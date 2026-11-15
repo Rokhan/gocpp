@@ -87,13 +87,13 @@ namespace golang::internal::runtime::maps
 namespace golang::internal::runtime::maps
 {
     namespace abi = golang::internal::abi;
+    table* newTable(abi::MapType* typ, uint64_t capacity, int64_t index, uint8_t localDepth);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/internal/runtime/maps/map.fwd.h"
 
 namespace golang::internal::runtime::maps
 {
-    table* newTable(abi::MapType* typ, uint64_t capacity, int64_t index, uint8_t localDepth);
     struct Iter
     {
         gocpp::unsafe_pointer key{}; // Must be in first position.  Write nil to indicate iteration end (see cmd/compile/internal/walk/range.go).

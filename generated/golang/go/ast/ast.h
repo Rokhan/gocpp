@@ -97,14 +97,13 @@ namespace golang::go::ast
     std::ostream& operator<<(std::ostream& os, const struct Package& value);
 }
 #include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::ast
 {
     namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
-#include "golang/go/token/token.h"
+#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::ast
 {
@@ -177,290 +176,6 @@ namespace golang::go::ast
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Node& value);
-    struct Comment
-    {
-        token::Pos Slash{}; // position of "/" starting the comment
-        gocpp::string Text{}; // comment text (excluding '\n' for //-style comments)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Comment& value);
-    struct FieldList
-    {
-        token::Pos Opening{}; // position of opening parenthesis/brace/bracket, if any
-        gocpp::slice<Field*> List{}; // field list; or nil
-        token::Pos Closing{}; // position of closing parenthesis/brace/bracket, if any
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct FieldList& value);
-    struct BadExpr
-    {
-        token::Pos From{}; // position range of bad expression
-        token::Pos To{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct BadExpr& value);
-    struct Ident
-    {
-        token::Pos NamePos{}; // identifier position
-        gocpp::string Name{}; // identifier name
-        Object* Obj{}; // denoted object, or nil. Deprecated: see Object.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Ident& value);
-    struct BasicLit
-    {
-        token::Pos ValuePos{}; // literal position
-        token::Pos ValueEnd{}; // position immediately after the literal
-        token::Token Kind{}; // token.INT, token.FLOAT, token.IMAG, token.CHAR, or token.STRING
-        gocpp::string Value{}; // literal string; e.g. 42, 0x7f, 3.14, 1e-9, 2.4i, 'a', '\x7f', "foo" or `\m\n\o`
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct BasicLit& value);
-    struct StructType
-    {
-        token::Pos Struct{}; // position of "struct" keyword
-        FieldList* Fields{}; // list of field declarations
-        bool Incomplete{}; // true if (source) fields are missing in the Fields list
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct StructType& value);
-    struct FuncType
-    {
-        token::Pos Func{}; // position of "func" keyword (token.NoPos if there is no "func")
-        FieldList* TypeParams{}; // type parameters; or nil
-        FieldList* Params{}; // (incoming) parameters; non-nil
-        FieldList* Results{}; // (outgoing) results; or nil
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
-    struct InterfaceType
-    {
-        token::Pos Interface{}; // position of "interface" keyword
-        FieldList* Methods{}; // list of embedded interfaces, methods, or types
-        bool Incomplete{}; // true if (source) methods or types are missing in the Methods list
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
-    struct BadStmt
-    {
-        token::Pos From{}; // position range of bad statement
-        token::Pos To{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct BadStmt& value);
-    struct EmptyStmt
-    {
-        token::Pos Semicolon{}; // position of following ";"
-        bool Implicit{}; // if set, ";" was omitted in the source
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct EmptyStmt& value);
-    struct GoStmt
-    {
-        token::Pos Go{}; // position of "go" keyword
-        CallExpr* Call{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct GoStmt& value);
-    struct DeferStmt
-    {
-        token::Pos Defer{}; // position of "defer" keyword
-        CallExpr* Call{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct DeferStmt& value);
-    struct BranchStmt
-    {
-        token::Pos TokPos{}; // position of Tok
-        token::Token Tok{}; // keyword token (BREAK, CONTINUE, GOTO, FALLTHROUGH)
-        Ident* Label{}; // label name; or nil
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct BranchStmt& value);
-    struct SelectStmt
-    {
-        token::Pos Select{}; // position of "select" keyword
-        BlockStmt* Body{}; // CommClauses only
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SelectStmt& value);
-    struct ImportSpec
-    {
-        CommentGroup* Doc{}; // associated documentation; or nil
-        Ident* Name{}; // local package name (including "."); or nil
-        BasicLit* Path{}; // import path
-        CommentGroup* Comment{}; // line comments; or nil
-        token::Pos EndPos{}; // end of spec (overrides Path.Pos if nonzero)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ImportSpec& value);
-    struct BadDecl
-    {
-        token::Pos From{}; // position range of bad declaration
-        token::Pos To{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct BadDecl& value);
     struct Expr : virtual gocpp::Interface, Node
     {
         using gocpp::Interface::operator==;
@@ -668,76 +383,23 @@ namespace golang::go::ast
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Decl& value);
-    Ident* NewIdent(gocpp::string name);
-    struct Spec : virtual gocpp::Interface, Node
+    struct Comment
     {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
+        token::Pos Slash{}; // position of "/" starting the comment
+        gocpp::string Text{}; // comment text (excluding '\n' for //-style comments)
 
-        Spec(){}
-        Spec(Spec& i) = default;
-        Spec(const Spec& i) = default;
-        Spec& operator=(Spec& i) = default;
-        Spec& operator=(const Spec& i) = default;
+        using isGoStruct = void;
 
-        inline Spec(nullptr_t) {};
-        Spec& operator=(nullptr_t) { mValue.reset(); }
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
 
-        template<typename T>
-        Spec(T& ref);
-
-        template<typename T>
-        Spec(const T& ref);
-
-        template<typename T>
-        Spec(T* ptr);
-
-        using isGoInterface = void;
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
 
         std::ostream& PrintTo(std::ostream& os) const;
-
-        struct ISpec: virtual Node::INode
-        {
-            virtual void vspecNode() = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = ISpec>
-        struct SpecImpl : virtual TInterface, virtual Node::NodeImpl<T, TStore, TInterface>
-        {
-            explicit SpecImpl(T* ptr): Node::NodeImpl<T, TStore, TInterface>(ptr)
-            {
-                value.reset(ptr);
-            }
-
-            void vspecNode() override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline ISpec* value() const;
-
-        std::shared_ptr<ISpec> mValue;
     };
 
-    namespace rec
-    {
-        void specNode(const gocpp::PtrRecv<struct Spec, false>& self);
-        void specNode(const gocpp::ObjRecv<struct Spec>& self);
-
-        token::Pos End(const gocpp::PtrRecv<struct Spec, false>& self);
-        token::Pos End(const gocpp::ObjRecv<struct Spec>& self);
-
-        token::Pos Pos(const gocpp::PtrRecv<struct Spec, false>& self);
-        token::Pos Pos(const gocpp::ObjRecv<struct Spec>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Spec& value);
+    std::ostream& operator<<(std::ostream& os, const struct Comment& value);
     struct Field
     {
         CommentGroup* Doc{}; // associated documentation; or nil
@@ -758,6 +420,59 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Field& value);
+    struct FieldList
+    {
+        token::Pos Opening{}; // position of opening parenthesis/brace/bracket, if any
+        gocpp::slice<Field*> List{}; // field list; or nil
+        token::Pos Closing{}; // position of closing parenthesis/brace/bracket, if any
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct FieldList& value);
+    struct BadExpr
+    {
+        token::Pos From{}; // position range of bad expression
+        token::Pos To{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct BadExpr& value);
+    struct Ident
+    {
+        token::Pos NamePos{}; // identifier position
+        gocpp::string Name{}; // identifier name
+        Object* Obj{}; // denoted object, or nil. Deprecated: see Object.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Ident& value);
     struct Ellipsis
     {
         token::Pos Ellipsis{}; // position of "..."
@@ -946,43 +661,6 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StarExpr& value);
-    struct UnaryExpr
-    {
-        token::Pos OpPos{}; // position of Op
-        token::Token Op{}; // operator
-        Expr X{}; // operand
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct UnaryExpr& value);
-    struct BinaryExpr
-    {
-        Expr X{}; // left operand
-        token::Pos OpPos{}; // position of Op
-        token::Token Op{}; // operator
-        Expr Y{}; // right operand
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct BinaryExpr& value);
     struct KeyValueExpr
     {
         Expr Key{};
@@ -1019,6 +697,61 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ArrayType& value);
+    struct StructType
+    {
+        token::Pos Struct{}; // position of "struct" keyword
+        FieldList* Fields{}; // list of field declarations
+        bool Incomplete{}; // true if (source) fields are missing in the Fields list
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct StructType& value);
+    struct FuncType
+    {
+        token::Pos Func{}; // position of "func" keyword (token.NoPos if there is no "func")
+        FieldList* TypeParams{}; // type parameters; or nil
+        FieldList* Params{}; // (incoming) parameters; non-nil
+        FieldList* Results{}; // (outgoing) results; or nil
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct FuncType& value);
+    struct InterfaceType
+    {
+        token::Pos Interface{}; // position of "interface" keyword
+        FieldList* Methods{}; // list of embedded interfaces, methods, or types
+        bool Incomplete{}; // true if (source) methods or types are missing in the Methods list
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceType& value);
     struct MapType
     {
         token::Pos Map{}; // position of "map" keyword
@@ -1056,6 +789,24 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ChanType& value);
+    Ident* NewIdent(gocpp::string name);
+    struct BadStmt
+    {
+        token::Pos From{}; // position range of bad statement
+        token::Pos To{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct BadStmt& value);
     struct DeclStmt
     {
         Decl Decl{}; // *GenDecl with CONST, TYPE, or VAR token
@@ -1072,6 +823,23 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DeclStmt& value);
+    struct EmptyStmt
+    {
+        token::Pos Semicolon{}; // position of following ";"
+        bool Implicit{}; // if set, ";" was omitted in the source
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct EmptyStmt& value);
     struct LabeledStmt
     {
         Ident* Label{};
@@ -1124,11 +892,10 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SendStmt& value);
-    struct IncDecStmt
+    struct GoStmt
     {
-        Expr X{};
-        token::Pos TokPos{}; // position of Tok
-        token::Token Tok{}; // INC or DEC
+        token::Pos Go{}; // position of "go" keyword
+        CallExpr* Call{};
 
         using isGoStruct = void;
 
@@ -1141,13 +908,11 @@ namespace golang::go::ast
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct IncDecStmt& value);
-    struct AssignStmt
+    std::ostream& operator<<(std::ostream& os, const struct GoStmt& value);
+    struct DeferStmt
     {
-        gocpp::slice<Expr> Lhs{};
-        token::Pos TokPos{}; // position of Tok
-        token::Token Tok{}; // assignment token, DEFINE
-        gocpp::slice<Expr> Rhs{};
+        token::Pos Defer{}; // position of "defer" keyword
+        CallExpr* Call{};
 
         using isGoStruct = void;
 
@@ -1160,7 +925,7 @@ namespace golang::go::ast
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct AssignStmt& value);
+    std::ostream& operator<<(std::ostream& os, const struct DeferStmt& value);
     struct ReturnStmt
     {
         token::Pos Return{}; // position of "return" keyword
@@ -1292,6 +1057,23 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CommClause& value);
+    struct SelectStmt
+    {
+        token::Pos Select{}; // position of "select" keyword
+        BlockStmt* Body{}; // CommClauses only
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SelectStmt& value);
     struct ForStmt
     {
         token::Pos For{}; // position of "for" keyword
@@ -1312,16 +1094,82 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ForStmt& value);
-    struct RangeStmt
+    struct Spec : virtual gocpp::Interface, Node
     {
-        token::Pos For{}; // position of "for" keyword
-        Expr Key{}; // Key, Value may be nil
-        Expr Value{};
-        token::Pos TokPos{}; // position of Tok; invalid if Key == nil
-        token::Token Tok{}; // ILLEGAL if Key == nil, ASSIGN, DEFINE
-        token::Pos Range{}; // position of "range" keyword
-        Expr X{}; // value to range over
-        BlockStmt* Body{};
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        Spec(){}
+        Spec(Spec& i) = default;
+        Spec(const Spec& i) = default;
+        Spec& operator=(Spec& i) = default;
+        Spec& operator=(const Spec& i) = default;
+
+        inline Spec(nullptr_t) {};
+        Spec& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        Spec(T& ref);
+
+        template<typename T>
+        Spec(const T& ref);
+
+        template<typename T>
+        Spec(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct ISpec: virtual Node::INode
+        {
+            virtual void vspecNode() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = ISpec>
+        struct SpecImpl : virtual TInterface, virtual Node::NodeImpl<T, TStore, TInterface>
+        {
+            explicit SpecImpl(T* ptr): Node::NodeImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vspecNode() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline ISpec* value() const;
+
+        std::shared_ptr<ISpec> mValue;
+    };
+
+    namespace rec
+    {
+        void specNode(const gocpp::PtrRecv<struct Spec, false>& self);
+        void specNode(const gocpp::ObjRecv<struct Spec>& self);
+
+        token::Pos End(const gocpp::PtrRecv<struct Spec, false>& self);
+        token::Pos End(const gocpp::ObjRecv<struct Spec>& self);
+
+        token::Pos Pos(const gocpp::PtrRecv<struct Spec, false>& self);
+        token::Pos Pos(const gocpp::ObjRecv<struct Spec>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct Spec& value);
+    struct ImportSpec
+    {
+        CommentGroup* Doc{}; // associated documentation; or nil
+        Ident* Name{}; // local package name (including "."); or nil
+        BasicLit* Path{}; // import path
+        CommentGroup* Comment{}; // line comments; or nil
+        token::Pos EndPos{}; // end of spec (overrides Path.Pos if nonzero)
 
         using isGoStruct = void;
 
@@ -1334,7 +1182,7 @@ namespace golang::go::ast
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct RangeStmt& value);
+    std::ostream& operator<<(std::ostream& os, const struct ImportSpec& value);
     struct ValueSpec
     {
         CommentGroup* Doc{}; // associated documentation; or nil
@@ -1376,14 +1224,10 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeSpec& value);
-    struct GenDecl
+    struct BadDecl
     {
-        CommentGroup* Doc{}; // associated documentation; or nil
-        token::Pos TokPos{}; // position of Tok
-        token::Token Tok{}; // IMPORT, CONST, TYPE, or VAR
-        token::Pos Lparen{}; // position of '(', if any
-        gocpp::slice<Spec> Specs{};
-        token::Pos Rparen{}; // position of ')', if any
+        token::Pos From{}; // position range of bad declaration
+        token::Pos To{};
 
         using isGoStruct = void;
 
@@ -1396,7 +1240,7 @@ namespace golang::go::ast
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct GenDecl& value);
+    std::ostream& operator<<(std::ostream& os, const struct BadDecl& value);
     struct File
     {
         CommentGroup* Doc{}; // associated documentation; or nil
@@ -1423,9 +1267,169 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
-    Expr Unparen(Expr e);
     bool IsGenerated(File* file);
     std::tuple<gocpp::string, bool> generator(File* file);
+    Expr Unparen(Expr e);
+}
+#include "golang/go/token/token.h"
+
+namespace golang::go::ast
+{
+    struct BasicLit
+    {
+        token::Pos ValuePos{}; // literal position
+        token::Pos ValueEnd{}; // position immediately after the literal
+        token::Token Kind{}; // token.INT, token.FLOAT, token.IMAG, token.CHAR, or token.STRING
+        gocpp::string Value{}; // literal string; e.g. 42, 0x7f, 3.14, 1e-9, 2.4i, 'a', '\x7f', "foo" or `\m\n\o`
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct BasicLit& value);
+    struct UnaryExpr
+    {
+        token::Pos OpPos{}; // position of Op
+        token::Token Op{}; // operator
+        Expr X{}; // operand
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct UnaryExpr& value);
+    struct BinaryExpr
+    {
+        Expr X{}; // left operand
+        token::Pos OpPos{}; // position of Op
+        token::Token Op{}; // operator
+        Expr Y{}; // right operand
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct BinaryExpr& value);
+    struct IncDecStmt
+    {
+        Expr X{};
+        token::Pos TokPos{}; // position of Tok
+        token::Token Tok{}; // INC or DEC
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IncDecStmt& value);
+    struct AssignStmt
+    {
+        gocpp::slice<Expr> Lhs{};
+        token::Pos TokPos{}; // position of Tok
+        token::Token Tok{}; // assignment token, DEFINE
+        gocpp::slice<Expr> Rhs{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct AssignStmt& value);
+    struct BranchStmt
+    {
+        token::Pos TokPos{}; // position of Tok
+        token::Token Tok{}; // keyword token (BREAK, CONTINUE, GOTO, FALLTHROUGH)
+        Ident* Label{}; // label name; or nil
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct BranchStmt& value);
+    struct RangeStmt
+    {
+        token::Pos For{}; // position of "for" keyword
+        Expr Key{}; // Key, Value may be nil
+        Expr Value{};
+        token::Pos TokPos{}; // position of Tok; invalid if Key == nil
+        token::Token Tok{}; // ILLEGAL if Key == nil, ASSIGN, DEFINE
+        token::Pos Range{}; // position of "range" keyword
+        Expr X{}; // value to range over
+        BlockStmt* Body{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RangeStmt& value);
+    struct GenDecl
+    {
+        CommentGroup* Doc{}; // associated documentation; or nil
+        token::Pos TokPos{}; // position of Tok
+        token::Token Tok{}; // IMPORT, CONST, TYPE, or VAR
+        token::Pos Lparen{}; // position of '(', if any
+        gocpp::slice<Spec> Specs{};
+        token::Pos Rparen{}; // position of ')', if any
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct GenDecl& value);
 }
 
 #include "golang/go/token/position.h"

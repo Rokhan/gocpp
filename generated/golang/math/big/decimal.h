@@ -29,8 +29,8 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decimal& value);
-    gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int64_t n);
     void rsh(decimal* x, uint64_t s);
+    gocpp::slice<unsigned char> appendZeros(gocpp::slice<unsigned char> buf, int64_t n);
     bool shouldRoundUp(decimal* x, int64_t n);
     void trim(decimal* x);
 }

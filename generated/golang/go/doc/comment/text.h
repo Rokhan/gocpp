@@ -16,16 +16,20 @@ namespace golang::go::doc::comment
     int64_t wrapPenalty(gocpp::string s);
 }
 #include "golang/bytes/buffer.fwd.h"
+
+namespace golang::go::doc::comment
+{
+    namespace bytes = golang::bytes;
+    void writeNL(bytes::Buffer* out);
+}
 #include "golang/strings/builder.fwd.h"
-#include "golang/strings/strings.fwd.h"
 
 namespace golang::go::doc::comment
 {
     namespace strings = golang::strings;
-    namespace bytes = golang::bytes;
 }
 #include "golang/strings/builder.h"
-#include "golang/go/doc/comment/parse.fwd.h"
+#include "golang/strings/strings.fwd.h"
 #include "golang/go/doc/comment/print.fwd.h"
 
 namespace golang::go::doc::comment
@@ -49,6 +53,17 @@ namespace golang::go::doc::comment
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct textPrinter& value);
+}
+
+#include "golang/bytes/buffer.h"
+#include "golang/go/doc/comment/parse.h"
+#include "golang/go/doc/comment/print.h"
+#include "golang/strings/builder.h"
+
+namespace golang::go::doc::comment
+{
+
     namespace rec
     {
         gocpp::slice<unsigned char> Comment(const gocpp::PtrRecv<struct textPrinter, false>& self, comment::Doc* d);
@@ -65,22 +80,6 @@ namespace golang::go::doc::comment
         gocpp::string headingID(const gocpp::ObjRecv<struct textPrinter>& self, comment::Heading* h);
         int64_t headingLevel(const gocpp::PtrRecv<struct textPrinter, false>& self);
         int64_t headingLevel(const gocpp::ObjRecv<struct textPrinter>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct textPrinter& value);
-    void writeNL(bytes::Buffer* out);
-}
-
-#include "golang/bytes/buffer.h"
-#include "golang/go/doc/comment/parse.h"
-#include "golang/go/doc/comment/print.h"
-#include "golang/strings/builder.h"
-
-namespace golang::go::doc::comment
-{
-
-    namespace rec
-    {
         gocpp::slice<unsigned char> Text(Printer* p, Doc* d);
         void block(textPrinter* p, bytes::Buffer* out, Block x);
         void text(textPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::go::doc::comment::Text> x);

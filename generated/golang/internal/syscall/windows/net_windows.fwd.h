@@ -13,10 +13,14 @@ namespace golang::internal::syscall::windows
     struct TCP_INITIAL_RTO_PARAMETERS;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
     inline constexpr int64_t SIO_TCP_INITIAL_RTO = syscall::IOC_IN | syscall::IOC_VENDOR | 17LL;
 }

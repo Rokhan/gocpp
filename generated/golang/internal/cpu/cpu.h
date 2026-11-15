@@ -39,13 +39,13 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct option& value);
-    void processOptions(gocpp::string env);
-    int64_t indexByte(gocpp::string s, unsigned char c);
     // options contains the cpu debug options that can be used in GODEBUG.
     // Options are arch dependent and are added by the arch specific doinit functions.
     // Features that are mandatory for the specific GOARCH should not be added to options
     // (e.g. SSE2 on amd64).
     extern gocpp::slice<option> options;
+    void processOptions(gocpp::string env);
+    int64_t indexByte(gocpp::string s, unsigned char c);
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 
@@ -120,6 +120,11 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct X86Struct& value);
+    // The booleans in X86 contain the correspondingly named cpuid feature bit.
+    // HasAVX and HasAVX2 are only set if the OS does support XMM and YMM registers
+    // in addition to the cpuid feature bit being set.
+    // The struct is padded to avoid false sharing.
+    extern X86Struct X86;
     struct ARMStruct
     {
         CacheLinePad _1{};
@@ -140,6 +145,9 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ARMStruct& value);
+    // The booleans in ARM contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
+    extern ARMStruct ARM;
     struct ARM64Struct
     {
         CacheLinePad _1{};
@@ -169,6 +177,9 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ARM64Struct& value);
+    // The booleans in ARM64 contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
+    extern ARM64Struct ARM64;
     struct Loong64Struct
     {
         CacheLinePad _1{};
@@ -194,6 +205,9 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Loong64Struct& value);
+    // The booleans in Loong64 contain the correspondingly named cpu feature bit.
+    // The struct is padded to avoid false sharing.
+    extern Loong64Struct Loong64;
     struct MIPS64XStruct
     {
         CacheLinePad _1{};
@@ -212,6 +226,7 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MIPS64XStruct& value);
+    extern MIPS64XStruct MIPS64X;
     struct PPC64Struct
     {
         CacheLinePad _1{};
@@ -234,6 +249,12 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PPC64Struct& value);
+    // For ppc64(le), it is safe to check only for ISA level starting on ISA v3.00,
+    // since there are no optional categories. There are some exceptions that also
+    // require kernel support to work (darn, scv), so there are feature bits for
+    // those as well. The minimum processor requirement is POWER8 (ISA 2.07).
+    // The struct is padded to avoid false sharing.
+    extern PPC64Struct PPC64;
     struct S390XStruct
     {
         CacheLinePad _1{};
@@ -272,6 +293,7 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct S390XStruct& value);
+    extern S390XStruct S390X;
     struct RISCV64Struct
     {
         CacheLinePad _1{};
@@ -302,28 +324,6 @@ namespace golang::internal::cpu
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RISCV64Struct& value);
-    // The booleans in X86 contain the correspondingly named cpuid feature bit.
-    // HasAVX and HasAVX2 are only set if the OS does support XMM and YMM registers
-    // in addition to the cpuid feature bit being set.
-    // The struct is padded to avoid false sharing.
-    extern X86Struct X86;
-    // The booleans in ARM contain the correspondingly named cpu feature bit.
-    // The struct is padded to avoid false sharing.
-    extern ARMStruct ARM;
-    // The booleans in ARM64 contain the correspondingly named cpu feature bit.
-    // The struct is padded to avoid false sharing.
-    extern ARM64Struct ARM64;
-    // The booleans in Loong64 contain the correspondingly named cpu feature bit.
-    // The struct is padded to avoid false sharing.
-    extern Loong64Struct Loong64;
-    extern MIPS64XStruct MIPS64X;
-    // For ppc64(le), it is safe to check only for ISA level starting on ISA v3.00,
-    // since there are no optional categories. There are some exceptions that also
-    // require kernel support to work (darn, scv), so there are feature bits for
-    // those as well. The minimum processor requirement is POWER8 (ISA 2.07).
-    // The struct is padded to avoid false sharing.
-    extern PPC64Struct PPC64;
-    extern S390XStruct S390X;
     // RISCV64 contains the supported CPU features and performance characteristics for riscv64
     // platforms. The booleans in RISCV64, with the exception of HasFastMisaligned, indicate
     // the presence of RISC-V extensions.

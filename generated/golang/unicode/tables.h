@@ -17,7 +17,7 @@ namespace golang::unicode
     extern gocpp::array<uint8_t, MaxLatin1 + 1> properties;
     extern gocpp::array<uint16_t, MaxASCII + 1> asciiFold;
 }
-#include "golang/unicode/letter.h"
+#include "golang/unicode/letter.fwd.h"
 
 namespace golang::unicode
 {
@@ -542,11 +542,6 @@ namespace golang::unicode
     extern RangeTable* Unified_Ideograph;
     extern RangeTable* Variation_Selector;
     extern RangeTable* White_Space;
-    // CaseRanges is the table describing case mappings for all letters with
-    // non-self mappings.
-    extern gocpp::slice<CaseRange> CaseRanges;
-    extern gocpp::slice<CaseRange> _CaseRanges;
-    extern gocpp::slice<foldPair> caseOrbit;
     // FoldCategory maps a category name to a table of
     // code points outside the category that are equivalent under
     // simple case folding to code points inside the category.
@@ -566,6 +561,16 @@ namespace golang::unicode
     extern RangeTable* foldCommon;
     extern RangeTable* foldGreek;
     extern RangeTable* foldInherited;
+}
+#include "golang/unicode/letter.h"
+
+namespace golang::unicode
+{
+    // CaseRanges is the table describing case mappings for all letters with
+    // non-self mappings.
+    extern gocpp::slice<CaseRange> CaseRanges;
+    extern gocpp::slice<CaseRange> _CaseRanges;
+    extern gocpp::slice<foldPair> caseOrbit;
 
     namespace rec
     {

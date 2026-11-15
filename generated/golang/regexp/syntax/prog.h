@@ -17,9 +17,8 @@ namespace golang::regexp::syntax
     extern gocpp::slice<gocpp::string> instOpNames;
     struct GoTag_EmptyOp { };
     using EmptyOp = gocpp::defined<uint8_t, GoTag_EmptyOp>;
-    bool IsWordChar(gocpp::rune r);
-    gocpp::string u32(uint32_t i);
     EmptyOp EmptyOpContext(gocpp::rune r1, gocpp::rune r2);
+    bool IsWordChar(gocpp::rune r);
     struct Inst
     {
         InstOp Op{};
@@ -57,6 +56,7 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Prog& value);
+    gocpp::string u32(uint32_t i);
 }
 #include "golang/strings/builder.fwd.h"
 

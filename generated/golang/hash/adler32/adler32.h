@@ -14,15 +14,19 @@ namespace golang::hash::adler32
 {
     struct GoTag_digest { };
     using digest = gocpp::defined<uint32_t, GoTag_digest>;
-    uint32_t Checksum(gocpp::slice<unsigned char> data);
     digest update(digest d, gocpp::slice<unsigned char> p);
+    uint32_t Checksum(gocpp::slice<unsigned char> data);
 }
 #include "golang/hash/hash.fwd.h"
-#include "golang/hash/hash.h"
 
 namespace golang::hash::adler32
 {
     namespace hash = golang::hash;
+}
+#include "golang/hash/hash.h"
+
+namespace golang::hash::adler32
+{
     hash::Hash32 New();
 }
 

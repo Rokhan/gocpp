@@ -15,16 +15,20 @@ namespace golang::runtime
     void checkTimeouts();
 }
 #include "golang/runtime/note_other.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
     void noteclear(note* n);
     void notewakeup(note* n);
     void notesleep(note* n);
-    bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline);
     bool notetsleep(note* n, int64_t ns);
     bool notetsleepg(note* n, int64_t ns);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool notetsleep_internal(note* n, int64_t ns, g* gp, int64_t deadline);
     std::tuple<g*, bool> beforeIdle(int64_t, int64_t);
 
     namespace rec

@@ -112,6 +112,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct findfuncbucket& value);
     void moduledataverify();
+    Func* FuncForPC(uintptr_t pc);
     struct pcvalueCacheEnt
     {
         // targetpc and off together are the key of this cache entry.
@@ -132,6 +133,23 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pcvalueCacheEnt& value);
+    struct pcvalueCache
+    {
+        gocpp::array<gocpp::array<pcvalueCacheEnt, 8>, 2> entries{};
+        int64_t inUse{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct pcvalueCache& value);
     uintptr_t pcvalueCacheKey(uintptr_t targetpc);
     std::tuple<gocpp::slice<unsigned char>, bool> step(gocpp::slice<unsigned char> p, uintptr_t* pc, int32_t* val, bool first);
     std::tuple<uint32_t, uint32_t> readvarint(gocpp::slice<unsigned char> p);
@@ -153,27 +171,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackmap& value);
-    Func* FuncForPC(uintptr_t pc);
-    struct pcvalueCache
-    {
-        gocpp::array<gocpp::array<pcvalueCacheEnt, 8>, 2> entries{};
-        int64_t inUse{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct pcvalueCache& value);
 }
-#include "golang/runtime/stack.h"
-#include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
@@ -186,6 +184,11 @@ namespace golang::runtime
     //
     // To make sure the map isn't collected, we keep a second reference here.
     extern gocpp::slice<gocpp::map<_type*, _type*>> pinnedTypemaps;
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
     struct funcInfo
     {
         _func* _func{};
@@ -202,23 +205,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        runtime::funcInfo funcInfo(const gocpp::PtrRecv<struct funcInfo, false>& self);
-        runtime::funcInfo funcInfo(const gocpp::ObjRecv<struct funcInfo>& self);
-        bool isInlined(const gocpp::PtrRecv<struct funcInfo, false>& self);
-        bool isInlined(const gocpp::ObjRecv<struct funcInfo>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct funcInfo& value);
-    bitvector stackmapdata(stackmap* stkmap, int32_t n);
-}
-#include "golang/internal/abi/symtab.fwd.h"
-#include "golang/internal/runtime/sys/consts.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
-
-namespace golang::runtime
-{
     struct Frame
     {
         // PC is the program counter for the location in this frame.
@@ -271,39 +258,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Frame& value);
-    uintptr_t badFuncInfoEntry(golang::runtime::funcInfo);
-    golang::runtime::funcInfo findfunc(uintptr_t pc);
-    std::tuple<int32_t, uintptr_t> pcvalue(golang::runtime::funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
-    gocpp::string funcname(golang::runtime::funcInfo f);
-    gocpp::string funcpkgpath(golang::runtime::funcInfo f);
-    gocpp::string funcfile(golang::runtime::funcInfo f, int32_t fileno);
-    std::tuple<gocpp::string, int32_t> funcline1(golang::runtime::funcInfo f, uintptr_t targetpc, bool strict);
-    std::tuple<gocpp::string, int32_t> funcline(golang::runtime::funcInfo f, uintptr_t targetpc);
-    int32_t funcspdelta(golang::runtime::funcInfo f, uintptr_t targetpc);
-    int32_t funcMaxSPDelta(golang::runtime::funcInfo f);
-    uint32_t pcdatastart(golang::runtime::funcInfo f, uint32_t table);
-    int32_t pcdatavalue(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc);
-    int32_t pcdatavalue1(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc, bool strict);
-    std::tuple<int32_t, uintptr_t> pcdatavalue2(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc);
-    namespace abi = golang::internal::abi;
-}
-#include "golang/internal/abi/symtab.h"
-
-namespace golang::runtime
-{
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/internal/runtime/sys/nih.h"
-
-namespace golang::runtime
-{
-    namespace sys = golang::internal::runtime::sys;
-}
-#include "golang/runtime/plugin.h"
-#include "golang/runtime/proc.fwd.h"
-
-namespace golang::runtime
-{
     struct Frames
     {
         // callers is a slice of PCs that have not yet been expanded to frames.
@@ -326,9 +280,43 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Frames& value);
+    Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
     int64_t runtime_FrameStartLine(Frame* f);
     gocpp::string runtime_FrameSymbolName(Frame* f);
     gocpp::slice<Frame> expandCgoFrames(uintptr_t pc);
+    uintptr_t badFuncInfoEntry(golang::runtime::funcInfo);
+    golang::runtime::funcInfo findfunc(uintptr_t pc);
+    std::tuple<int32_t, uintptr_t> pcvalue(golang::runtime::funcInfo f, uint32_t off, uintptr_t targetpc, bool strict);
+    gocpp::string funcname(golang::runtime::funcInfo f);
+    gocpp::string funcpkgpath(golang::runtime::funcInfo f);
+    gocpp::string funcfile(golang::runtime::funcInfo f, int32_t fileno);
+    std::tuple<gocpp::string, int32_t> funcline1(golang::runtime::funcInfo f, uintptr_t targetpc, bool strict);
+    std::tuple<gocpp::string, int32_t> funcline(golang::runtime::funcInfo f, uintptr_t targetpc);
+    int32_t funcspdelta(golang::runtime::funcInfo f, uintptr_t targetpc);
+    int32_t funcMaxSPDelta(golang::runtime::funcInfo f);
+    uint32_t pcdatastart(golang::runtime::funcInfo f, uint32_t table);
+    int32_t pcdatavalue(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc);
+    int32_t pcdatavalue1(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc, bool strict);
+    std::tuple<int32_t, uintptr_t> pcdatavalue2(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer funcdata(golang::runtime::funcInfo f, uint8_t i);
+}
+#include "golang/runtime/stack.h"
+
+namespace golang::runtime
+{
+    bitvector stackmapdata(stackmap* stkmap, int32_t n);
+}
+#include "golang/internal/abi/symtab.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/symtab.h"
+
+namespace golang::runtime
+{
     struct pcHeader
     {
         abi::PCLnTabMagic magic{}; // abi.Go1NNPcLnTabMagic
@@ -361,6 +349,39 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pcHeader& value);
+    struct srcFunc
+    {
+        moduledata* datap{};
+        int32_t nameOff{};
+        int32_t startLine{};
+        abi::FuncID funcID{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
+    gocpp::string badSrcFuncName(golang::runtime::srcFunc);
+}
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/runtime/plugin.h"
+#include "golang/internal/runtime/sys/consts.fwd.h"
+#include "golang/runtime/proc.fwd.h"
+
+namespace golang::runtime
+{
     struct moduledata
     {
         sys::NotInHeap NotInHeap{}; // Only in static data
@@ -425,27 +446,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct moduledata& value);
-    struct srcFunc
-    {
-        moduledata* datap{};
-        int32_t nameOff{};
-        int32_t startLine{};
-        abi::FuncID funcID{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct srcFunc& value);
-    gocpp::unsafe_pointer funcdata(golang::runtime::funcInfo f, uint8_t i);
-    Frames* CallersFrames(gocpp::slice<uintptr_t> callers);
     extern moduledata firstmoduledata;
     // lastmoduledatap should be an internal detail,
     // but widely used packages access it using linkname.
@@ -462,7 +462,6 @@ namespace golang::runtime
     gocpp::slice<moduledata*> activeModules();
     void moduledataverify1(moduledata* datap);
     moduledata* findmoduledatap(uintptr_t pc);
-    gocpp::string badSrcFuncName(golang::runtime::srcFunc);
 }
 
 #include "golang/runtime/runtime2.h"
@@ -483,6 +482,10 @@ namespace golang::runtime
         uintptr_t Entry(Func* f);
         std::tuple<gocpp::string, int64_t> FileLine(Func* f, uintptr_t pc);
         int32_t startLine(Func* f);
+        runtime::funcInfo funcInfo(const gocpp::PtrRecv<struct funcInfo, false>& self);
+        runtime::funcInfo funcInfo(const gocpp::ObjRecv<struct funcInfo>& self);
+        bool isInlined(const gocpp::PtrRecv<struct funcInfo, false>& self);
+        bool isInlined(const gocpp::ObjRecv<struct funcInfo>& self);
         bool valid(golang::runtime::funcInfo f);
         Func* _Func(golang::runtime::funcInfo f);
         bool isInlined(_func* f);

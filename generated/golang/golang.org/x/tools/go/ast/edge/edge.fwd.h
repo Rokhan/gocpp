@@ -8,7 +8,6 @@ namespace golang::golang_org::x::tools::go::ast::edge
 {
     struct GoTag_Kind;
     using Kind = gocpp::defined<uint8_t, GoTag_Kind>;
-    struct fieldInfo;
     // Each [Kind] is named Type_Field, where Type is the
     // [ast.Node] struct type and Field is the name of the field
     inline constexpr Kind Invalid = 0;
@@ -117,4 +116,5 @@ namespace golang::golang_org::x::tools::go::ast::edge
     inline constexpr Kind ValueSpec_Type = 103;
     inline constexpr Kind ValueSpec_Values = 104;
     inline constexpr Kind maxKind = 105;
+    struct fieldInfo;
 }

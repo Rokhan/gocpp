@@ -8,8 +8,6 @@ namespace golang::go::types
 {
     struct GoTag_stmtContext;
     using stmtContext = gocpp::defined<uint64_t, GoTag_stmtContext>;
-    struct GoTag_valueMap;
-    struct valueType;
     // permissible control-flow statements
     inline constexpr stmtContext breakOk = 1 << 0;
     inline constexpr stmtContext continueOk = 1 << 1;
@@ -17,5 +15,7 @@ namespace golang::go::types
     // additional context information
     inline constexpr stmtContext finalSwitchCase = 1 << 3;
     inline constexpr stmtContext inTypeSwitch = 1 << 4;
+    struct GoTag_valueMap;
+    struct valueType;
     using valueMap = gocpp::defined<gocpp::map<go_any, gocpp::slice<valueType>>, GoTag_valueMap>;
 }

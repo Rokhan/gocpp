@@ -31,6 +31,8 @@ namespace golang::unicode::utf8
     };
 
     std::ostream& operator<<(std::ostream& os, const struct acceptRange& value);
+    // acceptRanges has size 16 to avoid bounds checks in the code that uses it.
+    extern gocpp::array<acceptRange, 16> acceptRanges;
     bool FullRune(gocpp::slice<unsigned char> p);
     bool FullRuneInString(gocpp::string s);
     std::tuple<gocpp::rune, int64_t> DecodeRune(gocpp::slice<unsigned char> p);
@@ -53,8 +55,6 @@ namespace golang::unicode::utf8
     bool Valid(gocpp::slice<unsigned char> p);
     bool ValidString(gocpp::string s);
     bool ValidRune(gocpp::rune r);
-    // acceptRanges has size 16 to avoid bounds checks in the code that uses it.
-    extern gocpp::array<acceptRange, 16> acceptRanges;
 
     namespace rec
     {

@@ -80,45 +80,70 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cgoSymbolizerArg& value);
-    void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
     bool printOneCgoTraceback(uintptr_t pc, std::function<std::tuple<bool, bool> ()> commitFrame, cgoSymbolizerArg* arg);
     void callCgoSymbolizer(cgoSymbolizerArg* arg);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void cgoContextPCs(uintptr_t ctxt, gocpp::slice<uintptr_t> buf);
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/symtab.h"
-#include "golang/runtime/cgocall.fwd.h"
-#include "golang/runtime/stkframe.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    void printArgs(golang::runtime::funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
     void printcreatedby(g* gp);
-    void printcreatedby1(golang::runtime::funcInfo f, uintptr_t pc, uint64_t goid);
     void traceback(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
     void tracebacktrap(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp);
     void traceback1(uintptr_t pc, uintptr_t sp, uintptr_t lr, g* gp, unwindFlags flags);
-    void printAncestorTraceback(ancestorInfo ancestor);
-    void printAncestorTracebackFuncInfo(golang::runtime::funcInfo f, uintptr_t pc);
     int64_t gcallers(g* gp, int64_t skip, gocpp::slice<uintptr_t> pcbuf);
     void goroutineheader(g* gp);
     void tracebackothers(g* me);
     void tracebacksomeothers(g* me, std::function<bool (g* _1)> showf);
-    void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad);
     bool isSystemGoroutine(g* gp, bool fixed);
+}
+#include "golang/runtime/cgocall.fwd.h"
+
+namespace golang::runtime
+{
+    void printCgoTraceback(gocpp::array_ptr<golang::runtime::cgoCallers> callers);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     void SetCgoTraceback(int64_t version, gocpp::unsafe_pointer traceback, gocpp::unsafe_pointer context, gocpp::unsafe_pointer symbolizer);
     extern gocpp::unsafe_pointer cgoTraceback;
     extern gocpp::unsafe_pointer cgoContext;
     extern gocpp::unsafe_pointer cgoSymbolizer;
-    void printCgoTraceback(gocpp::array_ptr<golang::runtime::cgoCallers> callers);
+}
+#include "golang/runtime/symtab.h"
+
+namespace golang::runtime
+{
+    void printArgs(golang::runtime::funcInfo f, gocpp::unsafe_pointer argp, uintptr_t pc);
+    void printcreatedby1(golang::runtime::funcInfo f, uintptr_t pc, uint64_t goid);
+    void printAncestorTracebackFuncInfo(golang::runtime::funcInfo f, uintptr_t pc);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    void printAncestorTraceback(ancestorInfo ancestor);
+}
+#include "golang/runtime/stkframe.fwd.h"
+
+namespace golang::runtime
+{
+    void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad);
 }
 #include "golang/internal/abi/symtab.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/internal/abi/symtab.h"
 
 namespace golang::runtime
 {
     namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/symtab.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    bool isInjectedCall(abi::FuncID id);
+    bool showframe(golang::runtime::srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID);
+    bool showfuncinfo(golang::runtime::srcFunc sf, bool firstFrame, abi::FuncID calleeID);
+    bool elideWrapperCalling(abi::FuncID id);
 }
 #include "golang/runtime/stkframe.h"
 
@@ -155,10 +180,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unwinder& value);
-    bool isInjectedCall(abi::FuncID id);
-    bool showframe(golang::runtime::srcFunc sf, g* gp, bool firstFrame, abi::FuncID calleeID);
-    bool showfuncinfo(golang::runtime::srcFunc sf, bool firstFrame, abi::FuncID calleeID);
-    bool elideWrapperCalling(abi::FuncID id);
     int64_t tracebackPCs(unwinder* u, int64_t skip, gocpp::slice<uintptr_t> pcBuf);
     std::tuple<int64_t, int64_t> traceback2(unwinder* u, bool showRuntime, int64_t skip, int64_t max);
 }

@@ -31,28 +31,22 @@ namespace golang::go::doc
 {
     using methodSet = gocpp::defined<gocpp::map<gocpp::string, Func*>, GoTag_methodSet>;
     Func* customizeRecv(Func* f, gocpp::string recvTypeName, bool embeddedIsPtr, int64_t level);
+    gocpp::slice<Func*> sortedFuncs(methodSet m, bool allMethods);
     gocpp::slice<gocpp::string> noteBodies(gocpp::slice<Note*> notes);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/token.fwd.h"
 #include "golang/internal/lazyregexp/lazyre.fwd.h"
 
 namespace golang::go::doc
 {
-    gocpp::slice<Func*> sortedFuncs(methodSet m, bool allMethods);
-    namespace ast = golang::go::ast;
+    namespace lazyregexp = golang::internal::lazyregexp;
+    extern lazyregexp::Regexp* noteMarkerRx;
+    extern lazyregexp::Regexp* noteCommentRx;
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/doc/doc.h"
-#include "golang/go/token/token.h"
+#include "golang/go/ast/ast.fwd.h"
 
 namespace golang::go::doc
 {
-    namespace token = golang::go::token;
-    namespace lazyregexp = golang::internal::lazyregexp;
-    gocpp::string recvString(ast::Expr recv);
-    gocpp::string recvParam(ast::Expr p);
-    std::tuple<gocpp::string, bool> baseTypeName(ast::Expr x);
+    namespace ast = golang::go::ast;
     struct namedType
     {
         gocpp::string doc{}; // doc comment for type
@@ -78,6 +72,24 @@ namespace golang::go::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct namedType& value);
+    ast::Ident* lookupTypeParam(gocpp::string name, ast::FieldList* tparams);
+    gocpp::string sortingName(ast::GenDecl* d);
+    gocpp::slice<Type*> sortedTypes(gocpp::map<gocpp::string, namedType*> m, bool allMethods);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::doc
+{
+    gocpp::string recvString(ast::Expr recv);
+    gocpp::string recvParam(ast::Expr p);
+    std::tuple<gocpp::string, bool> baseTypeName(ast::Expr x);
+    gocpp::slice<gocpp::string> specNames(gocpp::slice<ast::Spec> specs);
+    std::tuple<gocpp::slice<ast::Field*>, bool> fields(ast::Expr typ);
+}
+#include "golang/go/doc/doc.h"
+
+namespace golang::go::doc
+{
     struct reader
     {
         Mode mode{};
@@ -110,14 +122,13 @@ namespace golang::go::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
-    gocpp::slice<gocpp::string> specNames(gocpp::slice<ast::Spec> specs);
-    std::tuple<gocpp::slice<ast::Field*>, bool> fields(ast::Expr typ);
-    ast::Ident* lookupTypeParam(gocpp::string name, ast::FieldList* tparams);
-    extern lazyregexp::Regexp* noteMarkerRx;
-    extern lazyregexp::Regexp* noteCommentRx;
-    gocpp::string sortingName(ast::GenDecl* d);
+}
+#include "golang/go/token/token.h"
+
+namespace golang::go::doc
+{
+    namespace token = golang::go::token;
     gocpp::slice<Value*> sortedValues(gocpp::slice<Value*> m, token::Token tok);
-    gocpp::slice<Type*> sortedTypes(gocpp::map<gocpp::string, namedType*> m, bool allMethods);
 }
 
 #include "golang/go/ast/ast.h"

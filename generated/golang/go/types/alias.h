@@ -10,7 +10,17 @@
 #include "gocpp/support.h"
 
 #include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    golang::go::types::Type Unalias(golang::go::types::Type t);
+}
 #include "golang/go/types/named.fwd.h"
+
+namespace golang::go::types
+{
+    Named* asNamed(golang::go::types::Type t);
+}
 #include "golang/go/types/object.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
 
@@ -37,8 +47,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alias& value);
-    golang::go::types::Type Unalias(golang::go::types::Type t);
-    Named* asNamed(golang::go::types::Type t);
     Alias* NewAlias(TypeName* obj, golang::go::types::Type rhs);
     golang::go::types::Type unalias(Alias* a0);
 }

@@ -16,36 +16,37 @@ namespace golang::go::types
     using stmtContext = gocpp::defined<uint64_t, GoTag_stmtContext>;
     struct GoTag_valueMap { };
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
-#include "golang/go/ast/ast.h"
-
-namespace golang::go::types
-{
-    namespace ast = golang::go::ast;
-}
 #include "golang/go/constant/value.h"
 
 namespace golang::go::types
 {
     namespace constant = golang::go::constant;
+    go_any goVal(constant::Value val);
 }
-#include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
 
 namespace golang::go::types
 {
     namespace token = golang::go::token;
 }
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    token::Token assignOp(token::Token op);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    gocpp::slice<ast::Stmt> trimTrailingEmptyStmts(gocpp::slice<ast::Stmt> list);
+}
+#include "golang/go/token/position.h"
 #include "golang/go/types/type.h"
 
 namespace golang::go::types
 {
-    gocpp::slice<ast::Stmt> trimTrailingEmptyStmts(gocpp::slice<ast::Stmt> list);
-    token::Token assignOp(token::Token op);
-    go_any goVal(constant::Value val);
     struct valueType
     {
         token::Pos pos{};

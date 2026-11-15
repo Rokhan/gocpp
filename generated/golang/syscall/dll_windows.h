@@ -49,13 +49,13 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct Proc& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    extern gocpp::unsafe_pointer __LoadLibraryExW;
+    extern gocpp::unsafe_pointer __GetProcAddress;
 }
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::syscall
 {
-    extern gocpp::unsafe_pointer __LoadLibraryExW;
-    extern gocpp::unsafe_pointer __GetProcAddress;
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall6(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6);
     std::tuple<uintptr_t, uintptr_t, Errno> Syscall9(uintptr_t trap, uintptr_t nargs, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9);
@@ -108,11 +108,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DLL& value);
-}
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::syscall
-{
     std::tuple<DLL*, gocpp::error> LoadDLL(gocpp::string name);
     DLL* MustLoadDLL(gocpp::string name);
 }
@@ -139,6 +134,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyDLL& value);
+    LazyDLL* NewLazyDLL(gocpp::string name);
     struct LazyProc
     {
         mocklib::Mutex mu{};
@@ -158,7 +154,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LazyProc& value);
-    LazyDLL* NewLazyDLL(gocpp::string name);
 
     namespace rec
     {

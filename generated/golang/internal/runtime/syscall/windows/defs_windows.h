@@ -61,6 +61,26 @@ namespace golang::internal::runtime::syscall::windows
     std::ostream& operator<<(std::ostream& os, const struct ExceptionRecord& value);
     struct GoTag_Handle { };
     using Handle = gocpp::defined<uintptr_t, GoTag_Handle>;
+    struct Overlapped
+    {
+        uintptr_t Internal{};
+        uintptr_t InternalHigh{};
+        uint32_t Offset{};
+        uint32_t OffsetHigh{};
+        Handle HEvent{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
     struct MemoryBasicInformation
     {
         uintptr_t BaseAddress{};
@@ -105,26 +125,6 @@ namespace golang::internal::runtime::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct OSVERSIONINFOW& value);
-    struct Overlapped
-    {
-        uintptr_t Internal{};
-        uintptr_t InternalHigh{};
-        uint32_t Offset{};
-        uint32_t OffsetHigh{};
-        Handle HEvent{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
 }
 #include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
 

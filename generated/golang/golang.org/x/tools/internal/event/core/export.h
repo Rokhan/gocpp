@@ -14,15 +14,7 @@ namespace golang::golang_org::x::tools::internal::event::core
 {
     void SetExporter(Exporter e);
 }
-#include "golang/context/context.fwd.h"
 #include "golang/sync/atomic/type.fwd.h"
-
-namespace golang::golang_org::x::tools::internal::event::core
-{
-    namespace context = golang::context;
-}
-#include "golang/context/context.h"
-#include "golang/golang.org/x/tools/internal/event/core/event.h"
 
 namespace golang::golang_org::x::tools::internal::event::core
 {
@@ -33,6 +25,18 @@ namespace golang::golang_org::x::tools::internal::event::core
 namespace golang::golang_org::x::tools::internal::event::core
 {
     extern atomic::Pointer<Exporter> exporter;
+}
+#include "golang/context/context.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event::core
+{
+    namespace context = golang::context;
+}
+#include "golang/context/context.h"
+#include "golang/golang.org/x/tools/internal/event/core/event.h"
+
+namespace golang::golang_org::x::tools::internal::event::core
+{
     context::Context deliver(context::Context ctx, Exporter exporter, Event ev);
     context::Context Export(context::Context ctx, Event ev);
     std::tuple<context::Context, std::function<void ()>> ExportPair(context::Context ctx, Event begin, Event end);

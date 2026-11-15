@@ -45,36 +45,67 @@ namespace golang::encoding::json::v2
 {
     bool isLegacyEmpty(addressableValue v);
 }
-#include "golang/encoding/base32/base32.fwd.h"
-#include "golang/encoding/base64/base64.fwd.h"
-#include "golang/encoding/hex/hex.fwd.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
+#include "golang/encoding/hex/hex.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace hex = golang::encoding::hex;
+    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase16;
+    extern std::function<int64_t (int64_t)> encodedLenBase16;
+    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase16;
+}
+#include "golang/encoding/base32/base32.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace base32 = golang::encoding::base32;
+    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase32;
+    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase32Hex;
+    extern std::function<int64_t (int64_t)> encodedLenBase32;
+    extern std::function<int64_t (int64_t)> encodedLenBase32Hex;
+    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32;
+    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32Hex;
+}
+#include "golang/encoding/base64/base64.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace base64 = golang::encoding::base64;
+    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64;
+    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64URL;
+    extern std::function<int64_t (int64_t)> encodedLenBase64;
+    extern std::function<int64_t (int64_t)> encodedLenBase64URL;
+    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase64;
+    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase64URL;
+}
+#include "golang/encoding/json/jsontext/token.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace jsontext = golang::encoding::json::jsontext;
+}
 #include "golang/encoding/json/jsontext/encode.fwd.h"
+#include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/errors.fwd.h"
 #include "golang/encoding/json/jsontext/quote.fwd.h"
 #include "golang/encoding/json/jsontext/state.fwd.h"
-#include "golang/encoding/json/jsontext/token.fwd.h"
-#include "golang/reflect/map.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    jsontext::Kind stringOrNumberKind(bool isString);
+}
 #include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace reflect = golang::reflect;
 }
-#include "golang/encoding/base32/base32.h"
-#include "golang/encoding/base64/base64.h"
-#include "golang/encoding/hex/hex.h"
-#include "golang/encoding/json/jsontext/token.h"
+#include "golang/reflect/value.fwd.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
+#include "golang/reflect/map.fwd.h"
 
 namespace golang::encoding::json::v2
 {
-    namespace jsontext = golang::encoding::json::jsontext;
-    namespace hex = golang::encoding::hex;
-    namespace base32 = golang::encoding::base32;
-    namespace base64 = golang::encoding::base64;
     // Most natural Go types that correspond with each JSON type.
     extern reflect::Type anyType;
     extern reflect::Type boolType;
@@ -102,27 +133,9 @@ namespace golang::encoding::json::v2
     };
 
     std::ostream& operator<<(std::ostream& os, const struct typedPointer& value);
-    gocpp::error visitPointer(seenPointers* m, reflect::Value v);
-    void leavePointer(seenPointers* m, reflect::Value v);
-    int64_t sliceLen(reflect::Value v);
     arshaler* makeDefaultArshaler(reflect::Type t);
     arshaler* makeBoolArshaler(reflect::Type t);
     arshaler* makeStringArshaler(reflect::Type t);
-    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase16;
-    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase32;
-    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase32Hex;
-    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64;
-    extern std::function<gocpp::slice<unsigned char> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendEncodeBase64URL;
-    extern std::function<int64_t (int64_t)> encodedLenBase16;
-    extern std::function<int64_t (int64_t)> encodedLenBase32;
-    extern std::function<int64_t (int64_t)> encodedLenBase32Hex;
-    extern std::function<int64_t (int64_t)> encodedLenBase64;
-    extern std::function<int64_t (int64_t)> encodedLenBase64URL;
-    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase16;
-    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32;
-    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase32Hex;
-    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase64;
-    extern std::function<std::tuple<gocpp::slice<unsigned char>, gocpp::error> (gocpp::slice<unsigned char>, gocpp::slice<unsigned char>)> appendDecodeBase64URL;
     arshaler* makeBytesArshaler(reflect::Type t, arshaler* fncs);
     arshaler* makeIntArshaler(reflect::Type t);
     arshaler* makeUintArshaler(reflect::Type t);
@@ -136,7 +149,14 @@ namespace golang::encoding::json::v2
     arshaler* makeInterfaceArshaler(reflect::Type t);
     bool isAnyType(reflect::Type t);
     arshaler* makeInvalidArshaler(reflect::Type t);
-    jsontext::Kind stringOrNumberKind(bool isString);
+}
+#include "golang/reflect/value.h"
+
+namespace golang::encoding::json::v2
+{
+    gocpp::error visitPointer(seenPointers* m, reflect::Value v);
+    void leavePointer(seenPointers* m, reflect::Value v);
+    int64_t sliceLen(reflect::Value v);
 }
 
 #include "golang/encoding/json/v2/arshal.h"

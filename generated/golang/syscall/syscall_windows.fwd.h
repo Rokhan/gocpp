@@ -8,8 +8,13 @@ namespace golang::syscall
 {
     struct GoTag_Handle;
     using Handle = gocpp::defined<uintptr_t, GoTag_Handle>;
+    inline constexpr Handle InvalidHandle = ~ Handle(0);
     struct GoTag_Errno;
     using Errno = gocpp::defined<uintptr_t, GoTag_Errno>;
+    inline constexpr Errno _ERROR_NOT_ENOUGH_MEMORY = Errno(8);
+    inline constexpr Errno _ERROR_NOT_SUPPORTED = Errno(50);
+    inline constexpr Errno _ERROR_BAD_NETPATH = Errno(53);
+    inline constexpr Errno _ERROR_CALL_NOT_IMPLEMENTED = Errno(120);
     inline constexpr bool ImplementsGetwd = true;
     // This matches the value in os/file_windows.go.
     inline constexpr long _UTIME_OMIT = - 1;
@@ -32,11 +37,6 @@ namespace golang::syscall
     struct IPv6Mreq;
     struct GoTag_Signal;
     using Signal = gocpp::defined<int64_t, GoTag_Signal>;
-    inline constexpr Handle InvalidHandle = ~ Handle(0);
-    inline constexpr Errno _ERROR_NOT_ENOUGH_MEMORY = Errno(8);
-    inline constexpr Errno _ERROR_NOT_SUPPORTED = Errno(50);
-    inline constexpr Errno _ERROR_BAD_NETPATH = Errno(53);
-    inline constexpr Errno _ERROR_CALL_NOT_IMPLEMENTED = Errno(120);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     inline constexpr uintptr_t ptrSize = gocpp::Sizeof<uintptr_t>();
     struct Sockaddr;

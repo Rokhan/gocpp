@@ -10,17 +10,21 @@
 #include "gocpp/support.h"
 
 #include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    bool AssignableTo(golang::go::types::Type V, golang::go::types::Type T);
+    bool ConvertibleTo(golang::go::types::Type V, golang::go::types::Type T);
+    bool Identical(golang::go::types::Type x, golang::go::types::Type y);
+    bool IdenticalIgnoreTags(golang::go::types::Type x, golang::go::types::Type y);
+}
 #include "golang/go/types/interface.fwd.h"
 
 namespace golang::go::types
 {
     bool AssertableTo(Interface* V, golang::go::types::Type T);
-    bool AssignableTo(golang::go::types::Type V, golang::go::types::Type T);
-    bool ConvertibleTo(golang::go::types::Type V, golang::go::types::Type T);
     bool Implements(golang::go::types::Type V, Interface* T);
     bool Satisfies(golang::go::types::Type V, Interface* T);
-    bool Identical(golang::go::types::Type x, golang::go::types::Type y);
-    bool IdenticalIgnoreTags(golang::go::types::Type x, golang::go::types::Type y);
 
     namespace rec
     {

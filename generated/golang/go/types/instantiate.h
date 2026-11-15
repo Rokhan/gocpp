@@ -10,7 +10,11 @@
 #include "gocpp/support.h"
 
 #include "golang/go/types/type.h"
-#include "golang/go/types/context.fwd.h"
+
+namespace golang::go::types
+{
+    bool mentions(golang::go::types::Type T, golang::go::types::Type typ);
+}
 #include "golang/go/types/typelists.fwd.h"
 
 namespace golang::go::types
@@ -84,8 +88,12 @@ namespace golang::go::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct genericType& value);
+}
+#include "golang/go/types/context.fwd.h"
+
+namespace golang::go::types
+{
     std::tuple<golang::go::types::Type, gocpp::error> Instantiate(Context* ctxt, golang::go::types::Type orig, gocpp::slice<golang::go::types::Type> targs, bool validate);
-    bool mentions(golang::go::types::Type T, golang::go::types::Type typ);
 }
 
 #include "golang/go/token/position.h"

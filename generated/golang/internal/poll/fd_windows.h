@@ -24,45 +24,71 @@ namespace golang::internal::poll
     std::tuple<int64_t, gocpp::string, gocpp::error> DupCloseOnExec(int64_t fd);
 }
 #include "golang/internal/syscall/windows/net_windows.fwd.h"
-#include "golang/internal/syscall/windows/symlink_windows.fwd.h"
-#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
-#include "golang/internal/syscall/windows/types_windows.fwd.h"
-#include "golang/internal/syscall/windows/zsyscall_windows.fwd.h"
-#include "golang/runtime/pinner.fwd.h"
-#include "golang/sync/oncefunc.fwd.h"
-#include "golang/sync/pool.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/types_windows_amd64.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-
-namespace golang::internal::poll
-{
-    namespace sync = golang::sync;
-    namespace syscall = golang::syscall;
-}
-#include "golang/internal/poll/fd_mutex.h"
-#include "golang/internal/poll/fd_poll_runtime.h"
 
 namespace golang::internal::poll
 {
     namespace windows = golang::internal::syscall::windows;
 }
-#include "golang/runtime/pinner.h"
-#include "golang/sync/oncefunc.h"
-#include "golang/sync/pool.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/syscall/zsyscall_windows.h"
+#include "golang/internal/syscall/windows/symlink_windows.fwd.h"
+#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
+#include "golang/internal/syscall/windows/types_windows.fwd.h"
+#include "golang/internal/syscall/windows/zsyscall_windows.fwd.h"
 
 namespace golang::internal::poll
 {
-    namespace runtime = golang::runtime;
-    // ifsHandlesOnly returns true if the system only has IFS handles for TCP sockets.
-    // See https://support.microsoft.com/kb/2568167 for details.
-    extern std::function<bool (void)> ifsHandlesOnly;
+    void freeWSAMsg(windows::WSAMsg* msg);
+}
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::internal::poll
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows_amd64.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+
+namespace golang::internal::poll
+{
+    syscall::WSABuf* newWsaBuf(gocpp::slice<unsigned char> b);
+    gocpp::slice<syscall::WSABuf>* newWSABufs(gocpp::slice<gocpp::slice<unsigned char>>* buf);
+    void freeWSABufs(gocpp::slice<syscall::WSABuf>* bufsPtr);
+    int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
+    int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
+    void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
+    void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::poll
+{
     bool canSkipCompletionPortOnSuccess(syscall::Handle h, bool isSocket);
+    struct wsaRsa
+    {
+        syscall::RawSockaddrAny name{};
+        int32_t namelen{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct wsaRsa& value);
+    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, wsaRsa* rsa);
+    wsaRsa* newWSARsa();
+    std::tuple<int32_t, gocpp::error> sockaddrToRaw(syscall::RawSockaddrAny* rsa, syscall::Sockaddr sa);
+}
+#include "golang/syscall/types_windows.h"
+
+namespace golang::internal::poll
+{
     struct operation
     {
         // Used by IOCP interface, it must be first field
@@ -84,32 +110,45 @@ namespace golang::internal::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct operation& value);
-    syscall::WSABuf* newWsaBuf(gocpp::slice<unsigned char> b);
+}
+#include "golang/syscall/zsyscall_windows.h"
+
+namespace golang::internal::poll
+{
+    extern std::function<gocpp::error (syscall::Handle, uint16_t*, uint32_t, uint32_t*, unsigned char*)> ReadConsole;
+}
+#include "golang/sync/oncefunc.fwd.h"
+
+namespace golang::internal::poll
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/oncefunc.h"
+#include "golang/sync/pool.fwd.h"
+
+namespace golang::internal::poll
+{
+    // ifsHandlesOnly returns true if the system only has IFS handles for TCP sockets.
+    // See https://support.microsoft.com/kb/2568167 for details.
+    extern std::function<bool (void)> ifsHandlesOnly;
+}
+#include "golang/sync/pool.h"
+
+namespace golang::internal::poll
+{
     extern sync::Pool wsaBufsPool;
-    gocpp::slice<syscall::WSABuf>* newWSABufs(gocpp::slice<gocpp::slice<unsigned char>>* buf);
-    void freeWSABufs(gocpp::slice<syscall::WSABuf>* bufsPtr);
     // wsaMsgPool is a pool of WSAMsg structures that can only hold a single WSABuf.
     extern sync::Pool wsaMsgPool;
-    void freeWSAMsg(windows::WSAMsg* msg);
-    struct wsaRsa
-    {
-        syscall::RawSockaddrAny name{};
-        int32_t namelen{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct wsaRsa& value);
     extern sync::Pool wsaRsaPool;
     extern sync::Pool operationPool;
+}
+#include "golang/internal/poll/fd_mutex.h"
+#include "golang/internal/poll/fd_poll_runtime.h"
+#include "golang/runtime/pinner.h"
+
+namespace golang::internal::poll
+{
+    namespace runtime = golang::runtime;
     struct FD
     {
         // Lock sysfd and serialize access to Read and Write methods.
@@ -163,14 +202,6 @@ namespace golang::internal::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FD& value);
-    extern std::function<gocpp::error (syscall::Handle, uint16_t*, uint32_t, uint32_t*, unsigned char*)> ReadConsole;
-    int32_t sockaddrInet4ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
-    int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
-    void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa);
-    void rawToSockaddrInet6(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa);
-    std::tuple<int32_t, gocpp::error> sockaddrToRaw(syscall::RawSockaddrAny* rsa, syscall::Sockaddr sa);
-    windows::WSAMsg* newWSAMsg(gocpp::slice<unsigned char> p, gocpp::slice<unsigned char> oob, int64_t flags, wsaRsa* rsa);
-    wsaRsa* newWSARsa();
 }
 
 #include "golang/syscall/syscall_windows.h"

@@ -31,13 +31,16 @@ namespace golang::sync
 
     std::ostream& operator<<(std::ostream& os, const struct eface& value);
 }
-#include "golang/sync/atomic/doc.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
 #include "golang/sync/atomic/type.h"
 
 namespace golang::sync
 {
     namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/doc.fwd.h"
+
+namespace golang::sync
+{
     struct poolDequeue
     {
         // headTail packs together a 32-bit head index and a 32-bit
@@ -98,15 +101,6 @@ namespace golang::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        uint64_t pack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint32_t head, uint32_t tail);
-        std::tuple<go_any, bool> popHead(const gocpp::PtrRecv<struct poolChainElt, false>& self);
-        std::tuple<go_any, bool> popTail(const gocpp::PtrRecv<struct poolChainElt, false>& self);
-        bool pushHead(const gocpp::PtrRecv<struct poolChainElt, false>& self, go_any val);
-        std::tuple<uint32_t, uint32_t> unpack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint64_t ptrs);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct poolChainElt& value);
     struct poolChain
     {
@@ -137,6 +131,11 @@ namespace golang::sync
         bool pushHead(poolDequeue* d, go_any val);
         std::tuple<go_any, bool> popHead(poolDequeue* d);
         std::tuple<go_any, bool> popTail(poolDequeue* d);
+        uint64_t pack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint32_t head, uint32_t tail);
+        std::tuple<go_any, bool> popHead(const gocpp::PtrRecv<struct poolChainElt, false>& self);
+        std::tuple<go_any, bool> popTail(const gocpp::PtrRecv<struct poolChainElt, false>& self);
+        bool pushHead(const gocpp::PtrRecv<struct poolChainElt, false>& self, go_any val);
+        std::tuple<uint32_t, uint32_t> unpack(const gocpp::PtrRecv<struct poolChainElt, false>& self, uint64_t ptrs);
         void pushHead(poolChain* c, go_any val);
         std::tuple<go_any, bool> popHead(poolChain* c);
         std::tuple<go_any, bool> popTail(poolChain* c);

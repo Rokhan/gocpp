@@ -33,43 +33,49 @@ namespace golang::internal::syscall::windows
     uint32_t RtlIsDosDeviceName_U(uint16_t* name);
     gocpp::error DestroyEnvironmentBlock(uint16_t* block);
     gocpp::error GetProfilesDirectory(uint16_t* dir, uint32_t* dirLen);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/internal/syscall/windows/security_windows.fwd.h"
-#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
+    gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, LUID* luid);
+}
 #include "golang/internal/syscall/windows/types_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
+    gocpp::error SetEntriesInAcl(uint32_t countExplicitEntries, EXPLICIT_ACCESS* explicitEntries, ACL* oldACL, ACL** newACL);
+    gocpp::error VirtualQuery(uintptr_t address, MemoryBasicInformation* buffer, uintptr_t length);
+}
 #include "golang/internal/syscall/windows/version_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
+    void rtlGetVersion(_OSVERSIONINFOEXW* info);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     extern gocpp::unsafe_pointer _;
-    gocpp::error LookupPrivilegeValue(uint16_t* systemname, uint16_t* name, LUID* luid);
-    gocpp::error SetEntriesInAcl(uint32_t countExplicitEntries, EXPLICIT_ACCESS* explicitEntries, ACL* oldACL, ACL** newACL);
+}
+#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
     gocpp::error GetAdaptersAddresses(uint32_t family, uint32_t flags, gocpp::unsafe_pointer reserved, IpAdapterAddresses* adapterAddresses, uint32_t* sizePointer);
     RUNTIME_FUNCTION* RtlLookupFunctionEntry(uintptr_t pc, uintptr_t* baseAddress, gocpp::unsafe_pointer table);
     uintptr_t RtlVirtualUnwind(uint32_t handlerType, uintptr_t baseAddress, uintptr_t pc, RUNTIME_FUNCTION* entry, gocpp::unsafe_pointer ctxt, gocpp::unsafe_pointer data, uintptr_t* frame, gocpp::unsafe_pointer ctxptrs);
-    gocpp::error VirtualQuery(uintptr_t address, MemoryBasicInformation* buffer, uintptr_t length);
-    void rtlGetVersion(_OSVERSIONINFOEXW* info);
 }
-#include "golang/syscall/dll_windows.fwd.h"
-#include "golang/syscall/security_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
 }
-#include "golang/internal/syscall/windows/security_windows.h"
-#include "golang/internal/syscall/windows/syscall_windows.h"
-#include "golang/syscall/security_windows.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/internal/syscall/windows/psapi_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/security_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
-    gocpp::error errnoErr(syscall::Errno e);
     extern syscall::LazyDLL* modadvapi32;
     extern syscall::LazyDLL* modbcryptprimitives;
     extern syscall::LazyDLL* modiphlpapi;
@@ -146,21 +152,25 @@ namespace golang::internal::syscall::windows
     extern syscall::LazyProc* procWSADuplicateSocketW;
     extern syscall::LazyProc* procWSAGetOverlappedResult;
     extern syscall::LazyProc* procWSASocketW;
-    std::tuple<uint32_t, gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
-    gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, TokenType tokenType, syscall::Token* phNewToken);
     uintptr_t getSidIdentifierAuthority(syscall::SID* sid);
     uintptr_t getSidSubAuthority(syscall::SID* sid, uint32_t subAuthorityIdx);
     uintptr_t getSidSubAuthorityCount(syscall::SID* sid);
-    gocpp::error ImpersonateLoggedOnUser(syscall::Token token);
     bool IsValidSid(syscall::SID* sid);
     gocpp::error LogonUser(uint16_t* username, uint16_t* domain, uint16_t* password, uint32_t logonType, uint32_t logonProvider, syscall::Token* token);
+    gocpp::error SetNamedSecurityInfo(gocpp::string objectName, uint32_t objectType, uint32_t securityInformation, syscall::SID* owner, syscall::SID* group, ACL* dacl, ACL* sacl);
+    gocpp::error _SetNamedSecurityInfo(uint16_t* objectName, uint32_t objectType, uint32_t securityInformation, syscall::SID* owner, syscall::SID* group, ACL* dacl, ACL* sacl);
+    gocpp::error NtCreateFile(syscall::Handle* handle, uint32_t access, OBJECT_ATTRIBUTES* oa, IO_STATUS_BLOCK* iosb, int64_t* allocationSize, uint32_t attributes, uint32_t share, uint32_t disposition, uint32_t options, gocpp::unsafe_pointer eabuffer, uint32_t ealength);
+    gocpp::error NtOpenFile(syscall::Handle* handle, uint32_t access, OBJECT_ATTRIBUTES* oa, IO_STATUS_BLOCK* iosb, uint32_t share, uint32_t options);
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::syscall::windows
+{
+    gocpp::error errnoErr(syscall::Errno e);
     std::tuple<syscall::Handle, gocpp::error> OpenSCManager(uint16_t* machineName, uint16_t* databaseName, uint32_t access);
     std::tuple<syscall::Handle, gocpp::error> OpenService(syscall::Handle mgr, uint16_t* serviceName, uint32_t access);
     gocpp::error OpenThreadToken(syscall::Handle h, uint32_t access, bool openasself, syscall::Token* token);
     gocpp::error QueryServiceStatus(syscall::Handle hService, SERVICE_STATUS* lpServiceStatus);
-    gocpp::error SetNamedSecurityInfo(gocpp::string objectName, uint32_t objectType, uint32_t securityInformation, syscall::SID* owner, syscall::SID* group, ACL* dacl, ACL* sacl);
-    gocpp::error _SetNamedSecurityInfo(uint16_t* objectName, uint32_t objectType, uint32_t securityInformation, syscall::SID* owner, syscall::SID* group, ACL* dacl, ACL* sacl);
-    gocpp::error SetTokenInformation(syscall::Token tokenHandle, uint32_t tokenInformationClass, gocpp::unsafe_pointer tokenInformation, uint32_t tokenInformationLength);
     std::tuple<syscall::Handle, gocpp::error> CreateEvent(SecurityAttributes* eventAttrs, uint32_t manualReset, uint32_t initialState, uint16_t* name);
     std::tuple<syscall::Handle, gocpp::error> CreateIoCompletionPort(syscall::Handle filehandle, syscall::Handle cphandle, uintptr_t key, uint32_t threadcnt);
     std::tuple<syscall::Handle, gocpp::error> CreateNamedPipe(uint16_t* name, uint32_t flags, uint32_t pipeMode, uint32_t maxInstances, uint32_t outSize, uint32_t inSize, uint32_t defaultTimeout, syscall::SecurityAttributes* sa);
@@ -178,16 +188,38 @@ namespace golang::internal::syscall::windows
     std::tuple<syscall::Handle, gocpp::error> ReOpenFile(syscall::Handle filehandle, uint32_t desiredAccess, uint32_t shareMode, uint32_t flagAndAttributes);
     gocpp::error SetFileInformationByHandle(syscall::Handle handle, uint32_t fileInformationClass, gocpp::unsafe_pointer buf, uint32_t bufsize);
     gocpp::error UnlockFileEx(syscall::Handle file, uint32_t reserved, uint32_t bytesLow, uint32_t bytesHigh, syscall::Overlapped* overlapped);
-    gocpp::error NtCreateFile(syscall::Handle* handle, uint32_t access, OBJECT_ATTRIBUTES* oa, IO_STATUS_BLOCK* iosb, int64_t* allocationSize, uint32_t attributes, uint32_t share, uint32_t disposition, uint32_t options, gocpp::unsafe_pointer eabuffer, uint32_t ealength);
-    gocpp::error NtOpenFile(syscall::Handle* handle, uint32_t access, OBJECT_ATTRIBUTES* oa, IO_STATUS_BLOCK* iosb, uint32_t share, uint32_t options);
     gocpp::error NtQueryInformationFile(syscall::Handle handle, IO_STATUS_BLOCK* iosb, gocpp::unsafe_pointer inBuffer, uint32_t inBufferLen, uint32_t go_class);
     gocpp::error NtSetInformationFile(syscall::Handle handle, IO_STATUS_BLOCK* iosb, gocpp::unsafe_pointer inBuffer, uint32_t inBufferLen, uint32_t go_class);
-    syscall::Errno rtlNtStatusToDosErrorNoTeb(NTStatus ntstatus);
-    gocpp::error GetProcessMemoryInfo(syscall::Handle handle, PROCESS_MEMORY_COUNTERS* memCounters, uint32_t cb);
-    gocpp::error CreateEnvironmentBlock(uint16_t** block, syscall::Token token, bool inheritExisting);
     gocpp::error WSADuplicateSocket(syscall::Handle s, uint32_t processID, syscall::WSAProtocolInfo* info);
     gocpp::error WSAGetOverlappedResult(syscall::Handle h, syscall::Overlapped* o, uint32_t* bytes, bool wait, uint32_t* flags);
     std::tuple<syscall::Handle, gocpp::error> WSASocket(int32_t af, int32_t typ, int32_t protocol, syscall::WSAProtocolInfo* protinfo, uint32_t group, uint32_t flags);
+}
+#include "golang/internal/syscall/windows/psapi_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
+    gocpp::error GetProcessMemoryInfo(syscall::Handle handle, PROCESS_MEMORY_COUNTERS* memCounters, uint32_t cb);
+}
+#include "golang/syscall/security_windows.h"
+
+namespace golang::internal::syscall::windows
+{
+    std::tuple<uint32_t, gocpp::error> adjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
+    gocpp::error ImpersonateLoggedOnUser(syscall::Token token);
+    gocpp::error SetTokenInformation(syscall::Token tokenHandle, uint32_t tokenInformationClass, gocpp::unsafe_pointer tokenInformation, uint32_t tokenInformationLength);
+    gocpp::error CreateEnvironmentBlock(uint16_t** block, syscall::Token token, bool inheritExisting);
+}
+#include "golang/internal/syscall/windows/security_windows.h"
+
+namespace golang::internal::syscall::windows
+{
+    gocpp::error DuplicateTokenEx(syscall::Token hExistingToken, uint32_t dwDesiredAccess, syscall::SecurityAttributes* lpTokenAttributes, uint32_t impersonationLevel, TokenType tokenType, syscall::Token* phNewToken);
+}
+#include "golang/internal/syscall/windows/syscall_windows.h"
+
+namespace golang::internal::syscall::windows
+{
+    syscall::Errno rtlNtStatusToDosErrorNoTeb(NTStatus ntstatus);
 
     namespace rec
     {

@@ -16,16 +16,20 @@ namespace golang::go::types
     namespace constant = golang::go::constant;
 }
 #include "golang/go/constant/value.h"
+
+namespace golang::go::types
+{
+    bool fitsFloat32(constant::Value x);
+    constant::Value roundFloat32(constant::Value x);
+    bool fitsFloat64(constant::Value x);
+    constant::Value roundFloat64(constant::Value x);
+}
 #include "golang/go/types/basic.fwd.h"
 #include "golang/go/types/check.fwd.h"
 
 namespace golang::go::types
 {
     bool representableConst(constant::Value x, Checker* check, Basic* typ, constant::Value* rounded);
-    bool fitsFloat32(constant::Value x);
-    constant::Value roundFloat32(constant::Value x);
-    bool fitsFloat64(constant::Value x);
-    constant::Value roundFloat64(constant::Value x);
 }
 
 #include "golang/go/constant/value.h"

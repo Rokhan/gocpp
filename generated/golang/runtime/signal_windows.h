@@ -51,11 +51,15 @@ namespace golang::runtime
     g* sigFetchG();
 }
 #include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
-#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
 
 namespace golang::runtime
 {
     namespace windows = golang::internal::runtime::syscall::windows;
+}
+#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
+
+namespace golang::runtime
+{
     bool isAbort(windows::Context* r);
     bool isgoexception(windows::ExceptionRecord* info, windows::Context* r);
     int32_t sigtrampgo(windows::ExceptionPointers* ep, int64_t kind);

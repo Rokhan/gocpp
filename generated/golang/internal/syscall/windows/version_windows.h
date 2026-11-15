@@ -38,6 +38,7 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _OSVERSIONINFOEXW& value);
+    _OSVERSIONINFOEXW* getVersionInfo();
     std::tuple<uint32_t, uint32_t, uint32_t> Version();
     extern bool supportTCPKeepAliveIdle;
     extern bool supportTCPKeepAliveInterval;
@@ -46,7 +47,6 @@ namespace golang::internal::syscall::windows
     bool SupportTCPKeepAliveIdle();
     bool SupportTCPKeepAliveInterval();
     bool SupportTCPKeepAliveCount();
-    _OSVERSIONINFOEXW* getVersionInfo();
 }
 #include "golang/sync/oncefunc.fwd.h"
 

@@ -105,86 +105,6 @@ namespace golang::hash
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Hash& value);
-    struct XOF : virtual gocpp::Interface, io::Writer, io::Reader
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        XOF(){}
-        XOF(XOF& i) = default;
-        XOF(const XOF& i) = default;
-        XOF& operator=(XOF& i) = default;
-        XOF& operator=(const XOF& i) = default;
-
-        inline XOF(nullptr_t) {};
-        XOF& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        XOF(T& ref);
-
-        template<typename T>
-        XOF(const T& ref);
-
-        template<typename T>
-        XOF(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IXOF: virtual io::Writer::IWriter, virtual io::Reader::IReader
-        {
-            // Reset resets the XOF to its initial state.
-            virtual void vReset() = 0;
-            // BlockSize returns the XOF's underlying block size.
-            // The Write method must be able to accept any amount
-            // of data, but it may operate more efficiently if all writes
-            // are a multiple of the block size.
-            virtual int64_t vBlockSize() = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IXOF>
-        struct XOFImpl : virtual TInterface, virtual io::Writer::WriterImpl<T, TStore, TInterface>, virtual io::Reader::ReaderImpl<T, TStore, TInterface>
-        {
-            explicit XOFImpl(T* ptr): io::Writer::WriterImpl<T, TStore, TInterface>(ptr), io::Reader::ReaderImpl<T, TStore, TInterface>(ptr)
-            {
-                value.reset(ptr);
-            }
-
-            void vReset() override;
-
-            int64_t vBlockSize() override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IXOF* value() const;
-
-        std::shared_ptr<IXOF> mValue;
-    };
-
-    namespace rec
-    {
-        void Reset(const gocpp::PtrRecv<struct XOF, false>& self);
-        void Reset(const gocpp::ObjRecv<struct XOF>& self);
-
-        int64_t BlockSize(const gocpp::PtrRecv<struct XOF, false>& self);
-        int64_t BlockSize(const gocpp::ObjRecv<struct XOF>& self);
-
-        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
-
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct XOF& value);
     struct Hash32 : virtual gocpp::Interface, Hash
     {
         using gocpp::Interface::operator==;
@@ -419,6 +339,86 @@ namespace golang::hash
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Cloner& value);
+    struct XOF : virtual gocpp::Interface, io::Writer, io::Reader
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        XOF(){}
+        XOF(XOF& i) = default;
+        XOF(const XOF& i) = default;
+        XOF& operator=(XOF& i) = default;
+        XOF& operator=(const XOF& i) = default;
+
+        inline XOF(nullptr_t) {};
+        XOF& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        XOF(T& ref);
+
+        template<typename T>
+        XOF(const T& ref);
+
+        template<typename T>
+        XOF(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IXOF: virtual io::Writer::IWriter, virtual io::Reader::IReader
+        {
+            // Reset resets the XOF to its initial state.
+            virtual void vReset() = 0;
+            // BlockSize returns the XOF's underlying block size.
+            // The Write method must be able to accept any amount
+            // of data, but it may operate more efficiently if all writes
+            // are a multiple of the block size.
+            virtual int64_t vBlockSize() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IXOF>
+        struct XOFImpl : virtual TInterface, virtual io::Writer::WriterImpl<T, TStore, TInterface>, virtual io::Reader::ReaderImpl<T, TStore, TInterface>
+        {
+            explicit XOFImpl(T* ptr): io::Writer::WriterImpl<T, TStore, TInterface>(ptr), io::Reader::ReaderImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vReset() override;
+
+            int64_t vBlockSize() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IXOF* value() const;
+
+        std::shared_ptr<IXOF> mValue;
+    };
+
+    namespace rec
+    {
+        void Reset(const gocpp::PtrRecv<struct XOF, false>& self);
+        void Reset(const gocpp::ObjRecv<struct XOF>& self);
+
+        int64_t BlockSize(const gocpp::PtrRecv<struct XOF, false>& self);
+        int64_t BlockSize(const gocpp::ObjRecv<struct XOF>& self);
+
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
+
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct XOF, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct XOF>& self, gocpp::slice<unsigned char> p);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct XOF& value);
 
     namespace rec
     {

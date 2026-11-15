@@ -14,40 +14,10 @@ namespace golang::go::types
 {
     gocpp::slice<int64_t> concat(gocpp::slice<int64_t> list, int64_t i);
 }
-#include "golang/go/types/object.h"
-#include "golang/go/types/selection.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/named.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/struct.fwd.h"
 
 namespace golang::go::types
 {
-    std::tuple<Selection, bool> LookupSelection(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
-    std::tuple<Object, gocpp::slice<int64_t>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
-    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
-    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
-    struct embeddedType
-    {
-        golang::go::types::Type typ{};
-        gocpp::slice<int64_t> index{}; // embedded field indices, starting with index at depth 0
-        bool indirect{}; // if set, there was a pointer indirection on the path to this field
-        bool multiples{}; // if set, typ appears multiple times at this depth
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct embeddedType& value);
-    std::tuple<int64_t, bool> lookupType(gocpp::map<golang::go::types::Type, int64_t> m, golang::go::types::Type typ);
     struct instanceLookup
     {
         // buf is used to avoid allocating the map m in the common case of a small
@@ -67,14 +37,69 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct instanceLookup& value);
-    std::tuple<Func*, bool> MissingMethod(golang::go::types::Type V, Interface* T, bool go_static);
-    bool hasInvalidEmbeddedFields(golang::go::types::Type T, gocpp::map<Struct*, bool> seen);
+}
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::go::types
+{
+    std::tuple<int64_t, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    struct embeddedType
+    {
+        golang::go::types::Type typ{};
+        gocpp::slice<int64_t> index{}; // embedded field indices, starting with index at depth 0
+        bool indirect{}; // if set, there was a pointer indirection on the path to this field
+        bool multiples{}; // if set, typ appears multiple times at this depth
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct embeddedType& value);
+    gocpp::slice<embeddedType> consolidateMultiples(gocpp::slice<embeddedType> list);
+    std::tuple<int64_t, bool> lookupType(gocpp::map<golang::go::types::Type, int64_t> m, golang::go::types::Type typ);
     bool isInterfacePtr(golang::go::types::Type T);
     std::tuple<golang::go::types::Type, bool> deref(golang::go::types::Type typ);
     golang::go::types::Type derefStructPtr(golang::go::types::Type typ);
-    std::tuple<int64_t, Func*> methodIndex(gocpp::slice<Func*> methods, Package* pkg, gocpp::string name, bool foldCase);
     gocpp::string fieldPath(golang::go::types::Type typ, gocpp::slice<int64_t> index);
-    gocpp::slice<embeddedType> consolidateMultiples(gocpp::slice<embeddedType> list);
+}
+#include "golang/go/types/interface.fwd.h"
+
+namespace golang::go::types
+{
+    std::tuple<Func*, bool> MissingMethod(golang::go::types::Type V, Interface* T, bool go_static);
+}
+#include "golang/go/types/struct.fwd.h"
+
+namespace golang::go::types
+{
+    bool hasInvalidEmbeddedFields(golang::go::types::Type T, gocpp::map<Struct*, bool> seen);
+}
+#include "golang/go/types/selection.h"
+
+namespace golang::go::types
+{
+    std::tuple<Selection, bool> LookupSelection(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
+}
+#include "golang/go/types/object.h"
+
+namespace golang::go::types
+{
+    std::tuple<Object, gocpp::slice<int64_t>, bool> LookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name);
+    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethod(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
+    std::tuple<Object, gocpp::slice<int64_t>, bool> lookupFieldOrMethodImpl(golang::go::types::Type T, bool addressable, Package* pkg, gocpp::string name, bool foldCase);
 }
 
 #include "golang/go/types/check.h"

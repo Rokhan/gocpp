@@ -14,13 +14,18 @@ namespace golang::hash::crc32
 {
     struct GoTag_slicing8Table { };
 }
-#include "golang/hash/crc32/crc32.h"
+#include "golang/hash/crc32/crc32.fwd.h"
 
 namespace golang::hash::crc32
 {
     gocpp::array_ptr<Table> simpleMakeTable(uint32_t poly);
     void simplePopulateTable(uint32_t poly, gocpp::array_ptr<Table> t);
     uint32_t simpleUpdate(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p);
+}
+#include "golang/hash/crc32/crc32.h"
+
+namespace golang::hash::crc32
+{
     using slicing8Table = gocpp::defined<gocpp::array<Table, 8>, GoTag_slicing8Table>;
     gocpp::array_ptr<slicing8Table> slicingMakeTable(uint32_t poly);
     uint32_t slicingUpdate(uint32_t crc, gocpp::array_ptr<slicing8Table> tab, gocpp::slice<unsigned char> p);

@@ -29,8 +29,6 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct patchList& value);
-    extern gocpp::slice<gocpp::rune> anyRuneNotNL;
-    extern gocpp::slice<gocpp::rune> anyRune;
     patchList makePatchList(uint32_t n);
     struct frag
     {
@@ -50,9 +48,10 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct frag& value);
+    extern gocpp::slice<gocpp::rune> anyRuneNotNL;
+    extern gocpp::slice<gocpp::rune> anyRune;
 }
 #include "golang/regexp/syntax/prog.fwd.h"
-#include "golang/regexp/syntax/regexp.fwd.h"
 
 namespace golang::regexp::syntax
 {
@@ -72,6 +71,11 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct compiler& value);
+}
+#include "golang/regexp/syntax/regexp.fwd.h"
+
+namespace golang::regexp::syntax
+{
     std::tuple<Prog*, gocpp::error> Compile(Regexp* re);
 }
 

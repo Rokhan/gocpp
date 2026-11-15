@@ -84,33 +84,22 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct linearAlloc& value);
     uintptr_t redZoneSize(uintptr_t userSize);
-}
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
-
-namespace golang::runtime
-{
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    bool freegc(gocpp::unsafe_pointer ptr, uintptr_t size, bool noscan);
+    void memclrNoHeapPointersChunked(uintptr_t size, gocpp::unsafe_pointer x);
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/mstats.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    gclinkptr nextFreeFast(mspan* s);
     gocpp::unsafe_pointer mallocgc(uintptr_t size, _type* typ, bool needzero);
     std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcTiny(uintptr_t size, _type* typ);
     std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallNoscan(uintptr_t size, _type* typ, bool needzero);
-    gocpp::unsafe_pointer mallocgcSmallNoscanReuse(mcache* c, mspan* span, spanClass spc, uintptr_t size, bool needzero);
     std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallScanNoHeader(uintptr_t size, _type* typ);
     std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcSmallScanHeader(uintptr_t size, _type* typ);
     std::tuple<gocpp::unsafe_pointer, uintptr_t> mallocgcLarge(uintptr_t size, _type* typ, bool needzero);
     gocpp::unsafe_pointer preMallocgcDebug(uintptr_t size, _type* typ);
     void postMallocgcDebug(gocpp::unsafe_pointer x, uintptr_t elemsize, _type* typ);
-    bool freegc(gocpp::unsafe_pointer ptr, uintptr_t size, bool noscan);
-    void doubleCheckNextReusable(gclinkptr v);
-    void memclrNoHeapPointersChunked(uintptr_t size, gocpp::unsafe_pointer x);
     gocpp::unsafe_pointer newobject(_type* typ);
     gocpp::unsafe_pointer maps_newobject(_type* typ);
     gocpp::unsafe_pointer reflect_unsafe_New(_type* typ);
@@ -118,7 +107,41 @@ namespace golang::runtime
     gocpp::unsafe_pointer newarray(_type* typ, int64_t n);
     gocpp::unsafe_pointer reflect_unsafe_NewArray(_type* typ, int64_t n);
     gocpp::unsafe_pointer maps_newarray(_type* typ, int64_t n);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
     void profilealloc(m* mp, gocpp::unsafe_pointer x, uintptr_t size);
+}
+#include "golang/runtime/mstats.fwd.h"
+
+namespace golang::runtime
+{
+    gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
+}
+#include "golang/runtime/mcache.h"
+
+namespace golang::runtime
+{
+    void doubleCheckNextReusable(gclinkptr v);
+}
+#include "golang/runtime/mheap.fwd.h"
+
+namespace golang::runtime
+{
+    gclinkptr nextFreeFast(mspan* s);
+}
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    gocpp::unsafe_pointer mallocgcSmallNoscanReuse(mcache* c, mspan* span, spanClass spc, uintptr_t size, bool needzero);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct globalAllocStruct
     {
         mutex mutex{};
@@ -136,16 +159,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct globalAllocStruct& value);
-    gocpp::unsafe_pointer persistentalloc(uintptr_t size, uintptr_t align, sysMemStat* sysStat);
-}
-#include "golang/internal/runtime/sys/intrinsics.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
-
-namespace golang::runtime
-{
     extern globalAllocStruct globalAlloc;
 }
 #include "golang/internal/runtime/sys/nih.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
 
 namespace golang::runtime
 {

@@ -77,17 +77,29 @@ namespace golang::go::parser
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
 }
 #include "golang/go/ast/ast.fwd.h"
-#include "golang/go/ast/scope.fwd.h"
-#include "golang/go/ast/walk.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::parser
 {
     namespace ast = golang::go::ast;
+}
+#include "golang/go/ast/scope.fwd.h"
+#include "golang/go/ast/walk.fwd.h"
+
+namespace golang::go::parser
+{
+    // The unresolved object is a sentinel to mark identifiers that have been added
+    // to the list of unresolved identifiers. The sentinel is only used for verifying
+    // internal consistency.
+    extern ast::Object* unresolved;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::parser
+{
     namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
+#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::parser
 {
@@ -118,10 +130,6 @@ namespace golang::go::parser
     };
 
     std::ostream& operator<<(std::ostream& os, const struct resolver& value);
-    // The unresolved object is a sentinel to mark identifiers that have been added
-    // to the list of unresolved identifiers. The sentinel is only used for verifying
-    // internal consistency.
-    extern ast::Object* unresolved;
 }
 
 #include "golang/go/ast/ast.h"

@@ -15,6 +15,7 @@ namespace golang::main
     std::function<int64_t (int64_t _1)> adder();
     struct GoTag_SpecialCase { };
     gocpp::rune ToUpper(gocpp::rune r);
+    gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
     struct compressor
     {
         std::function<void (gocpp::slice<unsigned char> _1, gocpp::slice<uint32_t> _2)> bulkHasher{};
@@ -34,7 +35,6 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct compressor& value);
     void main();
-    gocpp::slice<unsigned char> Map(std::function<gocpp::rune (gocpp::rune r)> mapping, gocpp::slice<unsigned char> s);
 }
 #include "golang/unicode/letter.fwd.h"
 

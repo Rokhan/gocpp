@@ -36,6 +36,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA& value);
+    golang::image::RGBA* NewRGBA(Rectangle r);
     struct RGBA64
     {
         // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
@@ -58,6 +59,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RGBA64& value);
+    RGBA64* NewRGBA64(Rectangle r);
     struct NRGBA
     {
         // Pix holds the image's pixels, in R, G, B, A order. The pixel at
@@ -80,6 +82,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NRGBA& value);
+    NRGBA* NewNRGBA(Rectangle r);
     struct NRGBA64
     {
         // Pix holds the image's pixels, in R, G, B, A order and big-endian format. The pixel at
@@ -102,6 +105,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NRGBA64& value);
+    NRGBA64* NewNRGBA64(Rectangle r);
     struct Alpha
     {
         // Pix holds the image's pixels, as alpha values. The pixel at
@@ -124,6 +128,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alpha& value);
+    Alpha* NewAlpha(Rectangle r);
     struct Alpha16
     {
         // Pix holds the image's pixels, as alpha values in big-endian format. The pixel at
@@ -146,6 +151,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Alpha16& value);
+    Alpha16* NewAlpha16(Rectangle r);
     struct Gray
     {
         // Pix holds the image's pixels, as gray values. The pixel at
@@ -168,6 +174,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Gray& value);
+    Gray* NewGray(Rectangle r);
     struct Gray16
     {
         // Pix holds the image's pixels, as gray values in big-endian format. The pixel at
@@ -190,6 +197,7 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Gray16& value);
+    Gray16* NewGray16(Rectangle r);
     struct CMYK
     {
         // Pix holds the image's pixels, in C, M, Y, K order. The pixel at
@@ -212,24 +220,16 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
+    CMYK* NewCMYK(Rectangle r);
 }
 #include "golang/image/color/color.fwd.h"
-#include "golang/image/color/ycbcr.fwd.h"
 
 namespace golang::image
 {
-    golang::image::RGBA* NewRGBA(Rectangle r);
-    RGBA64* NewRGBA64(Rectangle r);
-    NRGBA* NewNRGBA(Rectangle r);
-    NRGBA64* NewNRGBA64(Rectangle r);
-    Alpha* NewAlpha(Rectangle r);
-    Alpha16* NewAlpha16(Rectangle r);
-    Gray* NewGray(Rectangle r);
-    Gray16* NewGray16(Rectangle r);
-    CMYK* NewCMYK(Rectangle r);
     namespace color = golang::image::color;
 }
 #include "golang/image/color/color.h"
+#include "golang/image/color/ycbcr.fwd.h"
 
 namespace golang::image
 {
@@ -332,30 +332,6 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Image& value);
-    struct Paletted
-    {
-        // Pix holds the image's pixels, as palette indices. The pixel at
-        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
-        gocpp::slice<uint8_t> Pix{};
-        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
-        int64_t Stride{};
-        // Rect is the image's bounds.
-        Rectangle Rect{};
-        // Palette is the image's palette.
-        color::Palette Palette{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
     struct RGBA64Image : virtual gocpp::Interface, Image
     {
         using gocpp::Interface::operator==;
@@ -505,6 +481,30 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct PalettedImage& value);
+    struct Paletted
+    {
+        // Pix holds the image's pixels, as palette indices. The pixel at
+        // (x, y) starts at Pix[(y-Rect.Min.Y)*Stride + (x-Rect.Min.X)*1].
+        gocpp::slice<uint8_t> Pix{};
+        // Stride is the Pix stride (in bytes) between vertically adjacent pixels.
+        int64_t Stride{};
+        // Rect is the image's bounds.
+        Rectangle Rect{};
+        // Palette is the image's palette.
+        color::Palette Palette{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Paletted& value);
     Paletted* NewPaletted(Rectangle r, color::Palette p);
 }
 

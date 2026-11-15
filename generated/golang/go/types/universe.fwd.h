@@ -9,7 +9,6 @@ namespace golang::go::types
     struct gocpp_id_0;
     struct GoTag_builtinId;
     using builtinId = gocpp::defined<int64_t, GoTag_builtinId>;
-    struct gocpp_id_1;
     // universe scope
     inline constexpr builtinId _Append = 0;
     inline constexpr builtinId _Cap = 1;
@@ -41,4 +40,5 @@ namespace golang::go::types
     // testing support
     inline constexpr builtinId _Assert = 26;
     inline constexpr builtinId _Trace = 27;
+    struct gocpp_id_1;
 }

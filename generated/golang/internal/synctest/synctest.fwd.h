@@ -8,8 +8,8 @@ namespace golang::internal::synctest
 {
     struct GoTag_Association;
     using Association = gocpp::defined<int64_t, GoTag_Association>;
-    struct Bubble;
     inline constexpr synctest::Association Unbubbled = Association(0);
     inline constexpr synctest::Association CurrentBubble = Association(1);
     inline constexpr synctest::Association OtherBubble = Association(2);
+    struct Bubble;
 }

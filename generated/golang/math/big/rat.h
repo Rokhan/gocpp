@@ -10,7 +10,6 @@
 #include "gocpp/support.h"
 
 #include "golang/math/big/int.h"
-#include "golang/math/big/nat.h"
 
 namespace golang::math::big
 {
@@ -36,10 +35,15 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rat& value);
+    golang::math::big::Rat* NewRat(int64_t a, int64_t b);
+}
+#include "golang/math/big/nat.h"
+
+namespace golang::math::big
+{
     std::tuple<double, bool> quotToFloat32(stack* stk, golang::math::big::nat a, golang::math::big::nat b);
     std::tuple<double, bool> quotToFloat64(stack* stk, golang::math::big::nat a, golang::math::big::nat b);
     golang::math::big::nat mulDenom(stack* stk, golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
-    golang::math::big::Rat* NewRat(int64_t a, int64_t b);
 }
 
 #include "golang/math/big/int.h"

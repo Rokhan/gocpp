@@ -24,17 +24,28 @@ namespace golang::compress::flate
     // codegenOrder is the order in which codegen code sizes are written.
     extern gocpp::slice<uint32_t> codegenOrder;
 }
-#include "golang/io/io.fwd.h"
 #include "golang/sync/oncefunc.fwd.h"
 
 namespace golang::compress::flate
 {
-    namespace io = golang::io;
     namespace sync = golang::sync;
 }
-#include "golang/io/io.h"
 #include "golang/sync/oncefunc.h"
 #include "golang/compress/flate/huffman_code.fwd.h"
+
+namespace golang::compress::flate
+{
+    // huffOffset is a static offset encoder used for Huffman-only encoding.
+    // It can be reused since we will not be encoding offset values.
+    extern std::function<flate::huffmanEncoder* (void)> huffOffset;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::compress::flate
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
 
 namespace golang::compress::flate
 {
@@ -84,9 +95,6 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanBitWriter& value);
-    // huffOffset is a static offset encoder used for Huffman-only encoding.
-    // It can be reused since we will not be encoding offset values.
-    extern std::function<flate::huffmanEncoder* (void)> huffOffset;
     huffmanBitWriter* newHuffmanBitWriter(io::Writer w);
 }
 

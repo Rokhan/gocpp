@@ -30,12 +30,12 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Struct& value);
+    Struct* NewStruct(gocpp::slice<Var*> fields, gocpp::slice<gocpp::string> tags);
 }
 #include "golang/go/ast/ast.fwd.h"
 
 namespace golang::go::types
 {
-    Struct* NewStruct(gocpp::slice<Var*> fields, gocpp::slice<gocpp::string> tags);
     namespace ast = golang::go::ast;
 }
 #include "golang/go/ast/ast.h"

@@ -28,13 +28,13 @@ namespace golang::golang_org::x::sync::errgroup
 
     std::ostream& operator<<(std::ostream& os, const struct token& value);
 }
-#include "golang/sync/once.fwd.h"
 #include "golang/sync/waitgroup.fwd.h"
 
 namespace golang::golang_org::x::sync::errgroup
 {
     namespace sync = golang::sync;
 }
+#include "golang/sync/once.fwd.h"
 #include "golang/sync/once.h"
 #include "golang/sync/waitgroup.h"
 
@@ -61,7 +61,6 @@ namespace golang::golang_org::x::sync::errgroup
 
     std::ostream& operator<<(std::ostream& os, const struct Group& value);
 }
-#include "golang/context/context.fwd.h"
 #include "golang/context/context.h"
 
 namespace golang::golang_org::x::sync::errgroup

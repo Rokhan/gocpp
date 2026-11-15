@@ -83,12 +83,6 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
     uintptr_t ifaceHash(gocpp_id_0 i, uintptr_t seed);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
-
-namespace golang::runtime
-{
     uintptr_t memhash0(gocpp::unsafe_pointer p, uintptr_t h);
     uintptr_t memhash8(gocpp::unsafe_pointer p, uintptr_t h);
     uintptr_t memhash16(gocpp::unsafe_pointer p, uintptr_t h);
@@ -104,8 +98,6 @@ namespace golang::runtime
     uintptr_t c128hash(gocpp::unsafe_pointer p, uintptr_t h);
     uintptr_t interhash(gocpp::unsafe_pointer p, uintptr_t h);
     uintptr_t nilinterhash(gocpp::unsafe_pointer p, uintptr_t h);
-    uintptr_t typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h);
-    uintptr_t reflect_typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h);
     bool memequal0(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool memequal8(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool memequal16(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
@@ -119,10 +111,22 @@ namespace golang::runtime
     bool strequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool interequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
     bool nilinterequal(gocpp::unsafe_pointer p, gocpp::unsafe_pointer q);
-    bool efaceeq(_type* t, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
-    bool ifaceeq(itab* tab, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
     uint32_t readUnaligned32(gocpp::unsafe_pointer p);
     uint64_t readUnaligned64(gocpp::unsafe_pointer p);
+}
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    uintptr_t typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    uintptr_t reflect_typehash(_type* t, gocpp::unsafe_pointer p, uintptr_t h);
+    bool efaceeq(_type* t, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool ifaceeq(itab* tab, gocpp::unsafe_pointer x, gocpp::unsafe_pointer y);
 
     namespace rec
     {

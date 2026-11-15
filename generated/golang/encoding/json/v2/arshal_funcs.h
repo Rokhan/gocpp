@@ -85,27 +85,88 @@ namespace golang::encoding::json::v2
         return UnmarshalFunc(std::function(std::forward<F1>(fn)));
     }
 }
-#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/encode.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/sync/map.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace jsontext = golang::encoding::json::jsontext;
-    namespace sync = golang::sync;
+}
+#include "golang/encoding/json/jsontext/decode.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+
+    template<typename T>
+    Marshalers* MarshalToFunc(std::function<gocpp::error (jsontext::Encoder* _1, T _2)> fn);
+
+    template<typename F1>
+    decltype(auto) MarshalToFunc(F1&& fn)
+    {
+        return MarshalToFunc(std::function(std::forward<F1>(fn)));
+    }
+
+    template<typename T>
+    Unmarshalers* UnmarshalFromFunc(std::function<gocpp::error (jsontext::Decoder* _1, T _2)> fn);
+
+    template<typename F1>
+    decltype(auto) UnmarshalFromFunc(F1&& fn)
+    {
+        return UnmarshalFromFunc(std::function(std::forward<F1>(fn)));
+    }
+}
+#include "golang/reflect/type.fwd.h"
+
+namespace golang::encoding::json::v2
+{
     namespace reflect = golang::reflect;
 }
-#include "golang/encoding/json/v2/arshal.h"
+#include "golang/reflect/type.h"
+#include "golang/reflect/value.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    void assertCastableTo(reflect::Type to, bool marshal);
+    bool castableTo(reflect::Type from, reflect::Type to);
+    bool castableToFromAny(reflect::Type to);
+}
+#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
 }
+#include "golang/encoding/json/v2/arshal.h"
+
+namespace golang::encoding::json::v2
+{
+    template<typename Coder> 
+    struct typedArshaler
+    {
+        reflect::Type typ{};
+        std::function<gocpp::error (Coder* _1, addressableValue _2, jsonopts::Struct* _3)> fnc{};
+        bool maySkip{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    template<typename Coder>
+    std::ostream& operator<<(std::ostream& os, const struct typedArshaler<Coder>& value);
+}
+#include "golang/sync/map.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace sync = golang::sync;
+}
 #include "golang/encoding/json/v2/doc.h"
-#include "golang/reflect/type.h"
 #include "golang/sync/map.h"
 
 namespace golang::encoding::json::v2
@@ -139,47 +200,6 @@ namespace golang::encoding::json::v2
 
     template<typename Coder>
     std::ostream& operator<<(std::ostream& os, const struct typedArshalers<Coder>& value);
-    template<typename Coder> 
-    struct typedArshaler
-    {
-        reflect::Type typ{};
-        std::function<gocpp::error (Coder* _1, addressableValue _2, jsonopts::Struct* _3)> fnc{};
-        bool maySkip{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    template<typename Coder>
-    std::ostream& operator<<(std::ostream& os, const struct typedArshaler<Coder>& value);
-
-    template<typename T>
-    Marshalers* MarshalToFunc(std::function<gocpp::error (jsontext::Encoder* _1, T _2)> fn);
-
-    template<typename F1>
-    decltype(auto) MarshalToFunc(F1&& fn)
-    {
-        return MarshalToFunc(std::function(std::forward<F1>(fn)));
-    }
-
-    template<typename T>
-    Unmarshalers* UnmarshalFromFunc(std::function<gocpp::error (jsontext::Decoder* _1, T _2)> fn);
-
-    template<typename F1>
-    decltype(auto) UnmarshalFromFunc(F1&& fn)
-    {
-        return UnmarshalFromFunc(std::function(std::forward<F1>(fn)));
-    }
-    void assertCastableTo(reflect::Type to, bool marshal);
-    bool castableTo(reflect::Type from, reflect::Type to);
-    bool castableToFromAny(reflect::Type to);
 
     template<typename Coder>
     typedArshalers<Coder>* newTypedArshalers(gocpp::slice<typedArshalers<Coder>*> as);

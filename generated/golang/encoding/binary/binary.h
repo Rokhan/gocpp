@@ -208,6 +208,8 @@ namespace golang::encoding::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct littleEndian& value);
+    // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
+    extern littleEndian LittleEndian;
     struct bigEndian
     {
 
@@ -223,13 +225,6 @@ namespace golang::encoding::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bigEndian& value);
-    int64_t Size(go_any v);
-    struct GoTag_decoder { };
-    struct GoTag_encoder { };
-    std::tuple<int64_t, gocpp::slice<unsigned char>> intDataSize(go_any data);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int64_t n);
-    // LittleEndian is the little-endian implementation of [ByteOrder] and [AppendByteOrder].
-    extern littleEndian LittleEndian;
     // BigEndian is the big-endian implementation of [ByteOrder] and [AppendByteOrder].
     extern bigEndian BigEndian;
     std::tuple<int64_t, gocpp::error> Decode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
@@ -237,6 +232,7 @@ namespace golang::encoding::binary
     std::tuple<int64_t, gocpp::error> Encode(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> Append(gocpp::slice<unsigned char> buf, ByteOrder order, go_any data);
     void encodeFast(gocpp::slice<unsigned char> bs, ByteOrder order, go_any data);
+    int64_t Size(go_any v);
     struct coder
     {
         ByteOrder order{};
@@ -255,13 +251,21 @@ namespace golang::encoding::binary
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coder& value);
+    struct GoTag_decoder { };
     using decoder = gocpp::defined<coder, GoTag_decoder>;
+    struct GoTag_encoder { };
     using encoder = gocpp::defined<coder, GoTag_encoder>;
+    std::tuple<int64_t, gocpp::slice<unsigned char>> intDataSize(go_any data);
+    std::tuple<gocpp::slice<unsigned char>, gocpp::slice<unsigned char>> ensure(gocpp::slice<unsigned char> buf, int64_t n);
+}
+#include "golang/sync/map.h"
+
+namespace golang::encoding::binary
+{
+    namespace sync = golang::sync;
+    extern sync::Map structSize;
 }
 #include "golang/io/io.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/sync/map.fwd.h"
 
 namespace golang::encoding::binary
 {
@@ -271,19 +275,26 @@ namespace golang::encoding::binary
 
 namespace golang::encoding::binary
 {
-    namespace reflect = golang::reflect;
+    gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
+    gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
 }
-#include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
-#include "golang/sync/map.h"
+#include "golang/reflect/value.fwd.h"
 
 namespace golang::encoding::binary
 {
-    namespace sync = golang::sync;
-    gocpp::error Read(io::Reader r, ByteOrder order, go_any data);
-    gocpp::error Write(io::Writer w, ByteOrder order, go_any data);
-    extern sync::Map structSize;
+    namespace reflect = golang::reflect;
+}
+#include "golang/reflect/type.fwd.h"
+#include "golang/reflect/value.h"
+
+namespace golang::encoding::binary
+{
     int64_t dataSize(reflect::Value v);
+}
+#include "golang/reflect/type.h"
+
+namespace golang::encoding::binary
+{
     int64_t go_sizeof(reflect::Type t);
 }
 

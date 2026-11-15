@@ -298,6 +298,8 @@ namespace golang::runtime
     void writeConsoleUTF16(uintptr_t handle, gocpp::slice<uint16_t> b);
     int32_t semasleep(int64_t ns);
     void libpreinit();
+    void sigsave(sigset* p);
+    void msigrestore(sigset sigmask);
     void clearSignalHandlers();
     void sigblock(bool exiting);
     void minit();
@@ -338,41 +340,52 @@ namespace golang::runtime
     void profileLoop();
     void setProcessCPUProfiler(int32_t hz);
     void setThreadCPUProfiler(int32_t hz);
-    void sigsave(sigset* p);
-    void msigrestore(sigset sigmask);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
     void tstart_stdcall(m* newm);
-    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
-    extern gocpp::unsafe_pointer asmstdcallAddr;
-    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
-    extern mutex utf16ConsoleBackLock;
-    int64_t writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
     void semawakeup(m* mp);
     void semacreate(m* mp);
     void newosproc(m* mp);
-    void newosproc0(uintptr_t stacksize, gocpp::unsafe_pointer fn);
-    std::tuple<uintptr_t, uint32_t> createThread(uintptr_t stackSize, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
     void mpreinit(m* mp);
     void mdestroy(m* mp);
     void profilem(m* mp, uintptr_t thread);
     g* gFromSP(m* mp, uintptr_t sp);
-    // suspendLock protects simultaneous SuspendThread operations from
-    // suspending each other.
-    extern mutex suspendLock;
     void preemptM(m* mp);
     void osPreemptExtEnter(m* mp);
     void osPreemptExtExit(m* mp);
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
 #include "golang/internal/runtime/atomic/stubs.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
-#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    void exitThread(atomic::Uint32* wait);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    int32_t read(int32_t fd, gocpp::unsafe_pointer p, int32_t n);
+    extern gocpp::unsafe_pointer asmstdcallAddr;
+    int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n);
+    int64_t writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen);
+    void newosproc0(uintptr_t stacksize, gocpp::unsafe_pointer fn);
+    std::tuple<uintptr_t, uint32_t> createThread(uintptr_t stackSize, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    extern mutex utf16ConsoleBackLock;
+    // suspendLock protects simultaneous SuspendThread operations from
+    // suspending each other.
+    extern mutex suspendLock;
+}
 #include "golang/internal/runtime/syscall/windows/syscall_windows.fwd.h"
 
 namespace golang::runtime
@@ -380,10 +393,11 @@ namespace golang::runtime
     namespace windows = golang::internal::runtime::syscall::windows;
 }
 #include "golang/internal/runtime/syscall/windows/syscall_windows.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
+#include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
 
 namespace golang::runtime
 {
-    namespace atomic = golang::internal::runtime::atomic;
     struct mOS
     {
         // This is here to avoid using the G stack so the stack can move during the call.
@@ -427,7 +441,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mOS& value);
-    void exitThread(atomic::Uint32* wait);
 
     namespace rec
     {

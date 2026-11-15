@@ -60,11 +60,11 @@ namespace golang::runtime
     inline constexpr long timeHistMinBucketBits = 9;
     inline constexpr long timeHistMaxBucketBits = 48;
     inline constexpr long timeHistSubBucketBits = 2;
-    struct timeHistogram;
-    inline constexpr long fInf = 0x7FF0000000000000LL;
-    inline constexpr uint64_t fNegInf = uint64_t(0xFFF0000000000000_bi);
     inline constexpr int64_t timeHistNumSubBuckets = 1 << timeHistSubBucketBits;
     inline constexpr int64_t timeHistNumBuckets = timeHistMaxBucketBits - timeHistMinBucketBits + 1;
     // Two extra buckets, one for underflow, one for overflow.
     inline constexpr int64_t timeHistTotalBuckets = timeHistNumBuckets * timeHistNumSubBuckets + 2;
+    struct timeHistogram;
+    inline constexpr long fInf = 0x7FF0000000000000LL;
+    inline constexpr uint64_t fNegInf = uint64_t(0xFFF0000000000000_bi);
 }

@@ -32,15 +32,18 @@ namespace golang::runtime
     void notifyListCheck(uintptr_t sz);
     int64_t internal_sync_nanotime();
 }
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
     void readyWithTime(sudog* s, int64_t traceskip);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     void semacquire1(uint32_t* addr, bool lifo, semaProfileFlags profile, int64_t skipframes, waitReason reason);
 }
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
@@ -48,6 +51,8 @@ namespace golang::runtime
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
 
 namespace golang::runtime
 {
@@ -98,15 +103,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct notifyList& value);
+    uint32_t notifyListAdd(notifyList* l);
+    void notifyListWait(notifyList* l, uint32_t t);
+    void notifyListNotifyAll(notifyList* l);
+    void notifyListNotifyOne(notifyList* l);
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 
 namespace golang::runtime
 {
-    uint32_t notifyListAdd(notifyList* l);
-    void notifyListWait(notifyList* l, uint32_t t);
-    void notifyListNotifyAll(notifyList* l);
-    void notifyListNotifyOne(notifyList* l);
     namespace cpu = golang::internal::cpu;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;

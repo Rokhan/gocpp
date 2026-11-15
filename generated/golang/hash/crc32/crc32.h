@@ -14,12 +14,18 @@ namespace golang::hash::crc32
 {
     struct GoTag_Table { };
     using Table = gocpp::defined<gocpp::array<uint32_t, 256>, GoTag_Table>;
+    // castagnoliTable points to a lazily initialized Table for the Castagnoli
+    // polynomial. MakeTable will always return this value when asked to make a
+    // Castagnoli table so we can compare against it to find when the caller is
+    // using this polynomial.
+    extern gocpp::array_ptr<Table> castagnoliTable;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateCastagnoli;
     extern std::function<void (void)> castagnoliInitOnce;
     // IEEETable is the table for the [IEEE] polynomial.
     extern gocpp::array_ptr<crc32::Table> IEEETable;
     extern std::function<uint32_t (uint32_t crc, gocpp::slice<unsigned char> p)> updateIEEE;
     extern std::function<void (void)> ieeeInitOnce;
+    gocpp::array_ptr<Table> MakeTable(uint32_t poly);
     struct digest
     {
         uint32_t crc{};
@@ -37,16 +43,10 @@ namespace golang::hash::crc32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct digest& value);
-    uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
-    // castagnoliTable points to a lazily initialized Table for the Castagnoli
-    // polynomial. MakeTable will always return this value when asked to make a
-    // Castagnoli table so we can compare against it to find when the caller is
-    // using this polynomial.
-    extern gocpp::array_ptr<Table> castagnoliTable;
-    gocpp::array_ptr<Table> MakeTable(uint32_t poly);
     uint32_t update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p, bool checkInitIEEE);
     uint32_t Update(uint32_t crc, gocpp::array_ptr<Table> tab, gocpp::slice<unsigned char> p);
     uint32_t Checksum(gocpp::slice<unsigned char> data, gocpp::array_ptr<Table> tab);
+    uint32_t ChecksumIEEE(gocpp::slice<unsigned char> data);
     uint32_t tableSum(gocpp::array_ptr<Table> t);
 }
 #include "golang/hash/crc32/crc32_generic.fwd.h"
@@ -57,20 +57,28 @@ namespace golang::hash::crc32
     // ieeeTable8 is the slicing8Table for IEEE
     extern gocpp::array_ptr<slicing8Table> ieeeTable8;
 }
-#include "golang/hash/hash.fwd.h"
 #include "golang/sync/atomic/type.fwd.h"
 
 namespace golang::hash::crc32
 {
     namespace atomic = golang::sync::atomic;
-    namespace hash = golang::hash;
 }
-#include "golang/hash/hash.h"
 #include "golang/sync/atomic/type.h"
 
 namespace golang::hash::crc32
 {
     extern atomic::Bool haveCastagnoli;
+}
+#include "golang/hash/hash.fwd.h"
+
+namespace golang::hash::crc32
+{
+    namespace hash = golang::hash;
+}
+#include "golang/hash/hash.h"
+
+namespace golang::hash::crc32
+{
     hash::Hash32 New(gocpp::array_ptr<Table> tab);
     hash::Hash32 NewIEEE();
 }

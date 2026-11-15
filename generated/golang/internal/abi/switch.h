@@ -33,6 +33,23 @@ namespace golang::internal::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCacheEntry& value);
+    struct InterfaceSwitchCache
+    {
+        uintptr_t Mask{}; // mask for index. Must be a power of 2 minus 1
+        gocpp::array<InterfaceSwitchCacheEntry, 1> Entries{}; // Mask+1 entries total
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCache& value);
     struct TypeAssertCacheEntry
     {
         // type of source value (a *runtime._type)
@@ -53,23 +70,6 @@ namespace golang::internal::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertCacheEntry& value);
-    struct InterfaceSwitchCache
-    {
-        uintptr_t Mask{}; // mask for index. Must be a power of 2 minus 1
-        gocpp::array<InterfaceSwitchCacheEntry, 1> Entries{}; // Mask+1 entries total
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceSwitchCache& value);
     struct TypeAssertCache
     {
         uintptr_t Mask{};

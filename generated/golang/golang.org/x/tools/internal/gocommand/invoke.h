@@ -54,41 +54,46 @@ namespace golang::golang_org::x::tools::internal::gocommand
     extern bool DebugHangingGoCommands;
     std::tuple<gocpp::string, std::function<void ()>, gocpp::error> WriteOverlays(gocpp::map<gocpp::string, gocpp::slice<unsigned char>> overlay);
 }
-#include "golang/context/context.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/keys/keys.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
-#include "golang/os/exec/exec.fwd.h"
-#include "golang/os/exec/lp_windows.fwd.h"
 #include "golang/regexp/regexp.fwd.h"
-#include "golang/sync/once.fwd.h"
-#include "golang/time/sleep.fwd.h"
-#include "golang/time/time.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gocommand
 {
-    namespace sync = golang::sync;
     namespace regexp = golang::regexp;
+    // 1.13: go: updates to go.mod needed, but contents have changed
+    // 1.14: go: updating go.mod: existing contents have changed since last read
+    extern regexp::Regexp* modConcurrencyError;
 }
-#include "golang/context/context.h"
+#include "golang/golang.org/x/tools/internal/event/keys/keys.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gocommand
 {
     namespace keys = golang::golang_org::x::tools::internal::event::keys;
-    namespace label = golang::golang_org::x::tools::internal::event::label;
-    namespace context = golang::context;
+    // event keys for go command invocations
+    extern keys::String* verb;
+    extern keys::String* directory;
 }
-#include "golang/golang.org/x/tools/internal/event/label/label.h"
+#include "golang/os/exec/exec.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gocommand
 {
     namespace exec = golang::os::exec;
 }
-#include "golang/sync/once.h"
-#include "golang/time/time.h"
+#include "golang/os/exec/lp_windows.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gocommand
 {
-    namespace time = golang::time;
+    gocpp::string cmdDebugStr(exec::Cmd* cmd);
+}
+#include "golang/sync/once.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/once.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
     struct Runner
     {
         // once guards the runner initialization.
@@ -111,16 +116,37 @@ namespace golang::golang_org::x::tools::internal::gocommand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Runner& value);
-    // 1.13: go: updates to go.mod needed, but contents have changed
-    // 1.14: go: updating go.mod: existing contents have changed since last read
-    extern regexp::Regexp* modConcurrencyError;
-    // event keys for go command invocations
-    extern keys::String* verb;
-    extern keys::String* directory;
+}
+#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
+    namespace label = golang::golang_org::x::tools::internal::event::label;
+}
+#include "golang/golang.org/x/tools/internal/event/label/label.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
     gocpp::slice<label::Label> invLabels(Invocation inv);
+}
+#include "golang/context/context.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
+    namespace context = golang::context;
     gocpp::error runCmdContext(context::Context ctx, exec::Cmd* cmd);
+}
+#include "golang/time/time.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
+    namespace time = golang::time;
+}
+#include "golang/time/sleep.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gocommand
+{
     void handleHangingGoCommand(mocklib::Date start, exec::Cmd* cmd, gocpp::channel<gocpp::error> resChan);
-    gocpp::string cmdDebugStr(exec::Cmd* cmd);
 }
 
 #include "golang/bytes/buffer.h"

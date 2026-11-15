@@ -23,13 +23,13 @@ namespace golang::runtime
     struct GoTag_cgoErrorMsg { };
     using cgoErrorMsg = gocpp::defined<int64_t, GoTag_cgoErrorMsg>;
     void cgoCheckResult(go_any val);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
+    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct argset
     {
         gocpp::unsafe_pointer args{};
@@ -61,15 +61,18 @@ namespace golang::runtime
         return syscall_cgocaller(fn, gocpp::ToSlice<uintptr_t>(value, args...));
     }
     int32_t cgocall(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
-    void callbackUpdateSystemStack(m* mp, uintptr_t sp, bool signal);
     void cgocallbackg(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer frame, uintptr_t ctxt);
     void cgocallbackg1(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer frame, uintptr_t ctxt);
-    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, cgoErrorMsg msg);
     std::tuple<uintptr_t, uintptr_t> cgoCheckUnknownPointer(gocpp::unsafe_pointer p, cgoErrorMsg msg);
     bool cgoIsGoPointer(gocpp::unsafe_pointer p);
     bool cgoInRange(gocpp::unsafe_pointer p, uintptr_t start, uintptr_t end);
 }
-#include "golang/internal/abi/type.fwd.h"
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    void cgoCheckArg(_type* t, gocpp::unsafe_pointer p, bool indir, bool top, cgoErrorMsg msg);
+}
 #include "golang/internal/abi/type.h"
 #include "golang/runtime/error.h"
 

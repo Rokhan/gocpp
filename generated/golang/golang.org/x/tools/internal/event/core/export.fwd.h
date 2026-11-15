@@ -4,8 +4,8 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/context/context.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
 #include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
+#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::event::core
 {

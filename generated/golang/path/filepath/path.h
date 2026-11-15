@@ -52,31 +52,41 @@ namespace golang::path::filepath
     gocpp::string Dir(gocpp::string path);
     gocpp::string VolumeName(gocpp::string path);
 }
-#include "golang/io/fs/fs.fwd.h"
-#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/fs/fs.h"
 #include "golang/io/fs/walk.fwd.h"
-#include "golang/os/dir.fwd.h"
-#include "golang/os/file.fwd.h"
-#include "golang/os/getwd.fwd.h"
+
+namespace golang::path::filepath
+{
+    namespace fs = golang::io::fs;
+}
+#include "golang/io/fs/readdir.fwd.h"
+
+namespace golang::path::filepath
+{
+    gocpp::error walk(gocpp::string path, fs::FileInfo info, WalkFunc walkFn);
+}
+#include "golang/io/fs/walk.h"
+
+namespace golang::path::filepath
+{
+    gocpp::error walkDir(gocpp::string path, fs::DirEntry d, fs::WalkDirFunc walkDirFn);
+    gocpp::error WalkDir(gocpp::string root, fs::WalkDirFunc fn);
+}
 #include "golang/os/path_windows.fwd.h"
-#include "golang/os/stat.fwd.h"
 
 namespace golang::path::filepath
 {
     namespace os = golang::os;
 }
-#include "golang/io/fs/fs.h"
-#include "golang/io/fs/walk.h"
+#include "golang/os/getwd.fwd.h"
 #include "golang/os/stat.h"
 #include "golang/os/types.h"
+#include "golang/os/dir.fwd.h"
+#include "golang/os/file.fwd.h"
 
 namespace golang::path::filepath
 {
-    namespace fs = golang::io::fs;
     extern std::function<std::tuple<os::FileInfo, gocpp::error> (gocpp::string)> lstat;
-    gocpp::error walkDir(gocpp::string path, fs::DirEntry d, fs::WalkDirFunc walkDirFn);
-    gocpp::error walk(gocpp::string path, fs::FileInfo info, WalkFunc walkFn);
-    gocpp::error WalkDir(gocpp::string root, fs::WalkDirFunc fn);
 
     namespace rec
     {

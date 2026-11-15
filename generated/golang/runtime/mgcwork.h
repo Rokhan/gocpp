@@ -39,20 +39,16 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct workbufhdr& value);
 }
 #include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
-    namespace gc = golang::internal::runtime::gc;
 }
-#include "golang/internal/runtime/sys/nih.h"
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
 namespace golang::runtime
 {
-    namespace sys = golang::internal::runtime::sys;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    namespace gc = golang::internal::runtime::gc;
 }
 #include "golang/runtime/mgcmark_greenteagc.h"
 #include "golang/runtime/malloc.fwd.h"
@@ -116,12 +112,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcWork& value);
+}
+#include "golang/internal/runtime/sys/nih.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct workbuf
     {
         sys::NotInHeap _1{};
         workbufhdr workbufhdr{};
         // account for the above fields
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
+        gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj{};
 
         using isGoStruct = void;
 

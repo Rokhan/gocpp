@@ -9,18 +9,82 @@
 #include "golang/go/types/decl.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    struct importDecl
+    {
+        ast::ImportSpec* spec{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct importDecl& value);
+    struct varDecl
+    {
+        ast::ValueSpec* spec{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct varDecl& value);
+    struct typeDecl
+    {
+        ast::TypeSpec* spec{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct typeDecl& value);
+    struct funcDecl
+    {
+        ast::FuncDecl* decl{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct funcDecl& value);
+}
 #include "golang/go/types/object.h"
 
 namespace golang::go::types
 {
     gocpp::string pathString(gocpp::slice<Object> path);
     int64_t firstInSrc(gocpp::slice<Object> path);
-}
-#include "golang/go/ast/ast.fwd.h"
-
-namespace golang::go::types
-{
-    namespace ast = golang::go::ast;
 }
 #include "golang/go/ast/ast.h"
 
@@ -89,22 +153,6 @@ namespace golang::go::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct decl& value);
-    struct importDecl
-    {
-        ast::ImportSpec* spec{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct importDecl& value);
     struct constDecl
     {
         ast::ValueSpec* spec{};
@@ -125,54 +173,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct constDecl& value);
-    struct varDecl
-    {
-        ast::ValueSpec* spec{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct varDecl& value);
-    struct typeDecl
-    {
-        ast::TypeSpec* spec{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct typeDecl& value);
-    struct funcDecl
-    {
-        ast::FuncDecl* decl{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct funcDecl& value);
 }
 
 #include "golang/go/ast/ast.h"

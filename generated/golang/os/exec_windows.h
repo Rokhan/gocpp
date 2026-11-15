@@ -23,18 +23,17 @@ namespace golang::os
 {
     std::tuple<Process*, gocpp::error> findProcess(int64_t pid);
 }
-#include "golang/syscall/security_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/time/time.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
 #include "golang/time/time.h"
+#include "golang/syscall/security_windows.fwd.h"
 
 namespace golang::os
 {

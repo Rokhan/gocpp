@@ -31,13 +31,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Cleanup& value);
-    extern gocpp::array<uint8_t, 1> cleanupFnPtrMask;
-    uint32_t maxCleanupGs();
-    void runCleanups();
-    bool unique_runtime_blockUntilEmptyCleanupQueue(int64_t timeout);
-    bool sync_test_runtime_blockUntilEmptyCleanupQueue(int64_t timeout);
-    uintptr_t raceEnterNewCtx();
-    void raceRestoreCtx(uintptr_t ctx);
 
     template<typename T, typename S>
     Cleanup AddCleanup(T* ptr, std::function<void (S _1)> cleanup, S arg);
@@ -47,6 +40,13 @@ namespace golang::runtime
     {
         return AddCleanup(ptr, std::function(std::forward<F1>(cleanup)), arg);
     }
+    extern gocpp::array<uint8_t, 1> cleanupFnPtrMask;
+    uint32_t maxCleanupGs();
+    void runCleanups();
+    bool unique_runtime_blockUntilEmptyCleanupQueue(int64_t timeout);
+    bool sync_test_runtime_blockUntilEmptyCleanupQueue(int64_t timeout);
+    uintptr_t raceEnterNewCtx();
+    void raceRestoreCtx(uintptr_t ctx);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.fwd.h"
@@ -76,26 +76,20 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct cleanupFn& value);
 }
-#include "golang/internal/cpu/cpu_x86.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/runtime/sys/intrinsics.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
 #include "golang/internal/goarch/goarch.h"
-#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace goarch = golang::internal::goarch;
+    extern gocpp::array<unsigned char, cleanupBlockSize / goarch::PtrSize / 8> cleanupBlockPtrMask;
+}
 #include "golang/internal/runtime/sys/nih.h"
-#include "golang/runtime/lfstack.h"
-#include "golang/runtime/proc.h"
 #include "golang/runtime/runtime2.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
 
 namespace golang::runtime
 {
     namespace sys = golang::internal::runtime::sys;
-    namespace goarch = golang::internal::goarch;
-    namespace atomic = golang::internal::runtime::atomic;
-    namespace cpu = golang::internal::cpu;
-    extern gocpp::array<unsigned char, cleanupBlockSize / goarch::PtrSize / 8> cleanupBlockPtrMask;
     struct cleanupBlockHeader
     {
         sys::NotInHeap _1{};
@@ -122,6 +116,34 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cleanupBlockHeader& value);
+    struct cleanupBlock
+    {
+        cleanupBlockHeader cleanupBlockHeader{};
+        gocpp::array<cleanupFn, (cleanupBlockSize - gocpp::Sizeof<golang::runtime::cleanupBlockHeader>()) / gocpp::Sizeof<cleanupFn>()> cleanups{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cleanupBlock& value);
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/runtime/lfstack.h"
+#include "golang/runtime/proc.h"
+#include "golang/internal/cpu/cpu_x86.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+    namespace cpu = golang::internal::cpu;
     struct cleanupQueue
     {
         // Stack of full cleanup blocks.
@@ -185,23 +207,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct cleanupQueue& value);
-    struct cleanupBlock
-    {
-        cleanupBlockHeader cleanupBlockHeader{};
-        gocpp::array<cleanupFn, (cleanupBlockSize - gocpp::Sizeof<golang::runtime::cleanupBlockHeader>()) / gocpp::Sizeof<cleanupFn>()> cleanups{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cleanupBlock& value);
     // gcCleanups is the global cleanup queue.
     extern cleanupQueue gcCleanups;
 

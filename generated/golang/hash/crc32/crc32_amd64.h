@@ -23,22 +23,26 @@ namespace golang::hash::crc32
     void archInitIEEE();
     uint32_t archUpdateIEEE(uint32_t crc, gocpp::slice<unsigned char> p);
 }
-#include "golang/hash/crc32/crc32.h"
 #include "golang/hash/crc32/crc32_generic.fwd.h"
 
 namespace golang::hash::crc32
 {
-    using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
     extern gocpp::array_ptr<slicing8Table> archIeeeTable8;
+}
+#include "golang/hash/crc32/crc32.h"
+
+namespace golang::hash::crc32
+{
+    using sse42Table = gocpp::defined<gocpp::array<Table, 4>, GoTag_sse42Table>;
+    extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK1;
+    extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK2;
+    uint32_t castagnoliShift(gocpp::array_ptr<sse42Table> table, uint32_t crc);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/internal/cpu/cpu.fwd.h"
 
 namespace golang::hash::crc32
 {
-    extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK1;
-    extern gocpp::array_ptr<sse42Table> castagnoliSSE42TableK2;
-    uint32_t castagnoliShift(gocpp::array_ptr<sse42Table> table, uint32_t crc);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace cpu = golang::internal::cpu;
 }
 #include "golang/internal/cpu/cpu.h"

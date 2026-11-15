@@ -18,20 +18,38 @@ namespace golang::go::build
     extern gocpp::error errNUL;
     bool isValidImport(gocpp::string s);
 }
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 #include "golang/io/io.fwd.h"
 
 namespace golang::go::build
 {
-    namespace bufio = golang::bufio;
-    namespace token = golang::go::token;
     namespace io = golang::io;
 }
-#include "golang/go/build/build.h"
-#include "golang/go/token/position.h"
 #include "golang/io/io.h"
+
+namespace golang::go::build
+{
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> readComments(io::Reader f);
+}
+#include "golang/go/build/build.fwd.h"
+
+namespace golang::go::build
+{
+    gocpp::error readGoInfo(io::Reader f, fileInfo* info);
+}
+#include "golang/bufio/bufio.fwd.h"
+
+namespace golang::go::build
+{
+    namespace bufio = golang::bufio;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::build
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::build
 {
@@ -57,10 +75,13 @@ namespace golang::go::build
     };
 
     std::ostream& operator<<(std::ostream& os, const struct importReader& value);
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> readComments(io::Reader f);
-    gocpp::error readGoInfo(io::Reader f, fileInfo* info);
-    std::tuple<gocpp::slice<fileEmbed>, gocpp::error> parseGoEmbed(token::FileSet* fset, token::Pos pos, gocpp::string comment);
     importReader* newImportReader(gocpp::string name, io::Reader r);
+}
+#include "golang/go/build/build.h"
+
+namespace golang::go::build
+{
+    std::tuple<gocpp::slice<fileEmbed>, gocpp::error> parseGoEmbed(token::FileSet* fset, token::Pos pos, gocpp::string comment);
 
     namespace rec
     {

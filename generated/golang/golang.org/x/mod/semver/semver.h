@@ -45,6 +45,7 @@ namespace golang::golang_org::x::mod::semver
     using ByVersion = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_ByVersion>;
     void Sort(gocpp::slice<gocpp::string> list);
     int64_t compareVersion(gocpp::string a, gocpp::string b);
+    std::tuple<parsed, bool> parse(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parseInt(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parsePrerelease(gocpp::string v);
     std::tuple<gocpp::string, gocpp::string, bool> parseBuild(gocpp::string v);
@@ -54,7 +55,6 @@ namespace golang::golang_org::x::mod::semver
     int64_t compareInt(gocpp::string x, gocpp::string y);
     int64_t comparePrerelease(gocpp::string x, gocpp::string y);
     std::tuple<gocpp::string, gocpp::string> nextIdent(gocpp::string x);
-    std::tuple<parsed, bool> parse(gocpp::string v);
 
     namespace rec
     {

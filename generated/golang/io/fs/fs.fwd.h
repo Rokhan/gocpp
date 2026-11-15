@@ -12,7 +12,6 @@ namespace golang::io::fs
     struct ReadDirFile;
     struct GoTag_FileMode;
     using FileMode = gocpp::defined<uint32_t, GoTag_FileMode>;
-    struct PathError;
     // The defined file mode bits are the most significant bits of the [FileMode].
     // The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
     // The values of these bits should be considered part of the public API and
@@ -33,9 +32,10 @@ namespace golang::io::fs
     inline constexpr FileMode ModeCharDevice = 1 << (32 - 1 - 10);
     inline constexpr FileMode ModeSticky = 1 << (32 - 1 - 11);
     inline constexpr FileMode ModeIrregular = 1 << (32 - 1 - 12);
-    inline constexpr FileMode ModePerm = 0777;
     // Mask for the type bits. For regular files, none will be set.
     inline constexpr fs::FileMode ModeType = int64_t(ModeDir) | int64_t(ModeSymlink) | int64_t(ModeNamedPipe) | int64_t(ModeSocket) | int64_t(ModeDevice) | int64_t(ModeCharDevice) | int64_t(ModeIrregular);
+    inline constexpr FileMode ModePerm = 0777;
+    struct PathError;
 }
 #include "golang/time/time.fwd.h"
 

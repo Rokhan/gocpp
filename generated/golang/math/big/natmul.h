@@ -22,8 +22,14 @@ namespace golang::math::big
     extern long basicSqrThreshold;
     extern long karatsubaSqrThreshold;
 }
-#include "golang/math/big/nat.h"
 #include "golang/math/big/int.fwd.h"
+
+namespace golang::math::big
+{
+    gocpp::string ifmt(golang::math::big::Int* x);
+    void trace(gocpp::string name, golang::math::big::Int* x);
+}
+#include "golang/math/big/nat.h"
 
 namespace golang::math::big
 {
@@ -31,8 +37,6 @@ namespace golang::math::big
     void basicMul(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
     void karatsuba(stack* stk, golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
     void karatsubaSqr(stack* stk, golang::math::big::nat z, golang::math::big::nat x);
-    gocpp::string ifmt(golang::math::big::Int* x);
-    void trace(gocpp::string name, golang::math::big::Int* x);
 }
 
 #include "golang/math/big/arith.h"

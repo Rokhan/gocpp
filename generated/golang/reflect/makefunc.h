@@ -16,15 +16,18 @@ namespace golang::reflect
     uintptr_t methodValueCallCodePtr();
     void methodValueCall();
 }
-#include "golang/reflect/type.h"
 #include "golang/reflect/value.h"
 
 namespace golang::reflect
 {
-    golang::reflect::Value MakeFunc(golang::reflect::Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn);
     golang::reflect::Value makeMethodValue(gocpp::string op, golang::reflect::Value v);
 }
-#include "golang/internal/abi/abi.fwd.h"
+#include "golang/reflect/type.h"
+
+namespace golang::reflect
+{
+    golang::reflect::Value MakeFunc(golang::reflect::Type typ, std::function<gocpp::slice<golang::reflect::Value> (gocpp::slice<golang::reflect::Value> args)> fn);
+}
 #include "golang/internal/abi/funcpc.fwd.h"
 
 namespace golang::reflect
@@ -76,7 +79,7 @@ namespace golang::reflect
     {
         makeFuncCtxt makeFuncCtxt{};
         int64_t method{};
-        /* golang::reflect::Value rcvr; [Known incomplete type] */
+        golang::reflect::Value rcvr{};
 
         using isGoStruct = void;
 

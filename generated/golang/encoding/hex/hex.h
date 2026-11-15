@@ -29,7 +29,6 @@ namespace golang::encoding::hex
     gocpp::string Dump(gocpp::slice<unsigned char> data);
     unsigned char toChar(unsigned char b);
 }
-#include "golang/io/io.fwd.h"
 #include "golang/io/io.h"
 
 namespace golang::encoding::hex

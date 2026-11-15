@@ -30,6 +30,42 @@ namespace golang::runtime
     using statDep = gocpp::defined<uint64_t, GoTag_statDep>;
     struct GoTag_statDepSet { };
     using statDepSet = gocpp::defined<gocpp::array<uint64_t, 1>, GoTag_statDepSet>;
+    struct metricData
+    {
+        // deps is the set of runtime statistics that this metric
+        // depends on. Before compute is called, the statAggregate
+        // which will be passed must ensure() these dependencies.
+        statDepSet deps{};
+        // compute is a function that populates a metricValue
+        // given a populated statAggregate structure.
+        std::function<void (statAggregate* in, metricValue* out)> compute{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricData& value);
+    extern gocpp::map<gocpp::string, metricData> metrics;
+    statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
+
+    template<typename... Args>
+    statDepSet makeStatDepSet(Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<statDep>(deps...));
+    }
+
+    template<typename... Args>
+    statDepSet makeStatDepSet(statDep value, Args... deps)
+    {
+        return makeStatDepSet(gocpp::ToSlice<statDep>(value, deps...));
+    }
     struct sysStatsAggregate
     {
         uint64_t stacksSys{};
@@ -136,42 +172,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricFloat64Histogram& value);
-    gocpp::slice<gocpp::string> readMetricNames();
-    struct metricData
-    {
-        // deps is the set of runtime statistics that this metric
-        // depends on. Before compute is called, the statAggregate
-        // which will be passed must ensure() these dependencies.
-        statDepSet deps{};
-        // compute is a function that populates a metricValue
-        // given a populated statAggregate structure.
-        std::function<void (statAggregate* in, metricValue* out)> compute{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricData& value);
-    statDepSet makeStatDepSet(gocpp::slice<statDep> deps);
-
-    template<typename... Args>
-    statDepSet makeStatDepSet(Args... deps)
-    {
-        return makeStatDepSet(gocpp::ToSlice<statDep>(deps...));
-    }
-
-    template<typename... Args>
-    statDepSet makeStatDepSet(statDep value, Args... deps)
-    {
-        return makeStatDepSet(gocpp::ToSlice<statDep>(value, deps...));
-    }
     struct metricName
     {
         gocpp::string name{};
@@ -189,13 +189,50 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct metricName& value);
+    gocpp::slice<gocpp::string> readMetricNames();
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    struct metricValue
+    {
+        metricKind kind{};
+        uint64_t scalar{}; // contains scalar values for scalar Kinds.
+        gocpp::unsafe_pointer pointer{}; // contains non-scalar values.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
+    struct metricSample
+    {
+        gocpp::string name{};
+        metricValue value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
+    void readMetrics(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap);
+    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap);
 }
 #include "golang/runtime/mstats.h"
 
 namespace golang::runtime
 {
-    extern gocpp::map<gocpp::string, metricData> metrics;
     struct heapStatsAggregate
     {
         heapStatsDelta heapStatsDelta{};
@@ -227,11 +264,6 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        void merge(const gocpp::PtrRecv<struct heapStatsAggregate, false>& self, heapStatsDelta* b);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct heapStatsAggregate& value);
     struct cpuStatsAggregate
     {
@@ -248,33 +280,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        void accumulate(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t now, bool gcMarkPhase);
-        void accumulateGCPauseTime(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t dt, int32_t maxProcs);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct cpuStatsAggregate& value);
-    struct metricValue
-    {
-        metricKind kind{};
-        uint64_t scalar{}; // contains scalar values for scalar Kinds.
-        gocpp::unsafe_pointer pointer{}; // contains non-scalar values.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricValue& value);
-    void readMetrics(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap);
-    void readMetricsLocked(gocpp::unsafe_pointer samplesp, int64_t len, int64_t cap);
     struct statAggregate
     {
         statDepSet ensured{};
@@ -297,23 +303,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct statAggregate& value);
-    struct metricSample
-    {
-        gocpp::string name{};
-        metricValue value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct metricSample& value);
     void compute0(statAggregate* _1, metricValue* out);
     // agg is used by readMetrics, and is protected by metricsSema.
     //
@@ -329,8 +318,11 @@ namespace golang::runtime
         statDepSet go_union(statDepSet s, statDepSet b);
         bool empty(gocpp::array_ptr<statDepSet> s);
         bool has(gocpp::array_ptr<statDepSet> s, statDep d);
+        void merge(const gocpp::PtrRecv<struct heapStatsAggregate, false>& self, heapStatsDelta* b);
         void compute(heapStatsAggregate* a);
         void compute(sysStatsAggregate* a);
+        void accumulate(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t now, bool gcMarkPhase);
+        void accumulateGCPauseTime(const gocpp::PtrRecv<struct cpuStatsAggregate, false>& self, int64_t dt, int32_t maxProcs);
         void compute(cpuStatsAggregate* a);
         void compute(gcStatsAggregate* a);
         void compute(finalStatsAggregate* a);

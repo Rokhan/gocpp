@@ -59,6 +59,8 @@ namespace golang::runtime
     go_any deferrangefunc();
     void deferreturn();
     void Goexit();
+    void deferproc(std::function<void ()> fn);
+    void deferprocat(std::function<void ()> fn, go_any frame);
     struct PanicNilError
     {
         // This field makes PanicNilError structurally different from
@@ -94,25 +96,15 @@ namespace golang::runtime
     void cgroup_throw(gocpp::string s);
     void go_throw(gocpp::string s);
     void fatal(gocpp::string s);
+    void fatalthrow(throwType t);
     bool startpanic_m();
     extern bool didothers;
     bool canpanic();
     bool isAbortPC(uintptr_t pc);
     gocpp::string pcName(uintptr_t pc);
-    void deferproc(std::function<void ()> fn);
-    void deferprocat(std::function<void ()> fn, go_any frame);
-    void fatalthrow(throwType t);
     gocpp::string fnName(std::function<void ()> fn);
 }
-#include "golang/runtime/print.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/runtime.fwd.h"
-
-namespace golang::runtime
-{
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/runtime/synctest.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
@@ -123,21 +115,41 @@ namespace golang::runtime
     void popDefer(g* gp);
     void preprintpanics(_panic* p);
     void printpanics(_panic* p);
-    std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
-    extern godebugInc* panicnil;
     void printPreFatalDeferPanic(_panic* p);
+    void recovery(g* gp);
+    void fatalpanic(_panic* msgs);
+    bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr);
+    void dumpPanicDeferState(gocpp::string where, g* gp);
+}
+#include "golang/runtime/runtime.fwd.h"
+
+namespace golang::runtime
+{
+    extern godebugInc* panicnil;
+}
+#include "golang/runtime/synctest.fwd.h"
+
+namespace golang::runtime
+{
+    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp, synctestBubble* bubble);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    std::tuple<uint32_t, gocpp::unsafe_pointer> readvarintUnsafe(gocpp::unsafe_pointer fd);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     // paniclk is held while printing the panic information and stack trace,
     // so that two concurrent panics don't overlap their output.
     extern mutex paniclk;
-    void recovery(g* gp);
-    void fatalpanic(_panic* msgs);
     extern mutex deadlock;
-    bool dopanic_m(g* gp, uintptr_t pc, uintptr_t sp, synctestBubble* bubble);
-    bool shouldPushSigpanic(g* gp, uintptr_t pc, uintptr_t lr);
-    void dumpPanicDeferState(gocpp::string where, g* gp);
+}
+#include "golang/runtime/print.h"
+
+namespace golang::runtime
+{
     golang::runtime::hex pcOff(uintptr_t pc);
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime

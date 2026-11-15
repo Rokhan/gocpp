@@ -9,8 +9,8 @@
 #include "golang/encoding/json/jsontext/encode.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/io/io.fwd.h"
 #include "golang/encoding/json/jsontext/pools.h"
+#include "golang/io/io.fwd.h"
 
 namespace golang::encoding::json::jsontext
 {
@@ -53,7 +53,6 @@ namespace golang::encoding::json::jsontext
 namespace golang::encoding::json::jsontext
 {
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
-    namespace internal = golang::encoding::json::internal;
 }
 #include "golang/encoding/json/internal/jsonopts/options.h"
 #include "golang/encoding/json/jsontext/state.h"
@@ -77,20 +76,6 @@ namespace golang::encoding::json::jsontext
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        void InitializeMultiline(const gocpp::PtrRecv<struct encoderState, false>& self);
-        void JSONOptions(const gocpp::PtrRecv<struct encoderState, false>& self, internal::NotForPublicUse arg0);
-        void Join(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<jsonopts::Options> srcs);
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int64_t where);
-        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int64_t where);
-        bool needObjectValue(const gocpp::PtrRecv<struct encoderState, false>& self);
-        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int64_t pos);
-        int64_t previousOffsetEnd(const gocpp::PtrRecv<struct encoderState, false>& self);
-        void reset(const gocpp::PtrRecv<struct encoderState, false>& self);
-        gocpp::slice<unsigned char> unflushedBuffer(const gocpp::PtrRecv<struct encoderState, false>& self);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct encoderState& value);
     struct Encoder
@@ -138,9 +123,20 @@ namespace golang::encoding::json::jsontext
 
 namespace golang::encoding::json::jsontext
 {
+    namespace internal = golang::encoding::json::internal;
 
     namespace rec
     {
+        void InitializeMultiline(const gocpp::PtrRecv<struct encoderState, false>& self);
+        void JSONOptions(const gocpp::PtrRecv<struct encoderState, false>& self, internal::NotForPublicUse arg0);
+        void Join(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<jsonopts::Options> srcs);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::PtrRecv<struct encoderState, false>& self, gocpp::slice<unsigned char> b, int64_t where);
+        gocpp::slice<unsigned char> appendStackPointer(const gocpp::ObjRecv<struct encoderState>& self, gocpp::slice<unsigned char> b, int64_t where);
+        bool needObjectValue(const gocpp::PtrRecv<struct encoderState, false>& self);
+        int64_t offsetAt(const gocpp::PtrRecv<struct encoderState, false>& self, int64_t pos);
+        int64_t previousOffsetEnd(const gocpp::PtrRecv<struct encoderState, false>& self);
+        void reset(const gocpp::PtrRecv<struct encoderState, false>& self);
+        gocpp::slice<unsigned char> unflushedBuffer(const gocpp::PtrRecv<struct encoderState, false>& self);
         void Reset(golang::encoding::json::jsontext::Encoder* e, io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
         
         template<typename... Args>

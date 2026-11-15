@@ -67,26 +67,29 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct huffmanDecoder& value);
+    extern huffmanDecoder fixedHuffmanDecoder;
     extern gocpp::array<int64_t, 19> codeOrder;
     gocpp::error noEOF(gocpp::error e);
     void fixedHuffmanDecoderInit();
-    extern huffmanDecoder fixedHuffmanDecoder;
 }
-#include "golang/io/io.fwd.h"
 #include "golang/sync/once.fwd.h"
 
 namespace golang::compress::flate
 {
     namespace sync = golang::sync;
 }
-#include "golang/io/io.h"
 #include "golang/sync/once.h"
 
 namespace golang::compress::flate
 {
-    namespace io = golang::io;
     // Initialize the fixedHuffmanDecoder only once upon first use.
     extern sync::Once fixedOnce;
+}
+#include "golang/io/io.h"
+
+namespace golang::compress::flate
+{
+    namespace io = golang::io;
     struct Resetter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -215,15 +218,11 @@ namespace golang::compress::flate
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Reader& value);
-}
-#include "golang/bufio/bufio.fwd.h"
-
-namespace golang::compress::flate
-{
     io::ReadCloser NewReader(io::Reader r);
     io::ReadCloser NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
 }
 #include "golang/compress/flate/dict_decoder.h"
+#include "golang/bufio/bufio.fwd.h"
 
 namespace golang::compress::flate
 {

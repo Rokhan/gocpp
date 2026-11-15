@@ -94,6 +94,9 @@ namespace golang::internal::bisect
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
+    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int64_t line);
+    gocpp::error PrintMarker(Writer w, uint64_t h);
+    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
     gocpp::string Marker(uint64_t id);
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id);
     std::tuple<gocpp::string, uint64_t, bool> CutMarker(gocpp::string line);
@@ -130,9 +133,6 @@ namespace golang::internal::bisect
     uint64_t fnvString(uint64_t h, gocpp::string x);
     uint64_t fnvUint64(uint64_t h, uint64_t x);
     uint64_t fnvUint32(uint64_t h, uint32_t x);
-    gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int64_t line);
-    gocpp::error PrintMarker(Writer w, uint64_t h);
-    gocpp::error printStack(Writer w, uint64_t h, gocpp::slice<uintptr_t> stk);
 }
 #include "golang/sync/mutex.fwd.h"
 
@@ -165,7 +165,6 @@ namespace golang::internal::bisect
 
     std::ostream& operator<<(std::ostream& os, const struct dedup& value);
 }
-#include "golang/sync/atomic/doc_64.fwd.h"
 #include "golang/sync/atomic/type.fwd.h"
 
 namespace golang::internal::bisect
@@ -173,6 +172,7 @@ namespace golang::internal::bisect
     namespace atomic = golang::sync::atomic;
 }
 #include "golang/sync/atomic/type.h"
+#include "golang/sync/atomic/doc_64.fwd.h"
 
 namespace golang::internal::bisect
 {

@@ -36,6 +36,12 @@ namespace golang::math::big
 namespace golang::math::big
 {
     using nat = gocpp::defined<gocpp::slice<Word>, GoTag_nat>;
+    extern golang::math::big::nat natOne;
+    extern golang::math::big::nat natTwo;
+    extern golang::math::big::nat natFive;
+    extern golang::math::big::nat natTen;
+    bool alias(golang::math::big::nat x, golang::math::big::nat y);
+    void addTo(golang::math::big::nat z, golang::math::big::nat x);
     struct stackInner
     {
         gocpp::slice<Word> w{};
@@ -52,20 +58,14 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackInner& value);
+    stackInner* getStackInner();
+    bool same(golang::math::big::nat x, golang::math::big::nat y);
     Word bigEndianWord(gocpp::slice<unsigned char> buf);
 }
 #include "golang/sync/pool.fwd.h"
 
 namespace golang::math::big
 {
-    extern golang::math::big::nat natOne;
-    extern golang::math::big::nat natTwo;
-    extern golang::math::big::nat natFive;
-    extern golang::math::big::nat natTen;
-    bool alias(golang::math::big::nat x, golang::math::big::nat y);
-    void addTo(golang::math::big::nat z, golang::math::big::nat x);
-    stackInner* getStackInner();
-    bool same(golang::math::big::nat x, golang::math::big::nat y);
     namespace sync = golang::sync;
 }
 #include "golang/sync/pool.h"

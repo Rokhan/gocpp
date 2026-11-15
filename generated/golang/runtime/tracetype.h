@@ -9,7 +9,6 @@
 #include "golang/runtime/tracetype.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/runtime/tracebuf.h"
 #include "golang/runtime/tracemap.h"
 
 namespace golang::runtime
@@ -30,6 +29,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceTypeTable& value);
+}
+#include "golang/runtime/tracebuf.h"
+
+namespace golang::runtime
+{
     traceWriter dumpTypesRec(traceMapNode* node, traceWriter w);
 }
 

@@ -10,13 +10,13 @@ namespace golang::runtime
     struct winCallback;
     struct GoTag_abiPartKind;
     using abiPartKind = gocpp::defined<int64_t, GoTag_abiPartKind>;
+    inline constexpr abiPartKind abiPartBad = 0;
+    inline constexpr abiPartKind abiPartStack = 1;
+    inline constexpr abiPartKind abiPartReg = 2;
     struct abiPart;
     struct abiDesc;
     struct winCallbackKey;
     struct callbackArgs;
-    inline constexpr abiPartKind abiPartBad = 0;
-    inline constexpr abiPartKind abiPartStack = 1;
-    inline constexpr abiPartKind abiPartReg = 2;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 

@@ -14,25 +14,37 @@ namespace golang::encoding::json::v2
 {
     extern gocpp::error errRawEmbedNotObject;
 }
-#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
-#include "golang/encoding/json/jsontext/encode.fwd.h"
 #include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace reflect = golang::reflect;
-    namespace jsontext = golang::encoding::json::jsontext;
-    namespace jsonopts = golang::encoding::json::internal::jsonopts;
 }
-#include "golang/encoding/json/v2/arshal.h"
+#include "golang/reflect/value.fwd.h"
 #include "golang/reflect/type.h"
-#include "golang/encoding/json/v2/fields.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     extern reflect::Type jsontextValueType;
+}
+#include "golang/encoding/json/jsontext/encode.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace jsontext = golang::encoding::json::jsontext;
+}
+#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace jsonopts = golang::encoding::json::internal::jsonopts;
+}
+#include "golang/encoding/json/v2/arshal.h"
+#include "golang/encoding/json/jsontext/decode.fwd.h"
+#include "golang/encoding/json/v2/fields.fwd.h"
+
+namespace golang::encoding::json::v2
+{
     gocpp::error marshalEmbeddedFallbackAll(jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo, structField* f, std::function<bool (gocpp::slice<unsigned char> _1)> insertUnquotedName);
     gocpp::error unmarshalEmbeddedFallbackNext(jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo, structField* f, gocpp::slice<unsigned char> quotedName, gocpp::slice<unsigned char> unquotedName);
 

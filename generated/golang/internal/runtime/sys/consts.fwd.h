@@ -3,13 +3,11 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 
 namespace golang::internal::runtime::sys
 {
     namespace goos = golang::internal::goos;
-    namespace goarch = golang::internal::goarch;
 }
 #include "golang/internal/runtime/sys/consts_norace.fwd.h"
 
@@ -19,6 +17,12 @@ namespace golang::internal::runtime::sys
     // The race build also needs more stack. See issue 54291.
     // This arithmetic must match that in cmd/internal/objabi/stack.go:stackGuardMultiplier.
     inline constexpr int64_t StackGuardMultiplier = 1 + goos::IsAix + goos::IsOpenbsd + isRace;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+
+namespace golang::internal::runtime::sys
+{
+    namespace goarch = golang::internal::goarch;
     // DefaultPhysPageSize is the default physical page size.
     inline constexpr int64_t DefaultPhysPageSize = goarch::DefaultPhysPageSize;
     // PCQuantum is the minimal unit for a program counter (1 on x86, 4 on most other systems).

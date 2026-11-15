@@ -201,6 +201,75 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Multiplier& value);
+    struct MultAdder : virtual gocpp::Interface, Adder, Multiplier
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        MultAdder(){}
+        MultAdder(MultAdder& i) = default;
+        MultAdder(const MultAdder& i) = default;
+        MultAdder& operator=(MultAdder& i) = default;
+        MultAdder& operator=(const MultAdder& i) = default;
+
+        inline MultAdder(nullptr_t) {};
+        MultAdder& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        MultAdder(T& ref);
+
+        template<typename T>
+        MultAdder(const T& ref);
+
+        template<typename T>
+        MultAdder(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IMultAdder: virtual Adder::IAdder, virtual Multiplier::IMultiplier
+        {
+            virtual void vPrint() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IMultAdder>
+        struct MultAdderImpl : virtual TInterface, virtual Adder::AdderImpl<T, TStore, TInterface>, virtual Multiplier::MultiplierImpl<T, TStore, TInterface>
+        {
+            explicit MultAdderImpl(T* ptr): Adder::AdderImpl<T, TStore, TInterface>(ptr), Multiplier::MultiplierImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            void vPrint() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IMultAdder* value() const;
+
+        std::shared_ptr<IMultAdder> mValue;
+    };
+
+    namespace rec
+    {
+        void Print(const gocpp::PtrRecv<struct MultAdder, false>& self);
+        void Print(const gocpp::ObjRecv<struct MultAdder>& self);
+
+        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f);
+        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f);
+
+        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f);
+        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct MultAdder& value);
     struct Context : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -366,75 +435,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    struct MultAdder : virtual gocpp::Interface, Adder, Multiplier
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        MultAdder(){}
-        MultAdder(MultAdder& i) = default;
-        MultAdder(const MultAdder& i) = default;
-        MultAdder& operator=(MultAdder& i) = default;
-        MultAdder& operator=(const MultAdder& i) = default;
-
-        inline MultAdder(nullptr_t) {};
-        MultAdder& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        MultAdder(T& ref);
-
-        template<typename T>
-        MultAdder(const T& ref);
-
-        template<typename T>
-        MultAdder(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IMultAdder: virtual Adder::IAdder, virtual Multiplier::IMultiplier
-        {
-            virtual void vPrint() = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IMultAdder>
-        struct MultAdderImpl : virtual TInterface, virtual Adder::AdderImpl<T, TStore, TInterface>, virtual Multiplier::MultiplierImpl<T, TStore, TInterface>
-        {
-            explicit MultAdderImpl(T* ptr): Adder::AdderImpl<T, TStore, TInterface>(ptr), Multiplier::MultiplierImpl<T, TStore, TInterface>(ptr)
-            {
-                value.reset(ptr);
-            }
-
-            void vPrint() override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IMultAdder* value() const;
-
-        std::shared_ptr<IMultAdder> mValue;
-    };
-
-    namespace rec
-    {
-        void Print(const gocpp::PtrRecv<struct MultAdder, false>& self);
-        void Print(const gocpp::ObjRecv<struct MultAdder>& self);
-
-        void Add(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f);
-        void Add(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f);
-
-        void Mul(const gocpp::PtrRecv<struct MultAdder, false>& self, int64_t f);
-        void Mul(const gocpp::ObjRecv<struct MultAdder>& self, int64_t f);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct MultAdder& value);
 
     namespace rec
     {

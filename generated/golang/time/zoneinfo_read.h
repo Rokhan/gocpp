@@ -48,13 +48,18 @@ namespace golang::time
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> loadTzinfo(gocpp::string name, gocpp::string source);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFile(gocpp::string name);
 }
-#include "golang/time/zoneinfo.h"
+#include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
 {
     std::tuple<golang::time::Location*, gocpp::error> LoadLocationFromTZData(gocpp::string name, gocpp::slice<unsigned char> data);
-    int64_t findZone(gocpp::slice<zone> zones, gocpp::string name, int64_t offset, bool isDST);
     std::tuple<golang::time::Location*, gocpp::error> loadLocation(gocpp::string name, gocpp::slice<gocpp::string> sources);
+}
+#include "golang/time/zoneinfo.h"
+
+namespace golang::time
+{
+    int64_t findZone(gocpp::slice<zone> zones, gocpp::string name, int64_t offset, bool isDST);
 
     namespace rec
     {

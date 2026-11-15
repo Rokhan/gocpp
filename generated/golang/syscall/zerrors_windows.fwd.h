@@ -10,13 +10,9 @@ namespace golang::syscall
     inline constexpr int64_t APPLICATION_ERROR = 1 << 29;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {
-    // Go names for Windows errors.
-    inline constexpr Errno go_ENOENT = ERROR_FILE_NOT_FOUND;
-    inline constexpr Errno go_ENOTDIR = ERROR_PATH_NOT_FOUND;
     // Invented values to support what package os and others expects.
     inline constexpr Errno go_E2BIG = APPLICATION_ERROR + 0;
     inline constexpr Errno go_EACCES = APPLICATION_ERROR + 1;
@@ -149,4 +145,12 @@ namespace golang::syscall
     inline constexpr Errno go_EXDEV = APPLICATION_ERROR + 128;
     inline constexpr Errno go_EXFULL = APPLICATION_ERROR + 129;
     inline constexpr Errno go_EWINDOWS = APPLICATION_ERROR + 130;
+}
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::syscall
+{
+    // Go names for Windows errors.
+    inline constexpr Errno go_ENOENT = ERROR_FILE_NOT_FOUND;
+    inline constexpr Errno go_ENOTDIR = ERROR_PATH_NOT_FOUND;
 }

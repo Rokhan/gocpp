@@ -14,9 +14,6 @@ namespace golang::encoding::json::jsontext
     struct stateMachine;
     struct GoTag_stateEntry;
     using stateEntry = gocpp::defined<uint64_t, GoTag_stateEntry>;
-    struct objectNameStack;
-    struct GoTag_objectNamespaceStack;
-    struct objectNamespace;
     // The type mask (1 bit) records whether this is a JSON object or array.
     inline constexpr stateEntry stateTypeMask = 0x8000000000000000;
     inline constexpr stateEntry stateTypeObject = 0x8000000000000000;
@@ -32,6 +29,9 @@ namespace golang::encoding::json::jsontext
     inline constexpr stateEntry stateCountLSBMask = 0x0000000000000001;
     inline constexpr stateEntry stateCountOdd = 0x0000000000000001;
     inline constexpr stateEntry stateCountEven = 0x0000000000000000;
+    struct objectNameStack;
+    struct GoTag_objectNamespaceStack;
+    struct objectNamespace;
     using objectNamespaceStack = gocpp::defined<gocpp::slice<objectNamespace>, GoTag_objectNamespaceStack>;
 }
 #include "golang/math/const.fwd.h"

@@ -27,6 +27,9 @@ namespace golang::encoding::json::internal
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NotForPublicUse& value);
+    // AllowInternalUse is passed from "json" to "jsontext" to authenticate
+    // that the caller can have access to internal functionality.
+    extern NotForPublicUse AllowInternalUse;
     // Sentinel error values internally shared between jsonv1 and jsonv2.
     extern gocpp::error ErrCycle;
     extern gocpp::error ErrNonNilReference;
@@ -44,9 +47,6 @@ namespace golang::encoding::json::internal
     extern std::function<go_any ()> NewRawNumber;
     // RawNumberOf returns jsonv1.Number(b).
     extern std::function<go_any (gocpp::slice<unsigned char> b)> RawNumberOf;
-    // AllowInternalUse is passed from "json" to "jsontext" to authenticate
-    // that the caller can have access to internal functionality.
-    extern NotForPublicUse AllowInternalUse;
 
     namespace rec
     {

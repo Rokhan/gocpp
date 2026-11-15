@@ -9,11 +9,11 @@ namespace golang::reflect
     struct abiStep;
     struct GoTag_abiStepKind;
     using abiStepKind = gocpp::defined<int64_t, GoTag_abiStepKind>;
-    struct abiSeq;
-    struct abiDesc;
     inline constexpr abiStepKind abiStepBad = 0;
     inline constexpr abiStepKind abiStepStack = 1;
     inline constexpr abiStepKind abiStepIntReg = 2;
     inline constexpr abiStepKind abiStepPointer = 3;
     inline constexpr abiStepKind abiStepFloatReg = 4;
+    struct abiSeq;
+    struct abiDesc;
 }

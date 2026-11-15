@@ -33,6 +33,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timeval& value);
+    Timeval NsecToTimeval(int64_t nsec);
     struct SecurityAttributes
     {
         uint32_t Length{};
@@ -87,6 +88,104 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Filetime& value);
+    Filetime NsecToFiletime(int64_t nsec);
+    struct Win32finddata
+    {
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+        uint32_t Reserved0{};
+        uint32_t Reserved1{};
+        gocpp::array<uint16_t, MAX_PATH - 1> FileName{};
+        gocpp::array<uint16_t, 13> AlternateFileName{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Win32finddata& value);
+    struct win32finddata1
+    {
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+        uint32_t Reserved0{};
+        uint32_t Reserved1{};
+        gocpp::array<uint16_t, MAX_PATH> FileName{};
+        gocpp::array<uint16_t, 14> AlternateFileName{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct win32finddata1& value);
+    void copyFindData(Win32finddata* dst, win32finddata1* src);
+    struct ByHandleFileInformation
+    {
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t VolumeSerialNumber{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+        uint32_t NumberOfLinks{};
+        uint32_t FileIndexHigh{};
+        uint32_t FileIndexLow{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ByHandleFileInformation& value);
+    struct Win32FileAttributeData
+    {
+        uint32_t FileAttributes{};
+        Filetime CreationTime{};
+        Filetime LastAccessTime{};
+        Filetime LastWriteTime{};
+        uint32_t FileSizeHigh{};
+        uint32_t FileSizeLow{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Win32FileAttributeData& value);
     struct _PROC_THREAD_ATTRIBUTE_LIST
     {
 
@@ -150,6 +249,28 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Systemtime& value);
+    struct Timezoneinformation
+    {
+        int32_t Bias{};
+        gocpp::array<uint16_t, 32> StandardName{};
+        Systemtime StandardDate{};
+        int32_t StandardBias{};
+        gocpp::array<uint16_t, 32> DaylightName{};
+        Systemtime DaylightDate{};
+        int32_t DaylightBias{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Timezoneinformation& value);
     struct WSABuf
     {
         uint32_t Len{};
@@ -320,6 +441,25 @@ namespace golang::syscall
     std::ostream& operator<<(std::ostream& os, const struct TransmitFileBuffers& value);
     struct GoTag_SockaddrGen { };
     using SockaddrGen = gocpp::defined<gocpp::array<unsigned char, 24>, GoTag_SockaddrGen>;
+    struct InterfaceInfo
+    {
+        uint32_t Flags{};
+        SockaddrGen Address{};
+        SockaddrGen BroadcastAddress{};
+        SockaddrGen Netmask{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
     struct IpAddressString
     {
         gocpp::array<unsigned char, 16> String{};
@@ -337,6 +477,59 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct IpAddressString& value);
     struct GoTag_IpMaskString { };
+    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
+    struct IpAddrString
+    {
+        IpAddrString* Next{};
+        IpAddressString IpAddress{};
+        IpMaskString IpMask{};
+        uint32_t Context{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
+    struct IpAdapterInfo
+    {
+        IpAdapterInfo* Next{};
+        uint32_t ComboIndex{};
+        gocpp::array<unsigned char, MAX_ADAPTER_NAME_LENGTH + 4> AdapterName{};
+        gocpp::array<unsigned char, MAX_ADAPTER_DESCRIPTION_LENGTH + 4> Description{};
+        uint32_t AddressLength{};
+        gocpp::array<unsigned char, MAX_ADAPTER_ADDRESS_LENGTH> Address{};
+        uint32_t Index{};
+        uint32_t Type{};
+        uint32_t DhcpEnabled{};
+        IpAddrString* CurrentIpAddress{};
+        IpAddrString IpAddressList{};
+        IpAddrString GatewayList{};
+        IpAddrString DhcpServer{};
+        bool HaveWins{};
+        IpAddrString PrimaryWinsServer{};
+        IpAddrString SecondaryWinsServer{};
+        int64_t LeaseObtained{};
+        int64_t LeaseExpires{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IpAdapterInfo& value);
     struct MibIfRow
     {
         gocpp::array<uint16_t, MAX_INTERFACE_NAME_LEN> Name{};
@@ -460,6 +653,73 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertTrustStatus& value);
+    struct CertChainContext
+    {
+        uint32_t Size{};
+        CertTrustStatus TrustStatus{};
+        uint32_t ChainCount{};
+        CertSimpleChain** Chains{};
+        uint32_t LowerQualityChainCount{};
+        CertChainContext** LowerQualityChains{};
+        uint32_t HasRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertChainContext& value);
+    struct CertSimpleChain
+    {
+        uint32_t Size{};
+        CertTrustStatus TrustStatus{};
+        uint32_t NumElements{};
+        CertChainElement** Elements{};
+        CertTrustListInfo* TrustListInfo{};
+        uint32_t HasRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertSimpleChain& value);
+    struct CertChainElement
+    {
+        uint32_t Size{};
+        CertContext* CertContext{};
+        CertTrustStatus TrustStatus{};
+        CertRevocationInfo* RevocationInfo{};
+        CertEnhKeyUsage* IssuanceUsage{};
+        CertEnhKeyUsage* ApplicationUsage{};
+        uint16_t* ExtendedErrorInfo{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertChainElement& value);
     struct CertEnhKeyUsage
     {
         uint32_t Length{};
@@ -477,6 +737,45 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertEnhKeyUsage& value);
+    struct CertUsageMatch
+    {
+        uint32_t Type{};
+        CertEnhKeyUsage Usage{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertUsageMatch& value);
+    struct CertChainPara
+    {
+        uint32_t Size{};
+        CertUsageMatch RequestedUsage{};
+        CertUsageMatch RequstedIssuancePolicy{};
+        uint32_t URLRetrievalTimeout{};
+        uint32_t CheckRevocationFreshnessTime{};
+        uint32_t RevocationFreshnessTime{};
+        Filetime* CacheResync{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CertChainPara& value);
     struct CertChainPolicyPara
     {
         uint32_t Size{};
@@ -576,6 +875,7 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct GUID& value);
+    extern GUID WSAID_CONNECTEX;
     struct WSAProtocolChain
     {
         int32_t ChainLen{};
@@ -593,6 +893,41 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct WSAProtocolChain& value);
+    struct WSAProtocolInfo
+    {
+        uint32_t ServiceFlags1{};
+        uint32_t ServiceFlags2{};
+        uint32_t ServiceFlags3{};
+        uint32_t ServiceFlags4{};
+        uint32_t ProviderFlags{};
+        GUID ProviderId{};
+        uint32_t CatalogEntryId{};
+        WSAProtocolChain ProtocolChain{};
+        int32_t Version{};
+        int32_t AddressFamily{};
+        int32_t MaxSockAddr{};
+        int32_t MinSockAddr{};
+        int32_t SocketType{};
+        int32_t Protocol{};
+        int32_t ProtocolMaxOffset{};
+        int32_t NetworkByteOrder{};
+        int32_t SecurityScheme{};
+        uint32_t MessageSize{};
+        uint32_t ProviderReserved{};
+        gocpp::array<uint16_t, WSAPROTOCOL_LEN + 1> ProtocolName{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct WSAProtocolInfo& value);
     struct TCPKeepalive
     {
         uint32_t OnOff{};
@@ -672,20 +1007,11 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reparseDataBuffer& value);
-    Timeval NsecToTimeval(int64_t nsec);
-    Filetime NsecToFiletime(int64_t nsec);
-    struct Win32finddata
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    struct procThreadAttributeListContainer
     {
-        uint32_t FileAttributes{};
-        Filetime CreationTime{};
-        Filetime LastAccessTime{};
-        Filetime LastWriteTime{};
-        uint32_t FileSizeHigh{};
-        uint32_t FileSizeLow{};
-        uint32_t Reserved0{};
-        uint32_t Reserved1{};
-        gocpp::array<uint16_t, MAX_PATH - 1> FileName{};
-        gocpp::array<uint16_t, 13> AlternateFileName{};
+        _PROC_THREAD_ATTRIBUTE_LIST* data{};
+        gocpp::slice<gocpp::unsafe_pointer> pointers{};
 
         using isGoStruct = void;
 
@@ -698,246 +1024,12 @@ namespace golang::syscall
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Win32finddata& value);
-    struct win32finddata1
-    {
-        uint32_t FileAttributes{};
-        Filetime CreationTime{};
-        Filetime LastAccessTime{};
-        Filetime LastWriteTime{};
-        uint32_t FileSizeHigh{};
-        uint32_t FileSizeLow{};
-        uint32_t Reserved0{};
-        uint32_t Reserved1{};
-        gocpp::array<uint16_t, MAX_PATH> FileName{};
-        gocpp::array<uint16_t, 14> AlternateFileName{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct win32finddata1& value);
-    struct ByHandleFileInformation
-    {
-        uint32_t FileAttributes{};
-        Filetime CreationTime{};
-        Filetime LastAccessTime{};
-        Filetime LastWriteTime{};
-        uint32_t VolumeSerialNumber{};
-        uint32_t FileSizeHigh{};
-        uint32_t FileSizeLow{};
-        uint32_t NumberOfLinks{};
-        uint32_t FileIndexHigh{};
-        uint32_t FileIndexLow{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ByHandleFileInformation& value);
-    struct Win32FileAttributeData
-    {
-        uint32_t FileAttributes{};
-        Filetime CreationTime{};
-        Filetime LastAccessTime{};
-        Filetime LastWriteTime{};
-        uint32_t FileSizeHigh{};
-        uint32_t FileSizeLow{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Win32FileAttributeData& value);
-    struct Timezoneinformation
-    {
-        int32_t Bias{};
-        gocpp::array<uint16_t, 32> StandardName{};
-        Systemtime StandardDate{};
-        int32_t StandardBias{};
-        gocpp::array<uint16_t, 32> DaylightName{};
-        Systemtime DaylightDate{};
-        int32_t DaylightBias{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Timezoneinformation& value);
-    struct InterfaceInfo
-    {
-        uint32_t Flags{};
-        SockaddrGen Address{};
-        SockaddrGen BroadcastAddress{};
-        SockaddrGen Netmask{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct InterfaceInfo& value);
-    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
-    struct CertChainContext
-    {
-        uint32_t Size{};
-        CertTrustStatus TrustStatus{};
-        uint32_t ChainCount{};
-        CertSimpleChain** Chains{};
-        uint32_t LowerQualityChainCount{};
-        CertChainContext** LowerQualityChains{};
-        uint32_t HasRevocationFreshnessTime{};
-        uint32_t RevocationFreshnessTime{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertChainContext& value);
-    struct CertSimpleChain
-    {
-        uint32_t Size{};
-        CertTrustStatus TrustStatus{};
-        uint32_t NumElements{};
-        CertChainElement** Elements{};
-        CertTrustListInfo* TrustListInfo{};
-        uint32_t HasRevocationFreshnessTime{};
-        uint32_t RevocationFreshnessTime{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertSimpleChain& value);
-    struct CertChainElement
-    {
-        uint32_t Size{};
-        CertContext* CertContext{};
-        CertTrustStatus TrustStatus{};
-        CertRevocationInfo* RevocationInfo{};
-        CertEnhKeyUsage* IssuanceUsage{};
-        CertEnhKeyUsage* ApplicationUsage{};
-        uint16_t* ExtendedErrorInfo{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertChainElement& value);
-    struct CertUsageMatch
-    {
-        uint32_t Type{};
-        CertEnhKeyUsage Usage{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertUsageMatch& value);
-    extern GUID WSAID_CONNECTEX;
-    struct WSAProtocolInfo
-    {
-        uint32_t ServiceFlags1{};
-        uint32_t ServiceFlags2{};
-        uint32_t ServiceFlags3{};
-        uint32_t ServiceFlags4{};
-        uint32_t ProviderFlags{};
-        GUID ProviderId{};
-        uint32_t CatalogEntryId{};
-        WSAProtocolChain ProtocolChain{};
-        int32_t Version{};
-        int32_t AddressFamily{};
-        int32_t MaxSockAddr{};
-        int32_t MinSockAddr{};
-        int32_t SocketType{};
-        int32_t Protocol{};
-        int32_t ProtocolMaxOffset{};
-        int32_t NetworkByteOrder{};
-        int32_t SecurityScheme{};
-        uint32_t MessageSize{};
-        uint32_t ProviderReserved{};
-        gocpp::array<uint16_t, WSAPROTOCOL_LEN + 1> ProtocolName{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct WSAProtocolInfo& value);
+    std::ostream& operator<<(std::ostream& os, const struct procThreadAttributeListContainer& value);
 }
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::syscall
 {
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct Overlapped
     {
         uintptr_t Internal{};
@@ -958,7 +1050,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Overlapped& value);
-    void copyFindData(Win32finddata* dst, win32finddata1* src);
     struct StartupInfo
     {
         uint32_t Cb{};
@@ -992,10 +1083,10 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StartupInfo& value);
-    struct procThreadAttributeListContainer
+    struct _STARTUPINFOEXW
     {
-        _PROC_THREAD_ATTRIBUTE_LIST* data{};
-        gocpp::slice<gocpp::unsafe_pointer> pointers{};
+        StartupInfo StartupInfo{};
+        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList{};
 
         using isGoStruct = void;
 
@@ -1008,7 +1099,7 @@ namespace golang::syscall
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct procThreadAttributeListContainer& value);
+    std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
     struct ProcessInformation
     {
         golang::syscall::Handle Process{};
@@ -1028,25 +1119,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcessInformation& value);
-    struct IpAddrString
-    {
-        IpAddrString* Next{};
-        IpAddressString IpAddress{};
-        IpMaskString IpMask{};
-        uint32_t Context{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct IpAddrString& value);
     struct CertContext
     {
         uint32_t EncodingType{};
@@ -1067,78 +1139,6 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CertContext& value);
-    struct CertChainPara
-    {
-        uint32_t Size{};
-        CertUsageMatch RequestedUsage{};
-        CertUsageMatch RequstedIssuancePolicy{};
-        uint32_t URLRetrievalTimeout{};
-        uint32_t CheckRevocationFreshnessTime{};
-        uint32_t RevocationFreshnessTime{};
-        Filetime* CacheResync{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CertChainPara& value);
-    struct _STARTUPINFOEXW
-    {
-        StartupInfo StartupInfo{};
-        _PROC_THREAD_ATTRIBUTE_LIST* ProcThreadAttributeList{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _STARTUPINFOEXW& value);
-    struct IpAdapterInfo
-    {
-        IpAdapterInfo* Next{};
-        uint32_t ComboIndex{};
-        gocpp::array<unsigned char, MAX_ADAPTER_NAME_LENGTH + 4> AdapterName{};
-        gocpp::array<unsigned char, MAX_ADAPTER_DESCRIPTION_LENGTH + 4> Description{};
-        uint32_t AddressLength{};
-        gocpp::array<unsigned char, MAX_ADAPTER_ADDRESS_LENGTH> Address{};
-        uint32_t Index{};
-        uint32_t Type{};
-        uint32_t DhcpEnabled{};
-        IpAddrString* CurrentIpAddress{};
-        IpAddrString IpAddressList{};
-        IpAddrString GatewayList{};
-        IpAddrString DhcpServer{};
-        bool HaveWins{};
-        IpAddrString PrimaryWinsServer{};
-        IpAddrString SecondaryWinsServer{};
-        int64_t LeaseObtained{};
-        int64_t LeaseExpires{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct IpAdapterInfo& value);
 
     namespace rec
     {

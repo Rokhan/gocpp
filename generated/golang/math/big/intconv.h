@@ -9,25 +9,37 @@
 #include "golang/math/big/intconv.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/fmt/errors.fwd.h"
-#include "golang/fmt/print.fwd.h"
-#include "golang/fmt/scan.fwd.h"
 #include "golang/io/io.fwd.h"
 
 namespace golang::math::big
 {
-    namespace fmt = golang::fmt;
     namespace io = golang::io;
 }
-#include "golang/fmt/print.h"
-#include "golang/fmt/scan.h"
 #include "golang/io/io.h"
+
+namespace golang::math::big
+{
+    std::tuple<bool, gocpp::error> scanSign(io::ByteScanner r);
+}
+#include "golang/fmt/print.fwd.h"
+
+namespace golang::math::big
+{
+    namespace fmt = golang::fmt;
+}
+#include "golang/fmt/print.h"
+#include "golang/fmt/scan.fwd.h"
+#include "golang/fmt/errors.fwd.h"
 
 namespace golang::math::big
 {
     void writeMultiple(fmt::State s, gocpp::string text, int64_t count);
     extern fmt::Formatter _;
-    std::tuple<bool, gocpp::error> scanSign(io::ByteScanner r);
+}
+#include "golang/fmt/scan.h"
+
+namespace golang::math::big
+{
     struct byteReader
     {
         fmt::ScanState ScanState{};
@@ -42,22 +54,6 @@ namespace golang::math::big
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct byteReader, false>& self, gocpp::slice<unsigned char> buf);
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct byteReader>& self, gocpp::slice<unsigned char> buf);
-        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct byteReader, false>& self);
-        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct byteReader>& self);
-        void SkipSpace(const gocpp::PtrRecv<struct byteReader, false>& self);
-        void SkipSpace(const gocpp::ObjRecv<struct byteReader>& self);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::PtrRecv<struct byteReader, false>& self, bool skipSpace, std::function<bool (gocpp::rune)> f);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::ObjRecv<struct byteReader>& self, bool skipSpace, std::function<bool (gocpp::rune)> f);
-        gocpp::error UnreadRune(const gocpp::PtrRecv<struct byteReader, false>& self);
-        gocpp::error UnreadRune(const gocpp::ObjRecv<struct byteReader>& self);
-        std::tuple<int64_t, bool> Width(const gocpp::PtrRecv<struct byteReader, false>& self);
-        std::tuple<int64_t, bool> Width(const gocpp::ObjRecv<struct byteReader>& self);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct byteReader& value);
     extern fmt::Scanner _;
@@ -78,6 +74,18 @@ namespace golang::math::big
         gocpp::string String(golang::math::big::Int* x);
         void Format(golang::math::big::Int* x, fmt::State s, gocpp::rune ch);
         std::tuple<golang::math::big::Int*, int64_t, gocpp::error> scan(golang::math::big::Int* z, io::ByteScanner r, int64_t base);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct byteReader, false>& self, gocpp::slice<unsigned char> buf);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct byteReader>& self, gocpp::slice<unsigned char> buf);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct byteReader, false>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct byteReader>& self);
+        void SkipSpace(const gocpp::PtrRecv<struct byteReader, false>& self);
+        void SkipSpace(const gocpp::ObjRecv<struct byteReader>& self);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::PtrRecv<struct byteReader, false>& self, bool skipSpace, std::function<bool (gocpp::rune)> f);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Token(const gocpp::ObjRecv<struct byteReader>& self, bool skipSpace, std::function<bool (gocpp::rune)> f);
+        gocpp::error UnreadRune(const gocpp::PtrRecv<struct byteReader, false>& self);
+        gocpp::error UnreadRune(const gocpp::ObjRecv<struct byteReader>& self);
+        std::tuple<int64_t, bool> Width(const gocpp::PtrRecv<struct byteReader, false>& self);
+        std::tuple<int64_t, bool> Width(const gocpp::ObjRecv<struct byteReader>& self);
         std::tuple<unsigned char, gocpp::error> ReadByte(byteReader r);
         gocpp::error UnreadByte(byteReader r);
         gocpp::error Scan(golang::math::big::Int* z, fmt::ScanState s, gocpp::rune ch);

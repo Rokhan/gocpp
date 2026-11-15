@@ -15,8 +15,8 @@ namespace golang::time
     inline constexpr int64_t omega = int64_t((1_bi << 63) - 1_bi);
     struct GoTag_ruleKind;
     using ruleKind = gocpp::defined<int64_t, GoTag_ruleKind>;
-    struct rule;
     inline constexpr ruleKind ruleJulian = 0;
     inline constexpr ruleKind ruleDOY = 1;
     inline constexpr ruleKind ruleMonthWeekDay = 2;
+    struct rule;
 }

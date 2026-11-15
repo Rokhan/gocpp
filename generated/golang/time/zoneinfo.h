@@ -49,15 +49,6 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct zoneTrans& value);
-    std::tuple<gocpp::string, int64_t, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec);
-    std::tuple<gocpp::string, gocpp::string, bool> tzsetName(gocpp::string s);
-    std::tuple<int64_t, gocpp::string, bool> tzsetOffset(gocpp::string s);
-    struct GoTag_ruleKind { };
-    using ruleKind = gocpp::defined<int64_t, GoTag_ruleKind>;
-    std::tuple<int64_t, gocpp::string, bool> tzsetNum(gocpp::string s, int64_t min, int64_t max);
-    extern gocpp::error errLocation;
-    extern gocpp::string* zoneinfo;
-    bool containsDotDot(gocpp::string s);
     struct Location
     {
         gocpp::string name{};
@@ -94,6 +85,30 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Location& value);
+    // UTC represents Universal Coordinated Time (UTC).
+    extern golang::time::Location* UTC;
+    // utcLoc is separate so that get can refer to &utcLoc
+    // and ensure that it never returns a nil *Location,
+    // even if a badly behaved client has changed UTC.
+    extern golang::time::Location utcLoc;
+    // Local represents the system's local time zone.
+    // On Unix systems, Local consults the TZ environment
+    // variable to find the time zone to use. No TZ means
+    // use the system default /etc/localtime.
+    // TZ="" means use UTC.
+    // TZ="foo" means use file foo in the system timezone directory.
+    extern golang::time::Location* Local;
+    // localLoc is separate so that initLocal can initialize
+    // it even if a client has changed Local.
+    extern golang::time::Location localLoc;
+    extern gocpp::slice<golang::time::Location*> unnamedFixedZones;
+    golang::time::Location* FixedZone(gocpp::string name, int64_t offset);
+    golang::time::Location* fixedZone(gocpp::string name, int64_t offset);
+    std::tuple<gocpp::string, int64_t, int64_t, int64_t, bool, bool> tzset(gocpp::string s, int64_t lastTxSec, int64_t sec);
+    std::tuple<gocpp::string, gocpp::string, bool> tzsetName(gocpp::string s);
+    std::tuple<int64_t, gocpp::string, bool> tzsetOffset(gocpp::string s);
+    struct GoTag_ruleKind { };
+    using ruleKind = gocpp::defined<int64_t, GoTag_ruleKind>;
     struct rule
     {
         ruleKind kind{};
@@ -114,28 +129,13 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct rule& value);
-    // UTC represents Universal Coordinated Time (UTC).
-    extern golang::time::Location* UTC;
-    // utcLoc is separate so that get can refer to &utcLoc
-    // and ensure that it never returns a nil *Location,
-    // even if a badly behaved client has changed UTC.
-    extern golang::time::Location utcLoc;
-    // Local represents the system's local time zone.
-    // On Unix systems, Local consults the TZ environment
-    // variable to find the time zone to use. No TZ means
-    // use the system default /etc/localtime.
-    // TZ="" means use UTC.
-    // TZ="foo" means use file foo in the system timezone directory.
-    extern golang::time::Location* Local;
-    // localLoc is separate so that initLocal can initialize
-    // it even if a client has changed Local.
-    extern golang::time::Location localLoc;
-    extern gocpp::slice<golang::time::Location*> unnamedFixedZones;
-    golang::time::Location* FixedZone(gocpp::string name, int64_t offset);
-    golang::time::Location* fixedZone(gocpp::string name, int64_t offset);
     std::tuple<rule, gocpp::string, bool> tzsetRule(gocpp::string s);
+    std::tuple<int64_t, gocpp::string, bool> tzsetNum(gocpp::string s, int64_t min, int64_t max);
     int64_t tzruleTime(int64_t year, rule r, int64_t off);
+    extern gocpp::error errLocation;
+    extern gocpp::string* zoneinfo;
     std::tuple<golang::time::Location*, gocpp::error> LoadLocation(gocpp::string name);
+    bool containsDotDot(gocpp::string s);
 }
 #include "golang/sync/once.fwd.h"
 

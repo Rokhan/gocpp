@@ -17,12 +17,16 @@ namespace golang::go::types
     using VarKind = gocpp::defined<uint8_t, GoTag_VarKind>;
     extern gocpp::array<gocpp::string, 7> varKindNames;
 }
-#include "golang/go/types/typestring.h"
 #include "golang/go/types/package.fwd.h"
 
 namespace golang::go::types
 {
     gocpp::string Id(Package* pkg, gocpp::string name);
+}
+#include "golang/go/types/typestring.h"
+
+namespace golang::go::types
+{
     gocpp::string packagePrefix(Package* pkg, Qualifier qf);
 }
 #include "golang/go/token/position.fwd.h"
@@ -220,12 +224,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct object& value);
-}
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-
-namespace golang::go::types
-{
     struct PkgName
     {
         object object{};
@@ -242,27 +240,8 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct PkgName, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct PkgName, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct PkgName, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct PkgName, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct PkgName, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct PkgName, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct PkgName, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct PkgName, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct PkgName, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct PkgName, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct PkgName, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct PkgName, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct PkgName, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct PkgName, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct PkgName, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct PkgName, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct PkgName& value);
+    PkgName* NewPkgName(token::Pos pos, Package* pkg, gocpp::string name, Package* imported);
     struct TypeName
     {
         object object{};
@@ -278,27 +257,8 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct TypeName, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct TypeName, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct TypeName, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct TypeName, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct TypeName, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct TypeName, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct TypeName, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct TypeName, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct TypeName, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct TypeName, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct TypeName, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct TypeName, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct TypeName, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct TypeName, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct TypeName, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct TypeName, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct TypeName& value);
+    TypeName* NewTypeName(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
     struct Var
     {
         object object{};
@@ -317,27 +277,11 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct Var, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct Var, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct Var, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct Var, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct Var, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct Var, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct Var, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct Var, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct Var, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct Var, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct Var, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct Var, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct Var, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct Var, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct Var, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct Var, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Var& value);
+    Var* NewVar(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
+    Var* NewParam(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
+    Var* NewField(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, bool embedded);
+    Var* newVar(VarKind kind, token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
     struct Func
     {
         object object{};
@@ -356,26 +300,6 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct Func, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct Func, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct Func, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct Func, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct Func, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct Func, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct Func, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct Func, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct Func, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct Func, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct Func, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct Func, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct Func, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct Func, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct Func, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct Func, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Func& value);
     struct Label
     {
@@ -393,27 +317,8 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct Label, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct Label, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct Label, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct Label, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct Label, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct Label, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct Label, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct Label, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct Label, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct Label, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct Label, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct Label, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct Label, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct Label, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct Label, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct Label, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Label& value);
+    Label* NewLabel(token::Pos pos, Package* pkg, gocpp::string name);
     struct Nil
     {
         object object{};
@@ -429,85 +334,35 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct Nil, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct Nil, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct Nil, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct Nil, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct Nil, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct Nil, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct Nil, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct Nil, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct Nil, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct Nil, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct Nil, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct Nil, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct Nil, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct Nil, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct Nil, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct Nil, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Nil& value);
     gocpp::string ObjectString(Object obj, Qualifier qf);
     gocpp::string objectKind(Object obj);
 }
-#include "golang/go/constant/value.h"
+#include "golang/go/types/signature.fwd.h"
 
 namespace golang::go::types
 {
-    namespace constant = golang::go::constant;
+    Func* NewFunc(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Signature* sig);
+}
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+
+namespace golang::go::types
+{
+    TypeName* _NewTypeNameLazy(token::Pos pos, Package* pkg, gocpp::string name, std::function<std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type, gocpp::slice<Func*>, gocpp::slice<std::function<void ()>>> (Named* _1)> load);
+}
+#include "golang/bytes/buffer.fwd.h"
+
+namespace golang::go::types
+{
+    namespace bytes = golang::bytes;
+    void writeObject(bytes::Buffer* buf, Object obj, Qualifier qf);
+    void writeFuncName(bytes::Buffer* buf, Func* f, Qualifier qf);
 }
 #include "golang/go/types/universe.h"
 
 namespace golang::go::types
 {
-    namespace bytes = golang::bytes;
-    PkgName* NewPkgName(token::Pos pos, Package* pkg, gocpp::string name, Package* imported);
-    struct Const
-    {
-        object object{};
-        constant::Value val{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct Const, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct Const, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct Const, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct Const, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct Const, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct Const, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct Const, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct Const, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct Const, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct Const, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct Const, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct Const, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct Const, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct Const, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct Const, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct Const, false>& self, types::Type typ);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct Const& value);
-    TypeName* NewTypeName(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
-    Var* NewVar(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
-    Var* NewParam(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
-    Var* NewField(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, bool embedded);
-    Var* newVar(VarKind kind, token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ);
-    Label* NewLabel(token::Pos pos, Package* pkg, gocpp::string name);
     struct Builtin
     {
         object object{};
@@ -524,40 +379,32 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool Exported(const gocpp::PtrRecv<struct Builtin, false>& self);
-        gocpp::string Id(const gocpp::PtrRecv<struct Builtin, false>& self);
-        gocpp::string Name(const gocpp::PtrRecv<struct Builtin, false>& self);
-        types::Scope* Parent(const gocpp::PtrRecv<struct Builtin, false>& self);
-        types::Package* Pkg(const gocpp::PtrRecv<struct Builtin, false>& self);
-        token::Pos Pos(const gocpp::PtrRecv<struct Builtin, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct Builtin, false>& self);
-        types::Type Type(const gocpp::PtrRecv<struct Builtin, false>& self);
-        int64_t cmp(const gocpp::PtrRecv<struct Builtin, false>& self, types::object* b);
-        uint32_t order(const gocpp::PtrRecv<struct Builtin, false>& self);
-        bool sameId(const gocpp::PtrRecv<struct Builtin, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
-        token::Pos scopePos(const gocpp::PtrRecv<struct Builtin, false>& self);
-        void setOrder(const gocpp::PtrRecv<struct Builtin, false>& self, uint32_t order);
-        void setParent(const gocpp::PtrRecv<struct Builtin, false>& self, types::Scope* parent);
-        void setScopePos(const gocpp::PtrRecv<struct Builtin, false>& self, token::Pos pos);
-        void setType(const gocpp::PtrRecv<struct Builtin, false>& self, types::Type typ);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Builtin& value);
-    void writeObject(bytes::Buffer* buf, Object obj, Qualifier qf);
-    void writeFuncName(bytes::Buffer* buf, Func* f, Qualifier qf);
-    Const* NewConst(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, constant::Value val);
     Builtin* newBuiltin(builtinId id);
 }
-#include "golang/go/types/named.fwd.h"
-#include "golang/go/types/signature.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
+#include "golang/go/constant/value.h"
 
 namespace golang::go::types
 {
-    TypeName* _NewTypeNameLazy(token::Pos pos, Package* pkg, gocpp::string name, std::function<std::tuple<gocpp::slice<TypeParam*>, golang::go::types::Type, gocpp::slice<Func*>, gocpp::slice<std::function<void ()>>> (Named* _1)> load);
-    Func* NewFunc(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Signature* sig);
+    namespace constant = golang::go::constant;
+    struct Const
+    {
+        object object{};
+        constant::Value val{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Const& value);
+    Const* NewConst(token::Pos pos, Package* pkg, gocpp::string name, golang::go::types::Type typ, constant::Value val);
 }
 
 #include "golang/go/constant/value.h"
@@ -588,10 +435,74 @@ namespace golang::go::types
         void setScopePos(object* obj, token::Pos pos);
         bool sameId(object* obj, Package* pkg, gocpp::string name, bool foldCase);
         int64_t cmp(object* a, object* b);
+        bool Exported(const gocpp::PtrRecv<struct PkgName, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct PkgName, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct PkgName, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct PkgName, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct PkgName, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct PkgName, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct PkgName, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct PkgName, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct PkgName, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct PkgName, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct PkgName, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct PkgName, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct PkgName, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct PkgName, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct PkgName, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct PkgName, false>& self, types::Type typ);
         Package* Imported(PkgName* obj);
+        bool Exported(const gocpp::PtrRecv<struct Const, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct Const, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Const, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct Const, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct Const, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct Const, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Const, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct Const, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct Const, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct Const, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct Const, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct Const, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct Const, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct Const, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct Const, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct Const, false>& self, types::Type typ);
         constant::Value Val(Const* obj);
         void isDependency(Const*);
+        bool Exported(const gocpp::PtrRecv<struct TypeName, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct TypeName, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct TypeName, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct TypeName, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct TypeName, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct TypeName, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct TypeName, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct TypeName, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct TypeName, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct TypeName, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct TypeName, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct TypeName, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct TypeName, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct TypeName, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct TypeName, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct TypeName, false>& self, types::Type typ);
         bool IsAlias(TypeName* obj);
+        bool Exported(const gocpp::PtrRecv<struct Var, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct Var, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Var, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct Var, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct Var, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct Var, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Var, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct Var, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct Var, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct Var, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct Var, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct Var, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct Var, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct Var, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct Var, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct Var, false>& self, types::Type typ);
         gocpp::string String(VarKind kind);
         VarKind Kind(Var* v);
         void SetKind(Var* v, VarKind kind);
@@ -600,6 +511,22 @@ namespace golang::go::types
         bool IsField(Var* obj);
         Var* Origin(Var* obj);
         void isDependency(Var*);
+        bool Exported(const gocpp::PtrRecv<struct Func, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct Func, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Func, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct Func, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct Func, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct Func, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Func, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct Func, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct Func, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct Func, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct Func, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct Func, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct Func, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct Func, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct Func, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct Func, false>& self, types::Type typ);
         golang::go::types::Signature* Signature(Func* obj);
         gocpp::string FullName(Func* obj);
         golang::go::types::Scope* Scope(Func* obj);
@@ -607,6 +534,54 @@ namespace golang::go::types
         Package* Pkg(Func* obj);
         bool hasPtrRecv(Func* obj);
         void isDependency(Func*);
+        bool Exported(const gocpp::PtrRecv<struct Label, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct Label, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Label, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct Label, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct Label, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct Label, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Label, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct Label, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct Label, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct Label, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct Label, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct Label, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct Label, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct Label, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct Label, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct Label, false>& self, types::Type typ);
+        bool Exported(const gocpp::PtrRecv<struct Builtin, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct Builtin, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Builtin, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct Builtin, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct Builtin, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct Builtin, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Builtin, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct Builtin, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct Builtin, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct Builtin, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct Builtin, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct Builtin, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct Builtin, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct Builtin, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct Builtin, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct Builtin, false>& self, types::Type typ);
+        bool Exported(const gocpp::PtrRecv<struct Nil, false>& self);
+        gocpp::string Id(const gocpp::PtrRecv<struct Nil, false>& self);
+        gocpp::string Name(const gocpp::PtrRecv<struct Nil, false>& self);
+        types::Scope* Parent(const gocpp::PtrRecv<struct Nil, false>& self);
+        types::Package* Pkg(const gocpp::PtrRecv<struct Nil, false>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct Nil, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct Nil, false>& self);
+        types::Type Type(const gocpp::PtrRecv<struct Nil, false>& self);
+        int64_t cmp(const gocpp::PtrRecv<struct Nil, false>& self, types::object* b);
+        uint32_t order(const gocpp::PtrRecv<struct Nil, false>& self);
+        bool sameId(const gocpp::PtrRecv<struct Nil, false>& self, types::Package* pkg, gocpp::string name, bool foldCase);
+        token::Pos scopePos(const gocpp::PtrRecv<struct Nil, false>& self);
+        void setOrder(const gocpp::PtrRecv<struct Nil, false>& self, uint32_t order);
+        void setParent(const gocpp::PtrRecv<struct Nil, false>& self, types::Scope* parent);
+        void setScopePos(const gocpp::PtrRecv<struct Nil, false>& self, token::Pos pos);
+        void setType(const gocpp::PtrRecv<struct Nil, false>& self, types::Type typ);
         gocpp::string String(PkgName* obj);
         gocpp::string String(Const* obj);
         gocpp::string String(TypeName* obj);

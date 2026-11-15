@@ -28,59 +28,16 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         return internalErrorf(format, gocpp::ToSlice<go_any>(value, args...));
     }
 }
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/go/constant/value.fwd.h"
 #include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
-#include "golang/go/types/alias.fwd.h"
-#include "golang/go/types/basic.fwd.h"
-#include "golang/go/types/chan.fwd.h"
-#include "golang/go/types/interface.fwd.h"
-#include "golang/go/types/named.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/predicates.fwd.h"
-#include "golang/go/types/signature.fwd.h"
-#include "golang/go/types/tuple.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-#include "golang/go/types/universe.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/math/big/float.fwd.h"
-#include "golang/math/big/int.fwd.h"
-#include "golang/math/big/rat.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace token = golang::go::token;
-    namespace types = golang::go::types;
 }
-#include "golang/bytes/buffer.h"
+#include "golang/go/token/token.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    namespace bytes = golang::bytes;
-}
-#include "golang/go/constant/value.h"
-
-namespace golang::golang_org::x::tools::internal::gcimporter
-{
-    namespace io = golang::io;
-}
-#include "golang/go/types/object.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/iimport.h"
-#include "golang/io/io.h"
-
-namespace golang::golang_org::x::tools::internal::gcimporter
-{
-    namespace constant = golang::go::constant;
-    namespace big = golang::math::big;
-    std::tuple<gocpp::slice<unsigned char>, gocpp::error> IExportShallow(token::FileSet* fset, types::Package* pkg, ReportFunc reportf);
-    std::tuple<types::Package*, gocpp::error> IImportShallow(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, gocpp::string path, ReportFunc reportf);
-    gocpp::error IExportData(io::Writer out, token::FileSet* fset, types::Package* pkg);
-    gocpp::error IExportBundle(io::Writer out, token::FileSet* fset, gocpp::slice<types::Package*> pkgs);
-    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int64_t version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf);
     struct filePositions
     {
         token::File* file{};
@@ -98,57 +55,42 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct filePositions& value);
+}
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace types = golang::go::types;
+}
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/basic.fwd.h"
+#include "golang/go/types/chan.fwd.h"
+#include "golang/go/types/interface.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/signature.fwd.h"
+#include "golang/go/types/predicates.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    std::tuple<gocpp::slice<unsigned char>, gocpp::error> IExportShallow(token::FileSet* fset, types::Package* pkg, ReportFunc reportf);
     gocpp::string tparamExportName(gocpp::string prefix, types::TypeParam* tparam);
-    big::Float* constantToFloat(constant::Value x);
-    big::Rat* valueToRat(constant::Value x);
-    struct intWriter
-    {
-        bytes::Buffer Buffer{};
+}
+#include "golang/golang.org/x/tools/internal/gcimporter/iimport.h"
 
-        using isGoStruct = void;
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    std::tuple<types::Package*, gocpp::error> IImportShallow(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, gocpp::string path, ReportFunc reportf);
+}
+#include "golang/go/types/object.h"
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        int64_t Available(const gocpp::PtrRecv<struct intWriter, false>& self);
-        gocpp::slice<unsigned char> AvailableBuffer(const gocpp::PtrRecv<struct intWriter, false>& self);
-        gocpp::slice<unsigned char> Bytes(const gocpp::PtrRecv<struct intWriter, false>& self);
-        int64_t Cap(const gocpp::PtrRecv<struct intWriter, false>& self);
-        void Grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
-        int64_t Len(const gocpp::PtrRecv<struct intWriter, false>& self);
-        gocpp::slice<unsigned char> Next(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct intWriter, false>& self);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
-        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct intWriter, false>& self, io::Reader r);
-        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
-        std::tuple<gocpp::string, gocpp::error> ReadString(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
-        void Reset(const gocpp::PtrRecv<struct intWriter, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct intWriter, false>& self);
-        void Truncate(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
-        gocpp::error UnreadByte(const gocpp::PtrRecv<struct intWriter, false>& self);
-        gocpp::error UnreadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
-        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
-        gocpp::error WriteByte(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char c);
-        std::tuple<int64_t, gocpp::error> WriteRune(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::rune r);
-        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::string s);
-        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct intWriter, false>& self, io::Writer w);
-        bool empty(const gocpp::PtrRecv<struct intWriter, false>& self);
-        int64_t grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
-        std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSlice(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
-        std::tuple<int64_t, bool> tryGrowByReslice(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct intWriter& value);
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     struct objQueue
     {
         gocpp::slice<types::Object> ring{};
@@ -168,10 +110,53 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     std::ostream& operator<<(std::ostream& os, const struct objQueue& value);
 }
-#include "golang/golang.org/x/tools/go/types/objectpath/objectpath.fwd.h"
+#include "golang/io/io.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    gocpp::error IExportData(io::Writer out, token::FileSet* fset, types::Package* pkg);
+    gocpp::error IExportBundle(io::Writer out, token::FileSet* fset, gocpp::slice<types::Package*> pkgs);
+    gocpp::error iexportCommon(io::Writer out, token::FileSet* fset, bool bundle, bool shallow, int64_t version, gocpp::slice<types::Package*> pkgs, ReportFunc reportf);
+}
+#include "golang/go/constant/value.h"
+#include "golang/math/big/float.fwd.h"
+#include "golang/math/big/int.fwd.h"
+#include "golang/math/big/rat.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace constant = golang::go::constant;
+    namespace big = golang::math::big;
+    big::Float* constantToFloat(constant::Value x);
+    big::Rat* valueToRat(constant::Value x);
+}
+#include "golang/bytes/buffer.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace bytes = golang::bytes;
+    struct intWriter
+    {
+        bytes::Buffer Buffer{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct intWriter& value);
     struct exportWriter
     {
         iexporter* p{};
@@ -194,6 +179,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     std::ostream& operator<<(std::ostream& os, const struct exportWriter& value);
 }
 #include "golang/go/types/type.h"
+#include "golang/golang.org/x/tools/go/types/objectpath/objectpath.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
@@ -304,6 +290,34 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         void uint64(exportWriter* w, uint64_t x);
         void string(exportWriter* w, gocpp::string s);
         void localIdent(exportWriter* w, types::Object obj);
+        int64_t Available(const gocpp::PtrRecv<struct intWriter, false>& self);
+        gocpp::slice<unsigned char> AvailableBuffer(const gocpp::PtrRecv<struct intWriter, false>& self);
+        gocpp::slice<unsigned char> Bytes(const gocpp::PtrRecv<struct intWriter, false>& self);
+        int64_t Cap(const gocpp::PtrRecv<struct intWriter, false>& self);
+        void Grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        int64_t Len(const gocpp::PtrRecv<struct intWriter, false>& self);
+        gocpp::slice<unsigned char> Next(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> Peek(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct intWriter, false>& self);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadBytes(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct intWriter, false>& self, io::Reader r);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
+        std::tuple<gocpp::string, gocpp::error> ReadString(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
+        void Reset(const gocpp::PtrRecv<struct intWriter, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct intWriter, false>& self);
+        void Truncate(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        gocpp::error UnreadByte(const gocpp::PtrRecv<struct intWriter, false>& self);
+        gocpp::error UnreadRune(const gocpp::PtrRecv<struct intWriter, false>& self);
+        std::tuple<int64_t, gocpp::error> Write(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::slice<unsigned char> p);
+        gocpp::error WriteByte(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char c);
+        std::tuple<int64_t, gocpp::error> WriteRune(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::rune r);
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct intWriter, false>& self, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct intWriter, false>& self, io::Writer w);
+        bool empty(const gocpp::PtrRecv<struct intWriter, false>& self);
+        int64_t grow(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
+        std::tuple<gocpp::slice<unsigned char>, gocpp::error> readSlice(const gocpp::PtrRecv<struct intWriter, false>& self, unsigned char delim);
+        std::tuple<int64_t, bool> tryGrowByReslice(const gocpp::PtrRecv<struct intWriter, false>& self, int64_t n);
         void int64(intWriter* w, int64_t x);
         void uint64(intWriter* w, uint64_t x);
         bool empty(objQueue* q);

@@ -8,10 +8,70 @@ namespace golang::internal::abi
 {
     struct GoTag_PCLnTabMagic;
     using PCLnTabMagic = gocpp::defined<uint32_t, GoTag_PCLnTabMagic>;
+    // Initial PCLnTabMagic value used in Go 1.2 through Go 1.15.
+    inline constexpr PCLnTabMagic Go12PCLnTabMagic = 0xfffffffbLL;
+    // PCLnTabMagic value used in Go 1.16 through Go 1.17.
+    // Several fields added to header (CL 241598).
+    inline constexpr PCLnTabMagic Go116PCLnTabMagic = 0xfffffffaLL;
+    // PCLnTabMagic value used in Go 1.18 through Go 1.19.
+    // Entry PC of func data changed from address to offset (CL 351463).
+    inline constexpr PCLnTabMagic Go118PCLnTabMagic = 0xfffffff0LL;
+    // PCLnTabMagic value used in Go 1.20 and later.
+    // A ":" was added to generated symbol names (#37762).
+    inline constexpr PCLnTabMagic Go120PCLnTabMagic = 0xfffffff1LL;
+    // CurrentPCLnTabMagic is the value emitted by the current toolchain.
+    // This is written by the linker to the pcHeader and read by the
+    // runtime and debug/gosym (and external tools like Delve).
+    //
+    // Change this value when updating the pclntab version.
+    // Changing this exported value is OK because is an
+    // internal package.
+    inline constexpr abi::PCLnTabMagic CurrentPCLnTabMagic = int64_t(Go120PCLnTabMagic);
     struct GoTag_FuncFlag;
     using FuncFlag = gocpp::defined<uint8_t, GoTag_FuncFlag>;
+    // FuncFlagTopFrame indicates a function that appears at the top of its stack.
+    // The traceback routine stop at such a function and consider that a
+    // successful, complete traversal of the stack.
+    // Examples of TopFrame functions include goexit, which appears
+    // at the top of a user goroutine stack, and mstart, which appears
+    // at the top of a system goroutine stack.
+    inline constexpr FuncFlag FuncFlagTopFrame = 1 << 0;
+    // FuncFlagSPWrite indicates a function that writes an arbitrary value to SP
+    // (any write other than adding or subtracting a constant amount).
+    // The traceback routines cannot encode such changes into the
+    // pcsp tables, so the function traceback cannot safely unwind past
+    // SPWrite functions. Stopping at an SPWrite function is considered
+    // to be an incomplete unwinding of the stack. In certain contexts
+    // (in particular garbage collector stack scans) that is a fatal error.
+    inline constexpr FuncFlag FuncFlagSPWrite = 1 << 1;
+    // FuncFlagAsm indicates that a function was implemented in assembly.
+    inline constexpr FuncFlag FuncFlagAsm = 1 << 2;
     struct GoTag_FuncID;
     using FuncID = gocpp::defined<uint8_t, GoTag_FuncID>;
+    inline constexpr FuncID FuncIDNormal = 0;
+    inline constexpr FuncID FuncID_abort = 1;
+    inline constexpr FuncID FuncID_asmcgocall = 2;
+    inline constexpr FuncID FuncID_asyncPreempt = 3;
+    inline constexpr FuncID FuncID_cgocallback = 4;
+    inline constexpr FuncID FuncID_corostart = 5;
+    inline constexpr FuncID FuncID_debugCallV2 = 6;
+    inline constexpr FuncID FuncID_gcBgMarkWorker = 7;
+    inline constexpr FuncID FuncID_goexit = 8;
+    inline constexpr FuncID FuncID_gogo = 9;
+    inline constexpr FuncID FuncID_gopanic = 10;
+    inline constexpr FuncID FuncID_handleAsyncEvent = 11;
+    inline constexpr FuncID FuncID_mcall = 12;
+    inline constexpr FuncID FuncID_morestack = 13;
+    inline constexpr FuncID FuncID_mstart = 14;
+    inline constexpr FuncID FuncID_panicwrap = 15;
+    inline constexpr FuncID FuncID_rt0_go = 16;
+    inline constexpr FuncID FuncID_runtime_main = 17;
+    inline constexpr FuncID FuncID_runFinalizers = 18;
+    inline constexpr FuncID FuncID_runCleanups = 19;
+    inline constexpr FuncID FuncID_sigpanic = 20;
+    inline constexpr FuncID FuncID_systemstack = 21;
+    inline constexpr FuncID FuncID_systemstack_switch = 22;
+    inline constexpr FuncID FuncIDWrapper = 23;
     // ArgsSizeUnknown is set in Func.argsize to mark all functions
     // whose argument size is unknown (C vararg functions, and
     // assembly code without an explicit specification).
@@ -46,65 +106,5 @@ namespace golang::internal::abi
     // Like UnsafePointRestart1, but back to function entry if async preempted.
     inline constexpr long UnsafePointRestartAtEntry = - 5;
     inline constexpr long MINFUNC = 16;
-    // Initial PCLnTabMagic value used in Go 1.2 through Go 1.15.
-    inline constexpr PCLnTabMagic Go12PCLnTabMagic = 0xfffffffbLL;
-    // PCLnTabMagic value used in Go 1.16 through Go 1.17.
-    // Several fields added to header (CL 241598).
-    inline constexpr PCLnTabMagic Go116PCLnTabMagic = 0xfffffffaLL;
-    // PCLnTabMagic value used in Go 1.18 through Go 1.19.
-    // Entry PC of func data changed from address to offset (CL 351463).
-    inline constexpr PCLnTabMagic Go118PCLnTabMagic = 0xfffffff0LL;
-    // PCLnTabMagic value used in Go 1.20 and later.
-    // A ":" was added to generated symbol names (#37762).
-    inline constexpr PCLnTabMagic Go120PCLnTabMagic = 0xfffffff1LL;
-    // FuncFlagTopFrame indicates a function that appears at the top of its stack.
-    // The traceback routine stop at such a function and consider that a
-    // successful, complete traversal of the stack.
-    // Examples of TopFrame functions include goexit, which appears
-    // at the top of a user goroutine stack, and mstart, which appears
-    // at the top of a system goroutine stack.
-    inline constexpr FuncFlag FuncFlagTopFrame = 1 << 0;
-    // FuncFlagSPWrite indicates a function that writes an arbitrary value to SP
-    // (any write other than adding or subtracting a constant amount).
-    // The traceback routines cannot encode such changes into the
-    // pcsp tables, so the function traceback cannot safely unwind past
-    // SPWrite functions. Stopping at an SPWrite function is considered
-    // to be an incomplete unwinding of the stack. In certain contexts
-    // (in particular garbage collector stack scans) that is a fatal error.
-    inline constexpr FuncFlag FuncFlagSPWrite = 1 << 1;
-    // FuncFlagAsm indicates that a function was implemented in assembly.
-    inline constexpr FuncFlag FuncFlagAsm = 1 << 2;
-    inline constexpr FuncID FuncIDNormal = 0;
-    inline constexpr FuncID FuncID_abort = 1;
-    inline constexpr FuncID FuncID_asmcgocall = 2;
-    inline constexpr FuncID FuncID_asyncPreempt = 3;
-    inline constexpr FuncID FuncID_cgocallback = 4;
-    inline constexpr FuncID FuncID_corostart = 5;
-    inline constexpr FuncID FuncID_debugCallV2 = 6;
-    inline constexpr FuncID FuncID_gcBgMarkWorker = 7;
-    inline constexpr FuncID FuncID_goexit = 8;
-    inline constexpr FuncID FuncID_gogo = 9;
-    inline constexpr FuncID FuncID_gopanic = 10;
-    inline constexpr FuncID FuncID_handleAsyncEvent = 11;
-    inline constexpr FuncID FuncID_mcall = 12;
-    inline constexpr FuncID FuncID_morestack = 13;
-    inline constexpr FuncID FuncID_mstart = 14;
-    inline constexpr FuncID FuncID_panicwrap = 15;
-    inline constexpr FuncID FuncID_rt0_go = 16;
-    inline constexpr FuncID FuncID_runtime_main = 17;
-    inline constexpr FuncID FuncID_runFinalizers = 18;
-    inline constexpr FuncID FuncID_runCleanups = 19;
-    inline constexpr FuncID FuncID_sigpanic = 20;
-    inline constexpr FuncID FuncID_systemstack = 21;
-    inline constexpr FuncID FuncID_systemstack_switch = 22;
-    inline constexpr FuncID FuncIDWrapper = 23;
     inline constexpr int64_t FuncTabBucketSize = 256 * MINFUNC;
-    // CurrentPCLnTabMagic is the value emitted by the current toolchain.
-    // This is written by the linker to the pcHeader and read by the
-    // runtime and debug/gosym (and external tools like Delve).
-    //
-    // Change this value when updating the pclntab version.
-    // Changing this exported value is OK because is an
-    // internal package.
-    inline constexpr abi::PCLnTabMagic CurrentPCLnTabMagic = int64_t(Go120PCLnTabMagic);
 }

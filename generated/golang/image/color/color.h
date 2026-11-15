@@ -284,8 +284,6 @@ namespace golang::image::color
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Model& value);
-    struct GoTag_Palette { };
-    uint32_t sqDiff(uint32_t x, uint32_t y);
     Model ModelFunc(std::function<Color (Color _1)> f);
     struct modelFunc
     {
@@ -320,7 +318,9 @@ namespace golang::image::color
     Color alpha16Model(Color c);
     Color grayModel(Color c);
     Color gray16Model(Color c);
+    struct GoTag_Palette { };
     using Palette = gocpp::defined<gocpp::slice<Color>, GoTag_Palette>;
+    uint32_t sqDiff(uint32_t x, uint32_t y);
     // Standard colors.
     extern Gray16 Black;
     extern Gray16 White;

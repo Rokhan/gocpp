@@ -40,13 +40,13 @@ namespace golang::runtime
     void printstring(gocpp::string s);
     void printslice(gocpp::slice<unsigned char> s);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void printpointer(gocpp::unsafe_pointer p);
 }
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     extern mutex debuglock;
-    void printpointer(gocpp::unsafe_pointer p);
     void printeface(eface e);
     void printiface(iface i);
 

@@ -47,6 +47,8 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID& value);
+    std::tuple<SID*, gocpp::error> StringToSid(gocpp::string s);
+    std::tuple<SID*, gocpp::string, uint32_t, gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
     struct SIDAndAttributes
     {
         SID* Sid{};
@@ -64,6 +66,22 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SIDAndAttributes& value);
+    struct Tokenuser
+    {
+        SIDAndAttributes User{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Tokenuser& value);
     struct Tokenprimarygroup
     {
         SID* PrimaryGroup{};
@@ -81,24 +99,6 @@ namespace golang::syscall
 
     std::ostream& operator<<(std::ostream& os, const struct Tokenprimarygroup& value);
     struct GoTag_Token { };
-    std::tuple<SID*, gocpp::error> StringToSid(gocpp::string s);
-    std::tuple<SID*, gocpp::string, uint32_t, gocpp::error> LookupSID(gocpp::string system, gocpp::string account);
-    struct Tokenuser
-    {
-        SIDAndAttributes User{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Tokenuser& value);
 }
 #include "golang/syscall/syscall_windows.h"
 

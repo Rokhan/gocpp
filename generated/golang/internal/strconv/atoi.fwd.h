@@ -8,12 +8,12 @@ namespace golang::internal::strconv
 {
     struct GoTag_Error;
     using Error = gocpp::defined<int64_t, GoTag_Error>;
-    inline constexpr int64_t intSize = 32 << (~ (uint64_t)(0) >> 63);
     inline constexpr golang::internal::strconv::Error _ = 0;
     inline constexpr golang::internal::strconv::Error ErrRange = 1;
     inline constexpr golang::internal::strconv::Error ErrSyntax = 2;
     inline constexpr golang::internal::strconv::Error ErrBase = 3;
     inline constexpr golang::internal::strconv::Error ErrBitSize = 4;
+    inline constexpr int64_t intSize = 32 << (~ (uint64_t)(0) >> 63);
     // IntSize is the size in bits of an int or uint value.
     inline constexpr int64_t IntSize = intSize;
 }

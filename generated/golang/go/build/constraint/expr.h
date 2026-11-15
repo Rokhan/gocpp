@@ -110,51 +110,6 @@ namespace golang::go::build::constraint
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TagExpr& value);
-    struct SyntaxError
-    {
-        int64_t Offset{}; // byte offset in input where error was detected
-        gocpp::string Err{}; // description of error
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SyntaxError& value);
-    extern gocpp::error errNotConstraint;
-    bool IsGoBuild(gocpp::string line);
-    std::tuple<gocpp::string, bool> splitGoBuild(gocpp::string line);
-    struct exprParser
-    {
-        gocpp::string s{}; // input string
-        int64_t i{}; // next read location in s
-        gocpp::string tok{}; // last token read
-        bool isTag{};
-        int64_t pos{}; // position (start) of last token
-        int64_t size{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct exprParser& value);
-    bool IsPlusBuild(gocpp::string line);
-    std::tuple<gocpp::string, bool> splitPlusBuild(gocpp::string line);
-    bool isValidTag(gocpp::string word);
-    extern gocpp::error errComplex;
     Expr tag(gocpp::string tag);
     struct NotExpr
     {
@@ -211,9 +166,54 @@ namespace golang::go::build::constraint
     std::ostream& operator<<(std::ostream& os, const struct OrExpr& value);
     gocpp::string orArg(Expr x);
     Expr or(Expr x, Expr y);
+    struct SyntaxError
+    {
+        int64_t Offset{}; // byte offset in input where error was detected
+        gocpp::string Err{}; // description of error
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SyntaxError& value);
+    extern gocpp::error errNotConstraint;
     std::tuple<Expr, gocpp::error> Parse(gocpp::string line);
+    bool IsGoBuild(gocpp::string line);
+    std::tuple<gocpp::string, bool> splitGoBuild(gocpp::string line);
+    struct exprParser
+    {
+        gocpp::string s{}; // input string
+        int64_t i{}; // next read location in s
+        gocpp::string tok{}; // last token read
+        bool isTag{};
+        int64_t pos{}; // position (start) of last token
+        int64_t size{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct exprParser& value);
     std::tuple<Expr, gocpp::error> parseExpr(gocpp::string text);
+    bool IsPlusBuild(gocpp::string line);
+    std::tuple<gocpp::string, bool> splitPlusBuild(gocpp::string line);
     std::tuple<Expr, gocpp::error> parsePlusBuildExpr(gocpp::string text);
+    bool isValidTag(gocpp::string word);
+    extern gocpp::error errComplex;
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> PlusBuildLines(Expr x);
     Expr pushNot(Expr x, bool not);
     gocpp::slice<Expr> appendSplitAnd(gocpp::slice<Expr> list, Expr x);

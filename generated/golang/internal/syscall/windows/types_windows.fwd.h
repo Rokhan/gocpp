@@ -52,6 +52,12 @@ namespace golang::internal::syscall::windows
     inline constexpr long WRITE_OWNER = 0x00080000;
     inline constexpr long SYNCHRONIZE = 0x00100000;
     inline constexpr long STANDARD_RIGHTS_REQUIRED = 0x000F0000;
+    inline constexpr int64_t STANDARD_RIGHTS_READ = READ_CONTROL;
+    inline constexpr int64_t FILE_GENERIC_READ = STANDARD_RIGHTS_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES | FILE_READ_EA | SYNCHRONIZE;
+    inline constexpr int64_t STANDARD_RIGHTS_WRITE = READ_CONTROL;
+    inline constexpr int64_t FILE_GENERIC_WRITE = STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA | FILE_APPEND_DATA | SYNCHRONIZE;
+    inline constexpr int64_t STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
+    inline constexpr int64_t FILE_GENERIC_EXECUTE = STANDARD_RIGHTS_EXECUTE | FILE_READ_ATTRIBUTES | FILE_EXECUTE | SYNCHRONIZE;
     inline constexpr long STANDARD_RIGHTS_ALL = 0x001F0000;
     inline constexpr long SPECIFIC_RIGHTS_ALL = 0x0000FFFF;
     inline constexpr long ACCESS_SYSTEM_SECURITY = 0x01000000;
@@ -146,6 +152,17 @@ namespace golang::internal::syscall::windows
     // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_osversioninfoexw
     inline constexpr long VER_NT_WORKSTATION = 0x0000001;
     inline constexpr long FileFlagsMask = 0xFFF00000LL;
+    inline constexpr int64_t ValidFileFlagsMask = int64_t(O_FILE_FLAG_OPEN_REPARSE_POINT) |
+        int64_t(O_FILE_FLAG_BACKUP_SEMANTICS) |
+        int64_t(O_FILE_FLAG_OVERLAPPED) |
+        int64_t(O_FILE_FLAG_OPEN_NO_RECALL) |
+        int64_t(O_FILE_FLAG_SESSION_AWARE) |
+        int64_t(O_FILE_FLAG_POSIX_SEMANTICS) |
+        int64_t(O_FILE_FLAG_DELETE_ON_CLOSE) |
+        int64_t(O_FILE_FLAG_SEQUENTIAL_SCAN) |
+        int64_t(O_FILE_FLAG_NO_BUFFERING) |
+        int64_t(O_FILE_FLAG_RANDOM_ACCESS) |
+        int64_t(O_FILE_FLAG_WRITE_THROUGH);
     struct TRUSTEE;
     // https://msdn.microsoft.com/en-us/library/windows/desktop/aa379638.aspx
     inline constexpr long TRUSTEE_IS_SID = 0x0;
@@ -280,35 +297,26 @@ namespace golang::internal::syscall::windows
     inline constexpr long PF_ARM_SME_LUTv2_INSTRUCTIONS_AVAILABLE = 87;
     inline constexpr long PF_ARM_SME_FA64_INSTRUCTIONS_AVAILABLE = 88;
     inline constexpr long PF_UMONITOR_INSTRUCTION_AVAILABLE = 89;
-    inline constexpr int64_t STANDARD_RIGHTS_READ = READ_CONTROL;
-    inline constexpr int64_t STANDARD_RIGHTS_WRITE = READ_CONTROL;
-    inline constexpr int64_t STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
-    inline constexpr int64_t ValidFileFlagsMask = int64_t(O_FILE_FLAG_OPEN_REPARSE_POINT) |
-        int64_t(O_FILE_FLAG_BACKUP_SEMANTICS) |
-        int64_t(O_FILE_FLAG_OVERLAPPED) |
-        int64_t(O_FILE_FLAG_OPEN_NO_RECALL) |
-        int64_t(O_FILE_FLAG_SESSION_AWARE) |
-        int64_t(O_FILE_FLAG_POSIX_SEMANTICS) |
-        int64_t(O_FILE_FLAG_DELETE_ON_CLOSE) |
-        int64_t(O_FILE_FLAG_SEQUENTIAL_SCAN) |
-        int64_t(O_FILE_FLAG_NO_BUFFERING) |
-        int64_t(O_FILE_FLAG_RANDOM_ACCESS) |
-        int64_t(O_FILE_FLAG_WRITE_THROUGH);
-    inline constexpr int64_t FILE_GENERIC_READ = STANDARD_RIGHTS_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES | FILE_READ_EA | SYNCHRONIZE;
-    inline constexpr int64_t FILE_GENERIC_WRITE = STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA | FILE_APPEND_DATA | SYNCHRONIZE;
-    inline constexpr int64_t FILE_GENERIC_EXECUTE = STANDARD_RIGHTS_EXECUTE | FILE_READ_ATTRIBUTES | FILE_EXECUTE | SYNCHRONIZE;
 }
 #include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
 #include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
-#include "golang/syscall/security_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
+    namespace windows = golang::internal::runtime::syscall::windows;
+    using MemoryBasicInformation = windows::MemoryBasicInformation;
+    using Context = windows::Context;
+}
 #include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
-    namespace windows = golang::internal::runtime::syscall::windows;
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/security_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
     inline constexpr int64_t SIO_UDP_NETRESET = syscall::IOC_IN | syscall::IOC_VENDOR | 15LL;
-    using MemoryBasicInformation = windows::MemoryBasicInformation;
-    using Context = windows::Context;
 }

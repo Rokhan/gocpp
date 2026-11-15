@@ -32,9 +32,7 @@ namespace golang::go::types
     struct GoTag_ImportMode { };
     using ImportMode = gocpp::defined<int64_t, GoTag_ImportMode>;
 }
-#include "golang/go/types/type.h"
 #include "golang/go/types/package.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
 
 namespace golang::go::types
 {
@@ -104,30 +102,6 @@ namespace golang::go::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Importer& value);
-    struct Instance
-    {
-        TypeList* TypeArgs{};
-        golang::go::types::Type Type{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Instance& value);
-}
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::go::types
-{
     struct ImporterFrom : virtual gocpp::Interface, Importer
     {
         using gocpp::Interface::operator==;
@@ -203,53 +177,12 @@ namespace golang::go::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ImporterFrom& value);
-    namespace token = golang::go::token;
-    namespace errors = golang::internal::types::errors;
-}
-#include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-#include "golang/go/token/position.h"
-#include "golang/go/types/operand.h"
-
-namespace golang::go::types
-{
-    namespace ast = golang::go::ast;
 }
 #include "golang/go/types/sizes.h"
-#include "golang/internal/types/errors/codes.h"
 #include "golang/go/types/context.fwd.h"
-#include "golang/go/types/object.fwd.h"
 
 namespace golang::go::types
 {
-    namespace constant = golang::go::constant;
-    struct Error
-    {
-        token::FileSet* Fset{}; // file set for interpretation of Pos
-        token::Pos Pos{}; // error position
-        gocpp::string Msg{}; // error message
-        bool Soft{}; // if set, error is "soft"
-        // go116code is a future API, unexported as the set of error codes is large
-        // and likely to change significantly during experimentation. Tools wishing
-        // to preview this feature may read go116code using reflection (see
-        // errorcodes_test.go), but beware that there is no guarantee of future
-        // compatibility.
-        errors::Code go116code{};
-        token::Pos go116start{};
-        token::Pos go116end{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Error& value);
     struct Config
     {
         // Context is the context used for resolving global identifiers. If nil, the
@@ -319,6 +252,65 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Config& value);
+    void srcimporter_setUsesCgo(Config* conf);
+}
+#include "golang/go/types/type.h"
+#include "golang/go/types/typelists.fwd.h"
+
+namespace golang::go::types
+{
+    struct Instance
+    {
+        TypeList* TypeArgs{};
+        golang::go::types::Type Type{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Instance& value);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/types/object.fwd.h"
+
+namespace golang::go::types
+{
+    struct Initializer
+    {
+        gocpp::slice<Var*> Lhs{}; // var Lhs = Rhs
+        ast::Expr Rhs{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Initializer& value);
+}
+#include "golang/go/constant/value.h"
+#include "golang/go/types/operand.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
     struct TypeAndValue
     {
         operandMode mode{};
@@ -337,24 +329,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeAndValue& value);
-    struct Initializer
-    {
-        gocpp::slice<Var*> Lhs{}; // var Lhs = Rhs
-        ast::Expr Rhs{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Initializer& value);
-    void srcimporter_setUsesCgo(Config* conf);
 }
 #include "golang/go/types/object.h"
 #include "golang/go/types/scope.fwd.h"
@@ -477,6 +451,46 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+    namespace errors = golang::internal::types::errors;
+}
+#include "golang/go/token/position.h"
+#include "golang/internal/types/errors/codes.h"
+
+namespace golang::go::types
+{
+    struct Error
+    {
+        token::FileSet* Fset{}; // file set for interpretation of Pos
+        token::Pos Pos{}; // error position
+        gocpp::string Msg{}; // error message
+        bool Soft{}; // if set, error is "soft"
+        // go116code is a future API, unexported as the set of error codes is large
+        // and likely to change significantly during experimentation. Tools wishing
+        // to preview this feature may read go116code using reflection (see
+        // errorcodes_test.go), but beware that there is no guarantee of future
+        // compatibility.
+        errors::Code go116code{};
+        token::Pos go116start{};
+        token::Pos go116end{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Error& value);
 }
 
 #include "golang/go/ast/ast.h"

@@ -27,6 +27,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dloggerFake& value);
+    dloggerFake dlogFake();
     struct debugLogReader
     {
         debugLogBuf* data{};
@@ -53,7 +54,6 @@ namespace golang::runtime
     void printDebugLog();
     void printDebugLogImpl();
     void printDebugLogPC(uintptr_t pc, bool returnPC);
-    dloggerFake dlogFake();
 }
 #include "golang/runtime/debuglog_off.h"
 
@@ -61,7 +61,6 @@ namespace golang::runtime
 {
     dlogger dlog();
 }
-#include "golang/internal/runtime/sys/nih.fwd.h"
 #include "golang/internal/runtime/sys/nih.h"
 
 namespace golang::runtime
@@ -114,9 +113,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct debugLogWriter& value);
 }
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
 
 namespace golang::runtime
 {

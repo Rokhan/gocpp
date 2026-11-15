@@ -40,12 +40,16 @@ namespace golang::runtime
     // and there may be other issues (see #54104).
     inline constexpr long riscv64AddrBits = 56;
 }
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 
 namespace golang::runtime
 {
     namespace goos = golang::internal::goos;
+}
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+
+namespace golang::runtime
+{
     namespace goarch = golang::internal::goarch;
     inline constexpr int64_t addrBits = goos::IsAix * aixAddrBits + goarch::IsRiscv64 * riscv64AddrBits + goos::IsFreebsd * goarch::IsAmd64 * freebsdAmd64AddrBits + (1 - goos::IsAix) * (1 - goarch::IsRiscv64) * (1 - goos::IsFreebsd * goarch::IsAmd64) * defaultAddrBits;
 }

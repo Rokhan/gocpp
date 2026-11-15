@@ -52,6 +52,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct addrRange& value);
+    addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
     // minOffAddr is the minimum address in the offset space, and
     // it corresponds to the virtual address arenaBaseOffset.
     extern offAddr minOffAddr;
@@ -59,36 +60,11 @@ namespace golang::runtime
     // space. It corresponds to the highest virtual address representable
     // by the page alloc chunk and heap arena maps.
     extern offAddr maxOffAddr;
-    addrRange makeAddrRange(uintptr_t base, uintptr_t limit);
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
-
-namespace golang::runtime
-{
-    namespace atomic = golang::internal::runtime::atomic;
-}
-#include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/mstats.fwd.h"
 
 namespace golang::runtime
 {
-    struct atomicOffAddr
-    {
-        // a contains the offset address, unlike offAddr.
-        atomic::Int64 a{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
     struct addrRanges
     {
         // ranges is a slice of ranges sorted by base.
@@ -111,6 +87,34 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct addrRanges& value);
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    struct atomicOffAddr
+    {
+        // a contains the offset address, unlike offAddr.
+        atomic::Int64 a{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct atomicOffAddr& value);
 }
 
 #include "golang/runtime/mstats.h"

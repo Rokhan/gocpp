@@ -14,7 +14,6 @@ namespace golang::runtime
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/mheap.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
@@ -34,6 +33,11 @@ namespace golang::runtime
     gocpp::unsafe_pointer mallocgcSmallNoScanSC6(uintptr_t size, _type* typ, bool needzero);
     gocpp::unsafe_pointer mallocgcSmallNoScanSC7(uintptr_t size, _type* typ, bool needzero);
     gocpp::unsafe_pointer mallocgcTinySlowPath(uintptr_t size, _type* typ, bool needzero);
+}
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
     gocpp::unsafe_pointer mallocgcSmallScanSlowPath(uintptr_t size, _type* typ, bool needzero, spanClass spc, uintptr_t elemsize);
     gocpp::unsafe_pointer mallocgcSmallNoScanSlowPath(uintptr_t size, _type* typ, bool needzero, spanClass spc, uintptr_t elemsize);
 

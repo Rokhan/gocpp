@@ -27,21 +27,6 @@ namespace golang::internal::runtime::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct noCopy& value);
-    struct align64
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct align64& value);
     struct Int32
     {
         noCopy noCopy{};
@@ -59,6 +44,89 @@ namespace golang::internal::runtime::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int32& value);
+    struct Uint8
+    {
+        noCopy noCopy{};
+        uint8_t value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Uint8& value);
+    struct Bool
+    {
+        // Inherits noCopy from Uint8.
+        Uint8 u{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Bool& value);
+    struct Uint32
+    {
+        noCopy noCopy{};
+        uint32_t value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
+    struct Uintptr
+    {
+        noCopy noCopy{};
+        uintptr_t value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
+    struct align64
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct align64& value);
     struct Int64
     {
         noCopy noCopy{};
@@ -77,40 +145,6 @@ namespace golang::internal::runtime::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int64& value);
-    struct Uint8
-    {
-        noCopy noCopy{};
-        uint8_t value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Uint8& value);
-    struct Uint32
-    {
-        noCopy noCopy{};
-        uint32_t value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Uint32& value);
     struct Uint64
     {
         noCopy noCopy{};
@@ -129,41 +163,6 @@ namespace golang::internal::runtime::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint64& value);
-    struct Uintptr
-    {
-        noCopy noCopy{};
-        uintptr_t value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Uintptr& value);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    struct Bool
-    {
-        // Inherits noCopy from Uint8.
-        Uint8 u{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Bool& value);
     struct Float64
     {
         // Inherits noCopy and align64 from Uint64.
@@ -181,6 +180,7 @@ namespace golang::internal::runtime::atomic
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Float64& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct UnsafePointer
     {
         noCopy noCopy{};

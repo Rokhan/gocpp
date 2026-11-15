@@ -30,9 +30,50 @@ namespace golang::encoding::json::jsontext
 
     std::ostream& operator<<(std::ostream& os, const struct bufferStatistics& value);
 }
-#include "golang/encoding/json/jsontext/options.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/encode.fwd.h"
+
+namespace golang::encoding::json::jsontext
+{
+    void putBufferedEncoder(golang::encoding::json::jsontext::Encoder* e);
+    void putStreamingEncoder(golang::encoding::json::jsontext::Encoder* e);
+}
+#include "golang/encoding/json/jsontext/decode.fwd.h"
+
+namespace golang::encoding::json::jsontext
+{
+    void putBufferedDecoder(golang::encoding::json::jsontext::Decoder* d);
+    void putStreamingDecoder(golang::encoding::json::jsontext::Decoder* d);
+}
+#include "golang/sync/pool.fwd.h"
+
+namespace golang::encoding::json::jsontext
+{
+    namespace sync = golang::sync;
+    // This owns the internal buffer since there is no io.Writer to output to.
+    // Since the buffer can get arbitrarily large in normal usage,
+    // there is statistical tracking logic to determine whether to recycle
+    // the internal buffer or not based on a history of utilization.
+    extern sync::Pool* bufferedEncoderPool;
+    // This owns the internal buffer, but it is only used to temporarily store
+    // buffered JSON before flushing it to the underlying io.Writer.
+    // In a sufficiently efficient streaming mode, we do not expect the buffer
+    // to grow arbitrarily large. Thus, we avoid recycling large buffers.
+    extern sync::Pool* streamingEncoderPool;
+    // This does not own the internal buffer since
+    // it is taken directly from the provided bytes.Buffer.
+    extern sync::Pool* bytesBufferEncoderPool;
+    // This does not own the internal buffer since it is externally provided.
+    extern sync::Pool* bufferedDecoderPool;
+    // This owns the internal buffer, but it is only used to temporarily store
+    // buffered JSON fetched from the underlying io.Reader.
+    // In a sufficiently efficient streaming mode, we do not expect the buffer
+    // to grow arbitrarily large. Thus, we avoid recycling large buffers.
+    extern sync::Pool* streamingDecoderPool;
+    // This does not own the internal buffer since
+    // it is taken directly from the provided bytes.Buffer.
+    extern sync::Pool* bytesBufferDecoderPool;
+}
+#include "golang/encoding/json/jsontext/options.h"
 
 namespace golang::encoding::json::jsontext
 {
@@ -49,8 +90,6 @@ namespace golang::encoding::json::jsontext
     {
         return getBufferedEncoder(gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, opts...));
     }
-    void putBufferedEncoder(golang::encoding::json::jsontext::Encoder* e);
-    void putStreamingEncoder(golang::encoding::json::jsontext::Encoder* e);
     golang::encoding::json::jsontext::Decoder* getBufferedDecoder(gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
 
     template<typename... Args>
@@ -64,34 +103,12 @@ namespace golang::encoding::json::jsontext
     {
         return getBufferedDecoder(b, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, opts...));
     }
-    void putBufferedDecoder(golang::encoding::json::jsontext::Decoder* d);
-    void putStreamingDecoder(golang::encoding::json::jsontext::Decoder* d);
-}
-#include "golang/io/io.fwd.h"
-#include "golang/sync/pool.fwd.h"
-
-namespace golang::encoding::json::jsontext
-{
-    namespace sync = golang::sync;
 }
 #include "golang/io/io.h"
 
 namespace golang::encoding::json::jsontext
 {
     namespace io = golang::io;
-    // This owns the internal buffer since there is no io.Writer to output to.
-    // Since the buffer can get arbitrarily large in normal usage,
-    // there is statistical tracking logic to determine whether to recycle
-    // the internal buffer or not based on a history of utilization.
-    extern sync::Pool* bufferedEncoderPool;
-    // This owns the internal buffer, but it is only used to temporarily store
-    // buffered JSON before flushing it to the underlying io.Writer.
-    // In a sufficiently efficient streaming mode, we do not expect the buffer
-    // to grow arbitrarily large. Thus, we avoid recycling large buffers.
-    extern sync::Pool* streamingEncoderPool;
-    // This does not own the internal buffer since
-    // it is taken directly from the provided bytes.Buffer.
-    extern sync::Pool* bytesBufferEncoderPool;
     golang::encoding::json::jsontext::Encoder* getStreamingEncoder(io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
 
     template<typename... Args>
@@ -105,16 +122,6 @@ namespace golang::encoding::json::jsontext
     {
         return getStreamingEncoder(w, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, opts...));
     }
-    // This does not own the internal buffer since it is externally provided.
-    extern sync::Pool* bufferedDecoderPool;
-    // This owns the internal buffer, but it is only used to temporarily store
-    // buffered JSON fetched from the underlying io.Reader.
-    // In a sufficiently efficient streaming mode, we do not expect the buffer
-    // to grow arbitrarily large. Thus, we avoid recycling large buffers.
-    extern sync::Pool* streamingDecoderPool;
-    // This does not own the internal buffer since
-    // it is taken directly from the provided bytes.Buffer.
-    extern sync::Pool* bytesBufferDecoderPool;
     golang::encoding::json::jsontext::Decoder* getStreamingDecoder(io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> opts);
 
     template<typename... Args>

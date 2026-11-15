@@ -136,17 +136,6 @@ namespace golang::time
     inline constexpr int64_t stdFracSecond0 = 34;
     inline constexpr int64_t stdFracSecond9 = 35;
     inline constexpr int64_t stdNeedDate = 1 << 8;
-    inline constexpr int64_t stdNeedYday = 1 << 9;
-    inline constexpr int64_t stdNeedClock = 1 << 10;
-    inline constexpr long stdArgShift = 16;
-    inline constexpr long stdSeparatorShift = 28;
-    struct ParseError;
-    // These are borrowed from unicode/utf8 and strconv and replicate behavior in
-    // that package, since we can't take a dependency on either.
-    inline const gocpp::string lowerhex = "0123456789abcdef"_s;
-    inline constexpr long runeSelf = 0x80;
-    inline constexpr char runeError = '\uFFFD';
-    struct parseDurationError;
     inline constexpr int64_t stdLongMonth = 1 + stdNeedDate;
     inline constexpr int64_t stdMonth = 2 + stdNeedDate;
     inline constexpr int64_t stdNumMonth = 3 + stdNeedDate;
@@ -156,8 +145,12 @@ namespace golang::time
     inline constexpr int64_t stdDay = 7 + stdNeedDate;
     inline constexpr int64_t stdUnderDay = 8 + stdNeedDate;
     inline constexpr int64_t stdZeroDay = 9 + stdNeedDate;
+    inline constexpr int64_t stdLongYear = 19 + stdNeedDate;
+    inline constexpr int64_t stdYear = 20 + stdNeedDate;
+    inline constexpr int64_t stdNeedYday = 1 << 9;
     inline constexpr int64_t stdUnderYearDay = 10 + stdNeedYday;
     inline constexpr int64_t stdZeroYearDay = 11 + stdNeedYday;
+    inline constexpr int64_t stdNeedClock = 1 << 10;
     inline constexpr int64_t stdHour = 12 + stdNeedClock;
     inline constexpr int64_t stdHour12 = 13 + stdNeedClock;
     inline constexpr int64_t stdZeroHour12 = 14 + stdNeedClock;
@@ -165,9 +158,16 @@ namespace golang::time
     inline constexpr int64_t stdZeroMinute = 16 + stdNeedClock;
     inline constexpr int64_t stdSecond = 17 + stdNeedClock;
     inline constexpr int64_t stdZeroSecond = 18 + stdNeedClock;
-    inline constexpr int64_t stdLongYear = 19 + stdNeedDate;
-    inline constexpr int64_t stdYear = 20 + stdNeedDate;
     inline constexpr int64_t stdPM = 21 + stdNeedClock;
     inline constexpr int64_t stdpm = 22 + stdNeedClock;
+    inline constexpr long stdArgShift = 16;
+    inline constexpr long stdSeparatorShift = 28;
     inline constexpr int64_t stdMask = (1 << stdArgShift) - 1;
+    struct ParseError;
+    // These are borrowed from unicode/utf8 and strconv and replicate behavior in
+    // that package, since we can't take a dependency on either.
+    inline const gocpp::string lowerhex = "0123456789abcdef"_s;
+    inline constexpr long runeSelf = 0x80;
+    inline constexpr char runeError = '\uFFFD';
+    struct parseDurationError;
 }

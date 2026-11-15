@@ -108,13 +108,10 @@ namespace golang::go::types
 
     std::ostream& operator<<(std::ostream& os, const struct bailout& value);
 }
-#include "golang/go/types/errors.h"
-#include "golang/go/types/version.h"
 #include "golang/go/types/scope.fwd.h"
 
 namespace golang::go::types
 {
-    extern types::atPos noposn;
     struct dotImportKey
     {
         golang::go::types::Scope* scope{};
@@ -132,24 +129,12 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dotImportKey& value);
-    struct action
-    {
-        goVersion version{}; // applicable language version
-        std::function<void ()> f{}; // action to be executed
-        actionDesc* desc{}; // action description; may be nil, requires debug to be set
+}
+#include "golang/go/types/errors.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct action& value);
+namespace golang::go::types
+{
+    extern types::atPos noposn;
     struct actionDesc
     {
         positioner pos{};
@@ -168,40 +153,16 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct actionDesc& value);
-    goVersion versionMax(goVersion a, goVersion b);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/version.h"
 
 namespace golang::go::types
 {
-    namespace token = golang::go::token;
-    namespace constant = golang::go::constant;
-}
-#include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-
-namespace golang::go::types
-{
-    namespace ast = golang::go::ast;
-}
-#include "golang/go/token/position.h"
-#include "golang/go/types/operand.h"
-#include "golang/go/types/basic.fwd.h"
-#include "golang/go/types/resolver.fwd.h"
-#include "golang/go/types/signature.fwd.h"
-
-namespace golang::go::types
-{
-    // nopos, noposn indicate an unknown position
-    extern token::Pos nopos;
-    struct exprInfo
+    struct action
     {
-        bool isLhs{}; // expression is lhs operand of a shift with delayed type-check
-        operandMode mode{};
-        Basic* typ{};
-        constant::Value val{}; // constant value; or nil (if not a constant)
+        goVersion version{}; // applicable language version
+        std::function<void ()> f{}; // action to be executed
+        actionDesc* desc{}; // action description; may be nil, requires debug to be set
 
         using isGoStruct = void;
 
@@ -214,7 +175,41 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct exprInfo& value);
+    std::ostream& operator<<(std::ostream& os, const struct action& value);
+    goVersion versionMax(goVersion a, goVersion b);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::types
+{
+    // nopos, noposn indicate an unknown position
+    extern token::Pos nopos;
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    ast::Ident* instantiatedIdent(ast::Expr expr);
+}
+#include "golang/go/constant/value.fwd.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
+}
+#include "golang/go/constant/value.h"
+#include "golang/go/types/resolver.fwd.h"
+#include "golang/go/types/signature.fwd.h"
+
+namespace golang::go::types
+{
     struct environment
     {
         declInfo* decl{}; // package-level declaration whose init expression/function body is checked
@@ -242,11 +237,34 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct environment& value);
-    ast::Ident* instantiatedIdent(ast::Expr expr);
+}
+#include "golang/go/types/operand.h"
+#include "golang/go/types/basic.fwd.h"
+
+namespace golang::go::types
+{
+    struct exprInfo
+    {
+        bool isLhs{}; // expression is lhs operand of a shift with delayed type-check
+        operandMode mode{};
+        Basic* typ{};
+        constant::Value val{}; // constant value; or nil (if not a constant)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct exprInfo& value);
 }
 #include "golang/go/types/mono.h"
 #include "golang/go/types/object.h"
-#include "golang/go/types/type.h"
 #include "golang/go/types/api.fwd.h"
 #include "golang/go/types/context.fwd.h"
 #include "golang/go/types/package.fwd.h"
@@ -313,20 +331,6 @@ namespace golang::go::types
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        types::Object ObjectOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Ident* id);
-        types::Object ObjectOf(const gocpp::ObjRecv<struct Checker>& self, ast::Ident* id);
-        types::PkgName* PkgNameOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::ImportSpec* imp);
-        types::PkgName* PkgNameOf(const gocpp::ObjRecv<struct Checker>& self, ast::ImportSpec* imp);
-        types::Type TypeOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Expr e);
-        types::Type TypeOf(const gocpp::ObjRecv<struct Checker>& self, ast::Expr e);
-        types::Object lookup(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name);
-        std::tuple<types::Scope*, types::Object> lookupScope(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name);
-        bool recordTypes(const gocpp::PtrRecv<struct Checker, false>& self);
-        bool recordTypes(const gocpp::ObjRecv<struct Checker>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Checker& value);
     Checker* NewChecker(Config* conf, token::FileSet* fset, Package* pkg, golang::go::types::Info* info);
 }
@@ -360,6 +364,16 @@ namespace golang::go::types
         {
             return describef(a, pos, format, gocpp::ToSlice<go_any>(value, args...));
         }
+        types::Object ObjectOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Ident* id);
+        types::Object ObjectOf(const gocpp::ObjRecv<struct Checker>& self, ast::Ident* id);
+        types::PkgName* PkgNameOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::ImportSpec* imp);
+        types::PkgName* PkgNameOf(const gocpp::ObjRecv<struct Checker>& self, ast::ImportSpec* imp);
+        types::Type TypeOf(const gocpp::PtrRecv<struct Checker, false>& self, ast::Expr e);
+        types::Type TypeOf(const gocpp::ObjRecv<struct Checker>& self, ast::Expr e);
+        types::Object lookup(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name);
+        std::tuple<types::Scope*, types::Object> lookupScope(const gocpp::PtrRecv<struct Checker, false>& self, gocpp::string name);
+        bool recordTypes(const gocpp::PtrRecv<struct Checker, false>& self);
+        bool recordTypes(const gocpp::ObjRecv<struct Checker>& self);
         void addDeclDep(Checker* check, Object to);
         void rememberUntyped(Checker* check, ast::Expr e, bool lhs, operandMode mode, Basic* typ, constant::Value val);
         action* later(Checker* check, std::function<void ()> f);

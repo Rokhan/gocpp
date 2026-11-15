@@ -14,17 +14,17 @@ namespace golang::runtime
     inline constexpr double capacityPerProc = 1e9;
     struct GoTag_limiterEventType;
     using limiterEventType = gocpp::defined<uint8_t, GoTag_limiterEventType>;
-    inline constexpr long limiterEventBits = 3;
-    struct GoTag_limiterEventStamp;
-    using limiterEventStamp = gocpp::defined<uint64_t, GoTag_limiterEventStamp>;
-    struct limiterEvent;
     inline constexpr limiterEventType limiterEventNone = 0;
     inline constexpr limiterEventType limiterEventIdleMarkWork = 1;
     inline constexpr limiterEventType limiterEventMarkAssist = 2;
     inline constexpr limiterEventType limiterEventScavengeAssist = 3;
     inline constexpr limiterEventType limiterEventIdle = 4;
+    inline constexpr long limiterEventBits = 3;
     // limiterEventTypeMask is a mask for the bits in p.limiterEventStart that represent
     // the event type. The rest of the bits of that field represent a timestamp.
     inline constexpr uint64_t limiterEventTypeMask = uint64_t((1 << limiterEventBits) - 1) << (64 - limiterEventBits);
+    struct GoTag_limiterEventStamp;
+    using limiterEventStamp = gocpp::defined<uint64_t, GoTag_limiterEventStamp>;
     inline constexpr limiterEventStamp limiterEventStampNone = limiterEventStamp(0);
+    struct limiterEvent;
 }

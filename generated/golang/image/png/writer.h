@@ -84,6 +84,25 @@ namespace golang::image::png
     struct GoTag_EncoderBuffer { };
     struct GoTag_CompressionLevel { };
     using CompressionLevel = gocpp::defined<int64_t, GoTag_CompressionLevel>;
+    struct Encoder
+    {
+        CompressionLevel CompressionLevel{};
+        // BufferPool optionally specifies a buffer pool to get temporary
+        // EncoderBuffers when encoding an image.
+        EncoderBufferPool BufferPool{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
     struct opaquer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -148,25 +167,6 @@ namespace golang::image::png
 
     std::ostream& operator<<(std::ostream& os, const struct opaquer& value);
     int64_t abs8(uint8_t d);
-    struct Encoder
-    {
-        CompressionLevel CompressionLevel{};
-        // BufferPool optionally specifies a buffer pool to get temporary
-        // EncoderBuffers when encoding an image.
-        EncoderBufferPool BufferPool{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
     int64_t levelToZlib(CompressionLevel l);
 }
 #include "golang/image/png/reader.fwd.h"
@@ -175,23 +175,41 @@ namespace golang::image::png
 {
     int64_t filter(gocpp::array_ptr<gocpp::array<gocpp::slice<unsigned char>, nFilter>> cr, gocpp::slice<unsigned char> pr, int64_t bpp);
 }
-#include "golang/bufio/bufio.fwd.h"
-#include "golang/compress/zlib/writer.fwd.h"
 #include "golang/image/image.fwd.h"
+
+namespace golang::image::png
+{
+    namespace image = golang::image;
+}
+#include "golang/image/image.h"
+
+namespace golang::image::png
+{
+    bool opaque(image::Image m);
+}
 #include "golang/io/io.fwd.h"
 
 namespace golang::image::png
 {
     namespace io = golang::io;
-    namespace image = golang::image;
-    namespace zlib = golang::compress::zlib;
-    namespace bufio = golang::bufio;
 }
-#include "golang/image/image.h"
 #include "golang/io/io.h"
 
 namespace golang::image::png
 {
+    gocpp::error Encode(io::Writer w, image::Image m);
+}
+#include "golang/compress/zlib/writer.fwd.h"
+
+namespace golang::image::png
+{
+    namespace zlib = golang::compress::zlib;
+}
+#include "golang/bufio/bufio.fwd.h"
+
+namespace golang::image::png
+{
+    namespace bufio = golang::bufio;
     struct encoder
     {
         Encoder* enc{};
@@ -220,8 +238,6 @@ namespace golang::image::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct encoder& value);
-    bool opaque(image::Image m);
-    gocpp::error Encode(io::Writer w, image::Image m);
     using EncoderBuffer = gocpp::defined<encoder, GoTag_EncoderBuffer>;
 }
 

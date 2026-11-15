@@ -14,13 +14,11 @@ namespace golang::go::types
 {
     gocpp::string subscript(uint64_t x);
 }
-#include "golang/go/types/type.h"
 #include "golang/go/types/package.fwd.h"
 
 namespace golang::go::types
 {
     Qualifier RelativeTo(Package* pkg);
-    gocpp::string TypeString(golang::go::types::Type typ, Qualifier qf);
 }
 #include "golang/bytes/buffer.fwd.h"
 
@@ -28,14 +26,24 @@ namespace golang::go::types
 {
     namespace bytes = golang::bytes;
 }
-#include "golang/go/types/context.fwd.h"
 #include "golang/go/types/signature.fwd.h"
+
+namespace golang::go::types
+{
+    void WriteSignature(bytes::Buffer* buf, golang::go::types::Signature* sig, Qualifier qf);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    gocpp::string TypeString(golang::go::types::Type typ, Qualifier qf);
+    void WriteType(bytes::Buffer* buf, golang::go::types::Type typ, Qualifier qf);
+}
+#include "golang/go/types/context.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
 
 namespace golang::go::types
 {
-    void WriteType(bytes::Buffer* buf, golang::go::types::Type typ, Qualifier qf);
-    void WriteSignature(bytes::Buffer* buf, golang::go::types::Signature* sig, Qualifier qf);
     struct typeWriter
     {
         bytes::Buffer* buf{};

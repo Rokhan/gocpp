@@ -9,13 +9,13 @@ namespace golang::sync
     struct poolDequeue;
     struct eface;
     inline constexpr long dequeueBits = 32;
-    using dequeueNil = gocpp::empty_struct*;
-    struct poolChain;
-    struct poolChainElt;
     // dequeueLimit is the maximum size of a poolDequeue.
     //
     // This must be at most (1<<dequeueBits)/2 because detecting fullness
     // depends on wrapping around the ring buffer without wrapping around
     // the index. We divide by 4 so this fits in an int on 32-bit.
     inline constexpr int64_t dequeueLimit = (1LL << dequeueBits) / 4LL;
+    using dequeueNil = gocpp::empty_struct*;
+    struct poolChain;
+    struct poolChainElt;
 }

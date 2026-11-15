@@ -43,10 +43,10 @@ namespace golang::unicode::utf8
     inline constexpr long s5 = 0x34;
     inline constexpr long s6 = 0x04;
     inline constexpr long s7 = 0x44;
-    struct acceptRange;
-    inline constexpr int64_t ptrSize = 4 << (~ uintptr_t(0) >> 63);
     inline constexpr gocpp::rune runeErrorByte0 = t3 | (RuneError >> 12);
     inline constexpr gocpp::rune runeErrorByte1 = tx | (RuneError >> 6) & maskx;
     inline constexpr gocpp::rune runeErrorByte2 = tx | RuneError & maskx;
+    struct acceptRange;
+    inline constexpr int64_t ptrSize = 4 << (~ uintptr_t(0) >> 63);
     inline constexpr uint64_t hiBits = uint64_t(0x8080808080808080_bi >> (64 - 8 * ptrSize));
 }

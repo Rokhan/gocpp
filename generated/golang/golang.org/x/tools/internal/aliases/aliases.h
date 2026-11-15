@@ -9,20 +9,24 @@
 #include "golang/golang.org/x/tools/internal/aliases/aliases.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/alias.fwd.h"
 #include "golang/go/types/object.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::aliases
 {
     namespace types = golang::go::types;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::aliases
+{
     namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
 #include "golang/go/types/type.h"
+#include "golang/go/types/alias.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::aliases
 {

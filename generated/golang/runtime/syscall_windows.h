@@ -16,21 +16,6 @@ namespace golang::runtime
     void cbsUnlock();
     struct GoTag_abiPartKind { };
     using abiPartKind = gocpp::defined<int64_t, GoTag_abiPartKind>;
-    void callbackasm();
-    uintptr_t callbackasmAddr(int64_t i);
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args);
-
-    template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, Args... args)
-    {
-        return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(args...));
-    }
-
-    template<typename... Args>
-    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, uintptr_t value, Args... args)
-    {
-        return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(value, args...));
-    }
     struct abiPart
     {
         abiPartKind kind{};
@@ -51,12 +36,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiPart& value);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/runtime/runtime2.h"
-
-namespace golang::runtime
-{
     struct abiDesc
     {
         gocpp::slice<abiPart> parts{};
@@ -80,6 +59,44 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct abiDesc& value);
+    void callbackasm();
+    uintptr_t callbackasmAddr(int64_t i);
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, gocpp::slice<uintptr_t> args);
+
+    template<typename... Args>
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, Args... args)
+    {
+        return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(args...));
+    }
+
+    template<typename... Args>
+    std::tuple<uintptr_t, uintptr_t, uintptr_t> syscall_syscalln(uintptr_t fn, uintptr_t n, uintptr_t value, Args... args)
+    {
+        return syscall_syscalln(fn, n, gocpp::ToSlice<uintptr_t>(value, args...));
+    }
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    struct winCallback
+    {
+        funcval* fn{}; // Go function
+        uintptr_t retPop{}; // For 386 cdecl, how many bytes to pop on return
+        abiDesc abiMap{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
     struct winCallbackKey
     {
         funcval* fn{};
@@ -97,7 +114,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct winCallbackKey& value);
-    uintptr_t compileCallback(eface fn, bool cdecl);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct callbackArgs
     {
         uintptr_t index{};
@@ -123,25 +140,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct callbackArgs& value);
-    struct winCallback
-    {
-        funcval* fn{}; // Go function
-        uintptr_t retPop{}; // For 386 cdecl, how many bytes to pop on return
-        abiDesc abiMap{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct winCallback& value);
     void callbackWrap(callbackArgs* a);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    uintptr_t compileCallback(eface fn, bool cdecl);
 }
 #include "golang/runtime/zcallback_windows.fwd.h"
 

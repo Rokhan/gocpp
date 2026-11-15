@@ -286,527 +286,6 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Seeker& value);
-    struct ReaderFrom : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        ReaderFrom(){}
-        ReaderFrom(ReaderFrom& i) = default;
-        ReaderFrom(const ReaderFrom& i) = default;
-        ReaderFrom& operator=(ReaderFrom& i) = default;
-        ReaderFrom& operator=(const ReaderFrom& i) = default;
-
-        inline ReaderFrom(nullptr_t) {};
-        ReaderFrom& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        ReaderFrom(T& ref);
-
-        template<typename T>
-        ReaderFrom(const T& ref);
-
-        template<typename T>
-        ReaderFrom(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IReaderFrom
-        {
-            virtual std::tuple<int64_t, gocpp::error> vReadFrom(Reader r) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IReaderFrom>
-        struct ReaderFromImpl : virtual TInterface
-        {
-            explicit ReaderFromImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<int64_t, gocpp::error> vReadFrom(Reader r) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IReaderFrom* value() const;
-
-        std::shared_ptr<IReaderFrom> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct ReaderFrom, false>& self, Reader r);
-        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::ObjRecv<struct ReaderFrom>& self, Reader r);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct ReaderFrom& value);
-    struct WriterTo : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        WriterTo(){}
-        WriterTo(WriterTo& i) = default;
-        WriterTo(const WriterTo& i) = default;
-        WriterTo& operator=(WriterTo& i) = default;
-        WriterTo& operator=(const WriterTo& i) = default;
-
-        inline WriterTo(nullptr_t) {};
-        WriterTo& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        WriterTo(T& ref);
-
-        template<typename T>
-        WriterTo(const T& ref);
-
-        template<typename T>
-        WriterTo(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IWriterTo
-        {
-            virtual std::tuple<int64_t, gocpp::error> vWriteTo(Writer w) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IWriterTo>
-        struct WriterToImpl : virtual TInterface
-        {
-            explicit WriterToImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<int64_t, gocpp::error> vWriteTo(Writer w) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IWriterTo* value() const;
-
-        std::shared_ptr<IWriterTo> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self, Writer w);
-        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<struct WriterTo>& self, Writer w);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct WriterTo& value);
-    struct ReaderAt : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        ReaderAt(){}
-        ReaderAt(ReaderAt& i) = default;
-        ReaderAt(const ReaderAt& i) = default;
-        ReaderAt& operator=(ReaderAt& i) = default;
-        ReaderAt& operator=(const ReaderAt& i) = default;
-
-        inline ReaderAt(nullptr_t) {};
-        ReaderAt& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        ReaderAt(T& ref);
-
-        template<typename T>
-        ReaderAt(const T& ref);
-
-        template<typename T>
-        ReaderAt(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IReaderAt
-        {
-            virtual std::tuple<int64_t, gocpp::error> vReadAt(gocpp::slice<unsigned char> p, int64_t off) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IReaderAt>
-        struct ReaderAtImpl : virtual TInterface
-        {
-            explicit ReaderAtImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<int64_t, gocpp::error> vReadAt(gocpp::slice<unsigned char> p, int64_t off) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IReaderAt* value() const;
-
-        std::shared_ptr<IReaderAt> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::PtrRecv<struct ReaderAt, false>& self, gocpp::slice<unsigned char> p, int64_t off);
-        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::ObjRecv<struct ReaderAt>& self, gocpp::slice<unsigned char> p, int64_t off);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct ReaderAt& value);
-    struct WriterAt : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        WriterAt(){}
-        WriterAt(WriterAt& i) = default;
-        WriterAt(const WriterAt& i) = default;
-        WriterAt& operator=(WriterAt& i) = default;
-        WriterAt& operator=(const WriterAt& i) = default;
-
-        inline WriterAt(nullptr_t) {};
-        WriterAt& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        WriterAt(T& ref);
-
-        template<typename T>
-        WriterAt(const T& ref);
-
-        template<typename T>
-        WriterAt(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IWriterAt
-        {
-            virtual std::tuple<int64_t, gocpp::error> vWriteAt(gocpp::slice<unsigned char> p, int64_t off) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IWriterAt>
-        struct WriterAtImpl : virtual TInterface
-        {
-            explicit WriterAtImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<int64_t, gocpp::error> vWriteAt(gocpp::slice<unsigned char> p, int64_t off) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IWriterAt* value() const;
-
-        std::shared_ptr<IWriterAt> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> WriteAt(const gocpp::PtrRecv<struct WriterAt, false>& self, gocpp::slice<unsigned char> p, int64_t off);
-        std::tuple<int64_t, gocpp::error> WriteAt(const gocpp::ObjRecv<struct WriterAt>& self, gocpp::slice<unsigned char> p, int64_t off);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct WriterAt& value);
-    struct ByteReader : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        ByteReader(){}
-        ByteReader(ByteReader& i) = default;
-        ByteReader(const ByteReader& i) = default;
-        ByteReader& operator=(ByteReader& i) = default;
-        ByteReader& operator=(const ByteReader& i) = default;
-
-        inline ByteReader(nullptr_t) {};
-        ByteReader& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        ByteReader(T& ref);
-
-        template<typename T>
-        ByteReader(const T& ref);
-
-        template<typename T>
-        ByteReader(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IByteReader
-        {
-            virtual std::tuple<unsigned char, gocpp::error> vReadByte() = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IByteReader>
-        struct ByteReaderImpl : virtual TInterface
-        {
-            explicit ByteReaderImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<unsigned char, gocpp::error> vReadByte() override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IByteReader* value() const;
-
-        std::shared_ptr<IByteReader> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct ByteReader, false>& self);
-        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct ByteReader>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct ByteReader& value);
-    struct ByteWriter : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        ByteWriter(){}
-        ByteWriter(ByteWriter& i) = default;
-        ByteWriter(const ByteWriter& i) = default;
-        ByteWriter& operator=(ByteWriter& i) = default;
-        ByteWriter& operator=(const ByteWriter& i) = default;
-
-        inline ByteWriter(nullptr_t) {};
-        ByteWriter& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        ByteWriter(T& ref);
-
-        template<typename T>
-        ByteWriter(const T& ref);
-
-        template<typename T>
-        ByteWriter(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IByteWriter
-        {
-            virtual gocpp::error vWriteByte(unsigned char c) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IByteWriter>
-        struct ByteWriterImpl : virtual TInterface
-        {
-            explicit ByteWriterImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            gocpp::error vWriteByte(unsigned char c) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IByteWriter* value() const;
-
-        std::shared_ptr<IByteWriter> mValue;
-    };
-
-    namespace rec
-    {
-        gocpp::error WriteByte(const gocpp::PtrRecv<struct ByteWriter, false>& self, unsigned char c);
-        gocpp::error WriteByte(const gocpp::ObjRecv<struct ByteWriter>& self, unsigned char c);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value);
-    struct RuneReader : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        RuneReader(){}
-        RuneReader(RuneReader& i) = default;
-        RuneReader(const RuneReader& i) = default;
-        RuneReader& operator=(RuneReader& i) = default;
-        RuneReader& operator=(const RuneReader& i) = default;
-
-        inline RuneReader(nullptr_t) {};
-        RuneReader& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        RuneReader(T& ref);
-
-        template<typename T>
-        RuneReader(const T& ref);
-
-        template<typename T>
-        RuneReader(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IRuneReader
-        {
-            virtual std::tuple<gocpp::rune, int64_t, gocpp::error> vReadRune() = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IRuneReader>
-        struct RuneReaderImpl : virtual TInterface
-        {
-            explicit RuneReaderImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<gocpp::rune, int64_t, gocpp::error> vReadRune() override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IRuneReader* value() const;
-
-        std::shared_ptr<IRuneReader> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct RuneReader, false>& self);
-        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct RuneReader>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct RuneReader& value);
-    struct StringWriter : virtual gocpp::Interface
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        StringWriter(){}
-        StringWriter(StringWriter& i) = default;
-        StringWriter(const StringWriter& i) = default;
-        StringWriter& operator=(StringWriter& i) = default;
-        StringWriter& operator=(const StringWriter& i) = default;
-
-        inline StringWriter(nullptr_t) {};
-        StringWriter& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        StringWriter(T& ref);
-
-        template<typename T>
-        StringWriter(const T& ref);
-
-        template<typename T>
-        StringWriter(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IStringWriter
-        {
-            virtual std::tuple<int64_t, gocpp::error> vWriteString(gocpp::string s) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IStringWriter>
-        struct StringWriterImpl : virtual TInterface
-        {
-            explicit StringWriterImpl(T* ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<int64_t, gocpp::error> vWriteString(gocpp::string s) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IStringWriter* value() const;
-
-        std::shared_ptr<IStringWriter> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, gocpp::string s);
-        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, gocpp::string s);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct StringWriter& value);
-    extern gocpp::error errWhence;
-    extern gocpp::error errOffset;
-    struct discard
-    {
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct discard& value);
     struct ReadWriter : virtual gocpp::Interface, Reader, Writer
     {
         using gocpp::Interface::operator==;
@@ -1320,6 +799,321 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadWriteSeeker& value);
+    struct ReaderFrom : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        ReaderFrom(){}
+        ReaderFrom(ReaderFrom& i) = default;
+        ReaderFrom(const ReaderFrom& i) = default;
+        ReaderFrom& operator=(ReaderFrom& i) = default;
+        ReaderFrom& operator=(const ReaderFrom& i) = default;
+
+        inline ReaderFrom(nullptr_t) {};
+        ReaderFrom& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        ReaderFrom(T& ref);
+
+        template<typename T>
+        ReaderFrom(const T& ref);
+
+        template<typename T>
+        ReaderFrom(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IReaderFrom
+        {
+            virtual std::tuple<int64_t, gocpp::error> vReadFrom(Reader r) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IReaderFrom>
+        struct ReaderFromImpl : virtual TInterface
+        {
+            explicit ReaderFromImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<int64_t, gocpp::error> vReadFrom(Reader r) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IReaderFrom* value() const;
+
+        std::shared_ptr<IReaderFrom> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::PtrRecv<struct ReaderFrom, false>& self, Reader r);
+        std::tuple<int64_t, gocpp::error> ReadFrom(const gocpp::ObjRecv<struct ReaderFrom>& self, Reader r);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct ReaderFrom& value);
+    struct WriterTo : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        WriterTo(){}
+        WriterTo(WriterTo& i) = default;
+        WriterTo(const WriterTo& i) = default;
+        WriterTo& operator=(WriterTo& i) = default;
+        WriterTo& operator=(const WriterTo& i) = default;
+
+        inline WriterTo(nullptr_t) {};
+        WriterTo& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        WriterTo(T& ref);
+
+        template<typename T>
+        WriterTo(const T& ref);
+
+        template<typename T>
+        WriterTo(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IWriterTo
+        {
+            virtual std::tuple<int64_t, gocpp::error> vWriteTo(Writer w) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IWriterTo>
+        struct WriterToImpl : virtual TInterface
+        {
+            explicit WriterToImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<int64_t, gocpp::error> vWriteTo(Writer w) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IWriterTo* value() const;
+
+        std::shared_ptr<IWriterTo> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::PtrRecv<struct WriterTo, false>& self, Writer w);
+        std::tuple<int64_t, gocpp::error> WriteTo(const gocpp::ObjRecv<struct WriterTo>& self, Writer w);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct WriterTo& value);
+    struct ReaderAt : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        ReaderAt(){}
+        ReaderAt(ReaderAt& i) = default;
+        ReaderAt(const ReaderAt& i) = default;
+        ReaderAt& operator=(ReaderAt& i) = default;
+        ReaderAt& operator=(const ReaderAt& i) = default;
+
+        inline ReaderAt(nullptr_t) {};
+        ReaderAt& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        ReaderAt(T& ref);
+
+        template<typename T>
+        ReaderAt(const T& ref);
+
+        template<typename T>
+        ReaderAt(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IReaderAt
+        {
+            virtual std::tuple<int64_t, gocpp::error> vReadAt(gocpp::slice<unsigned char> p, int64_t off) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IReaderAt>
+        struct ReaderAtImpl : virtual TInterface
+        {
+            explicit ReaderAtImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<int64_t, gocpp::error> vReadAt(gocpp::slice<unsigned char> p, int64_t off) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IReaderAt* value() const;
+
+        std::shared_ptr<IReaderAt> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::PtrRecv<struct ReaderAt, false>& self, gocpp::slice<unsigned char> p, int64_t off);
+        std::tuple<int64_t, gocpp::error> ReadAt(const gocpp::ObjRecv<struct ReaderAt>& self, gocpp::slice<unsigned char> p, int64_t off);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct ReaderAt& value);
+    struct WriterAt : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        WriterAt(){}
+        WriterAt(WriterAt& i) = default;
+        WriterAt(const WriterAt& i) = default;
+        WriterAt& operator=(WriterAt& i) = default;
+        WriterAt& operator=(const WriterAt& i) = default;
+
+        inline WriterAt(nullptr_t) {};
+        WriterAt& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        WriterAt(T& ref);
+
+        template<typename T>
+        WriterAt(const T& ref);
+
+        template<typename T>
+        WriterAt(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IWriterAt
+        {
+            virtual std::tuple<int64_t, gocpp::error> vWriteAt(gocpp::slice<unsigned char> p, int64_t off) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IWriterAt>
+        struct WriterAtImpl : virtual TInterface
+        {
+            explicit WriterAtImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<int64_t, gocpp::error> vWriteAt(gocpp::slice<unsigned char> p, int64_t off) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IWriterAt* value() const;
+
+        std::shared_ptr<IWriterAt> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<int64_t, gocpp::error> WriteAt(const gocpp::PtrRecv<struct WriterAt, false>& self, gocpp::slice<unsigned char> p, int64_t off);
+        std::tuple<int64_t, gocpp::error> WriteAt(const gocpp::ObjRecv<struct WriterAt>& self, gocpp::slice<unsigned char> p, int64_t off);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct WriterAt& value);
+    struct ByteReader : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        ByteReader(){}
+        ByteReader(ByteReader& i) = default;
+        ByteReader(const ByteReader& i) = default;
+        ByteReader& operator=(ByteReader& i) = default;
+        ByteReader& operator=(const ByteReader& i) = default;
+
+        inline ByteReader(nullptr_t) {};
+        ByteReader& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        ByteReader(T& ref);
+
+        template<typename T>
+        ByteReader(const T& ref);
+
+        template<typename T>
+        ByteReader(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IByteReader
+        {
+            virtual std::tuple<unsigned char, gocpp::error> vReadByte() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IByteReader>
+        struct ByteReaderImpl : virtual TInterface
+        {
+            explicit ByteReaderImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<unsigned char, gocpp::error> vReadByte() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IByteReader* value() const;
+
+        std::shared_ptr<IByteReader> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::PtrRecv<struct ByteReader, false>& self);
+        std::tuple<unsigned char, gocpp::error> ReadByte(const gocpp::ObjRecv<struct ByteReader>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct ByteReader& value);
     struct ByteScanner : virtual gocpp::Interface, ByteReader
     {
         using gocpp::Interface::operator==;
@@ -1386,6 +1180,132 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ByteScanner& value);
+    struct ByteWriter : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        ByteWriter(){}
+        ByteWriter(ByteWriter& i) = default;
+        ByteWriter(const ByteWriter& i) = default;
+        ByteWriter& operator=(ByteWriter& i) = default;
+        ByteWriter& operator=(const ByteWriter& i) = default;
+
+        inline ByteWriter(nullptr_t) {};
+        ByteWriter& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        ByteWriter(T& ref);
+
+        template<typename T>
+        ByteWriter(const T& ref);
+
+        template<typename T>
+        ByteWriter(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IByteWriter
+        {
+            virtual gocpp::error vWriteByte(unsigned char c) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IByteWriter>
+        struct ByteWriterImpl : virtual TInterface
+        {
+            explicit ByteWriterImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            gocpp::error vWriteByte(unsigned char c) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IByteWriter* value() const;
+
+        std::shared_ptr<IByteWriter> mValue;
+    };
+
+    namespace rec
+    {
+        gocpp::error WriteByte(const gocpp::PtrRecv<struct ByteWriter, false>& self, unsigned char c);
+        gocpp::error WriteByte(const gocpp::ObjRecv<struct ByteWriter>& self, unsigned char c);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct ByteWriter& value);
+    struct RuneReader : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        RuneReader(){}
+        RuneReader(RuneReader& i) = default;
+        RuneReader(const RuneReader& i) = default;
+        RuneReader& operator=(RuneReader& i) = default;
+        RuneReader& operator=(const RuneReader& i) = default;
+
+        inline RuneReader(nullptr_t) {};
+        RuneReader& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        RuneReader(T& ref);
+
+        template<typename T>
+        RuneReader(const T& ref);
+
+        template<typename T>
+        RuneReader(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IRuneReader
+        {
+            virtual std::tuple<gocpp::rune, int64_t, gocpp::error> vReadRune() = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IRuneReader>
+        struct RuneReaderImpl : virtual TInterface
+        {
+            explicit RuneReaderImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<gocpp::rune, int64_t, gocpp::error> vReadRune() override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IRuneReader* value() const;
+
+        std::shared_ptr<IRuneReader> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::PtrRecv<struct RuneReader, false>& self);
+        std::tuple<gocpp::rune, int64_t, gocpp::error> ReadRune(const gocpp::ObjRecv<struct RuneReader>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct RuneReader& value);
     struct RuneScanner : virtual gocpp::Interface, RuneReader
     {
         using gocpp::Interface::operator==;
@@ -1452,6 +1372,69 @@ namespace golang::io
     }
 
     std::ostream& operator<<(std::ostream& os, const struct RuneScanner& value);
+    struct StringWriter : virtual gocpp::Interface
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        StringWriter(){}
+        StringWriter(StringWriter& i) = default;
+        StringWriter(const StringWriter& i) = default;
+        StringWriter& operator=(StringWriter& i) = default;
+        StringWriter& operator=(const StringWriter& i) = default;
+
+        inline StringWriter(nullptr_t) {};
+        StringWriter& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        StringWriter(T& ref);
+
+        template<typename T>
+        StringWriter(const T& ref);
+
+        template<typename T>
+        StringWriter(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IStringWriter
+        {
+            virtual std::tuple<int64_t, gocpp::error> vWriteString(gocpp::string s) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IStringWriter>
+        struct StringWriterImpl : virtual TInterface
+        {
+            explicit StringWriterImpl(T* ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<int64_t, gocpp::error> vWriteString(gocpp::string s) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IStringWriter* value() const;
+
+        std::shared_ptr<IStringWriter> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::PtrRecv<struct StringWriter, false>& self, gocpp::string s);
+        std::tuple<int64_t, gocpp::error> WriteString(const gocpp::ObjRecv<struct StringWriter>& self, gocpp::string s);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct StringWriter& value);
     std::tuple<int64_t, gocpp::error> WriteString(Writer w, gocpp::string s);
     std::tuple<int64_t, gocpp::error> ReadAtLeast(Reader r, gocpp::slice<unsigned char> buf, int64_t min);
     std::tuple<int64_t, gocpp::error> ReadFull(Reader r, gocpp::slice<unsigned char> buf);
@@ -1497,6 +1480,9 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SectionReader& value);
+    SectionReader* NewSectionReader(ReaderAt r, int64_t off, int64_t n);
+    extern gocpp::error errWhence;
+    extern gocpp::error errOffset;
     struct OffsetWriter
     {
         WriterAt w{};
@@ -1515,6 +1501,7 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct OffsetWriter& value);
+    OffsetWriter* NewOffsetWriter(WriterAt w, int64_t off);
     Reader TeeReader(Reader r, Writer w);
     struct teeReader
     {
@@ -1536,9 +1523,25 @@ namespace golang::io
     // Discard is a [Writer] on which all Write calls succeed
     // without doing anything.
     extern Writer Discard;
+    struct discard
+    {
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct discard& value);
     // discard implements ReaderFrom as an optimization so Copy to
     // io.Discard can avoid doing unnecessary work.
     extern ReaderFrom _;
+    ReadCloser NopCloser(Reader r);
     struct nopCloser
     {
         Reader Reader{};
@@ -1553,12 +1556,6 @@ namespace golang::io
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloser, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloser>& self, gocpp::slice<unsigned char> p);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloser& value);
     struct nopCloserWriterTo
@@ -1576,19 +1573,9 @@ namespace golang::io
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self, gocpp::slice<unsigned char> p);
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self, gocpp::slice<unsigned char> p);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadAll(Reader r);
-    SectionReader* NewSectionReader(ReaderAt r, int64_t off, int64_t n);
-    OffsetWriter* NewOffsetWriter(WriterAt w, int64_t off);
-    ReadCloser NopCloser(Reader r);
 }
-#include "golang/sync/pool.fwd.h"
 #include "golang/sync/pool.h"
 
 namespace golang::io
@@ -1611,7 +1598,11 @@ namespace golang::io
         std::tuple<int64_t, gocpp::error> Write(discard, gocpp::slice<unsigned char> p);
         std::tuple<int64_t, gocpp::error> WriteString(discard, gocpp::string s);
         std::tuple<int64_t, gocpp::error> ReadFrom(discard, Reader r);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloser, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloser>& self, gocpp::slice<unsigned char> p);
         gocpp::error Close(nopCloser);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self, gocpp::slice<unsigned char> p);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self, gocpp::slice<unsigned char> p);
         gocpp::error Close(nopCloserWriterTo);
         std::tuple<int64_t, gocpp::error> WriteTo(nopCloserWriterTo c, Writer w);
     }

@@ -16,19 +16,23 @@ namespace golang::go::scanner
     struct GoTag_ErrorList { };
     using ErrorList = gocpp::defined<gocpp::slice<golang::go::scanner::Error*>, GoTag_ErrorList>;
 }
+#include "golang/io/io.h"
+
+namespace golang::go::scanner
+{
+    namespace io = golang::io;
+    void PrintError(io::Writer w, gocpp::error err);
+}
 #include "golang/go/token/position.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::go::scanner
 {
     namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
-#include "golang/io/io.h"
 
 namespace golang::go::scanner
 {
-    namespace io = golang::io;
     struct Error
     {
         token::Position Pos{};
@@ -46,7 +50,6 @@ namespace golang::go::scanner
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
-    void PrintError(io::Writer w, gocpp::error err);
 }
 
 #include "golang/go/token/position.h"

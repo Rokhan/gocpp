@@ -29,6 +29,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
+    extern gocpp::map<gocpp::string, Vertex> m;
     void main();
     struct GoTag_Set { };
     using Set = gocpp::defined<gocpp::map<gocpp::string, gocpp::empty_struct>, GoTag_Set>;
@@ -57,7 +58,6 @@ namespace golang::main
     void testNamedAndEmptyStruct();
     void testNilWritePanic();
     void testNilFieldWritePanic();
-    extern gocpp::map<gocpp::string, Vertex> m;
 
     namespace rec
     {

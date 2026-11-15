@@ -203,13 +203,13 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct TypeAssertionError& value);
 }
 #include "golang/internal/abi/bounds.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
 
 namespace golang::runtime
 {
     namespace abi = golang::internal::abi;
 }
 #include "golang/internal/abi/bounds.h"
+#include "golang/internal/abi/type.fwd.h"
 
 namespace golang::runtime
 {

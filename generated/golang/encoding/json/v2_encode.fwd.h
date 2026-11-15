@@ -12,10 +12,14 @@ namespace golang::encoding::json
     struct MarshalerError;
 }
 #include "golang/encoding/json/v2/arshal.fwd.h"
-#include "golang/encoding/json/v2/arshal_methods.fwd.h"
 
 namespace golang::encoding::json
 {
     namespace jsonv2 = golang::encoding::json::v2;
+}
+#include "golang/encoding/json/v2/arshal_methods.fwd.h"
+
+namespace golang::encoding::json
+{
     using Marshaler = jsonv2::Marshaler;
 }

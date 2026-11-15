@@ -9,7 +9,6 @@
 #include "golang/go/types/typelists.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.fwd.h"
 
 namespace golang::go::types
@@ -30,6 +29,12 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeParamList& value);
+    TypeParamList* bindTParams(gocpp::slice<TypeParam*> list);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
     struct TypeList
     {
         gocpp::slice<golang::go::types::Type> types{};
@@ -47,7 +52,6 @@ namespace golang::go::types
 
     std::ostream& operator<<(std::ostream& os, const struct TypeList& value);
     TypeList* newTypeList(gocpp::slice<golang::go::types::Type> list);
-    TypeParamList* bindTParams(gocpp::slice<TypeParam*> list);
 }
 
 #include "golang/go/types/type.h"

@@ -36,6 +36,21 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct writeBarrierStruct& value);
+    // The compiler knows about this variable.
+    // If you change it, you must change builtin/runtime.go, too.
+    // If you change the first four bytes, you must also change the write
+    // barrier insertion code.
+    //
+    // writeBarrier should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/bytedance/sonic
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname writeBarrier
+    extern writeBarrierStruct writeBarrier;
     // gcBlackenEnabled is 1 if mutator assists and background mark
     // workers are allowed to blacken objects. This must only be set when
     // gcphase == _GCmark.
@@ -54,6 +69,25 @@ namespace golang::runtime
     using gcMode = gocpp::defined<int64_t, GoTag_gcMode>;
     struct GoTag_gcTriggerKind { };
     using gcTriggerKind = gocpp::defined<int64_t, GoTag_gcTriggerKind>;
+    struct gcTrigger
+    {
+        gcTriggerKind kind{};
+        int64_t now{}; // gcTriggerTime: current time
+        uint32_t n{}; // gcTriggerCycle: cycle number to start
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
+    void gcStart(gcTrigger trigger);
     // gcMarkDoneFlushed counts the number of P's with flushed work.
     //
     // Ideally this would be a captured local in gcMarkDone, but forEachP
@@ -73,95 +107,48 @@ namespace golang::runtime
     void gcBeginWork();
     bool gcEndWork();
     void gcMark(int64_t startTime);
+    bool gcSweep(gcMode mode);
     void gcResetMarkState();
     void clearpools();
     gocpp::slice<unsigned char> itoaDiv(gocpp::slice<unsigned char> buf, uint64_t val, int64_t dec);
     gocpp::slice<unsigned char> fmtNSAsMS(gocpp::slice<unsigned char> buf, uint64_t ns);
     void gcTestMoveStackOnNextCall();
-    // The compiler knows about this variable.
-    // If you change it, you must change builtin/runtime.go, too.
-    // If you change the first four bytes, you must also change the write
-    // barrier insertion code.
-    //
-    // writeBarrier should be an internal detail,
-    // but widely used packages access it using linkname.
-    // Notable members of the hall of shame include:
-    //   - github.com/bytedance/sonic
-    //
-    // Do not remove or change the type signature.
-    // See go.dev/issue/67401.
-    //
-    //go:linkname writeBarrier
-    extern writeBarrierStruct writeBarrier;
-    struct gcTrigger
-    {
-        gcTriggerKind kind{};
-        int64_t now{}; // gcTriggerTime: current time
-        uint32_t n{}; // gcTriggerCycle: cycle number to start
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcTrigger& value);
-    bool gcSweep(gcMode mode);
     extern std::function<void ()> poolcleanup;
     void sync_runtime_registerPoolCleanup(std::function<void ()> f);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/list_manual.h"
-#include "golang/runtime/mheap.h"
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool gcShouldScheduleWorker(golang::runtime::p* p);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
+    void boring_registerCache(gocpp::unsafe_pointer p);
+    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
+
+    template<typename... Args>
+    uint64_t gcTestIsReachable(Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
+    }
+
+    template<typename... Args>
+    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
+    {
+        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
+    }
+    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+}
 #include "golang/runtime/proc.h"
+
+namespace golang::runtime
+{
+    void gcMarkTermination(worldStop stw);
+}
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
-    {
-        mutex lock{};
-        // free is a list of spans dedicated to workbufs, but
-        // that don't currently contain any workbufs.
-        mSpanList free{};
-        // busy is a list of all spans containing workbufs on
-        // one of the workbuf lists.
-        mSpanList busy{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct gocpp_id_1
-    {
-        mutex lock{};
-        listHeadManual list{}; // *spanSPMC
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
     struct gocpp_id_3
     {
         mutex lock{};
@@ -223,8 +210,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
-    void gcStart(gcTrigger trigger);
-    void gcMarkTermination(worldStop stw);
     struct gcBgMarkWorkerNode
     {
         // Unused workers are managed in a lock-free stack. This field must be first.
@@ -248,33 +233,85 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNode& value);
-    bool gcShouldScheduleWorker(golang::runtime::p* p);
-    extern gocpp::slice<gocpp::unsafe_pointer> boringCaches;
-    void boring_registerCache(gocpp::unsafe_pointer p);
-    uint64_t gcTestIsReachable(gocpp::slice<gocpp::unsafe_pointer> ptrs);
+}
+#include "golang/runtime/tagptr.fwd.h"
 
-    template<typename... Args>
-    uint64_t gcTestIsReachable(Args... ptrs)
+namespace golang::runtime
+{
+    struct gcBgMarkWorkerNodePadded
     {
-        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(ptrs...));
-    }
+        gcBgMarkWorkerNode gcBgMarkWorkerNode{};
+        gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::gcBgMarkWorkerNode>() - gcBgMarkWorkerNodeRedZoneSize> pad{};
 
-    template<typename... Args>
-    uint64_t gcTestIsReachable(gocpp::unsafe_pointer value, Args... ptrs)
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNodePadded& value);
+}
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    struct gocpp_id_0
     {
-        return gcTestIsReachable(gocpp::ToSlice<gocpp::unsafe_pointer>(value, ptrs...));
-    }
-    gocpp::string gcTestPointerClass(gocpp::unsafe_pointer p);
+        mutex lock{};
+        // free is a list of spans dedicated to workbufs, but
+        // that don't currently contain any workbufs.
+        mSpanList free{};
+        // busy is a list of all spans containing workbufs on
+        // one of the workbuf lists.
+        mSpanList busy{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+}
+#include "golang/runtime/list_manual.h"
+
+namespace golang::runtime
+{
+    struct gocpp_id_1
+    {
+        mutex lock{};
+        listHeadManual list{}; // *spanSPMC
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
-#include "golang/runtime/tagptr.fwd.h"
 
 namespace golang::runtime
 {
@@ -330,28 +367,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcDebugMarkDoneStruct& value);
-    struct gcBgMarkWorkerNodePadded
-    {
-        gcBgMarkWorkerNode gcBgMarkWorkerNode{};
-        gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::gcBgMarkWorkerNode>() - gcBgMarkWorkerNodeRedZoneSize> pad{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gcBgMarkWorkerNodePadded& value);
-}
-#include "golang/internal/cpu/cpu.fwd.h"
-
-namespace golang::runtime
-{
     // gcDebugMarkDone contains fields used to debug/test mark termination.
     extern gcDebugMarkDoneStruct gcDebugMarkDone;
 }
@@ -497,12 +512,6 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        void accumulate(const gocpp::PtrRecv<struct workType, false>& self, int64_t now, bool gcMarkPhase);
-        void accumulateGCPauseTime(const gocpp::PtrRecv<struct workType, false>& self, int64_t dt, int32_t maxProcs);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct workType& value);
     extern workType work;
 }
@@ -514,6 +523,8 @@ namespace golang::runtime
 
     namespace rec
     {
+        void accumulate(const gocpp::PtrRecv<struct workType, false>& self, int64_t now, bool gcMarkPhase);
+        void accumulateGCPauseTime(const gocpp::PtrRecv<struct workType, false>& self, int64_t dt, int32_t maxProcs);
         bool test(gcTrigger t);
         bool isMaybeRunnable(g* gp);
     }

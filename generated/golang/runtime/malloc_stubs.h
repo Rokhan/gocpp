@@ -13,31 +13,44 @@
 namespace golang::runtime
 {
     void deductAssistCredit(uintptr_t size);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/mcache.h"
-#include "golang/runtime/mheap.h"
 #include "golang/runtime/runtime2.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer malloc0(uintptr_t size, _type* typ, bool needzero);
-    gocpp::unsafe_pointer mallocPanic(uintptr_t size, _type* typ, bool needzero);
-    gocpp::unsafe_pointer mallocgcSlowPathStub(uintptr_t size, _type* typ, bool needzero, spanClass spc, uintptr_t elemsize);
-    gocpp::unsafe_pointer mallocStub(uintptr_t size, _type* typ, bool needzero);
-    void postMallocgc(gocpp::unsafe_pointer x, _type* typ, uintptr_t size, uintptr_t elemsize);
-    gocpp::unsafe_pointer inlinedMalloc(m* mp, uintptr_t size, _type* typ, bool needzero);
     void doubleCheckSmallScanNoHeader(uintptr_t size, _type* typ, m* mp);
-    gocpp::unsafe_pointer smallStub(m* mp, uintptr_t size, _type* typ, bool needzero);
     void doubleCheckSmallNoScan(_type* typ, m* mp);
     void doubleCheckTiny(uintptr_t size, _type* typ, m* mp);
-    gocpp::unsafe_pointer tinyStub(m* mp, uintptr_t size, _type* typ, bool needzero);
-    gclinkptr nextFreeFastTiny(mspan* span);
-    gclinkptr nextFreeFastStub(mspan* span, uintptr_t elemsize);
+}
+#include "golang/runtime/mheap.fwd.h"
+
+namespace golang::runtime
+{
     uintptr_t heapSetTypeNoHeaderStub(uintptr_t x, uintptr_t dataSize, _type* typ, mspan* span);
     uintptr_t writeHeapBitsSmallStub(mspan* span, uintptr_t x, uintptr_t dataSize, _type* typ);
     void writeHeapBitsDoubleCheck(mspan* span, uintptr_t x, uintptr_t dataSize, uintptr_t src, uintptr_t src0, uintptr_t i, uintptr_t j, uintptr_t bits, _type* typ);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer malloc0(uintptr_t size, _type* typ, bool needzero);
+    gocpp::unsafe_pointer mallocPanic(uintptr_t size, _type* typ, bool needzero);
+    gocpp::unsafe_pointer mallocStub(uintptr_t size, _type* typ, bool needzero);
+    void postMallocgc(gocpp::unsafe_pointer x, _type* typ, uintptr_t size, uintptr_t elemsize);
+    gocpp::unsafe_pointer inlinedMalloc(m* mp, uintptr_t size, _type* typ, bool needzero);
+    gocpp::unsafe_pointer smallStub(m* mp, uintptr_t size, _type* typ, bool needzero);
+    gocpp::unsafe_pointer tinyStub(m* mp, uintptr_t size, _type* typ, bool needzero);
+}
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    gocpp::unsafe_pointer mallocgcSlowPathStub(uintptr_t size, _type* typ, bool needzero, spanClass spc, uintptr_t elemsize);
+}
+#include "golang/runtime/mcache.h"
+
+namespace golang::runtime
+{
+    gclinkptr nextFreeFastTiny(mspan* span);
+    gclinkptr nextFreeFastStub(mspan* span, uintptr_t elemsize);
 
     namespace rec
     {

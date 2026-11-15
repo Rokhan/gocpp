@@ -142,39 +142,21 @@ namespace golang::internal::reflectlite
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/internal/reflectlite/type.h"
-
-namespace golang::internal::reflectlite
-{
-    struct ValueError
-    {
-        gocpp::string Method{};
-        golang::internal::reflectlite::Kind Kind{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
     int64_t chanlen(gocpp::unsafe_pointer);
     int64_t maplen(gocpp::unsafe_pointer);
     gocpp::unsafe_pointer arrayAt(gocpp::unsafe_pointer p, int64_t i, uintptr_t eltSize, gocpp::string whySafe);
 }
-#include "golang/internal/abi/escape.fwd.h"
-#include "golang/internal/abi/iface.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
 
 namespace golang::internal::reflectlite
 {
     namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/escape.fwd.h"
+#include "golang/internal/abi/iface.fwd.h"
+
+namespace golang::internal::reflectlite
+{
     struct Value
     {
         // typ_ holds the type of the value represented by a Value.
@@ -207,26 +189,36 @@ namespace golang::internal::reflectlite
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        reflectlite::Kind kind(const gocpp::PtrRecv<struct Value, false>& self);
-        reflectlite::Kind kind(const gocpp::ObjRecv<struct Value>& self);
-        void mustBeAssignable(const gocpp::PtrRecv<struct Value, false>& self);
-        void mustBeAssignable(const gocpp::ObjRecv<struct Value>& self);
-        void mustBeExported(const gocpp::PtrRecv<struct Value, false>& self);
-        void mustBeExported(const gocpp::ObjRecv<struct Value>& self);
-        reflectlite::flag ro(const gocpp::PtrRecv<struct Value, false>& self);
-        reflectlite::flag ro(const gocpp::ObjRecv<struct Value>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
-    gocpp::unsafe_pointer unsafe_New(abi::Type*);
-    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
-    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     go_any packEface(Value v);
     Value unpackEface(go_any i);
     go_any valueInterface(Value v);
+    gocpp::unsafe_pointer unsafe_New(abi::Type*);
     Value ValueOf(go_any i);
+    void ifaceE2I(abi::Type* t, go_any src, gocpp::unsafe_pointer dst);
+    void typedmemmove(abi::Type* t, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
+}
+#include "golang/internal/reflectlite/type.h"
+
+namespace golang::internal::reflectlite
+{
+    struct ValueError
+    {
+        gocpp::string Method{};
+        golang::internal::reflectlite::Kind Kind{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ValueError& value);
 }
 
 #include "golang/internal/abi/type.h"
@@ -237,6 +229,14 @@ namespace golang::internal::reflectlite
 
     namespace rec
     {
+        reflectlite::Kind kind(const gocpp::PtrRecv<struct Value, false>& self);
+        reflectlite::Kind kind(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeAssignable(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeAssignable(const gocpp::ObjRecv<struct Value>& self);
+        void mustBeExported(const gocpp::PtrRecv<struct Value, false>& self);
+        void mustBeExported(const gocpp::ObjRecv<struct Value>& self);
+        reflectlite::flag ro(const gocpp::PtrRecv<struct Value, false>& self);
+        reflectlite::flag ro(const gocpp::ObjRecv<struct Value>& self);
         golang::internal::reflectlite::Kind kind(flag f);
         flag ro(flag f);
         abi::Type* typ(Value v);

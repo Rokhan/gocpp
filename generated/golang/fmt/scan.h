@@ -316,22 +316,23 @@ namespace golang::fmt
     std::tuple<int64_t, bool> hexDigit(gocpp::rune d);
     void errorHandler(gocpp::error* errp);
 }
+#include "golang/sync/pool.h"
+
+namespace golang::fmt
+{
+    namespace sync = golang::sync;
+    extern sync::Pool ssFree;
+}
 #include "golang/io/io.fwd.h"
-#include "golang/sync/pool.fwd.h"
-#include "golang/unicode/utf8/utf8.fwd.h"
-#include "golang/fmt/print.h"
 
 namespace golang::fmt
 {
     namespace io = golang::io;
 }
 #include "golang/io/io.h"
-#include "golang/sync/pool.h"
 
 namespace golang::fmt
 {
-    namespace utf8 = golang::unicode::utf8;
-    namespace sync = golang::sync;
     std::tuple<int64_t, gocpp::error> Fscan(io::Reader r, gocpp::slice<go_any> a);
 
     template<typename... Args>
@@ -371,26 +372,12 @@ namespace golang::fmt
     {
         return Fscanf(r, format, gocpp::ToSlice<go_any>(value, a...));
     }
-    struct ss
-    {
-        io::RuneScanner rs{}; // where to read input
-        buffer buf{}; // token accumulator
-        int64_t count{}; // runes consumed so far.
-        bool atEOF{}; // already read EOF
-        ssave ssave{};
+}
+#include "golang/unicode/utf8/utf8.fwd.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ss& value);
+namespace golang::fmt
+{
+    namespace utf8 = golang::unicode::utf8;
     struct readRune
     {
         io::Reader reader{};
@@ -411,7 +398,31 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct readRune& value);
-    extern sync::Pool ssFree;
+}
+#include "golang/fmt/print.h"
+
+namespace golang::fmt
+{
+    struct ss
+    {
+        io::RuneScanner rs{}; // where to read input
+        buffer buf{}; // token accumulator
+        int64_t count{}; // runes consumed so far.
+        bool atEOF{}; // already read EOF
+        ssave ssave{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ss& value);
     std::tuple<ss*, ssave> newScanState(io::Reader r, bool nlIsSpace, bool nlIsEnd);
 
     namespace rec

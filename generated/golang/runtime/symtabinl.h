@@ -56,13 +56,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct inlineUnwinder& value);
+    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc);
+    golang::runtime::srcFunc badSrcFunc(inlineUnwinder*, inlineFrame);
 }
 #include "golang/internal/abi/symtab.fwd.h"
 
 namespace golang::runtime
 {
-    std::tuple<inlineUnwinder, inlineFrame> newInlineUnwinder(golang::runtime::funcInfo f, uintptr_t pc);
-    golang::runtime::srcFunc badSrcFunc(inlineUnwinder*, inlineFrame);
     namespace abi = golang::internal::abi;
 }
 #include "golang/internal/abi/symtab.h"

@@ -16,12 +16,16 @@ namespace golang::os
     struct GoTag_rootFS { };
     bool isValidRootFSPath(gocpp::string name);
 }
-#include "golang/os/root_openat.fwd.h"
 #include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
     std::tuple<File*, gocpp::error> OpenInRoot(gocpp::string dir, gocpp::string name);
+}
+#include "golang/os/root_openat.fwd.h"
+
+namespace golang::os
+{
     struct Root
     {
         root* root{};

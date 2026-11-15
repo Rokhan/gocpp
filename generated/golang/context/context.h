@@ -48,6 +48,38 @@ namespace golang::context
     };
 
     std::ostream& operator<<(std::ostream& os, const struct emptyCtx& value);
+    struct backgroundCtx
+    {
+        emptyCtx emptyCtx{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct backgroundCtx& value);
+    struct todoCtx
+    {
+        emptyCtx emptyCtx{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct todoCtx& value);
     struct afterFuncer : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -250,21 +282,30 @@ namespace golang::context
     std::ostream& operator<<(std::ostream& os, const struct stringer& value);
     gocpp::string stringify(go_any v);
 }
-#include "golang/sync/atomic/type.fwd.h"
+#include "golang/sync/atomic/type.h"
+
+namespace golang::context
+{
+    namespace atomic = golang::sync::atomic;
+}
 #include "golang/sync/atomic/value.fwd.h"
-#include "golang/time/sleep.fwd.h"
+
+namespace golang::context
+{
+    // goroutines counts the number of goroutines ever created; for testing.
+    extern atomic::Int32 goroutines;
+}
 #include "golang/time/time.fwd.h"
 
 namespace golang::context
 {
     namespace time = golang::time;
 }
-#include "golang/sync/atomic/type.h"
 #include "golang/time/time.h"
+#include "golang/time/sleep.fwd.h"
 
 namespace golang::context
 {
-    namespace atomic = golang::sync::atomic;
     struct Context : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -416,70 +457,6 @@ namespace golang::context
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Context& value);
-    struct backgroundCtx
-    {
-        emptyCtx emptyCtx{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct backgroundCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct backgroundCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct backgroundCtx, false>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct backgroundCtx>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct backgroundCtx, false>& self);
-        gocpp::error Err(const gocpp::ObjRecv<struct backgroundCtx>& self);
-        go_any Value(const gocpp::PtrRecv<struct backgroundCtx, false>& self, go_any key);
-        go_any Value(const gocpp::ObjRecv<struct backgroundCtx>& self, go_any key);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct backgroundCtx& value);
-    struct todoCtx
-    {
-        emptyCtx emptyCtx{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct todoCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct todoCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct todoCtx, false>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct todoCtx>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct todoCtx, false>& self);
-        gocpp::error Err(const gocpp::ObjRecv<struct todoCtx>& self);
-        go_any Value(const gocpp::PtrRecv<struct todoCtx, false>& self, go_any key);
-        go_any Value(const gocpp::ObjRecv<struct todoCtx>& self, go_any key);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct todoCtx& value);
-    // goroutines counts the number of goroutines ever created; for testing.
-    extern atomic::Int32 goroutines;
-}
-#include "golang/sync/mutex.fwd.h"
-#include "golang/sync/once.fwd.h"
-
-namespace golang::context
-{
     Context Background();
     Context TODO();
     std::tuple<Context, CancelFunc> WithCancel(Context parent);
@@ -501,18 +478,6 @@ namespace golang::context
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct stopCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct stopCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct stopCtx, false>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct stopCtx>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct stopCtx, false>& self);
-        gocpp::error Err(const gocpp::ObjRecv<struct stopCtx>& self);
-        go_any Value(const gocpp::PtrRecv<struct stopCtx, false>& self, go_any key);
-        go_any Value(const gocpp::ObjRecv<struct stopCtx>& self, go_any key);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct stopCtx& value);
     void removeChild(Context parent, canceler child);
@@ -556,23 +521,12 @@ namespace golang::context
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct valueCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct valueCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct valueCtx, false>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct valueCtx>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct valueCtx, false>& self);
-        gocpp::error Err(const gocpp::ObjRecv<struct valueCtx>& self);
-        go_any Value(const gocpp::PtrRecv<struct valueCtx, false>& self, go_any key);
-        go_any Value(const gocpp::ObjRecv<struct valueCtx>& self, go_any key);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct valueCtx& value);
     go_any value(Context c, go_any key);
 }
 #include "golang/sync/atomic/value.h"
 #include "golang/sync/mutex.h"
+#include "golang/sync/once.fwd.h"
 
 namespace golang::context
 {
@@ -597,18 +551,6 @@ namespace golang::context
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct cancelCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct cancelCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct cancelCtx, false>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct cancelCtx>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct cancelCtx, false>& self);
-        gocpp::error Err(const gocpp::ObjRecv<struct cancelCtx>& self);
-        go_any Value(const gocpp::PtrRecv<struct cancelCtx, false>& self, go_any key);
-        go_any Value(const gocpp::ObjRecv<struct cancelCtx>& self, go_any key);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct cancelCtx& value);
     cancelCtx* withCancel(Context parent);
     std::tuple<cancelCtx*, bool> parentCancelCtx(Context parent);
@@ -628,18 +570,6 @@ namespace golang::context
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct timerCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct timerCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct timerCtx, false>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct timerCtx, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct timerCtx, false>& self);
-        go_any Value(const gocpp::PtrRecv<struct timerCtx, false>& self, go_any key);
-        void cancel(const gocpp::PtrRecv<struct timerCtx, false>& self, bool removeFromParent, gocpp::error err, gocpp::error cause);
-        void propagateCancel(const gocpp::PtrRecv<struct timerCtx, false>& self, Context parent, canceler child);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct timerCtx& value);
 }
@@ -664,18 +594,6 @@ namespace golang::context
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
-        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct afterFuncCtx>& self);
-        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
-        gocpp::error Err(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
-        go_any Value(const gocpp::PtrRecv<struct afterFuncCtx, false>& self, go_any key);
-        void cancel(const gocpp::PtrRecv<struct afterFuncCtx, false>& self, bool removeFromParent, gocpp::error err, gocpp::error cause);
-        void propagateCancel(const gocpp::PtrRecv<struct afterFuncCtx, false>& self, Context parent, canceler child);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct afterFuncCtx& value);
 }
 
@@ -693,9 +611,49 @@ namespace golang::context
         gocpp::channel<gocpp::empty_struct> Done(emptyCtx);
         gocpp::error Err(emptyCtx);
         go_any Value(emptyCtx, go_any key);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct backgroundCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct backgroundCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct backgroundCtx, false>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct backgroundCtx>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct backgroundCtx, false>& self);
+        gocpp::error Err(const gocpp::ObjRecv<struct backgroundCtx>& self);
+        go_any Value(const gocpp::PtrRecv<struct backgroundCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct backgroundCtx>& self, go_any key);
         gocpp::string String(backgroundCtx);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct todoCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct todoCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct todoCtx, false>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct todoCtx>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct todoCtx, false>& self);
+        gocpp::error Err(const gocpp::ObjRecv<struct todoCtx>& self);
+        go_any Value(const gocpp::PtrRecv<struct todoCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct todoCtx>& self, go_any key);
         gocpp::string String(todoCtx);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct afterFuncCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct afterFuncCtx, false>& self);
+        go_any Value(const gocpp::PtrRecv<struct afterFuncCtx, false>& self, go_any key);
+        void cancel(const gocpp::PtrRecv<struct afterFuncCtx, false>& self, bool removeFromParent, gocpp::error err, gocpp::error cause);
+        void propagateCancel(const gocpp::PtrRecv<struct afterFuncCtx, false>& self, Context parent, canceler child);
         void cancel(afterFuncCtx* a, bool removeFromParent, gocpp::error err, gocpp::error cause);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct stopCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct stopCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct stopCtx, false>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct stopCtx>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct stopCtx, false>& self);
+        gocpp::error Err(const gocpp::ObjRecv<struct stopCtx>& self);
+        go_any Value(const gocpp::PtrRecv<struct stopCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct stopCtx>& self, go_any key);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct cancelCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct cancelCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct cancelCtx, false>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct cancelCtx>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct cancelCtx, false>& self);
+        gocpp::error Err(const gocpp::ObjRecv<struct cancelCtx>& self);
+        go_any Value(const gocpp::PtrRecv<struct cancelCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct cancelCtx>& self, go_any key);
         go_any Value(cancelCtx* c, go_any key);
         gocpp::channel<gocpp::empty_struct> Done(cancelCtx* c);
         gocpp::error Err(cancelCtx* c);
@@ -707,9 +665,25 @@ namespace golang::context
         gocpp::error Err(withoutCancelCtx);
         go_any Value(withoutCancelCtx c, go_any key);
         gocpp::string String(withoutCancelCtx c);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct timerCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct timerCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct timerCtx, false>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct timerCtx, false>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct timerCtx, false>& self);
+        go_any Value(const gocpp::PtrRecv<struct timerCtx, false>& self, go_any key);
+        void cancel(const gocpp::PtrRecv<struct timerCtx, false>& self, bool removeFromParent, gocpp::error err, gocpp::error cause);
+        void propagateCancel(const gocpp::PtrRecv<struct timerCtx, false>& self, Context parent, canceler child);
         std::tuple<mocklib::Date, bool> Deadline(timerCtx* c);
         gocpp::string String(timerCtx* c);
         void cancel(timerCtx* c, bool removeFromParent, gocpp::error err, gocpp::error cause);
+        std::tuple<time::Time, bool> Deadline(const gocpp::PtrRecv<struct valueCtx, false>& self);
+        std::tuple<time::Time, bool> Deadline(const gocpp::ObjRecv<struct valueCtx>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::PtrRecv<struct valueCtx, false>& self);
+        gocpp::channel<gocpp::empty_struct> Done(const gocpp::ObjRecv<struct valueCtx>& self);
+        gocpp::error Err(const gocpp::PtrRecv<struct valueCtx, false>& self);
+        gocpp::error Err(const gocpp::ObjRecv<struct valueCtx>& self);
+        go_any Value(const gocpp::PtrRecv<struct valueCtx, false>& self, go_any key);
+        go_any Value(const gocpp::ObjRecv<struct valueCtx>& self, go_any key);
         gocpp::string String(valueCtx* c);
         go_any Value(valueCtx* c, go_any key);
     }

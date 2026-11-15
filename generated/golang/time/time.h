@@ -32,10 +32,15 @@ namespace golang::time
     using absLeap = gocpp::defined<int64_t, GoTag_absLeap>;
     struct GoTag_absJanFeb { };
     using absJanFeb = gocpp::defined<int64_t, GoTag_absJanFeb>;
+    absDays dateToAbsDays(int64_t year, golang::time::Month month, int64_t day);
     struct GoTag_Duration { };
     using Duration = gocpp::defined<int64_t, GoTag_Duration>;
     std::tuple<int64_t, uint64_t> fmtFrac(gocpp::slice<unsigned char> buf, uint64_t v, int64_t prec);
     int64_t fmtInt(gocpp::slice<unsigned char> buf, uint64_t v);
+    bool lessThanHalf(Duration x, Duration y);
+    Duration subMono(int64_t t, int64_t u);
+    int64_t daysBefore(golang::time::Month m);
+    int64_t daysIn(golang::time::Month m, int64_t year);
     std::tuple<int64_t, int32_t, int64_t> now();
     std::tuple<int64_t, int32_t, int64_t> runtimeNow();
     int64_t runtimeNano();
@@ -50,11 +55,6 @@ namespace golang::time
     bool isLeap(int64_t year);
     std::tuple<int64_t, int64_t> norm(int64_t hi, int64_t lo, int64_t base);
     std::tuple<int64_t, int64_t, int64_t> legacyAbsClock(uint64_t abs);
-    absDays dateToAbsDays(int64_t year, golang::time::Month month, int64_t day);
-    bool lessThanHalf(Duration x, Duration y);
-    Duration subMono(int64_t t, int64_t u);
-    int64_t daysBefore(golang::time::Month m);
-    int64_t daysIn(golang::time::Month m, int64_t year);
     std::tuple<int64_t, golang::time::Month, int64_t, int64_t> legacyAbsDate(uint64_t abs, bool full);
 }
 #include "golang/time/zoneinfo.fwd.h"

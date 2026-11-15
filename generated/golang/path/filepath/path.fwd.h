@@ -6,6 +6,12 @@
 #include "golang/io/fs/fs.fwd.h"
 #include "golang/io/fs/readdir.fwd.h"
 #include "golang/io/fs/walk.fwd.h"
+
+namespace golang::path::filepath
+{
+    namespace fs = golang::io::fs;
+    using WalkFunc = std::function<gocpp::error (gocpp::string path, fs::FileInfo info, gocpp::error err)>;
+}
 #include "golang/os/dir.fwd.h"
 #include "golang/os/file.fwd.h"
 #include "golang/os/getwd.fwd.h"
@@ -15,8 +21,6 @@
 namespace golang::path::filepath
 {
     namespace os = golang::os;
-    namespace fs = golang::io::fs;
     inline constexpr gocpp::rune Separator = os::PathSeparator;
     inline constexpr gocpp::rune ListSeparator = os::PathListSeparator;
-    using WalkFunc = std::function<gocpp::error (gocpp::string path, fs::FileInfo info, gocpp::error err)>;
 }

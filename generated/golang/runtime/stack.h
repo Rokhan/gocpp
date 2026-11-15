@@ -69,16 +69,34 @@ namespace golang::runtime
     extern uint32_t startingStackSize;
     void gcComputeStartingStackSize();
 }
+#include "golang/runtime/mcache.fwd.h"
+
+namespace golang::runtime
+{
+    void stackcacherefill(mcache* c, uint8_t order);
+    void stackcacherelease(mcache* c, uint8_t order);
+    void stackcache_clear(mcache* c);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    void copystack(g* gp, uintptr_t newsize);
+    void gostartcallfn(gobuf* gobuf, funcval* fv);
+    bool isShrinkStackSafe(g* gp);
+    void shrinkstack(g* gp);
+}
 #include "golang/runtime/mcache.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     gclinkptr stackpoolalloc(uint8_t order);
     void stackpoolfree(gclinkptr x, uint8_t order);
-    void stackcacherefill(mcache* c, uint8_t order);
-    void stackcacherelease(mcache* c, uint8_t order);
-    void stackcache_clear(mcache* c);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     golang::runtime::stack stackalloc(uint32_t n);
     void stackfree(golang::runtime::stack stk);
     struct adjustinfo
@@ -100,34 +118,66 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct adjustinfo& value);
-    void fillstack(golang::runtime::stack stk, unsigned char b);
-    uintptr_t findsghi(g* gp, golang::runtime::stack stk);
-    void copystack(g* gp, uintptr_t newsize);
-    void gostartcallfn(gobuf* gobuf, funcval* fv);
-    bool isShrinkStackSafe(g* gp);
-    void shrinkstack(g* gp);
-}
-#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
-#include "golang/internal/runtime/sys/consts.fwd.h"
-#include "golang/internal/runtime/sys/intrinsics.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
-
-namespace golang::runtime
-{
     void adjustctxt(g* gp, adjustinfo* adjinfo);
     void adjustdefers(g* gp, adjustinfo* adjinfo);
     void adjustpanics(g* gp, adjustinfo* adjinfo);
     void adjustsudogs(g* gp, adjustinfo* adjinfo);
+    void fillstack(golang::runtime::stack stk, unsigned char b);
+    uintptr_t findsghi(g* gp, golang::runtime::stack stk);
     uintptr_t syncadjustsudogs(g* gp, uintptr_t used, adjustinfo* adjinfo);
-    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/runtime/stkframe.fwd.h"
+
+namespace golang::runtime
+{
+    void adjustframe(stkframe* frame, adjustinfo* adjinfo);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
+}
+#include "golang/runtime/symtab.h"
+
+namespace golang::runtime
+{
+    void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f);
+}
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
+
+namespace golang::runtime
+{
     namespace gc = golang::internal::runtime::gc;
 }
-#include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/mheap.h"
-#include "golang/runtime/symtab.h"
 #include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/stkframe.fwd.h"
+
+namespace golang::runtime
+{
+    struct stackLargeStruct
+    {
+        mutex lock{};
+        gocpp::array<mSpanList, heapAddrBits - gc::PageShift> free{}; // free lists by log_2(s.npages)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value);
+}
+#include "golang/internal/runtime/sys/consts.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/internal/runtime/sys/nih.fwd.h"
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
 
 namespace golang::runtime
 {
@@ -149,38 +199,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackpoolItem& value);
-    struct stackLargeStruct
-    {
-        mutex lock{};
-        gocpp::array<mSpanList, heapAddrBits - gc::PageShift> free{}; // free lists by log_2(s.npages)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackLargeStruct& value);
-    void adjustpointer(adjustinfo* adjinfo, gocpp::unsafe_pointer vpp);
-    void adjustpointers(gocpp::unsafe_pointer scanp, bitvector* bv, adjustinfo* adjinfo, golang::runtime::funcInfo f);
-    void adjustframe(stkframe* frame, adjustinfo* adjinfo);
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 
 namespace golang::runtime
 {
     namespace cpu = golang::internal::cpu;
-}
-#include "golang/internal/runtime/gc/sizeclasses.h"
-#include "golang/runtime/malloc.h"
-
-namespace golang::runtime
-{
     struct stackpoolStruct
     {
         stackpoolItem item{};
@@ -198,10 +222,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackpoolStruct& value);
-    // Global pool of large stack spans.
-    extern stackLargeStruct stackLarge;
 }
 #include "golang/internal/cpu/cpu_x86.h"
+#include "golang/runtime/malloc.h"
 
 namespace golang::runtime
 {
@@ -212,6 +235,13 @@ namespace golang::runtime
     //
     // There is a free list for each order.
     extern gocpp::array<stackpoolStruct, _NumStackOrders> stackpool;
+}
+#include "golang/internal/runtime/gc/sizeclasses.h"
+
+namespace golang::runtime
+{
+    // Global pool of large stack spans.
+    extern stackLargeStruct stackLarge;
 
     namespace rec
     {

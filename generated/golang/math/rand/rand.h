@@ -81,23 +81,6 @@ namespace golang::math::rand
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Source& value);
-    uint64_t runtime_rand();
-    void Seed(int64_t seed);
-    int64_t Int63();
-    uint32_t Uint32();
-    uint64_t Uint64();
-    int32_t Int31();
-    int64_t Int();
-    int64_t Int63n(int64_t n);
-    int32_t Int31n(int32_t n);
-    int64_t Intn(int64_t n);
-    double Float64();
-    double Float32();
-    gocpp::slice<int64_t> Perm(int64_t n);
-    void Shuffle(int64_t n, std::function<void (int64_t i, int64_t j)> swap);
-    std::tuple<int64_t, gocpp::error> Read(gocpp::slice<unsigned char> p);
-    double NormFloat64();
-    double ExpFloat64();
     struct Source64 : virtual gocpp::Interface, Source
     {
         using gocpp::Interface::operator==;
@@ -168,13 +151,6 @@ namespace golang::math::rand
 
     std::ostream& operator<<(std::ostream& os, const struct Source64& value);
     Source NewSource(int64_t seed);
-    std::tuple<int64_t, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos);
-}
-#include "golang/math/rand/rng.fwd.h"
-
-namespace golang::math::rand
-{
-    rngSource* newSource(int64_t seed);
     struct Rand
     {
         Source src{};
@@ -200,24 +176,68 @@ namespace golang::math::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rand& value);
+    Rand* New(Source src);
+    std::tuple<int64_t, gocpp::error> read(gocpp::slice<unsigned char> p, Source src, int64_t* readVal, int8_t* readPos);
+    Rand* globalRand();
+    uint64_t runtime_rand();
+    void Seed(int64_t seed);
+    int64_t Int63();
+    uint32_t Uint32();
+    uint64_t Uint64();
+    int32_t Int31();
+    int64_t Int();
+    int64_t Int63n(int64_t n);
+    int32_t Int31n(int32_t n);
+    int64_t Intn(int64_t n);
+    double Float64();
+    double Float32();
+    gocpp::slice<int64_t> Perm(int64_t n);
+    void Shuffle(int64_t n, std::function<void (int64_t i, int64_t j)> swap);
+    std::tuple<int64_t, gocpp::error> Read(gocpp::slice<unsigned char> p);
+    double NormFloat64();
+    double ExpFloat64();
+}
+#include "golang/math/rand/rng.fwd.h"
+
+namespace golang::math::rand
+{
+    rngSource* newSource(int64_t seed);
 }
 #include "golang/internal/godebug/godebug.fwd.h"
+
+namespace golang::math::rand
+{
+    namespace godebug = golang::internal::godebug;
+    extern godebug::Setting* randautoseed;
+    // randseednop controls whether the global Seed is a no-op.
+    extern godebug::Setting* randseednop;
+}
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::math::rand
+{
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::math::rand
+{
+    // globalRandGenerator is the source of random numbers for the top-level
+    // convenience functions. When possible it uses the runtime fastrand64
+    // function to avoid locking. This is not possible if the user called Seed,
+    // either explicitly or implicitly via GODEBUG=randautoseed=0.
+    extern atomic::Pointer<Rand> globalRandGenerator;
+}
 #include "golang/sync/mutex.fwd.h"
 
 namespace golang::math::rand
 {
-    Rand* New(Source src);
-    Rand* globalRand();
-    namespace godebug = golang::internal::godebug;
     namespace sync = golang::sync;
 }
 #include "golang/sync/mutex.h"
 
 namespace golang::math::rand
 {
-    extern godebug::Setting* randautoseed;
-    // randseednop controls whether the global Seed is a no-op.
-    extern godebug::Setting* randseednop;
     struct runtimeSource
     {
         // The mutex is used to avoid race conditions in Read.
@@ -252,22 +272,6 @@ namespace golang::math::rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lockedSource& value);
-}
-#include "golang/sync/atomic/type.fwd.h"
-
-namespace golang::math::rand
-{
-    namespace atomic = golang::sync::atomic;
-}
-#include "golang/sync/atomic/type.h"
-
-namespace golang::math::rand
-{
-    // globalRandGenerator is the source of random numbers for the top-level
-    // convenience functions. When possible it uses the runtime fastrand64
-    // function to avoid locking. This is not possible if the user called Seed,
-    // either explicitly or implicitly via GODEBUG=randautoseed=0.
-    extern atomic::Pointer<Rand> globalRandGenerator;
 
     namespace rec
     {

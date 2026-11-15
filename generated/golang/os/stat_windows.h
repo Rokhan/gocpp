@@ -18,13 +18,13 @@ namespace golang::os
     std::tuple<FileInfo, gocpp::error> lstatNolog(gocpp::string name);
 }
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::os

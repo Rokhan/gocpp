@@ -10,6 +10,11 @@
 #include "gocpp/support.h"
 
 #include "golang/time/time.h"
+
+namespace golang::time
+{
+    std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b);
+}
 #include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
@@ -17,7 +22,6 @@ namespace golang::time
 
     template<typename bytes>
     std::tuple<Time, bool> parseRFC3339(bytes s, golang::time::Location* local);
-    std::tuple<Time, gocpp::error> parseStrictRFC3339(gocpp::slice<unsigned char> b);
 }
 
 #include "golang/time/time.h"

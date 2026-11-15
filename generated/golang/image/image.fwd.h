@@ -21,11 +21,15 @@ namespace golang::image
 }
 #include "golang/image/color/color.fwd.h"
 #include "golang/image/color/ycbcr.fwd.h"
-#include "golang/image/geom.fwd.h"
 
 namespace golang::image
 {
     namespace color = golang::image::color;
-    struct Image;
     struct RGBA64Image;
+}
+#include "golang/image/geom.fwd.h"
+
+namespace golang::image
+{
+    struct Image;
 }

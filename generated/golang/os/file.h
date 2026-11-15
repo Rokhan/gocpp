@@ -78,7 +78,7 @@ namespace golang::os
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> ReadFile(gocpp::string name);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readFileContents(int64_t statSize, std::function<std::tuple<int64_t, gocpp::error> (gocpp::slice<unsigned char> _1)> read);
 }
-#include "golang/os/types.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
@@ -92,54 +92,6 @@ namespace golang::os
     extern File* Stdout;
     extern File* Stderr;
     File* NewFile(uintptr_t fd, gocpp::string name);
-    gocpp::error Mkdir(gocpp::string name, FileMode perm);
-    std::tuple<File*, gocpp::error> Open(gocpp::string name);
-    std::tuple<File*, gocpp::error> Create(gocpp::string name);
-    std::tuple<File*, gocpp::error> OpenFile(gocpp::string name, int64_t flag, FileMode perm);
-    std::tuple<File*, gocpp::error> openDir(gocpp::string name);
-    gocpp::error Chmod(gocpp::string name, FileMode mode);
-    int64_t statOrZero(File* f);
-    gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, FileMode perm);
-}
-#include "golang/io/fs/fs.fwd.h"
-#include "golang/io/fs/readdir.fwd.h"
-#include "golang/io/fs/readfile.fwd.h"
-#include "golang/io/fs/readlink.fwd.h"
-#include "golang/io/fs/stat.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/syscall/net.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/time/time.fwd.h"
-
-namespace golang::os
-{
-    namespace syscall = golang::syscall;
-}
-#include "golang/io/fs/fs.h"
-#include "golang/io/fs/readdir.h"
-#include "golang/io/fs/readfile.h"
-#include "golang/io/fs/readlink.h"
-#include "golang/io/fs/stat.h"
-
-namespace golang::os
-{
-    namespace io = golang::io;
-}
-#include "golang/io/io.h"
-#include "golang/os/dir.h"
-
-namespace golang::os
-{
-    namespace time = golang::time;
-}
-#include "golang/syscall/net.h"
-#include "golang/time/time.h"
-
-namespace golang::os
-{
-    namespace fs = golang::io::fs;
     struct fileWithoutReadFrom
     {
         noReadFrom noReadFrom{};
@@ -156,8 +108,108 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
+    struct fileWithoutWriteTo
+    {
+        noWriteTo noWriteTo{};
+        File* File{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
+    std::tuple<File*, gocpp::error> Open(gocpp::string name);
+    std::tuple<File*, gocpp::error> Create(gocpp::string name);
+    std::tuple<File*, gocpp::error> openDir(gocpp::string name);
+    int64_t statOrZero(File* f);
+}
+#include "golang/os/types.h"
+
+namespace golang::os
+{
+    gocpp::error Mkdir(gocpp::string name, FileMode perm);
+    std::tuple<File*, gocpp::error> OpenFile(gocpp::string name, int64_t flag, FileMode perm);
+    gocpp::error Chmod(gocpp::string name, FileMode mode);
+    gocpp::error WriteFile(gocpp::string name, gocpp::slice<unsigned char> data, FileMode perm);
+}
+#include "golang/io/fs/fs.h"
+#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/fs/readfile.fwd.h"
+#include "golang/io/fs/readlink.fwd.h"
+#include "golang/io/fs/stat.fwd.h"
+
+namespace golang::os
+{
+    namespace fs = golang::io::fs;
+    fs::FS DirFS(gocpp::string dir);
+}
+#include "golang/io/fs/stat.h"
+
+namespace golang::os
+{
+    extern fs::StatFS _;
+}
+#include "golang/io/fs/readfile.h"
+
+namespace golang::os
+{
+    extern fs::ReadFileFS _;
+}
+#include "golang/io/fs/readdir.h"
+
+namespace golang::os
+{
+    extern fs::ReadDirFS _;
+}
+#include "golang/io/fs/readlink.h"
+
+namespace golang::os
+{
+    extern fs::ReadLinkFS _;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::os
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::os
+{
+    std::tuple<int64_t, gocpp::error> genericReadFrom(File* f, io::Reader r);
+    std::tuple<int64_t, gocpp::error> genericWriteTo(File* f, io::Writer w);
+}
+
+#include "golang/io/fs/fs.h"
+#include "golang/io/io.h"
+#include "golang/os/dir.h"
+#include "golang/os/types.h"
+#include "golang/syscall/net.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+    namespace time = golang::time;
+
     namespace rec
     {
+        gocpp::string Name(File* f);
+        gocpp::string Error(LinkError* e);
+        gocpp::error Unwrap(LinkError* e);
+        std::tuple<int64_t, gocpp::error> Read(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> ReadAt(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, gocpp::error> ReadFrom(File* f, io::Reader r);
+        std::tuple<int64_t, gocpp::error> ReadFrom(noReadFrom, io::Reader);
         gocpp::error Chdir(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self);
         gocpp::error Chdir(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self);
         gocpp::error Chmod(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, FileMode mode);
@@ -236,28 +288,10 @@ namespace golang::os
         std::tuple<int64_t, gocpp::error> write(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, gocpp::slice<unsigned char> b);
         std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::PtrRecv<struct fileWithoutReadFrom, false>& self, io::Writer w);
         std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::ObjRecv<struct fileWithoutReadFrom>& self, io::Writer w);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct fileWithoutReadFrom& value);
-    std::tuple<int64_t, gocpp::error> genericReadFrom(File* f, io::Reader r);
-    struct fileWithoutWriteTo
-    {
-        noWriteTo noWriteTo{};
-        File* File{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
+        std::tuple<int64_t, gocpp::error> Write(File* f, gocpp::slice<unsigned char> b);
+        std::tuple<int64_t, gocpp::error> WriteAt(File* f, gocpp::slice<unsigned char> b, int64_t off);
+        std::tuple<int64_t, gocpp::error> WriteTo(File* f, io::Writer w);
+        std::tuple<int64_t, gocpp::error> WriteTo(noWriteTo, io::Writer);
         gocpp::error Chdir(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self);
         gocpp::error Chdir(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self);
         gocpp::error Chmod(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, FileMode mode);
@@ -336,40 +370,6 @@ namespace golang::os
         std::tuple<int64_t, gocpp::error> write(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, gocpp::slice<unsigned char> b);
         std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::PtrRecv<struct fileWithoutWriteTo, false>& self, io::Writer w);
         std::tuple<int64_t, bool, gocpp::error> writeTo(const gocpp::ObjRecv<struct fileWithoutWriteTo>& self, io::Writer w);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct fileWithoutWriteTo& value);
-    std::tuple<int64_t, gocpp::error> genericWriteTo(File* f, io::Writer w);
-    fs::FS DirFS(gocpp::string dir);
-    extern fs::StatFS _;
-    extern fs::ReadFileFS _;
-    extern fs::ReadDirFS _;
-    extern fs::ReadLinkFS _;
-}
-
-#include "golang/io/fs/fs.h"
-#include "golang/io/io.h"
-#include "golang/os/dir.h"
-#include "golang/os/types.h"
-#include "golang/syscall/net.h"
-#include "golang/time/time.h"
-
-namespace golang::os
-{
-
-    namespace rec
-    {
-        gocpp::string Name(File* f);
-        gocpp::string Error(LinkError* e);
-        gocpp::error Unwrap(LinkError* e);
-        std::tuple<int64_t, gocpp::error> Read(File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int64_t, gocpp::error> ReadAt(File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int64_t, gocpp::error> ReadFrom(File* f, io::Reader r);
-        std::tuple<int64_t, gocpp::error> ReadFrom(noReadFrom, io::Reader);
-        std::tuple<int64_t, gocpp::error> Write(File* f, gocpp::slice<unsigned char> b);
-        std::tuple<int64_t, gocpp::error> WriteAt(File* f, gocpp::slice<unsigned char> b, int64_t off);
-        std::tuple<int64_t, gocpp::error> WriteTo(File* f, io::Writer w);
-        std::tuple<int64_t, gocpp::error> WriteTo(noWriteTo, io::Writer);
         std::tuple<int64_t, gocpp::error> Seek(File* f, int64_t offset, int64_t whence);
         std::tuple<int64_t, gocpp::error> WriteString(File* f, gocpp::string s);
         gocpp::error wrapErr(File* f, gocpp::string op, gocpp::error err);

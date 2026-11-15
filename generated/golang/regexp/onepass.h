@@ -31,19 +31,24 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct queueOnePass& value);
+    queueOnePass* newQueue(int64_t size);
     extern gocpp::slice<gocpp::rune> noRune;
     extern gocpp::slice<uint32_t> noNext;
     std::tuple<gocpp::slice<gocpp::rune>, gocpp::slice<uint32_t>> mergeRuneSets(gocpp::slice<gocpp::rune>* leftRunes, gocpp::slice<gocpp::rune>* rightRunes, uint32_t leftPC, uint32_t rightPC);
     extern gocpp::slice<gocpp::rune> anyRuneNotNL;
     extern gocpp::slice<gocpp::rune> anyRune;
-    queueOnePass* newQueue(int64_t size);
 }
-#include "golang/regexp/syntax/parse.fwd.h"
 #include "golang/regexp/syntax/prog.fwd.h"
 
 namespace golang::regexp
 {
     namespace syntax = golang::regexp::syntax;
+}
+#include "golang/regexp/syntax/parse.fwd.h"
+
+namespace golang::regexp
+{
+    std::tuple<gocpp::string, bool, uint32_t> onePassPrefix(syntax::Prog* p);
 }
 #include "golang/regexp/syntax/prog.h"
 
@@ -65,18 +70,7 @@ namespace golang::regexp
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool MatchEmptyWidth(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune before, gocpp::rune after);
-        bool MatchRune(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
-        int64_t MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
-        gocpp::string String(const gocpp::PtrRecv<struct onePassInst, false>& self);
-        syntax::InstOp op(const gocpp::PtrRecv<struct onePassInst, false>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct onePassInst& value);
-    std::tuple<gocpp::string, bool, uint32_t> onePassPrefix(syntax::Prog* p);
-    syntax::InstOp iop(syntax::Inst* i);
     struct onePassProg
     {
         gocpp::slice<onePassInst> Inst{};
@@ -96,6 +90,7 @@ namespace golang::regexp
 
     std::ostream& operator<<(std::ostream& os, const struct onePassProg& value);
     uint32_t onePassNext(onePassInst* i, gocpp::rune r);
+    syntax::InstOp iop(syntax::Inst* i);
     void cleanupOnePass(onePassProg* prog, syntax::Prog* original);
     onePassProg* onePassCopy(syntax::Prog* prog);
     onePassProg* makeOnePass(onePassProg* p);
@@ -103,6 +98,11 @@ namespace golang::regexp
 
     namespace rec
     {
+        bool MatchEmptyWidth(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune before, gocpp::rune after);
+        bool MatchRune(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
+        int64_t MatchRunePos(const gocpp::PtrRecv<struct onePassInst, false>& self, gocpp::rune r);
+        gocpp::string String(const gocpp::PtrRecv<struct onePassInst, false>& self);
+        syntax::InstOp op(const gocpp::PtrRecv<struct onePassInst, false>& self);
         bool empty(queueOnePass* q);
         uint32_t next(queueOnePass* q);
         void clear(queueOnePass* q);

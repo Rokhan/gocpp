@@ -9,8 +9,15 @@
 #include "golang/go/types/typeset.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/termlist.h"
 #include "golang/go/types/object.fwd.h"
+
+namespace golang::go::types
+{
+    int64_t compareFunc(Func* a, Func* b);
+    void sortMethods(gocpp::slice<Func*> list);
+    void assertSortedMethods(gocpp::slice<Func*> list);
+}
+#include "golang/go/types/termlist.h"
 
 namespace golang::go::types
 {
@@ -32,35 +39,32 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _TypeSet& value);
-    std::tuple<termlist, bool> intersectTermLists(termlist xterms, bool xcomp, termlist yterms, bool ycomp);
-    int64_t compareFunc(Func* a, Func* b);
-    void sortMethods(gocpp::slice<Func*> list);
-    void assertSortedMethods(gocpp::slice<Func*> list);
-}
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::go::types
-{
     // topTypeSet may be used as type set for the empty interface.
     extern _TypeSet topTypeSet;
+    std::tuple<termlist, bool> intersectTermLists(termlist xterms, bool xcomp, termlist yterms, bool ycomp);
     // invalidTypeSet is a singleton type set to signal an invalid type set
     // due to an error. It's also a valid empty type set, so consumers of
     // type sets may choose to ignore it.
     extern _TypeSet invalidTypeSet;
 }
-#include "golang/go/token/position.h"
+#include "golang/go/token/position.fwd.h"
 
 namespace golang::go::types
 {
     namespace token = golang::go::token;
 }
+#include "golang/go/token/position.h"
 #include "golang/go/types/check.fwd.h"
 #include "golang/go/types/interface.fwd.h"
-#include "golang/go/types/union.fwd.h"
 
 namespace golang::go::types
 {
     _TypeSet* computeInterfaceTypeSet(Checker* check, token::Pos pos, Interface* ityp);
+}
+#include "golang/go/types/union.fwd.h"
+
+namespace golang::go::types
+{
     _TypeSet* computeUnionTypeSet(Checker* check, gocpp::map<Union*, _TypeSet*> unionSets, token::Pos pos, Union* utyp);
 }
 

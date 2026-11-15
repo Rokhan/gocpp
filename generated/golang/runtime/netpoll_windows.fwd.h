@@ -18,7 +18,7 @@ namespace golang::runtime
     // It is set to a low value so the overlapped entry key can
     // contain as much bits as possible for the pollDesc pointer.
     inline constexpr long sourceBits = 4;
+    inline constexpr int64_t sourceMasks = (1 << sourceBits) - 1;
     struct pollOperation;
     struct overlappedEntry;
-    inline constexpr int64_t sourceMasks = (1 << sourceBits) - 1;
 }

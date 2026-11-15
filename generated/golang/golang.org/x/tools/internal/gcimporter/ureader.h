@@ -14,52 +14,146 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 {
     std::tuple<gocpp::string, gocpp::string> splitVargenSuffix(gocpp::string name);
 }
-#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/context.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace types = golang::go::types;
+}
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/alias.fwd.h"
 #include "golang/go/types/array.fwd.h"
 #include "golang/go/types/chan.fwd.h"
-#include "golang/go/types/context.fwd.h"
 #include "golang/go/types/instantiate.fwd.h"
-#include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/map.fwd.h"
 #include "golang/go/types/named.fwd.h"
 #include "golang/go/types/object.fwd.h"
-#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/pointer.fwd.h"
 #include "golang/go/types/scope.fwd.h"
 #include "golang/go/types/signature.fwd.h"
 #include "golang/go/types/slice.fwd.h"
 #include "golang/go/types/struct.fwd.h"
 #include "golang/go/types/tuple.fwd.h"
-#include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 #include "golang/go/types/union.fwd.h"
 #include "golang/go/types/universe.fwd.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/codes.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    types::Scope* pkgScope(types::Package* pkg);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace token = golang::go::token;
+    std::tuple<int64_t, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path);
+}
 #include "golang/golang.org/x/tools/internal/pkgbits/decoder.fwd.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/reloc.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace pkgbits = golang::golang_org::x::tools::internal::pkgbits;
+}
+#include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/codes.fwd.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/sync.fwd.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/version.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    namespace pkgbits = golang::golang_org::x::tools::internal::pkgbits;
-    namespace types = golang::go::types;
+    struct derivedInfo
+    {
+        pkgbits::Index idx{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct derivedInfo& value);
+    struct typeInfo
+    {
+        pkgbits::Index idx{};
+        bool derived{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct typeInfo& value);
 }
-#include "golang/go/constant/value.h"
-#include "golang/go/types/type.h"
-#include "golang/golang.org/x/tools/internal/gcimporter/bimport.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/codes.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/decoder.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/version.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
-    namespace token = golang::go::token;
-    namespace constant = golang::go::constant;
-    namespace big = golang::math::big;
+    types::Package* readUnifiedPackage(token::FileSet* fset, types::Context* ctxt, gocpp::map<gocpp::string, types::Package*> imports, pkgbits::PkgDecoder input);
+    struct reader
+    {
+        pkgbits::Decoder Decoder{};
+        pkgReader* p{};
+        readerDict* dict{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct reader& value);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    struct readerDict
+    {
+        gocpp::slice<typeInfo> rtbounds{}; // contains constraint types for each parameter in rtparams
+        gocpp::slice<types::TypeParam*> rtparams{}; // contains receiver type parameters for an element
+        gocpp::slice<typeInfo> tbounds{}; // contains constraint types for each parameter in tparams
+        gocpp::slice<types::TypeParam*> tparams{}; // contains type parameters for an element
+        // derived is a slice of types derived from tparams, which may be
+        // instantiated while reading the current element.
+        gocpp::slice<derivedInfo> derived{};
+        gocpp::slice<types::Type> derivedTypes{}; // lazily instantiated from derived
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct readerDict& value);
+}
+#include "golang/golang.org/x/tools/internal/gcimporter/bimport.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     struct pkgReader
     {
         pkgbits::PkgDecoder PkgDecoder{};
@@ -94,6 +188,27 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct pkgReader& value);
+}
+
+#include "golang/go/token/position.h"
+#include "golang/go/types/interface.h"
+#include "golang/go/types/object.h"
+#include "golang/go/types/package.h"
+#include "golang/go/types/signature.h"
+#include "golang/go/types/struct.h"
+#include "golang/go/types/tuple.h"
+#include "golang/go/types/type.h"
+#include "golang/go/types/typeparam.h"
+#include "golang/go/types/union.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
+#include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace big = golang::math::big;
+    namespace constant = golang::go::constant;
+
     namespace rec
     {
         int64_t AbsIdx(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
@@ -111,63 +226,8 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         pkgbits::Decoder TempDecoder(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
         pkgbits::Decoder TempDecoderRaw(const gocpp::PtrRecv<struct pkgReader, false>& self, pkgbits::RelocKind k, pkgbits::Index idx);
         int64_t TotalElems(const gocpp::PtrRecv<struct pkgReader, false>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct pkgReader& value);
-    struct derivedInfo
-    {
-        pkgbits::Index idx{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct derivedInfo& value);
-    struct typeInfo
-    {
-        pkgbits::Index idx{};
-        bool derived{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct typeInfo& value);
-    std::tuple<int64_t, types::Package*, gocpp::error> UImportData(token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::slice<unsigned char> data, gocpp::string path);
-    types::Package* readUnifiedPackage(token::FileSet* fset, types::Context* ctxt, gocpp::map<gocpp::string, types::Package*> imports, pkgbits::PkgDecoder input);
-    struct reader
-    {
-        pkgbits::Decoder Decoder{};
-        pkgReader* p{};
-        readerDict* dict{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
+        void later(pkgReader* pr, std::function<void ()> fn);
+        void laterFor(pkgReader* pr, types::Type t, std::function<void ()> fn);
         bool Bool(const gocpp::PtrRecv<struct reader, false>& self);
         int64_t Code(const gocpp::PtrRecv<struct reader, false>& self, pkgbits::SyncMarker mark);
         int64_t Int(const gocpp::PtrRecv<struct reader, false>& self);
@@ -188,55 +248,6 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         uint64_t rawUvarint(const gocpp::PtrRecv<struct reader, false>& self);
         int64_t rawVarint(const gocpp::PtrRecv<struct reader, false>& self);
         constant::Value scalar(const gocpp::PtrRecv<struct reader, false>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct reader& value);
-    types::Scope* pkgScope(types::Package* pkg);
-    struct readerDict
-    {
-        gocpp::slice<typeInfo> rtbounds{}; // contains constraint types for each parameter in rtparams
-        gocpp::slice<types::TypeParam*> rtparams{}; // contains receiver type parameters for an element
-        gocpp::slice<typeInfo> tbounds{}; // contains constraint types for each parameter in tparams
-        gocpp::slice<types::TypeParam*> tparams{}; // contains type parameters for an element
-        // derived is a slice of types derived from tparams, which may be
-        // instantiated while reading the current element.
-        gocpp::slice<derivedInfo> derived{};
-        gocpp::slice<types::Type> derivedTypes{}; // lazily instantiated from derived
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct readerDict& value);
-}
-
-#include "golang/go/token/position.h"
-#include "golang/go/types/interface.h"
-#include "golang/go/types/object.h"
-#include "golang/go/types/package.h"
-#include "golang/go/types/signature.h"
-#include "golang/go/types/struct.h"
-#include "golang/go/types/tuple.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/typeparam.h"
-#include "golang/go/types/union.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
-#include "golang/golang.org/x/tools/internal/pkgbits/sync.h"
-
-namespace golang::golang_org::x::tools::internal::gcimporter
-{
-
-    namespace rec
-    {
-        void later(pkgReader* pr, std::function<void ()> fn);
-        void laterFor(pkgReader* pr, types::Type t, std::function<void ()> fn);
         reader* newReader(pkgReader* pr, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
         reader* tempReader(pkgReader* pr, pkgbits::RelocKind k, pkgbits::Index idx, pkgbits::SyncMarker marker);
         void retireReader(pkgReader* pr, reader* r);

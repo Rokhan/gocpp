@@ -16,10 +16,14 @@ namespace golang::go::types
     using unifyMode = gocpp::defined<uint64_t, GoTag_unifyMode>;
     struct GoTag_typeParamsById { };
 }
-#include "golang/go/types/type.h"
-#include "golang/go/types/check.fwd.h"
-#include "golang/go/types/interface.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
+
+namespace golang::go::types
+{
+    using typeParamsById = gocpp::defined<gocpp::slice<TypeParam*>, GoTag_typeParamsById>;
+}
+#include "golang/go/types/check.fwd.h"
+#include "golang/go/types/type.fwd.h"
 
 namespace golang::go::types
 {
@@ -51,9 +55,18 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct unifier& value);
-    using typeParamsById = gocpp::defined<gocpp::slice<TypeParam*>, GoTag_typeParamsById>;
-    Interface* asInterface(golang::go::types::Type x);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
     unifier* newUnifier(Checker* check, gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> targs, bool enableInterfaceInference);
+}
+#include "golang/go/types/interface.fwd.h"
+
+namespace golang::go::types
+{
+    Interface* asInterface(golang::go::types::Type x);
 }
 
 #include "golang/go/types/predicates.h"

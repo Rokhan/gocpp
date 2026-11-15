@@ -10,14 +10,14 @@
 #include "gocpp/support.h"
 
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::internal::poll
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::internal::poll
 {

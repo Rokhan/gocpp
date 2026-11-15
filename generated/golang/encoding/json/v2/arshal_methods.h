@@ -140,36 +140,16 @@ namespace golang::encoding::json::v2
 
     std::ostream& operator<<(std::ostream& os, const struct Unmarshaler& value);
 }
-#include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/encode.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace reflect = golang::reflect;
-}
-#include "golang/reflect/type.h"
 
 namespace golang::encoding::json::v2
 {
     namespace jsontext = golang::encoding::json::jsontext;
 }
-#include "golang/encoding/json/v2/arshal.fwd.h"
+#include "golang/encoding/json/jsontext/decode.fwd.h"
 
 namespace golang::encoding::json::v2
 {
-    // Interfaces for custom serialization.
-    extern reflect::Type jsonMarshalerType;
-    extern reflect::Type jsonMarshalerToType;
-    extern reflect::Type jsonUnmarshalerType;
-    extern reflect::Type jsonUnmarshalerFromType;
-    extern reflect::Type textAppenderType;
-    extern reflect::Type textMarshalerType;
-    extern reflect::Type textUnmarshalerType;
-    extern gocpp::slice<reflect::Type> allMarshalerTypes;
-    extern gocpp::slice<reflect::Type> allUnmarshalerTypes;
-    extern gocpp::slice<reflect::Type> allMethodTypes;
     struct MarshalerTo : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -296,7 +276,29 @@ namespace golang::encoding::json::v2
     }
 
     std::ostream& operator<<(std::ostream& os, const struct UnmarshalerFrom& value);
-    arshaler* makeMethodArshaler(arshaler* fncs, reflect::Type t);
+}
+#include "golang/reflect/type.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace reflect = golang::reflect;
+}
+#include "golang/reflect/value.fwd.h"
+#include "golang/reflect/type.h"
+
+namespace golang::encoding::json::v2
+{
+    // Interfaces for custom serialization.
+    extern reflect::Type jsonMarshalerType;
+    extern reflect::Type jsonMarshalerToType;
+    extern reflect::Type jsonUnmarshalerType;
+    extern reflect::Type jsonUnmarshalerFromType;
+    extern reflect::Type textAppenderType;
+    extern reflect::Type textMarshalerType;
+    extern reflect::Type textUnmarshalerType;
+    extern gocpp::slice<reflect::Type> allMarshalerTypes;
+    extern gocpp::slice<reflect::Type> allUnmarshalerTypes;
+    extern gocpp::slice<reflect::Type> allMethodTypes;
     bool implementsAny(reflect::Type t, gocpp::slice<reflect::Type> ifaceTypes);
 
     template<typename... Args>
@@ -311,6 +313,12 @@ namespace golang::encoding::json::v2
         return implementsAny(t, gocpp::ToSlice<reflect::Type>(value, ifaceTypes...));
     }
     std::tuple<bool, bool> implements(reflect::Type t, reflect::Type ifaceType);
+}
+#include "golang/encoding/json/v2/arshal.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    arshaler* makeMethodArshaler(arshaler* fncs, reflect::Type t);
 
     namespace rec
     {

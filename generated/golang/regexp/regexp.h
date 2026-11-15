@@ -153,30 +153,57 @@ namespace golang::regexp
 
     std::ostream& operator<<(std::ostream& os, const struct input& value);
 }
-#include "golang/io/io.fwd.h"
-#include "golang/regexp/syntax/compile.fwd.h"
-#include "golang/regexp/syntax/parse.fwd.h"
-#include "golang/regexp/syntax/prog.fwd.h"
-#include "golang/regexp/syntax/regexp.fwd.h"
 #include "golang/sync/pool.fwd.h"
-
-namespace golang::regexp
-{
-    namespace syntax = golang::regexp::syntax;
-}
-#include "golang/io/io.h"
-#include "golang/regexp/syntax/prog.h"
 
 namespace golang::regexp
 {
     namespace sync = golang::sync;
 }
 #include "golang/sync/pool.h"
-#include "golang/regexp/onepass.fwd.h"
+
+namespace golang::regexp
+{
+    extern gocpp::array<sync::Pool, len(matchSize)> matchPool;
+}
+#include "golang/io/io.h"
 
 namespace golang::regexp
 {
     namespace io = golang::io;
+    struct inputReader
+    {
+        io::RuneReader r{};
+        bool atEOT{};
+        int64_t pos{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct inputReader& value);
+    std::tuple<bool, gocpp::error> MatchReader(gocpp::string pattern, io::RuneReader r);
+}
+#include "golang/regexp/syntax/prog.fwd.h"
+
+namespace golang::regexp
+{
+    namespace syntax = golang::regexp::syntax;
+}
+#include "golang/regexp/syntax/parse.fwd.h"
+#include "golang/regexp/syntax/compile.fwd.h"
+#include "golang/regexp/syntax/prog.h"
+#include "golang/regexp/syntax/regexp.fwd.h"
+#include "golang/regexp/onepass.fwd.h"
+
+namespace golang::regexp
+{
     struct Regexp
     {
         gocpp::string expr{}; // as passed to Compile
@@ -210,26 +237,6 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Regexp& value);
-    extern gocpp::array<sync::Pool, len(matchSize)> matchPool;
-    struct inputReader
-    {
-        io::RuneReader r{};
-        bool atEOT{};
-        int64_t pos{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct inputReader& value);
-    std::tuple<bool, gocpp::error> MatchReader(gocpp::string pattern, io::RuneReader r);
     std::tuple<Regexp*, gocpp::error> Compile(gocpp::string expr);
     std::tuple<Regexp*, gocpp::error> CompilePOSIX(gocpp::string expr);
     int64_t minInputLen(syntax::Regexp* re);

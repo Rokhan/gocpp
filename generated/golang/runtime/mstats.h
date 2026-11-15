@@ -38,43 +38,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    void init();
-    // doubleCheckReadMemStats controls a double-check mode for ReadMemStats that
-    // ensures consistency between the values that ReadMemStats is using and the
-    // runtime-internal stats.
-    extern bool doubleCheckReadMemStats;
-    void readGCStats(gocpp::slice<uint64_t>* pauses);
-    void readGCStats_m(gocpp::slice<uint64_t>* pauses);
-    void flushmcache(int64_t i);
-    void flushallmcaches();
-    struct GoTag_sysMemStat { };
-    using sysMemStat = gocpp::defined<uint64_t, GoTag_sysMemStat>;
-    struct cpuStats
-    {
-        int64_t GCAssistTime{}; // GC assists
-        int64_t GCDedicatedTime{}; // GC dedicated mark workers + pauses
-        int64_t GCIdleTime{}; // GC idle mark workers
-        int64_t GCPauseTime{}; // GC pauses (all GOMAXPROCS, even if just 1 is running)
-        int64_t GCTotalTime{};
-        int64_t ScavengeAssistTime{}; // background scavenger
-        int64_t ScavengeBgTime{}; // scavenge assists
-        int64_t ScavengeTotalTime{};
-        int64_t IdleTime{}; // Time Ps spent in _Pidle.
-        int64_t UserTime{}; // Time Ps spent in _Prunning that's not any of the above.
-        int64_t TotalTime{}; // GOMAXPROCS * (monotonic wall clock time elapsed)
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cpuStats& value);
     struct MemStats
     {
         // Alloc is bytes of allocated heap objects.
@@ -256,8 +219,45 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MemStats& value);
+    void init();
     void ReadMemStats(MemStats* m);
+    // doubleCheckReadMemStats controls a double-check mode for ReadMemStats that
+    // ensures consistency between the values that ReadMemStats is using and the
+    // runtime-internal stats.
+    extern bool doubleCheckReadMemStats;
     void readmemstats_m(MemStats* stats);
+    void readGCStats(gocpp::slice<uint64_t>* pauses);
+    void readGCStats_m(gocpp::slice<uint64_t>* pauses);
+    void flushmcache(int64_t i);
+    void flushallmcaches();
+    struct GoTag_sysMemStat { };
+    using sysMemStat = gocpp::defined<uint64_t, GoTag_sysMemStat>;
+    struct cpuStats
+    {
+        int64_t GCAssistTime{}; // GC assists
+        int64_t GCDedicatedTime{}; // GC dedicated mark workers + pauses
+        int64_t GCIdleTime{}; // GC idle mark workers
+        int64_t GCPauseTime{}; // GC pauses (all GOMAXPROCS, even if just 1 is running)
+        int64_t GCTotalTime{};
+        int64_t ScavengeAssistTime{}; // background scavenger
+        int64_t ScavengeBgTime{}; // scavenge assists
+        int64_t ScavengeTotalTime{};
+        int64_t IdleTime{}; // Time Ps spent in _Pidle.
+        int64_t UserTime{}; // Time Ps spent in _Prunning that's not any of the above.
+        int64_t TotalTime{}; // GOMAXPROCS * (monotonic wall clock time elapsed)
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cpuStats& value);
 }
 #include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
@@ -296,9 +296,8 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct heapStatsDelta& value);
 }
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 
 namespace golang::runtime
 {

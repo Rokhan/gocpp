@@ -15,7 +15,9 @@ namespace golang::math
     inline constexpr double SqrtPi = 1.77245385090551602729816748334114518279754945612238712821380779;
     inline constexpr double SqrtPhi = 1.27201964951406896425242246173749149171560804184009624861664038;
     inline constexpr double Ln2 = 0.693147180559945309417232121458176568075500134360255254120680009;
+    inline constexpr double Log2E = 1 / Ln2;
     inline constexpr double Ln10 = 2.30258509299404568401799145468436420760110148862877297603332790;
+    inline constexpr double Log10E = 1 / Ln10;
     // Floating-point limit values.
     // Max is the largest finite value representable by the type.
     // SmallestNonzero is the smallest positive, non-zero value representable by the type.
@@ -25,6 +27,8 @@ namespace golang::math
     inline constexpr double SmallestNonzeroFloat64 = 0x1p-1022 * 0x1p-52;
     // Integer limit values.
     inline constexpr int64_t intSize = 32 << (~ (uint64_t)(0) >> 63);
+    inline constexpr int64_t MaxInt = int64_t((1_bi << (intSize - 1)) - 1_bi);
+    inline constexpr int64_t MinInt = - 1LL << (intSize - 1);
     inline constexpr int64_t MaxInt8 = (1 << 7) - 1;
     inline constexpr int64_t MinInt8 = - 1 << 7;
     inline constexpr int64_t MaxInt16 = (1 << 15) - 1;
@@ -33,13 +37,9 @@ namespace golang::math
     inline constexpr int64_t MinInt32 = - 1 << 31;
     inline constexpr int64_t MaxInt64 = int64_t((1_bi << 63) - 1_bi);
     inline constexpr int64_t MinInt64 = - 1LL << 63;
+    inline constexpr uint64_t MaxUint = uint64_t((1_bi << intSize) - 1_bi);
     inline constexpr int64_t MaxUint8 = (1 << 8) - 1;
     inline constexpr int64_t MaxUint16 = (1 << 16) - 1;
     inline constexpr int64_t MaxUint32 = (1LL << 32) - 1LL;
     inline constexpr uint64_t MaxUint64 = uint64_t((1_bi << 64) - 1_bi);
-    inline constexpr double Log2E = 1 / Ln2;
-    inline constexpr double Log10E = 1 / Ln10;
-    inline constexpr int64_t MaxInt = int64_t((1_bi << (intSize - 1)) - 1_bi);
-    inline constexpr int64_t MinInt = - 1LL << (intSize - 1);
-    inline constexpr uint64_t MaxUint = uint64_t((1_bi << intSize) - 1_bi);
 }

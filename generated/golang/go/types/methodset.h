@@ -34,9 +34,9 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MethodSet& value);
-    using methodSet = gocpp::defined<gocpp::map<gocpp::string, Selection*>, GoTag_methodSet>;
     // Shared empty method set.
     extern MethodSet emptyMethodSet;
+    using methodSet = gocpp::defined<gocpp::map<gocpp::string, Selection*>, GoTag_methodSet>;
 }
 #include "golang/go/types/type.h"
 

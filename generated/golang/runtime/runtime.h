@@ -36,40 +36,34 @@ namespace golang::runtime
     extern gocpp::slice<uintptr_t> auxv;
     gocpp::slice<uintptr_t> getAuxv();
 }
-#include "golang/internal/abi/runtime.fwd.h"
+#include "golang/internal/abi/runtime.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+    // zeroVal is used by reflect via linkname.
+    //
+    // zeroVal should be an internal detail,
+    // but widely used packages access it using linkname.
+    // Notable members of the hall of shame include:
+    //   - github.com/ugorji/go/codec
+    //
+    // Do not remove or change the type signature.
+    // See go.dev/issue/67401.
+    //
+    //go:linkname zeroVal
+    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
+}
 #include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
 }
-#include "golang/internal/abi/runtime.h"
 #include "golang/internal/runtime/atomic/types.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    namespace abi = golang::internal::abi;
-    struct ticksType
-    {
-        // lock protects access to start* and val.
-        mutex lock{};
-        int64_t startTicks{};
-        int64_t startTime{};
-        atomic::Int64 val{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ticksType& value);
     extern atomic::Pointer<std::function<void (gocpp::string _1, gocpp::string _2)>> godebugUpdate;
     extern atomic::Pointer<gocpp::string> godebugEnv;
     extern atomic::Pointer<std::function<std::function<void ()> (gocpp::string _1)>> godebugNewIncNonDefault;
@@ -97,18 +91,31 @@ namespace golang::runtime
     //
     // Initialized to -1 in schedinit.
     extern atomic::Uintptr crashFD;
-    // zeroVal is used by reflect via linkname.
-    //
-    // zeroVal should be an internal detail,
-    // but widely used packages access it using linkname.
-    // Notable members of the hall of shame include:
-    //   - github.com/ugorji/go/codec
-    //
-    // Do not remove or change the type signature.
-    // See go.dev/issue/67401.
-    //
-    //go:linkname zeroVal
-    extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct ticksType
+    {
+        // lock protects access to start* and val.
+        mutex lock{};
+        int64_t startTicks{};
+        int64_t startTime{};
+        atomic::Int64 val{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ticksType& value);
     extern ticksType ticks;
 
     namespace rec

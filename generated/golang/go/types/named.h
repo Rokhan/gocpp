@@ -15,7 +15,6 @@ namespace golang::go::types
     struct GoTag_stateMask { };
     using stateMask = gocpp::defined<uint32_t, GoTag_stateMask>;
 }
-#include "golang/go/types/type.h"
 #include "golang/go/types/context.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
 
@@ -40,6 +39,11 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct instance& value);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
     golang::go::types::Type safeUnderlying(golang::go::types::Type typ);
 }
 #include "golang/sync/mutex.fwd.h"

@@ -15,20 +15,43 @@ namespace golang::go::types
 {
     Object resolve(gocpp::string name, Object obj);
 }
-#include "golang/go/token/position.fwd.h"
 #include "golang/sync/once.fwd.h"
-
-namespace golang::go::types
-{
-    namespace token = golang::go::token;
-}
-#include "golang/go/token/position.h"
 
 namespace golang::go::types
 {
     namespace sync = golang::sync;
 }
 #include "golang/sync/once.h"
+
+namespace golang::go::types
+{
+    struct lazyObject
+    {
+        golang::go::types::Scope* parent{};
+        std::function<Object ()> resolve{};
+        Object obj{};
+        sync::Once once{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct lazyObject& value);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
 
 namespace golang::go::types
 {
@@ -55,25 +78,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Scope& value);
-    struct lazyObject
-    {
-        golang::go::types::Scope* parent{};
-        std::function<Object ()> resolve{};
-        Object obj{};
-        sync::Once once{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct lazyObject& value);
     golang::go::types::Scope* NewScope(golang::go::types::Scope* parent, token::Pos pos, token::Pos end, gocpp::string comment);
 }
 

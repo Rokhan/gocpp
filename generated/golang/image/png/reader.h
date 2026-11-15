@@ -33,27 +33,29 @@ namespace golang::image::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct interlaceScan& value);
-    extern png::FormatError chunkOrderError;
-    void init();
     // interlacing defines Adam7 interlacing, with 7 passes of reduced images.
     // See https://www.w3.org/TR/PNG/#8Interlace
     extern gocpp::slice<interlaceScan> interlacing;
+    extern png::FormatError chunkOrderError;
+    void init();
 }
-#include "golang/hash/hash.fwd.h"
-#include "golang/image/color/color.fwd.h"
-#include "golang/image/format.fwd.h"
-#include "golang/image/geom.fwd.h"
-#include "golang/image/image.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/hash/hash.h"
-#include "golang/image/color/color.h"
 #include "golang/image/image.h"
 #include "golang/io/io.h"
+#include "golang/image/format.fwd.h"
+#include "golang/image/geom.fwd.h"
 
 namespace golang::image::png
 {
     namespace io = golang::io;
     namespace image = golang::image;
+    std::tuple<image::Image, gocpp::error> Decode(io::Reader r);
+    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r);
+}
+#include "golang/hash/hash.h"
+#include "golang/image/color/color.h"
+
+namespace golang::image::png
+{
     namespace hash = golang::hash;
     namespace color = golang::image::color;
     struct decoder
@@ -87,8 +89,6 @@ namespace golang::image::png
     };
 
     std::ostream& operator<<(std::ostream& os, const struct decoder& value);
-    std::tuple<image::Image, gocpp::error> Decode(io::Reader r);
-    std::tuple<image::Config, gocpp::error> DecodeConfig(io::Reader r);
 }
 
 #include "golang/image/image.h"

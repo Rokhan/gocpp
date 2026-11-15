@@ -21,6 +21,8 @@ namespace golang::compress::flate
     // continue to be able to decompress this output.
     inline constexpr long HuffmanOnly = - 2;
     inline constexpr long logWindowSize = 15;
+    inline constexpr int64_t windowSize = 1 << logWindowSize;
+    inline constexpr int64_t windowMask = windowSize - 1;
     inline constexpr long minMatchLength = 4;
     inline constexpr long maxMatchLength = 258;
     inline constexpr long minOffsetSize = 1;
@@ -31,15 +33,13 @@ namespace golang::compress::flate
     inline constexpr int64_t maxFlateBlockTokens = 1 << 15;
     inline constexpr long maxStoreBlockSize = 65535;
     inline constexpr long hashBits = 17;
+    inline constexpr int64_t hashSize = 1 << hashBits;
+    inline constexpr int64_t hashMask = (1 << hashBits) - 1;
     inline constexpr int64_t maxHashOffset = 1 << 28;
     struct compressionLevel;
     struct advancedState;
     struct compressor;
     struct Writer;
-    inline constexpr int64_t windowSize = 1 << logWindowSize;
-    inline constexpr int64_t hashSize = 1 << hashBits;
-    inline constexpr int64_t hashMask = (1 << hashBits) - 1;
-    inline constexpr int64_t windowMask = windowSize - 1;
 }
 #include "golang/math/const.fwd.h"
 

@@ -9,7 +9,7 @@ namespace golang::math::rand
     inline constexpr long rngLen = 607;
     inline constexpr long rngTap = 273;
     inline constexpr uint64_t rngMax = uint64_t(1_bi << 63);
+    inline constexpr int64_t rngMask = int64_t(gocpp::bigint(rngMax) - 1_bi);
     inline constexpr int64_t int32max = (1LL << 31) - 1LL;
     struct rngSource;
-    inline constexpr int64_t rngMask = int64_t(gocpp::bigint(rngMax) - 1_bi);
 }

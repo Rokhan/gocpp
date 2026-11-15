@@ -31,6 +31,14 @@ namespace golang::regexp
 
     std::ostream& operator<<(std::ostream& os, const struct job& value);
 }
+#include "golang/regexp/syntax/prog.fwd.h"
+
+namespace golang::regexp
+{
+    namespace syntax = golang::regexp::syntax;
+    int64_t maxBitStateLen(syntax::Prog* prog);
+    bool shouldBacktrack(syntax::Prog* prog);
+}
 #include "golang/regexp/exec.h"
 
 namespace golang::regexp
@@ -56,24 +64,20 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bitState& value);
+    bitState* newBitState();
+    void freeBitState(bitState* b);
 }
-#include "golang/regexp/syntax/prog.fwd.h"
 #include "golang/sync/pool.fwd.h"
 
 namespace golang::regexp
 {
-    bitState* newBitState();
-    void freeBitState(bitState* b);
     namespace sync = golang::sync;
-    namespace syntax = golang::regexp::syntax;
 }
 #include "golang/sync/pool.h"
 
 namespace golang::regexp
 {
     extern sync::Pool bitStatePool;
-    int64_t maxBitStateLen(syntax::Prog* prog);
-    bool shouldBacktrack(syntax::Prog* prog);
 }
 
 #include "golang/regexp/regexp.h"

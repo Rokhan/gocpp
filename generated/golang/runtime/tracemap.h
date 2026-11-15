@@ -9,19 +9,11 @@
 #include "golang/runtime/tracemap.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/cpu/cpu.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
-}
-#include "golang/internal/cpu/cpu.h"
-
-namespace golang::runtime
-{
-    namespace cpu = golang::internal::cpu;
 }
 #include "golang/internal/runtime/atomic/types.h"
 #include "golang/internal/runtime/sys/nih.h"
@@ -29,7 +21,34 @@ namespace golang::runtime
 namespace golang::runtime
 {
     namespace sys = golang::internal::runtime::sys;
+    struct traceMapNode
+    {
+        sys::NotInHeap _1{};
+        gocpp::array<atomic::UnsafePointer, 4> children{}; // *traceMapNode (can't use generics because it's notinheap)
+        uintptr_t hash{};
+        uint64_t id{};
+        gocpp::slice<unsigned char> data{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct traceMapNode& value);
 }
+#include "golang/internal/cpu/cpu.fwd.h"
+
+namespace golang::runtime
+{
+    namespace cpu = golang::internal::cpu;
+}
+#include "golang/internal/cpu/cpu.h"
 #include "golang/runtime/traceregion.h"
 
 namespace golang::runtime
@@ -54,26 +73,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceMap& value);
-    struct traceMapNode
-    {
-        sys::NotInHeap _1{};
-        gocpp::array<atomic::UnsafePointer, 4> children{}; // *traceMapNode (can't use generics because it's notinheap)
-        uintptr_t hash{};
-        uint64_t id{};
-        gocpp::slice<unsigned char> data{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct traceMapNode& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 
     namespace rec

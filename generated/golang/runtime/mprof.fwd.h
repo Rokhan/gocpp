@@ -23,6 +23,10 @@ namespace golang::runtime
     inline constexpr long maxProfStackDepth = 1024;
     struct GoTag_bucketType;
     using bucketType = gocpp::defined<int64_t, GoTag_bucketType>;
+    // profile types
+    inline constexpr bucketType memProfile = 1 + 0;
+    inline constexpr bucketType blockProfile = 1 + 1;
+    inline constexpr bucketType mutexProfile = 1 + 2;
     struct bucket;
     struct memRecord;
     struct memRecordCycle;
@@ -36,10 +40,6 @@ namespace golang::runtime
     struct gocpp_id_0;
     struct GoTag_goroutineProfileState;
     using goroutineProfileState = gocpp::defined<uint32_t, GoTag_goroutineProfileState>;
-    // profile types
-    inline constexpr bucketType memProfile = 1 + 0;
-    inline constexpr bucketType blockProfile = 1 + 1;
-    inline constexpr bucketType mutexProfile = 1 + 2;
     inline constexpr goroutineProfileState goroutineProfileAbsent = 0;
     inline constexpr goroutineProfileState goroutineProfileInProgress = 1;
     inline constexpr goroutineProfileState goroutineProfileSatisfied = 2;

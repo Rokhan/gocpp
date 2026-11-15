@@ -111,6 +111,7 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
+    entry* newEntry(go_any i);
     void main();
 
     template<typename T>
@@ -142,12 +143,11 @@ namespace golang::main
     int64_t RealIndexing(gocpp::slice<int64_t> arr, int64_t i);
     std::function<int64_t (int64_t _1)> FuncInstantiationAsValue();
     int64_t FuncInstantiationCalled();
+    Boxed<int64_t> TypeInstantiationConverted(int64_t x);
     std::function<std::tuple<int64_t, gocpp::string> (int64_t _1, gocpp::string _2)> FuncInstantiationAsValue2();
     std::tuple<int64_t, gocpp::string> FuncInstantiationCalled2();
     template<typename K, typename V> struct GoTag_BoxedPair { };
     template<typename K, typename V> using BoxedPair = gocpp::defined<int64_t, GoTag_BoxedPair<K ,V>>;
-    entry* newEntry(go_any i);
-    Boxed<int64_t> TypeInstantiationConverted(int64_t x);
     BoxedPair<int64_t, gocpp::string> TypeInstantiationConverted2(int64_t x);
     Pair<int64_t, gocpp::string> NewPair();
 

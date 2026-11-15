@@ -53,6 +53,7 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ParseError& value);
+    ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
     gocpp::string quote(gocpp::string s);
 
     template<typename bytes>
@@ -91,17 +92,20 @@ namespace golang::time
 
     std::ostream& operator<<(std::ostream& os, const struct parseDurationError& value);
     extern gocpp::map<gocpp::string, uint64_t> unitMap;
-    ParseError* newParseError(gocpp::string layout, gocpp::string value, gocpp::string layoutElem, gocpp::string valueElem, gocpp::string message);
 }
 #include "golang/time/time.h"
-#include "golang/time/zoneinfo.fwd.h"
 
 namespace golang::time
 {
     std::tuple<Time, gocpp::error> Parse(gocpp::string layout, gocpp::string value);
+    std::tuple<Duration, gocpp::error> ParseDuration(gocpp::string s);
+}
+#include "golang/time/zoneinfo.fwd.h"
+
+namespace golang::time
+{
     std::tuple<Time, gocpp::error> ParseInLocation(gocpp::string layout, gocpp::string value, golang::time::Location* loc);
     std::tuple<Time, gocpp::error> parse(gocpp::string layout, gocpp::string value, golang::time::Location* defaultLocation, golang::time::Location* local);
-    std::tuple<Duration, gocpp::error> ParseDuration(gocpp::string s);
 }
 
 #include "golang/time/time.h"

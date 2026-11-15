@@ -45,8 +45,6 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tableEntry& value);
-    uint32_t hashLen(uint64_t u, uint8_t b, uint8_t n);
-    int64_t matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
     struct tableEntryPrev
     {
         tableEntry cur{};
@@ -64,6 +62,8 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tableEntryPrev& value);
+    uint32_t hashLen(uint64_t u, uint8_t b, uint8_t n);
+    int64_t matchLen(gocpp::slice<unsigned char> a, gocpp::slice<unsigned char> b);
 }
 #include "golang/compress/flate/token.fwd.h"
 

@@ -29,6 +29,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Value& value);
+    Value* New(gocpp::string name, gocpp::string description);
     struct Tag
     {
         gocpp::string name{};
@@ -46,6 +47,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Tag& value);
+    Tag* NewTag(gocpp::string name, gocpp::string description);
     struct Int
     {
         gocpp::string name{};
@@ -63,6 +65,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int& value);
+    Int* NewInt(gocpp::string name, gocpp::string description);
     struct Uint
     {
         gocpp::string name{};
@@ -80,6 +83,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Uint& value);
+    Uint* NewUint(gocpp::string name, gocpp::string description);
     struct Float
     {
         gocpp::string name{};
@@ -97,6 +101,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Float& value);
+    Float* NewFloat(gocpp::string name, gocpp::string description);
     struct String
     {
         gocpp::string name{};
@@ -114,6 +119,7 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct String& value);
+    String* NewString(gocpp::string name, gocpp::string description);
     struct Error
     {
         gocpp::string name{};
@@ -131,12 +137,6 @@ namespace golang::golang_org::x::tools::internal::event::keys
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Error& value);
-    Value* New(gocpp::string name, gocpp::string description);
-    Tag* NewTag(gocpp::string name, gocpp::string description);
-    Int* NewInt(gocpp::string name, gocpp::string description);
-    Uint* NewUint(gocpp::string name, gocpp::string description);
-    Float* NewFloat(gocpp::string name, gocpp::string description);
-    String* NewString(gocpp::string name, gocpp::string description);
     Error* NewError(gocpp::string name, gocpp::string description);
 }
 

@@ -44,7 +44,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct fixalloc& value);
 }
-#include "golang/internal/runtime/sys/nih.fwd.h"
 #include "golang/internal/runtime/sys/nih.h"
 
 namespace golang::runtime

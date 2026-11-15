@@ -7,6 +7,8 @@
 namespace golang::math::bits
 {
     inline constexpr int64_t uintSize = 32 << (~ (uint64_t)(0) >> 63);
+    // UintSize is the size of a uint in bits.
+    inline constexpr int64_t UintSize = uintSize;
     // See http://keithandkatie.com/keith/papers/debruijn.html
     inline constexpr long deBruijn32 = 0x077CB531;
     inline constexpr long deBruijn64 = 0x03f79d71b4ca8b09LL;
@@ -15,6 +17,4 @@ namespace golang::math::bits
     inline constexpr long m2 = 0x0f0f0f0f0f0f0f0fLL;
     inline constexpr long m3 = 0x00ff00ff00ff00ffLL;
     inline constexpr long m4 = 0x0000ffff0000ffffLL;
-    // UintSize is the size of a uint in bits.
-    inline constexpr int64_t UintSize = uintSize;
 }

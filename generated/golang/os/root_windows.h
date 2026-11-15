@@ -14,35 +14,36 @@ namespace golang::os
 {
     std::tuple<gocpp::string, gocpp::error> rootCleanPath(gocpp::string s, gocpp::slice<gocpp::string> prefix, gocpp::slice<gocpp::string> suffix);
 }
-#include "golang/os/types.h"
 #include "golang/os/root.fwd.h"
 
 namespace golang::os
 {
     std::tuple<Root*, gocpp::error> openRootNolog(gocpp::string name);
     std::tuple<Root*, gocpp::error> openRootInRoot(Root* r, gocpp::string name);
+    gocpp::error rootSymlink(Root* r, gocpp::string oldname, gocpp::string newname);
+}
+#include "golang/os/types.h"
+
+namespace golang::os
+{
     std::tuple<File*, gocpp::error> rootOpenFileNolog(Root* root, gocpp::string name, int64_t flag, FileMode perm);
     std::tuple<FileInfo, gocpp::error> rootStat(Root* r, gocpp::string name, bool lstat);
-    gocpp::error rootSymlink(Root* r, gocpp::string oldname, gocpp::string newname);
     bool isDirectoryLink(FileInfo fi);
 }
 #include "golang/syscall/exec_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/time/time.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/time/time.h"
 
 namespace golang::os
 {
-    namespace time = golang::time;
     std::tuple<Root*, gocpp::error> newRoot(syscall::Handle fd, gocpp::string name);
     std::tuple<syscall::Handle, gocpp::error> openat(syscall::Handle dirfd, gocpp::string name, uint64_t flag, FileMode perm);
     std::tuple<gocpp::string, gocpp::error> readReparseLinkAt(syscall::Handle dirfd, gocpp::string name);
@@ -54,12 +55,18 @@ namespace golang::os
     gocpp::error removeat(syscall::Handle dirfd, gocpp::string name);
     gocpp::error removefileat(syscall::Handle dirfd, gocpp::string name);
     gocpp::error removedirat(syscall::Handle dirfd, gocpp::string name);
-    gocpp::error chtimesat(syscall::Handle dirfd, gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
     gocpp::error renameat(syscall::Handle oldfd, gocpp::string oldname, syscall::Handle newfd, gocpp::string newname);
     gocpp::error linkat(syscall::Handle oldfd, gocpp::string oldname, syscall::Handle newfd, gocpp::string newname);
     gocpp::error checkSymlink(syscall::Handle parent, gocpp::string name, gocpp::error origError);
     std::tuple<gocpp::string, gocpp::error> readlinkat(syscall::Handle dirfd, gocpp::string name);
     std::tuple<FileInfo, gocpp::error> lstatat(syscall::Handle parent, gocpp::string name);
+}
+#include "golang/time/time.h"
+
+namespace golang::os
+{
+    namespace time = golang::time;
+    gocpp::error chtimesat(syscall::Handle dirfd, gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
 
     namespace rec
     {

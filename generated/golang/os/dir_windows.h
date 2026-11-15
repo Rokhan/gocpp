@@ -39,19 +39,28 @@ namespace golang::os
     std::ostream& operator<<(std::ostream& os, const struct dirEntry& value);
 }
 #include "golang/sync/mutex.fwd.h"
-#include "golang/sync/pool.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
     namespace sync = golang::sync;
+}
+#include "golang/sync/pool.fwd.h"
+#include "golang/sync/pool.h"
+
+namespace golang::os
+{
+    extern sync::Pool dirBufPool;
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::os
+{
     namespace syscall = golang::syscall;
 }
 #include "golang/sync/mutex.h"
-#include "golang/sync/pool.h"
+#include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
@@ -80,7 +89,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dirInfo& value);
-    extern sync::Pool dirBufPool;
 }
 
 #include "golang/os/dir.h"

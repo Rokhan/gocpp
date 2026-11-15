@@ -15,15 +15,19 @@ namespace golang::runtime
     void traceSnapshotMemory(uintptr_t gen);
 }
 #include "golang/runtime/traceevent.h"
+
+namespace golang::runtime
+{
+    traceArg traceHeapObjectID(uintptr_t addr);
+    traceArg traceGoroutineStackID(uintptr_t base);
+    traceArg traceCompressStackSize(uintptr_t size);
+}
 #include "golang/runtime/mheap.fwd.h"
 
 namespace golang::runtime
 {
     traceArg traceSpanTypeAndClass(mspan* s);
     traceArg traceSpanID(mspan* s);
-    traceArg traceHeapObjectID(uintptr_t addr);
-    traceArg traceGoroutineStackID(uintptr_t base);
-    traceArg traceCompressStackSize(uintptr_t size);
 }
 
 #include "golang/internal/abi/type.h"

@@ -100,71 +100,47 @@ namespace golang::encoding::json::v2
     gocpp::error wrapErrUnsupported(gocpp::error err, gocpp::string what);
     gocpp::error toUnexpectedEOF(gocpp::error err);
 }
-#include "golang/encoding/json/internal/jsonflags/flags.fwd.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
-#include "golang/encoding/json/jsontext/encode.fwd.h"
-#include "golang/encoding/json/jsontext/errors.fwd.h"
-#include "golang/encoding/json/jsontext/state.fwd.h"
-#include "golang/encoding/json/jsontext/token.fwd.h"
-#include "golang/encoding/json/jsontext/value.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/sync/oncefunc.fwd.h"
+#include "golang/sync/oncefunc.h"
 
 namespace golang::encoding::json::v2
 {
-    namespace jsontext = golang::encoding::json::jsontext;
+    namespace sync = golang::sync;
+    // errorModalVerb is a modal verb like "cannot" or "unable to".
+    //
+    // Once per process, Hyrum-proof the error message by deliberately
+    // switching between equivalent renderings of the same error message.
+    // The randomization is tied to the Hyrum-proofing already applied
+    // on map iteration in Go.
+    extern std::function<gocpp::string (void)> errorModalVerb;
 }
 #include "golang/encoding/json/internal/jsonflags/flags.h"
 
 namespace golang::encoding::json::v2
 {
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
-    namespace reflect = golang::reflect;
+    bool isFatalError(gocpp::error err, jsonflags::Flags flags);
 }
-#include "golang/encoding/json/jsontext/state.h"
-#include "golang/encoding/json/jsontext/token.h"
-#include "golang/encoding/json/jsontext/value.h"
-#include "golang/encoding/json/v2/doc.h"
-#include "golang/encoding/json/v2/options.h"
-#include "golang/reflect/type.h"
-#include "golang/sync/oncefunc.h"
+#include "golang/encoding/json/jsontext/errors.fwd.h"
 
 namespace golang::encoding::json::v2
 {
-    namespace sync = golang::sync;
-    bool isFatalError(gocpp::error err, jsonflags::Flags flags);
-    struct SemanticError
-    {
-        requireKeyedLiterals requireKeyedLiterals{};
-        nonComparable nonComparable{};
-        gocpp::string action{}; // either "marshal" or "unmarshal"
-        // ByteOffset indicates that an error occurred at or after this byte offset.
-        int64_t ByteOffset{};
-        // JSONPointer indicates that an error occurred within this JSON value
-        // as indicated using the JSON Pointer notation (see RFC 6901).
-        jsontext::Pointer JSONPointer{};
-        // JSONKind is the JSON kind that could not be handled.
-        jsontext::Kind JSONKind{}; // may be zero if unknown
-        // JSONValue is the JSON number or string that could not be unmarshaled.
-        // It is not populated during marshaling.
-        jsontext::Value JSONValue{}; // may be nil if irrelevant or unknown
-        // GoType is the Go type that could not be handled.
-        reflect::Type GoType{}; // may be nil if unknown
-        // Err is the underlying error.
-        gocpp::error Err{}; // may be nil
+    namespace jsontext = golang::encoding::json::jsontext;
+}
+#include "golang/encoding/json/jsontext/state.fwd.h"
+#include "golang/encoding/json/jsontext/token.fwd.h"
+#include "golang/encoding/json/jsontext/value.fwd.h"
+#include "golang/encoding/json/jsontext/state.h"
+#include "golang/encoding/json/jsontext/encode.fwd.h"
+#include "golang/encoding/json/jsontext/decode.fwd.h"
 
-        using isGoStruct = void;
+namespace golang::encoding::json::v2
+{
+    gocpp::error newDuplicateNameError(jsontext::Pointer ptr, gocpp::slice<unsigned char> quotedName, int64_t offset);
+}
+#include "golang/encoding/json/v2/options.h"
 
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SemanticError& value);
+namespace golang::encoding::json::v2
+{
     struct coder : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -234,22 +210,64 @@ namespace golang::encoding::json::v2
     }
 
     std::ostream& operator<<(std::ostream& os, const struct coder& value);
+}
+#include "golang/reflect/type.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace reflect = golang::reflect;
+}
+#include "golang/reflect/type.h"
+
+namespace golang::encoding::json::v2
+{
+    gocpp::error newInvalidFormatError(coder c, reflect::Type t);
     gocpp::error newMarshalErrorBefore(jsontext::Encoder* e, reflect::Type t, gocpp::error err);
     gocpp::error newUnmarshalErrorBefore(jsontext::Decoder* d, reflect::Type t, gocpp::error err);
     gocpp::error newUnmarshalErrorBeforeWithSkipping(jsontext::Decoder* d, reflect::Type t, gocpp::error err);
     gocpp::error newUnmarshalErrorAfter(jsontext::Decoder* d, reflect::Type t, gocpp::error err);
     gocpp::error newUnmarshalErrorAfterWithValue(jsontext::Decoder* d, reflect::Type t, gocpp::error err);
     gocpp::error newUnmarshalErrorAfterWithSkipping(jsontext::Decoder* d, reflect::Type t, gocpp::error err);
-    // errorModalVerb is a modal verb like "cannot" or "unable to".
-    //
-    // Once per process, Hyrum-proof the error message by deliberately
-    // switching between equivalent renderings of the same error message.
-    // The randomization is tied to the Hyrum-proofing already applied
-    // on map iteration in Go.
-    extern std::function<gocpp::string (void)> errorModalVerb;
-    gocpp::error newDuplicateNameError(jsontext::Pointer ptr, gocpp::slice<unsigned char> quotedName, int64_t offset);
-    gocpp::error newInvalidFormatError(coder c, reflect::Type t);
     gocpp::error newSemanticErrorWithPosition(coder c, reflect::Type t, int64_t prevDepth, int64_t prevLength, gocpp::error err);
+}
+#include "golang/encoding/json/jsontext/token.h"
+#include "golang/encoding/json/jsontext/value.h"
+#include "golang/encoding/json/v2/doc.h"
+
+namespace golang::encoding::json::v2
+{
+    struct SemanticError
+    {
+        requireKeyedLiterals requireKeyedLiterals{};
+        nonComparable nonComparable{};
+        gocpp::string action{}; // either "marshal" or "unmarshal"
+        // ByteOffset indicates that an error occurred at or after this byte offset.
+        int64_t ByteOffset{};
+        // JSONPointer indicates that an error occurred within this JSON value
+        // as indicated using the JSON Pointer notation (see RFC 6901).
+        jsontext::Pointer JSONPointer{};
+        // JSONKind is the JSON kind that could not be handled.
+        jsontext::Kind JSONKind{}; // may be zero if unknown
+        // JSONValue is the JSON number or string that could not be unmarshaled.
+        // It is not populated during marshaling.
+        jsontext::Value JSONValue{}; // may be nil if irrelevant or unknown
+        // GoType is the Go type that could not be handled.
+        reflect::Type GoType{}; // may be nil if unknown
+        // Err is the underlying error.
+        gocpp::error Err{}; // may be nil
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SemanticError& value);
 
     namespace rec
     {

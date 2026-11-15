@@ -21,7 +21,6 @@ namespace golang::runtime
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/chan.fwd.h"
-#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
@@ -42,7 +41,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scase& value);
-    bool selparkcommit(g* gp, gocpp::unsafe_pointer _1);
+    void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
+    void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
+    std::tuple<int64_t, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int64_t nsends, int64_t nrecvs, bool block);
     struct runtimeSelect
     {
         selectDir dir{};
@@ -62,10 +63,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeSelect& value);
-    void sellock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    void selunlock(gocpp::slice<scase> scases, gocpp::slice<uint16_t> lockorder);
-    std::tuple<int64_t, bool> selectgo(scase* cas0, uint16_t* order0, uintptr_t* pc0, int64_t nsends, int64_t nrecvs, bool block);
     std::tuple<int64_t, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool selparkcommit(g* gp, gocpp::unsafe_pointer _1);
 }
 
 #include "golang/runtime/chan.h"

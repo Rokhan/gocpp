@@ -19,11 +19,11 @@ namespace golang::compress::flate
     struct ReadError;
     struct WriteError;
     inline constexpr long huffmanChunkBits = 9;
+    inline constexpr int64_t huffmanNumChunks = 1 << huffmanChunkBits;
     inline constexpr long huffmanCountMask = 15;
     inline constexpr long huffmanValueShift = 4;
     struct huffmanDecoder;
     struct decompressor;
-    inline constexpr int64_t huffmanNumChunks = 1 << huffmanChunkBits;
 }
 #include "golang/io/io.fwd.h"
 

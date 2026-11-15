@@ -14,14 +14,12 @@ namespace golang::time
 {
     void sendTime(go_any c, uintptr_t seq, int64_t delta);
     void goFunc(go_any arg, uintptr_t seq, int64_t delta);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/time/time.h"
 
 namespace golang::time
 {
     void Sleep(Duration d);
-    gocpp::unsafe_pointer syncTimer(gocpp::channel<Time> c);
     int64_t when(Duration d);
     struct Timer
     {
@@ -40,12 +38,14 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timer& value);
-    gocpp::channel<Time> After(Duration d);
-    Timer* newTimer(int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2, int64_t _3)> f, go_any arg, gocpp::unsafe_pointer cp);
     bool stopTimer(Timer*);
     bool resetTimer(Timer* t, int64_t when, int64_t period);
     Timer* NewTimer(Duration d);
+    gocpp::channel<Time> After(Duration d);
     Timer* AfterFunc(Duration d, std::function<void ()> f);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer syncTimer(gocpp::channel<Time> c);
+    Timer* newTimer(int64_t when, int64_t period, std::function<void (go_any _1, uintptr_t _2, int64_t _3)> f, go_any arg, gocpp::unsafe_pointer cp);
 }
 
 #include "golang/time/time.h"

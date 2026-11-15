@@ -34,13 +34,13 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     struct GoTag_VertexAlias { };
-    struct GoTag_vvvv2 { };
-    void UseTypedefPtr1(vvvv1* t);
-    void main();
     using VertexAlias = gocpp::defined<Vertex, GoTag_VertexAlias>;
+    struct GoTag_vvvv2 { };
     using vvvv2 = gocpp::defined<Vertex, GoTag_vvvv2>;
-    void UseStructPtr(Vertex* t);
+    void UseTypedefPtr1(vvvv1* t);
     void UseTypedefPtr2(vvvv2* t);
+    void UseStructPtr(Vertex* t);
+    void main();
 
     namespace rec
     {

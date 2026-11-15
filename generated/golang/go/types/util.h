@@ -10,31 +10,46 @@
 #include "gocpp/support.h"
 
 #include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::types
 {
-    namespace token = golang::go::token;
     namespace ast = golang::go::ast;
+    bool hasDots(ast::CallExpr* call);
+    bool isdddArray(ast::ArrayType* atyp);
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-#include "golang/go/token/position.h"
-#include "golang/go/token/token.h"
 #include "golang/go/types/errors.h"
 
 namespace golang::go::types
 {
-    namespace constant = golang::go::constant;
-    int64_t cmpPos(token::Pos p, token::Pos q);
-    bool hasDots(ast::CallExpr* call);
     positioner dddErrPos(ast::CallExpr* call);
-    bool isdddArray(ast::ArrayType* atyp);
     positioner argErrPos(ast::CallExpr* call);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::types
+{
+    int64_t cmpPos(token::Pos p, token::Pos q);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
     token::Pos startPos(ast::Node n);
     token::Pos endPos(ast::Node n);
+}
+#include "golang/go/constant/value.h"
+#include "golang/go/token/token.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
     constant::Value makeFromLiteral(gocpp::string lit, token::Token kind);
 
     namespace rec

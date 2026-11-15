@@ -9,11 +9,6 @@
 #include "golang/internal/abi/iface.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::internal::abi
-{
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
 #include "golang/internal/abi/type.fwd.h"
 
 namespace golang::internal::abi
@@ -37,6 +32,7 @@ namespace golang::internal::abi
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ITab& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct EmptyInterface
     {
         Type* Type{};

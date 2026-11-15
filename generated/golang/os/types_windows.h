@@ -10,27 +10,40 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/godebug/godebug.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/syscall/exec_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/time/time.fwd.h"
-
-namespace golang::os
-{
-    namespace syscall = golang::syscall;
-    namespace sync = golang::sync;
-}
-#include "golang/os/types.h"
-#include "golang/sync/mutex.h"
-#include "golang/syscall/types_windows.h"
-#include "golang/time/time.h"
 
 namespace golang::os
 {
     namespace godebug = golang::internal::godebug;
+    extern godebug::Setting* winsymlink;
+}
+#include "golang/os/types.h"
+#include "golang/time/time.h"
+
+namespace golang::os
+{
     namespace time = golang::time;
+    mocklib::Date atime(FileInfo fi);
+}
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::os
+{
+    namespace sync = golang::sync;
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/sync/mutex.h"
+#include "golang/syscall/types_windows.h"
+#include "golang/syscall/exec_windows.fwd.h"
+
+namespace golang::os
+{
     struct fileStat
     {
         gocpp::string name{};
@@ -64,36 +77,31 @@ namespace golang::os
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        void Lock(const gocpp::PtrRecv<struct fileStat, false>& self);
-        bool TryLock(const gocpp::PtrRecv<struct fileStat, false>& self);
-        void Unlock(const gocpp::PtrRecv<struct fileStat, false>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct fileStat& value);
-    extern godebug::Setting* winsymlink;
-    mocklib::Date atime(FileInfo fi);
-}
-#include "golang/internal/syscall/windows/reparse_windows.fwd.h"
-#include "golang/internal/syscall/windows/symlink_windows.fwd.h"
-#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
-#include "golang/internal/syscall/windows/zsyscall_windows.fwd.h"
-
-namespace golang::os
-{
     fileStat* newFileStatFromWin32FileAttributeData(syscall::Win32FileAttributeData* d);
     fileStat* newFileStatFromWin32finddata(syscall::Win32finddata* d);
     bool sameFile(fileStat* fs1, fileStat* fs2);
+}
+#include "golang/internal/syscall/windows/symlink_windows.fwd.h"
+
+namespace golang::os
+{
     namespace windows = golang::internal::syscall::windows;
+}
+#include "golang/internal/syscall/windows/zsyscall_windows.fwd.h"
+#include "golang/internal/syscall/windows/syscall_windows.fwd.h"
+#include "golang/internal/syscall/windows/reparse_windows.fwd.h"
+
+namespace golang::os
+{
+    fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
+    fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
 }
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::os
 {
     std::tuple<fileStat*, gocpp::error> newFileStatFromGetFileInformationByHandle(gocpp::string path, syscall::Handle h);
-    fileStat* newFileStatFromFileIDBothDirInfo(windows::FILE_ID_BOTH_DIR_INFO* d);
-    fileStat* newFileStatFromFileFullDirInfo(windows::FILE_FULL_DIR_INFO* d);
 }
 
 #include "golang/os/types.h"
@@ -104,6 +112,9 @@ namespace golang::os
 
     namespace rec
     {
+        void Lock(const gocpp::PtrRecv<struct fileStat, false>& self);
+        bool TryLock(const gocpp::PtrRecv<struct fileStat, false>& self);
+        void Unlock(const gocpp::PtrRecv<struct fileStat, false>& self);
         bool isReparseTagNameSurrogate(fileStat* fs);
         int64_t Size(fileStat* fs);
         FileMode Mode(fileStat* fs);

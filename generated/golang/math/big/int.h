@@ -35,9 +35,9 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Int& value);
+    golang::math::big::Int* NewInt(int64_t x);
     uint32_t low32(golang::math::big::nat x);
     uint64_t low64(golang::math::big::nat x);
-    golang::math::big::Int* NewInt(int64_t x);
     std::tuple<golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*, golang::math::big::Int*> euclidUpdate(golang::math::big::Int* A, golang::math::big::Int* B, golang::math::big::Int* Ua, golang::math::big::Int* Ub, golang::math::big::Int* q, golang::math::big::Int* r, bool extended);
     int64_t Jacobi(golang::math::big::Int* x, golang::math::big::Int* y);
 }

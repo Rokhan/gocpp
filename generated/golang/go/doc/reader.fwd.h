@@ -9,8 +9,8 @@ namespace golang::go::doc
     struct GoTag_methodSet;
     struct GoTag_embeddedSet;
     struct namedType;
-    struct reader;
     using embeddedSet = gocpp::defined<gocpp::map<namedType*, bool>, GoTag_embeddedSet>;
+    struct reader;
 }
 #include "golang/go/doc/doc.fwd.h"
 

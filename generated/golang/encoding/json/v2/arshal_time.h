@@ -23,28 +23,36 @@ namespace golang::encoding::json::v2
     unsigned char parseDec2(gocpp::slice<unsigned char> b);
 }
 #include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/time/format.fwd.h"
-#include "golang/time/time.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace reflect = golang::reflect;
 }
+#include "golang/reflect/value.fwd.h"
 #include "golang/reflect/type.h"
+
+namespace golang::encoding::json::v2
+{
+    extern reflect::Type timeDurationType;
+    extern reflect::Type timeTimeType;
+}
+#include "golang/encoding/json/v2/arshal.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    arshaler* makeTimeArshaler(arshaler* fncs, reflect::Type t);
+}
+#include "golang/time/time.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace time = golang::time;
 }
 #include "golang/time/time.h"
-#include "golang/encoding/json/v2/arshal.fwd.h"
+#include "golang/time/format.fwd.h"
 
 namespace golang::encoding::json::v2
 {
-    extern reflect::Type timeDurationType;
-    extern reflect::Type timeTimeType;
-    arshaler* makeTimeArshaler(arshaler* fncs, reflect::Type t);
     struct durationArshaler
     {
         time::Duration td{};

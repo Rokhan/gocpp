@@ -27,6 +27,9 @@ namespace golang::encoding::json::jsontext
     };
 
     std::ostream& operator<<(std::ostream& os, const struct exporter& value);
+    // Internal is for internal use only.
+    // This is exempt from the Go compatibility agreement.
+    extern exporter Internal;
     struct export
     {
 
@@ -42,9 +45,6 @@ namespace golang::encoding::json::jsontext
     };
 
     std::ostream& operator<<(std::ostream& os, const struct export& value);
-    // Internal is for internal use only.
-    // This is exempt from the Go compatibility agreement.
-    extern exporter Internal;
 }
 
 #include "golang/encoding/json/internal/internal.h"

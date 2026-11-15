@@ -14,7 +14,6 @@ namespace golang::go::types
 {
     void assert(bool p);
 }
-#include "golang/go/token/position.fwd.h"
 #include "golang/go/token/position.h"
 
 namespace golang::go::types
@@ -83,6 +82,23 @@ namespace golang::go::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct positioner& value);
+    struct errorDesc
+    {
+        positioner posn{};
+        gocpp::string msg{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct errorDesc& value);
     struct posSpan
     {
         token::Pos start{};
@@ -101,28 +117,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct posSpan& value);
-}
-#include "golang/go/ast/ast.fwd.h"
-
-namespace golang::go::types
-{
-    struct errorDesc
-    {
-        positioner posn{};
-        gocpp::string msg{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct errorDesc& value);
     posSpan spanOf(positioner at);
 }
 #include "golang/go/ast/ast.h"

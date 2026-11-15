@@ -10,8 +10,27 @@ namespace golang::internal::trace::tracev2
     inline constexpr long MaxTimedEventArgs = 5;
     struct GoTag_GoStatus;
     using GoStatus = gocpp::defined<uint8_t, GoTag_GoStatus>;
+    inline constexpr GoStatus GoBad = 0;
+    inline constexpr GoStatus GoRunnable = 1;
+    inline constexpr GoStatus GoRunning = 2;
+    inline constexpr GoStatus GoSyscall = 3;
+    inline constexpr GoStatus GoWaiting = 4;
     struct GoTag_ProcStatus;
     using ProcStatus = gocpp::defined<uint8_t, GoTag_ProcStatus>;
+    inline constexpr ProcStatus ProcBad = 0;
+    inline constexpr ProcStatus ProcRunning = 1;
+    inline constexpr ProcStatus ProcIdle = 2;
+    inline constexpr ProcStatus ProcSyscall = 3;
+    // ProcSyscallAbandoned is a special case of
+    // ProcSyscall. It's used in the very specific case
+    // where the first a P is mentioned in a generation is
+    // part of a ProcSteal event. If that's the first time
+    // it's mentioned, then there's no GoSyscallBegin to
+    // connect the P stealing back to at that point. This
+    // special state indicates this to the parser, so it
+    // doesn't try to find a GoSyscallEndBlocked that
+    // corresponds with the ProcSteal.
+    inline constexpr ProcStatus ProcSyscallAbandoned = 4;
     // MaxBatchSize sets the maximum size that a batch can be.
     //
     // Directly controls the trace batch size in the runtime.
@@ -36,25 +55,6 @@ namespace golang::internal::trace::tracev2
     //
     // NOTE: If this number decreases, the trace format version must change.
     inline constexpr int64_t MaxEventTrailerDataSize = 1 << 10;
-    inline constexpr GoStatus GoBad = 0;
-    inline constexpr GoStatus GoRunnable = 1;
-    inline constexpr GoStatus GoRunning = 2;
-    inline constexpr GoStatus GoSyscall = 3;
-    inline constexpr GoStatus GoWaiting = 4;
-    inline constexpr ProcStatus ProcBad = 0;
-    inline constexpr ProcStatus ProcRunning = 1;
-    inline constexpr ProcStatus ProcIdle = 2;
-    inline constexpr ProcStatus ProcSyscall = 3;
-    // ProcSyscallAbandoned is a special case of
-    // ProcSyscall. It's used in the very specific case
-    // where the first a P is mentioned in a generation is
-    // part of a ProcSteal event. If that's the first time
-    // it's mentioned, then there's no GoSyscallBegin to
-    // connect the P stealing back to at that point. This
-    // special state indicates this to the parser, so it
-    // doesn't try to find a GoSyscallEndBlocked that
-    // corresponds with the ProcSteal.
-    inline constexpr ProcStatus ProcSyscallAbandoned = 4;
 }
 #include "golang/internal/trace/tracev2/spec.fwd.h"
 

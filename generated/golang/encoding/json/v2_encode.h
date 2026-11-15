@@ -32,14 +32,13 @@ namespace golang::encoding::json
     std::ostream& operator<<(std::ostream& os, const struct InvalidUTF8Error& value);
 }
 #include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
 
 namespace golang::encoding::json
 {
     namespace reflect = golang::reflect;
 }
+#include "golang/reflect/value.fwd.h"
 #include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
 
 namespace golang::encoding::json
 {
@@ -59,23 +58,6 @@ namespace golang::encoding::json
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UnsupportedTypeError& value);
-    struct UnsupportedValueError
-    {
-        reflect::Value Value{};
-        gocpp::string Str{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct UnsupportedValueError& value);
     struct MarshalerError
     {
         reflect::Type Type{};
@@ -94,6 +76,28 @@ namespace golang::encoding::json
     };
 
     std::ostream& operator<<(std::ostream& os, const struct MarshalerError& value);
+}
+#include "golang/reflect/value.h"
+
+namespace golang::encoding::json
+{
+    struct UnsupportedValueError
+    {
+        reflect::Value Value{};
+        gocpp::string Str{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct UnsupportedValueError& value);
 
     namespace rec
     {

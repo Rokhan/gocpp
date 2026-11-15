@@ -63,10 +63,10 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Float& value);
+    Float* NewFloat(double x);
     int64_t fnorm(golang::math::big::nat m);
     uint32_t msb32(golang::math::big::nat x);
     uint64_t msb64(golang::math::big::nat x);
-    Float* NewFloat(double x);
     void validateBinaryOperands(Float* x, Float* y);
 }
 

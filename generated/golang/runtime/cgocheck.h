@@ -13,17 +13,17 @@
 namespace golang::runtime
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void cgoCheckPtrWrite(gocpp::unsafe_pointer* dst, gocpp::unsafe_pointer src);
+    void cgoCheckBits(gocpp::unsafe_pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
 }
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    void cgoCheckPtrWrite(gocpp::unsafe_pointer* dst, gocpp::unsafe_pointer src);
     void cgoCheckMemmove(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src);
     void cgoCheckMemmove2(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
     void cgoCheckSliceCopy(_type* typ, gocpp::unsafe_pointer dst, gocpp::unsafe_pointer src, int64_t n);
     void cgoCheckTypedBlock(_type* typ, gocpp::unsafe_pointer src, uintptr_t off, uintptr_t size);
-    void cgoCheckBits(gocpp::unsafe_pointer src, unsigned char* gcbits, uintptr_t off, uintptr_t size);
 
     namespace rec
     {

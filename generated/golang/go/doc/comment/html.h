@@ -14,7 +14,6 @@ namespace golang::go::doc::comment
 {
     gocpp::string inc(gocpp::string s);
 }
-#include "golang/go/doc/comment/parse.fwd.h"
 #include "golang/go/doc/comment/print.fwd.h"
 
 namespace golang::go::doc::comment
@@ -35,6 +34,17 @@ namespace golang::go::doc::comment
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct htmlPrinter& value);
+}
+
+#include "golang/bytes/buffer.h"
+#include "golang/go/doc/comment/parse.h"
+#include "golang/go/doc/comment/print.h"
+
+namespace golang::go::doc::comment
+{
+    namespace bytes = golang::bytes;
+
     namespace rec
     {
         gocpp::slice<unsigned char> Comment(const gocpp::PtrRecv<struct htmlPrinter, false>& self, comment::Doc* d);
@@ -51,21 +61,6 @@ namespace golang::go::doc::comment
         gocpp::string headingID(const gocpp::ObjRecv<struct htmlPrinter>& self, comment::Heading* h);
         int64_t headingLevel(const gocpp::PtrRecv<struct htmlPrinter, false>& self);
         int64_t headingLevel(const gocpp::ObjRecv<struct htmlPrinter>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct htmlPrinter& value);
-}
-
-#include "golang/bytes/buffer.h"
-#include "golang/go/doc/comment/parse.h"
-#include "golang/go/doc/comment/print.h"
-
-namespace golang::go::doc::comment
-{
-    namespace bytes = golang::bytes;
-
-    namespace rec
-    {
         gocpp::slice<unsigned char> HTML(Printer* p, Doc* d);
         void block(htmlPrinter* p, bytes::Buffer* out, Block x);
         void text(htmlPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x);

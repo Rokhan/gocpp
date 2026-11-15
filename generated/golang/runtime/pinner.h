@@ -27,12 +27,6 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        void unpin(const gocpp::PtrRecv<struct Pinner, false>& self);
-        void unpin(const gocpp::ObjRecv<struct Pinner>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct Pinner& value);
     struct pinState
     {
@@ -57,11 +51,6 @@ namespace golang::runtime
     // panic function is a variable, that can be overwritten by a test.
     extern std::function<void (void)> pinnerLeakPanic;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/runtime/mheap.h"
-
-namespace golang::runtime
-{
     inline constexpr uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
     struct pinner
     {
@@ -83,8 +72,13 @@ namespace golang::runtime
     gocpp::unsafe_pointer pinnerGetPtr(go_any* i);
     bool isPinned(gocpp::unsafe_pointer ptr);
     bool setPinned(gocpp::unsafe_pointer ptr, bool pin);
-    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
     uintptr_t* pinnerGetPinCounter(gocpp::unsafe_pointer addr);
+}
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    using pinnerBits = gocpp::defined<gcBits, GoTag_pinnerBits>;
 }
 
 #include "golang/runtime/mheap.h"
@@ -94,6 +88,8 @@ namespace golang::runtime
 
     namespace rec
     {
+        void unpin(const gocpp::PtrRecv<struct Pinner, false>& self);
+        void unpin(const gocpp::ObjRecv<struct Pinner>& self);
         void Pin(Pinner* p, go_any pointer);
         void Unpin(Pinner* p);
         void unpin(pinner* p);

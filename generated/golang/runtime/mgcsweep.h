@@ -38,13 +38,8 @@ namespace golang::runtime
     bool isSweepDone();
     void deductSweepCredit(uintptr_t spanBytes, uintptr_t callerSweepPages);
     void gcPaceSweeper(uint64_t trigger);
-    namespace abi = golang::internal::abi;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/mbitmap.h"
-#include "golang/runtime/mgcmark_greenteagc.fwd.h"
 #include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/pinner.fwd.h"
 
 namespace golang::runtime
 {
@@ -63,8 +58,99 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    void clobberfree(gocpp::unsafe_pointer x, uintptr_t size);
+}
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    struct activeSweep
+    {
+        // state is divided into two parts.
+        // The top bit (masked by sweepDrainedMask) is a boolean
+        // value indicating whether all the sweep work has been
+        // drained from the queue.
+        // The rest of the bits are a counter, indicating the
+        // number of outstanding concurrent sweepers.
+        atomic::Uint32 state{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct sweepdata
+    {
+        mutex lock{};
+        g* g{};
+        bool parked{};
+        // active tracks outstanding sweepers and the sweep
+        // termination condition.
+        activeSweep active{};
+        // centralIndex is the current unswept span class.
+        // It represents an index into the mcentral span
+        // sets. Accessed and updated via its load and
+        // update methods. Not protected by a lock.
+        // Reset at mark termination.
+        // Used by mheap.nextSpanForSweep.
+        sweepClass centralIndex{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
+    extern sweepdata sweep;
+}
+
+#include "golang/runtime/mheap.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+
     namespace rec
     {
+        sweepClass load(sweepClass* s);
+        void update(sweepClass* s, sweepClass sNew);
+        void clear(sweepClass* s);
+        std::tuple<spanClass, bool> split(sweepClass s);
+        mspan* nextSpanForSweep(mheap* h);
+        sweepLocker begin(activeSweep* a);
+        void end(activeSweep* a, sweepLocker sl);
+        bool markDrained(activeSweep* a);
+        uint32_t sweepers(activeSweep* a);
+        bool isDone(activeSweep* a);
+        void reset(activeSweep* a);
         markBits allocBitsForIndex(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t allocBitIndex);
         markBits allocBitsForIndex(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t allocBitIndex);
         uintptr_t base(const gocpp::PtrRecv<struct sweepLocked, false>& self);
@@ -143,99 +229,6 @@ namespace golang::runtime
         uintptr_t writeHeapBitsSmall(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::PtrRecv<struct sweepLocked, false>& self, uintptr_t addr);
         runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::ObjRecv<struct sweepLocked>& self, uintptr_t addr);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct sweepLocked& value);
-    void clobberfree(gocpp::unsafe_pointer x, uintptr_t size);
-}
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
-
-namespace golang::runtime
-{
-    namespace atomic = golang::internal::runtime::atomic;
-}
-#include "golang/internal/runtime/atomic/types.h"
-
-namespace golang::runtime
-{
-    struct activeSweep
-    {
-        // state is divided into two parts.
-        // The top bit (masked by sweepDrainedMask) is a boolean
-        // value indicating whether all the sweep work has been
-        // drained from the queue.
-        // The rest of the bits are a counter, indicating the
-        // number of outstanding concurrent sweepers.
-        atomic::Uint32 state{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct activeSweep& value);
-}
-#include "golang/runtime/runtime2.h"
-
-namespace golang::runtime
-{
-    struct sweepdata
-    {
-        mutex lock{};
-        g* g{};
-        bool parked{};
-        // active tracks outstanding sweepers and the sweep
-        // termination condition.
-        activeSweep active{};
-        // centralIndex is the current unswept span class.
-        // It represents an index into the mcentral span
-        // sets. Accessed and updated via its load and
-        // update methods. Not protected by a lock.
-        // Reset at mark termination.
-        // Used by mheap.nextSpanForSweep.
-        sweepClass centralIndex{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct sweepdata& value);
-    extern sweepdata sweep;
-}
-
-#include "golang/runtime/mheap.h"
-
-namespace golang::runtime
-{
-
-    namespace rec
-    {
-        sweepClass load(sweepClass* s);
-        void update(sweepClass* s, sweepClass sNew);
-        void clear(sweepClass* s);
-        std::tuple<spanClass, bool> split(sweepClass s);
-        mspan* nextSpanForSweep(mheap* h);
-        sweepLocker begin(activeSweep* a);
-        void end(activeSweep* a, sweepLocker sl);
-        bool markDrained(activeSweep* a);
-        uint32_t sweepers(activeSweep* a);
-        bool isDone(activeSweep* a);
-        void reset(activeSweep* a);
         std::tuple<sweepLocked, bool> tryAcquire(sweepLocker* l, mspan* s);
         void ensureSwept(mspan* s);
         bool sweep(sweepLocked* sl, bool preserve);

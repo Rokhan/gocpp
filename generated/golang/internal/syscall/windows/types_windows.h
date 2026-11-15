@@ -143,58 +143,13 @@ namespace golang::internal::syscall::windows
 
     std::ostream& operator<<(std::ostream& os, const struct EXPLICIT_ACCESS& value);
 }
-#include "golang/internal/syscall/windows/syscall_windows.h"
-
-namespace golang::internal::syscall::windows
-{
-    struct IO_STATUS_BLOCK
-    {
-        NTStatus Status{};
-        uintptr_t Information{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct IO_STATUS_BLOCK& value);
-}
 #include "golang/syscall/security_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/syscall_windows.h"
-#include "golang/internal/syscall/windows/string_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
-    struct OBJECT_ATTRIBUTES
-    {
-        uint32_t Length{};
-        syscall::Handle RootDirectory{};
-        NTUnicodeString* ObjectName{};
-        uint32_t Attributes{};
-        SECURITY_DESCRIPTOR* SecurityDescriptor{};
-        SECURITY_QUALITY_OF_SERVICE* SecurityQoS{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct OBJECT_ATTRIBUTES& value);
     struct SECURITY_DESCRIPTOR
     {
         unsigned char revision{};
@@ -217,6 +172,33 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SECURITY_DESCRIPTOR& value);
+}
+#include "golang/internal/syscall/windows/syscall_windows.h"
+
+namespace golang::internal::syscall::windows
+{
+    struct IO_STATUS_BLOCK
+    {
+        NTStatus Status{};
+        uintptr_t Information{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct IO_STATUS_BLOCK& value);
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::syscall::windows
+{
     struct FILE_RENAME_INFORMATION
     {
         unsigned char ReplaceIfExists{};
@@ -291,6 +273,32 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct FILE_COMPLETION_INFORMATION& value);
+}
+#include "golang/internal/syscall/windows/string_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
+    struct OBJECT_ATTRIBUTES
+    {
+        uint32_t Length{};
+        syscall::Handle RootDirectory{};
+        NTUnicodeString* ObjectName{};
+        uint32_t Attributes{};
+        SECURITY_DESCRIPTOR* SecurityDescriptor{};
+        SECURITY_QUALITY_OF_SERVICE* SecurityQoS{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct OBJECT_ATTRIBUTES& value);
 }
 
 #include "golang/syscall/syscall_windows.h"

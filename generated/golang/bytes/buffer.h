@@ -14,11 +14,6 @@ namespace golang::bytes
 {
     struct GoTag_readOp { };
     using readOp = gocpp::defined<int8_t, GoTag_readOp>;
-    // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
-    extern gocpp::error ErrTooLarge;
-    extern gocpp::error errNegativeRead;
-    gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int64_t n);
-    extern gocpp::error errUnreadByte;
     struct Buffer
     {
         gocpp::slice<unsigned char> buf{}; // contents are the bytes buf[off : len(buf)]
@@ -37,6 +32,11 @@ namespace golang::bytes
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Buffer& value);
+    // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
+    extern gocpp::error ErrTooLarge;
+    extern gocpp::error errNegativeRead;
+    gocpp::slice<unsigned char> growSlice(gocpp::slice<unsigned char> b, int64_t n);
+    extern gocpp::error errUnreadByte;
     Buffer* NewBuffer(gocpp::slice<unsigned char> buf);
     Buffer* NewBufferString(gocpp::string s);
 }

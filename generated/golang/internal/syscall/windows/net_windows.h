@@ -30,13 +30,16 @@ namespace golang::internal::syscall::windows
 
     std::ostream& operator<<(std::ostream& os, const struct TCP_INITIAL_RTO_PARAMETERS& value);
 }
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
     gocpp::error WSASendtoInet4(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet4* to, syscall::Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSASendtoInet6(syscall::Handle s, syscall::WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, syscall::SockaddrInet6* to, syscall::Overlapped* overlapped, unsigned char* croutine);
 

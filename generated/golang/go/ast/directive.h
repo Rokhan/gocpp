@@ -47,6 +47,7 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Directive& value);
+    std::tuple<Directive, bool> ParseDirective(token::Pos pos, gocpp::string c);
     struct DirectiveArg
     {
         // Arg is the parsed argument string. If the argument was a quoted string,
@@ -84,7 +85,6 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct directiveScanner& value);
-    std::tuple<Directive, bool> ParseDirective(token::Pos pos, gocpp::string c);
 }
 
 #include "golang/go/token/position.h"

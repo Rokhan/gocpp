@@ -91,8 +91,6 @@ namespace golang::internal::syscall::windows
     inline constexpr long PIPE_READMODE_MESSAGE = 0x00000002;
     struct GoTag_NTStatus;
     using NTStatus = gocpp::defined<uint32_t, GoTag_NTStatus>;
-    inline constexpr long FileModeInformation = 16;
-    struct FILE_MODE_INFORMATION;
     // x/sys/windows/mkerrors.bash can generate a complete list of NTStatus codes.
     //
     // At the moment, we only need a couple, so just put them here manually.
@@ -107,16 +105,22 @@ namespace golang::internal::syscall::windows
     inline constexpr NTStatus STATUS_INVALID_PARAMETER = 0xC000000DLL;
     inline constexpr NTStatus STATUS_INVALID_INFO_CLASS = 0xC0000003LL;
     inline constexpr NTStatus STATUS_ACCESS_DENIED = 0xC0000022LL;
+    inline constexpr long FileModeInformation = 16;
+    struct FILE_MODE_INFORMATION;
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
+    namespace syscall = golang::syscall;
 }
 #include "golang/syscall/dll_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/zerrors_windows.fwd.h"
 #include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
-    namespace syscall = golang::syscall;
     inline constexpr syscall::Errno ERROR_INVALID_HANDLE = 6;
     inline constexpr syscall::Errno ERROR_BAD_LENGTH = 24;
     inline constexpr syscall::Errno ERROR_SHARING_VIOLATION = 32;

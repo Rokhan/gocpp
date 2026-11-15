@@ -15,12 +15,16 @@ namespace golang::go::types
     gocpp::string measure(int64_t x, gocpp::string unit);
 }
 #include "golang/go/types/type.h"
-#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/operand.fwd.h"
 
 namespace golang::go::types
 {
     gocpp::slice<golang::go::types::Type> operandTypes(gocpp::slice<operand*> list);
+}
+#include "golang/go/types/object.fwd.h"
+
+namespace golang::go::types
+{
     gocpp::slice<golang::go::types::Type> varTypes(gocpp::slice<Var*> list);
 }
 

@@ -14,9 +14,23 @@ namespace golang::runtime
 {
     struct GoTag_tmpBuf { };
     using tmpBuf = gocpp::defined<gocpp::array<unsigned char, tmpStringBufSize>, GoTag_tmpBuf>;
+    gocpp::string concatstrings(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a);
+    gocpp::string concatstring2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1);
+    gocpp::string concatstring3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
+    gocpp::string concatstring4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
+    gocpp::string concatstring5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
+    gocpp::slice<unsigned char> concatbytes(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a);
+    gocpp::slice<unsigned char> concatbyte2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1);
+    gocpp::slice<unsigned char> concatbyte3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
+    gocpp::slice<unsigned char> concatbyte4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
+    gocpp::slice<unsigned char> concatbyte5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
+    gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int64_t n);
     bool stringDataOnStack(gocpp::string s);
+    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int64_t l);
     gocpp::string slicebytetostringtmp(unsigned char* ptr, int64_t n);
+    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s);
     gocpp::slice<gocpp::rune> stringtoslicerune(gocpp::array_ptr<gocpp::array<gocpp::rune, tmpStringBufSize>> buf, gocpp::string s);
+    gocpp::string slicerunetostring(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::rune> a);
     struct stringStructDWARF
     {
         unsigned char* str{};
@@ -47,20 +61,6 @@ namespace golang::runtime
     int64_t findnullw(uint16_t* s);
     gocpp::string gostringnocopy(unsigned char* str);
     gocpp::string gostringw(uint16_t* strw);
-    gocpp::string concatstrings(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a);
-    gocpp::string concatstring2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1);
-    gocpp::string concatstring3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
-    gocpp::string concatstring4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
-    gocpp::string concatstring5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
-    gocpp::slice<unsigned char> concatbytes(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::string> a);
-    gocpp::slice<unsigned char> concatbyte2(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1);
-    gocpp::slice<unsigned char> concatbyte3(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2);
-    gocpp::slice<unsigned char> concatbyte4(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3);
-    gocpp::slice<unsigned char> concatbyte5(gocpp::array_ptr<tmpBuf> buf, gocpp::string a0, gocpp::string a1, gocpp::string a2, gocpp::string a3, gocpp::string a4);
-    gocpp::string slicebytetostring(gocpp::array_ptr<tmpBuf> buf, unsigned char* ptr, int64_t n);
-    std::tuple<gocpp::string, gocpp::slice<unsigned char>> rawstringtmp(gocpp::array_ptr<tmpBuf> buf, int64_t l);
-    gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s);
-    gocpp::string slicerunetostring(gocpp::array_ptr<tmpBuf> buf, gocpp::slice<gocpp::rune> a);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct stringStruct
     {

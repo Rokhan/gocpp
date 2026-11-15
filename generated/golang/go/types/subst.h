@@ -24,12 +24,18 @@ namespace golang::go::types
     }
 }
 #include "golang/go/types/type.h"
-#include "golang/go/types/object.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
 
 namespace golang::go::types
 {
     using substMap = gocpp::defined<gocpp::map<TypeParam*, golang::go::types::Type>, GoTag_substMap>;
+    substMap makeSubstMap(gocpp::slice<TypeParam*> tpars, gocpp::slice<golang::go::types::Type> targs);
+    substMap makeRenameMap(gocpp::slice<TypeParam*> from, gocpp::slice<TypeParam*> to);
+}
+#include "golang/go/types/object.fwd.h"
+
+namespace golang::go::types
+{
     Var* cloneVar(Var* v, golang::go::types::Type typ);
     Func* cloneFunc(Func* f, golang::go::types::Type typ);
     std::tuple<gocpp::slice<Func*>, bool> replaceRecvType(gocpp::slice<Func*> in, golang::go::types::Type old, golang::go::types::Type go_new);
@@ -38,8 +44,6 @@ namespace golang::go::types
 
 namespace golang::go::types
 {
-    substMap makeSubstMap(gocpp::slice<TypeParam*> tpars, gocpp::slice<golang::go::types::Type> targs);
-    substMap makeRenameMap(gocpp::slice<TypeParam*> from, gocpp::slice<TypeParam*> to);
     namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"

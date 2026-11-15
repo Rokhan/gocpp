@@ -14,12 +14,16 @@ namespace golang::internal::lazyregexp
 {
     extern bool inTest;
 }
-#include "golang/regexp/regexp.fwd.h"
 #include "golang/sync/once.fwd.h"
 
 namespace golang::internal::lazyregexp
 {
     namespace sync = golang::sync;
+}
+#include "golang/regexp/regexp.fwd.h"
+
+namespace golang::internal::lazyregexp
+{
     namespace regexp = golang::regexp;
 }
 #include "golang/sync/once.h"

@@ -14,13 +14,13 @@ namespace golang::runtime
 {
     struct GoTag_chunkIdx { };
     using chunkIdx = gocpp::defined<uint64_t, GoTag_chunkIdx>;
+    chunkIdx chunkIndex(uintptr_t p);
+    uintptr_t chunkBase(chunkIdx ci);
     uint64_t chunkPageIndex(uintptr_t p);
     std::tuple<int64_t, int64_t> addrsToSummaryRange(int64_t level, uintptr_t base, uintptr_t limit);
     std::tuple<int64_t, int64_t> blockAlignSummaryRange(int64_t level, int64_t lo, int64_t hi);
     struct GoTag_pallocSum { };
     using pallocSum = gocpp::defined<uint64_t, GoTag_pallocSum>;
-    chunkIdx chunkIndex(uintptr_t p);
-    uintptr_t chunkBase(chunkIdx ci);
     pallocSum packPallocSum(uint64_t start, uint64_t max, uint64_t end);
     pallocSum mergeSummaries(gocpp::slice<pallocSum> sums, uint64_t logMaxPagesPerSum);
 }
@@ -32,7 +32,6 @@ namespace golang::runtime
     int64_t offAddrToLevelIndex(int64_t level, offAddr addr);
     offAddr levelIndexToOffAddr(int64_t level, int64_t idx);
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime

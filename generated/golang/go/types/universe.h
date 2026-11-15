@@ -21,11 +21,6 @@ namespace golang::go::types
     void DefPredeclaredTestFuncs();
     void init();
 }
-#include "golang/go/types/expr.h"
-#include "golang/go/types/object.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/basic.fwd.h"
-#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/scope.fwd.h"
 
 namespace golang::go::types
@@ -33,16 +28,19 @@ namespace golang::go::types
     // The Universe scope contains all predeclared objects of Go.
     // It is the outermost scope of any chain of nested scopes.
     extern golang::go::types::Scope* Universe;
+}
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::go::types
+{
     // The Unsafe package is the package returned by an importer
     // for the import path "unsafe".
     extern Package* Unsafe;
-    extern Object universeIota;
-    extern golang::go::types::Type universeBool;
-    extern golang::go::types::Type universeByte;
-    extern golang::go::types::Type universeRune;
-    extern golang::go::types::Type universeError;
-    extern Object universeAny;
-    extern Object universeComparable;
+}
+#include "golang/go/types/basic.fwd.h"
+
+namespace golang::go::types
+{
     // Typ contains the predeclared *Basic types indexed by their
     // corresponding BasicKind.
     //
@@ -51,10 +49,31 @@ namespace golang::go::types
     // alias basic type named "byte" (and analogous for "rune").
     extern gocpp::slice<Basic*> Typ;
     extern gocpp::array<Basic*, 2> basicAliases;
-    extern gocpp::array<gocpp_id_1, 28> predeclaredFuncs;
+}
+#include "golang/go/types/object.h"
+
+namespace golang::go::types
+{
+    extern Object universeIota;
+    extern Object universeAny;
+    extern Object universeComparable;
     void def(Object obj);
 }
-#include "golang/go/constant/value.fwd.h"
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    extern golang::go::types::Type universeBool;
+    extern golang::go::types::Type universeByte;
+    extern golang::go::types::Type universeRune;
+    extern golang::go::types::Type universeError;
+}
+#include "golang/go/types/expr.h"
+
+namespace golang::go::types
+{
+    extern gocpp::array<gocpp_id_1, 28> predeclaredFuncs;
+}
 #include "golang/go/constant/value.h"
 #include "golang/go/types/basic.h"
 

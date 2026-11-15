@@ -19,30 +19,6 @@ namespace golang::runtime
     uint64_t fillAligned(uint64_t x, uint64_t m);
     struct GoTag_scavChunkFlags { };
     using scavChunkFlags = gocpp::defined<uint8_t, GoTag_scavChunkFlags>;
-    struct piController
-    {
-        double kp{}; // Proportional constant.
-        double ti{}; // Integral time constant.
-        double tt{}; // Reset time.
-        double min{}; // Output boundaries.
-        double max{};
-        double errIntegral{}; // Integral of the error from t=0 to now.
-        // Error flags.
-        bool errOverflow{}; // Set if errIntegral ever overflowed.
-        bool inputOverflow{}; // Set if an operation with the input overflowed.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct piController& value);
     struct scavChunkData
     {
         // inUse indicates how many pages in this chunk are currently
@@ -71,26 +47,40 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool isEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
-        void setEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
-        void setNonEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct scavChunkData& value);
     scavChunkData unpackScavChunkData(uint64_t sc);
+    struct piController
+    {
+        double kp{}; // Proportional constant.
+        double ti{}; // Integral time constant.
+        double tt{}; // Reset time.
+        double min{}; // Output boundaries.
+        double max{};
+        double errIntegral{}; // Integral of the error from t=0 to now.
+        // Error flags.
+        bool errOverflow{}; // Set if errIntegral ever overflowed.
+        bool inputOverflow{}; // Set if an operation with the input overflowed.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct piController& value);
 }
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/time.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
 
 namespace golang::runtime
 {
@@ -127,6 +117,94 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengeStruct& value);
+    extern scavengeStruct scavenge;
+    struct atomicScavChunkData
+    {
+        atomic::Uint64 value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
+}
+#include "golang/runtime/mranges.h"
+
+namespace golang::runtime
+{
+    struct scavengeIndex
+    {
+        // chunks is a scavChunkData-per-chunk structure that indicates the presence of pages
+        // available for scavenging. Updates to the index are serialized by the pageAlloc lock.
+        // It tracks chunk occupancy and a generation counter per chunk. If a chunk's occupancy
+        // never exceeds pallocChunkDensePages over the course of a single GC cycle, the chunk
+        // becomes eligible for scavenging on the next cycle. If a chunk ever hits this density
+        // threshold it immediately becomes unavailable for scavenging in the current cycle as
+        // well as the next.
+        // [min, max) represents the range of chunks that is safe to access (i.e. will not cause
+        // a fault). As an optimization minHeapIdx represents the true minimum chunk that has been
+        // mapped, since min is likely rounded down to include the system page containing minHeapIdx.
+        // For a chunk size of 4 MiB this structure will only use 2 MiB for a 1 TiB contiguous heap.
+        gocpp::slice<atomicScavChunkData> chunks{};
+        atomic::Uintptr min{};
+        atomic::Uintptr max{};
+        atomic::Uintptr minHeapIdx{};
+        // searchAddr* is the maximum address (in the offset address space, so we have a linear
+        // view of the address space; see mranges.go:offAddr) containing memory available to
+        // scavenge. It is a hint to the find operation to avoid O(n^2) behavior in repeated lookups.
+        // searchAddr* is always inclusive and should be the base address of the highest runtime
+        // page available for scavenging.
+        // searchAddrForce is managed by find and free.
+        // searchAddrBg is managed by find and nextGen.
+        // Normally, find monotonically decreases searchAddr* as it finds no more free pages to
+        // scavenge. However, mark, when marking a new chunk at an index greater than the current
+        // searchAddr, sets searchAddr to the *negative* index into chunks of that page. The trick here
+        // is that concurrent calls to find will fail to monotonically decrease searchAddr*, and so they
+        // won't barge over new memory becoming available to scavenge. Furthermore, this ensures
+        // that some future caller of find *must* observe the new high index. That caller
+        // (or any other racing with it), then makes searchAddr positive before continuing, bringing
+        // us back to our monotonically decreasing steady-state.
+        // A pageAlloc lock serializes updates between min, max, and searchAddr, so abs(searchAddr)
+        // is always guaranteed to be >= min and < max (converted to heap addresses).
+        // searchAddrBg is increased only on each new generation and is mainly used by the
+        // background scavenger and heap-growth scavenging. searchAddrForce is increased continuously
+        // as memory gets freed and is mainly used by eager memory reclaim such as debug.FreeOSMemory
+        // and scavenging to maintain the memory limit.
+        atomicOffAddr searchAddrBg{};
+        atomicOffAddr searchAddrForce{};
+        // freeHWM is the highest address (in offset address space) that was freed
+        // this generation.
+        offAddr freeHWM{};
+        // Generation counter. Updated by nextGen at the end of each mark phase.
+        uint32_t gen{};
+        // test indicates whether or not we're in a test.
+        bool test{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
+}
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/time.fwd.h"
+
+namespace golang::runtime
+{
     struct scavengerState
     {
         // lock protects all fields below.
@@ -196,90 +274,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scavengerState& value);
-    struct atomicScavChunkData
-    {
-        atomic::Uint64 value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct atomicScavChunkData& value);
-    extern scavengeStruct scavenge;
     // Sleep/wait state of the background scavenger.
     extern scavengerState scavenger;
-}
-#include "golang/runtime/mranges.h"
-
-namespace golang::runtime
-{
-    struct scavengeIndex
-    {
-        // chunks is a scavChunkData-per-chunk structure that indicates the presence of pages
-        // available for scavenging. Updates to the index are serialized by the pageAlloc lock.
-        // It tracks chunk occupancy and a generation counter per chunk. If a chunk's occupancy
-        // never exceeds pallocChunkDensePages over the course of a single GC cycle, the chunk
-        // becomes eligible for scavenging on the next cycle. If a chunk ever hits this density
-        // threshold it immediately becomes unavailable for scavenging in the current cycle as
-        // well as the next.
-        // [min, max) represents the range of chunks that is safe to access (i.e. will not cause
-        // a fault). As an optimization minHeapIdx represents the true minimum chunk that has been
-        // mapped, since min is likely rounded down to include the system page containing minHeapIdx.
-        // For a chunk size of 4 MiB this structure will only use 2 MiB for a 1 TiB contiguous heap.
-        gocpp::slice<atomicScavChunkData> chunks{};
-        atomic::Uintptr min{};
-        atomic::Uintptr max{};
-        atomic::Uintptr minHeapIdx{};
-        // searchAddr* is the maximum address (in the offset address space, so we have a linear
-        // view of the address space; see mranges.go:offAddr) containing memory available to
-        // scavenge. It is a hint to the find operation to avoid O(n^2) behavior in repeated lookups.
-        // searchAddr* is always inclusive and should be the base address of the highest runtime
-        // page available for scavenging.
-        // searchAddrForce is managed by find and free.
-        // searchAddrBg is managed by find and nextGen.
-        // Normally, find monotonically decreases searchAddr* as it finds no more free pages to
-        // scavenge. However, mark, when marking a new chunk at an index greater than the current
-        // searchAddr, sets searchAddr to the *negative* index into chunks of that page. The trick here
-        // is that concurrent calls to find will fail to monotonically decrease searchAddr*, and so they
-        // won't barge over new memory becoming available to scavenge. Furthermore, this ensures
-        // that some future caller of find *must* observe the new high index. That caller
-        // (or any other racing with it), then makes searchAddr positive before continuing, bringing
-        // us back to our monotonically decreasing steady-state.
-        // A pageAlloc lock serializes updates between min, max, and searchAddr, so abs(searchAddr)
-        // is always guaranteed to be >= min and < max (converted to heap addresses).
-        // searchAddrBg is increased only on each new generation and is mainly used by the
-        // background scavenger and heap-growth scavenging. searchAddrForce is increased continuously
-        // as memory gets freed and is mainly used by eager memory reclaim such as debug.FreeOSMemory
-        // and scavenging to maintain the memory limit.
-        atomicOffAddr searchAddrBg{};
-        atomicOffAddr searchAddrForce{};
-        // freeHWM is the highest address (in offset address space) that was freed
-        // this generation.
-        offAddr freeHWM{};
-        // Generation counter. Updated by nextGen at the end of each mark phase.
-        uint32_t gen{};
-        // test indicates whether or not we're in a test.
-        bool test{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct scavengeIndex& value);
 }
 
 #include "golang/runtime/mpagealloc.h"
@@ -310,6 +306,9 @@ namespace golang::runtime
         void setEmpty(scavengeIndex* s, chunkIdx ci);
         scavChunkData load(atomicScavChunkData* sc);
         void store(atomicScavChunkData* sc, scavChunkData ssc);
+        bool isEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
+        void setEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
+        void setNonEmpty(const gocpp::PtrRecv<struct scavChunkData, false>& self);
         uint64_t pack(scavChunkData sc);
         bool isEmpty(scavChunkFlags* sc);
         void setEmpty(scavChunkFlags* sc);

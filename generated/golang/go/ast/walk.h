@@ -76,6 +76,10 @@ namespace golang::go::ast
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Visitor& value);
+
+    template<typename N>
+    void walkList(Visitor v, gocpp::slice<N> list);
+    void Walk(Visitor v, Node node);
     void Inspect(Node node, std::function<bool (Node _1)> f);
     void PreorderStack(Node root, gocpp::slice<Node> stack, std::function<bool (Node n, gocpp::slice<Node> stack)> f);
 }
@@ -83,10 +87,6 @@ namespace golang::go::ast
 
 namespace golang::go::ast
 {
-
-    template<typename N>
-    void walkList(Visitor v, gocpp::slice<N> list);
-    void Walk(Visitor v, Node node);
     namespace iter = golang::iter;
 }
 #include "golang/iter/iter.h"

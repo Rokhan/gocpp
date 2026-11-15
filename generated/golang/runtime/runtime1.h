@@ -52,16 +52,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct invalidGODEBUGStruct& value);
+    // If an invalid GODEBUG setting is found during startup time,
+    // invalidGODEBUG is set to that setting so it can be reported
+    // when initialization has progressed sufficiently.
+    extern invalidGODEBUGStruct invalidGODEBUG;
     void parsegodebug(gocpp::string godebug, gocpp::map<gocpp::string, bool> seen);
     void setTraceback(gocpp::string level);
     unsigned char* reflect_adjustAIXGCDataForRuntime(unsigned char* addr);
     uint8_t fips_getIndicator();
     void fips_setIndicator(uint8_t indicator);
-    // If an invalid GODEBUG setting is found during startup time,
-    // invalidGODEBUG is set to that setting so it can be reported
-    // when initialization has progressed sufficiently.
-    extern invalidGODEBUGStruct invalidGODEBUG;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.fwd.h"
 
@@ -69,28 +68,25 @@ namespace golang::runtime
 {
     m* acquirem();
     void releasem(m* mp);
-    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
-    gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
-    gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
-    gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
-    gocpp::unsafe_pointer reflectlite_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
-    gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
-    int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
 }
 #include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+    std::tuple<gocpp::slice<abi::Type*>, gocpp::slice<gocpp::slice<abi::Type*>>> reflect_compiledTypelinks();
+}
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
 }
-#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
-    namespace abi = golang::internal::abi;
     struct dbgVar
     {
         gocpp::string name{};
@@ -110,6 +106,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
+    gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer reflect_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer reflect_resolveTextOff(gocpp::unsafe_pointer rtype, int32_t off);
+    gocpp::unsafe_pointer reflectlite_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);
+    gocpp::unsafe_pointer reflectlite_resolveTypeOff(gocpp::unsafe_pointer rtype, int32_t off);
+    int32_t reflect_addReflectOff(gocpp::unsafe_pointer ptr);
+}
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
     struct debugStruct
     {
         int32_t cgocheck{};
@@ -172,7 +181,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugStruct& value);
-    std::tuple<gocpp::slice<abi::Type*>, gocpp::slice<gocpp::slice<abi::Type*>>> reflect_compiledTypelinks();
     // Holds variables parsed from GODEBUG env var,
     // except for "memprofilerate" since there is an
     // existing int var for that value, which may

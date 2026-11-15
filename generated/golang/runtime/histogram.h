@@ -16,7 +16,6 @@ namespace golang::runtime
     double float64NegInf();
     gocpp::slice<double> timeHistogramMetricsBuckets();
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime

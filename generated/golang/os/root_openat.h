@@ -9,22 +9,30 @@
 #include "golang/os/root_openat.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/os/root_windows.h"
-#include "golang/os/types.h"
 #include "golang/os/root.fwd.h"
 
 namespace golang::os
 {
-    gocpp::error rootChmod(Root* r, gocpp::string name, FileMode mode);
     gocpp::error rootChown(Root* r, gocpp::string name, int64_t uid, int64_t gid);
     gocpp::error rootLchown(Root* r, gocpp::string name, int64_t uid, int64_t gid);
-    gocpp::error rootMkdir(Root* r, gocpp::string name, FileMode perm);
-    gocpp::error rootMkdirAll(Root* r, gocpp::string fullname, FileMode perm);
     std::tuple<gocpp::string, gocpp::error> rootReadlink(Root* r, gocpp::string name);
     gocpp::error rootRemove(Root* r, gocpp::string name);
     gocpp::error rootRemoveAll(Root* r, gocpp::string name);
     gocpp::error rootRename(Root* r, gocpp::string oldname, gocpp::string newname);
     gocpp::error rootLink(Root* r, gocpp::string oldname, gocpp::string newname);
+}
+#include "golang/os/types.h"
+
+namespace golang::os
+{
+    gocpp::error rootChmod(Root* r, gocpp::string name, FileMode mode);
+    gocpp::error rootMkdir(Root* r, gocpp::string name, FileMode perm);
+    gocpp::error rootMkdirAll(Root* r, gocpp::string fullname, FileMode perm);
+}
+#include "golang/os/root_windows.h"
+
+namespace golang::os
+{
 
     template<typename T>
     std::tuple<T, gocpp::error> doInRoot(Root* r, gocpp::string name, uint64_t flags, std::function<std::tuple<sysfdType, gocpp::error> (sysfdType parent, gocpp::string name)> openDirFunc, std::function<std::tuple<T, gocpp::error> (sysfdType parent, gocpp::string name, bool endsInSlash)> f);
@@ -37,15 +45,12 @@ namespace golang::os
     std::tuple<FileMode, gocpp::error> modeAt(sysfdType parent, gocpp::string name);
 }
 #include "golang/sync/mutex.fwd.h"
-#include "golang/time/time.fwd.h"
 
 namespace golang::os
 {
     namespace sync = golang::sync;
-    namespace time = golang::time;
 }
 #include "golang/sync/mutex.h"
-#include "golang/time/time.h"
 
 namespace golang::os
 {
@@ -72,6 +77,17 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct root& value);
+}
+#include "golang/time/time.fwd.h"
+
+namespace golang::os
+{
+    namespace time = golang::time;
+}
+#include "golang/time/time.h"
+
+namespace golang::os
+{
     gocpp::error rootChtimes(Root* r, gocpp::string name, mocklib::Date atime, mocklib::Date mtime);
 
     namespace rec

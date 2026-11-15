@@ -21,6 +21,13 @@ namespace golang::runtime
     // distinct conceptually, and in previous iterations of the pacer the
     // distinction was more important.
     inline constexpr double gcBackgroundUtilization = 0.25;
+    // gcGoalUtilization is the goal CPU utilization for
+    // marking as a fraction of GOMAXPROCS.
+    //
+    // Increasing the goal utilization will shorten GC cycles as the GC
+    // has more resources behind it, lessening costs from the write barrier,
+    // but comes at the cost of increasing mutator latency.
+    inline constexpr double gcGoalUtilization = gcBackgroundUtilization;
     // gcCreditSlack is the amount of scan work credit that can
     // accumulate locally before updating gcController.heapScanWork and,
     // optionally, gcController.bgScanCredit. Lower values give a more
@@ -64,20 +71,17 @@ namespace golang::runtime
     // The maximum trigger constant is chosen somewhat arbitrarily, but the
     // current constant has served us well over the years.
     inline constexpr long maxTriggerRatioNum = 61;
-    // gcGoalUtilization is the goal CPU utilization for
-    // marking as a fraction of GOMAXPROCS.
-    //
-    // Increasing the goal utilization will shorten GC cycles as the GC
-    // has more resources behind it, lessening costs from the write barrier,
-    // but comes at the cost of increasing mutator latency.
-    inline constexpr double gcGoalUtilization = gcBackgroundUtilization;
 }
-#include "golang/internal/goexperiment/exp_greenteagc_on.fwd.h"
 #include "golang/internal/goexperiment/exp_heapminimum512kib_off.fwd.h"
 
 namespace golang::runtime
 {
     namespace goexperiment = golang::internal::goexperiment;
+}
+#include "golang/internal/goexperiment/exp_greenteagc_on.fwd.h"
+
+namespace golang::runtime
+{
     // defaultHeapMinimum is the value of heapMinimum for GOGC==100.
     inline constexpr int64_t defaultHeapMinimum = (goexperiment::HeapMinimum512KiBInt) * (512 << 10) +
             (1 - goexperiment::HeapMinimum512KiBInt) * (4 << 20);

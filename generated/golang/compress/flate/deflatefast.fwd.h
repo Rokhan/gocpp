@@ -8,6 +8,8 @@ namespace golang::compress::flate
 {
     // tableBits is the number of bits used in the hash table.
     inline constexpr long tableBits = 15;
+    // tableSize is the size of the hash table.
+    inline constexpr int64_t tableSize = 1 << tableBits;
     // hashLongBytes is the number of bytes used for long table hashes.
     inline constexpr long hashLongBytes = 7;
     // baseMatchOffset is the smallest match offset.
@@ -25,17 +27,19 @@ namespace golang::compress::flate
     inline constexpr long prime6bytes = 227718039650203LL;
     inline constexpr long prime7bytes = 58295818150454627LL;
     inline constexpr uint64_t prime8bytes = uint64_t(0xcf1bbcdcb7a56463_bi);
-    // tableSize is the size of the hash table.
-    inline constexpr int64_t tableSize = 1 << tableBits;
 }
 #include "golang/compress/flate/deflate.fwd.h"
-#include "golang/compress/flate/token.fwd.h"
 
 namespace golang::compress::flate
 {
     // allocHistory is the size to preallocate for history.
     inline constexpr int64_t allocHistory = maxStoreBlockSize * 5;
-    struct fastEnc;
     // bufferReset is the buffer offset at which the history is reset.
     inline constexpr int64_t bufferReset = (1LL << 31) - int64_t(allocHistory) - int64_t(maxStoreBlockSize) - 1LL;
+}
+#include "golang/compress/flate/token.fwd.h"
+
+namespace golang::compress::flate
+{
+    struct fastEnc;
 }

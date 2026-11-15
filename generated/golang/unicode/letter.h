@@ -48,12 +48,56 @@ namespace golang::unicode
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Range32& value);
+    struct RangeTable
+    {
+        gocpp::slice<Range16> R16{};
+        gocpp::slice<Range32> R32{};
+        int64_t LatinOffset{}; // number of entries in R16 with Hi <= MaxLatin1
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RangeTable& value);
     struct GoTag_SpecialCase { };
     struct GoTag_d { };
     using d = gocpp::defined<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
+    struct CaseRange
+    {
+        uint32_t Lo{};
+        uint32_t Hi{};
+        d Delta{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
+    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
+    bool is16(gocpp::slice<Range16> ranges, uint16_t r);
+    bool is32(gocpp::slice<Range32> ranges, uint32_t r);
+    bool Is(RangeTable* rangeTab, gocpp::rune r);
+    bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r);
     bool IsUpper(gocpp::rune r);
     bool IsLower(gocpp::rune r);
     bool IsTitle(gocpp::rune r);
+    CaseRange* lookupCaseRange(gocpp::rune r, gocpp::slice<CaseRange> caseRange);
+    gocpp::rune convertCase(int64_t _case, gocpp::rune r, CaseRange* cr);
+    std::tuple<gocpp::rune, bool> to(int64_t _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);
     gocpp::rune To(int64_t _case, gocpp::rune r);
     gocpp::rune ToUpper(gocpp::rune r);
     gocpp::rune ToLower(gocpp::rune r);
@@ -76,50 +120,6 @@ namespace golang::unicode
 
     std::ostream& operator<<(std::ostream& os, const struct foldPair& value);
     gocpp::rune SimpleFold(gocpp::rune r);
-    struct RangeTable
-    {
-        gocpp::slice<Range16> R16{};
-        gocpp::slice<Range32> R32{};
-        int64_t LatinOffset{}; // number of entries in R16 with Hi <= MaxLatin1
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct RangeTable& value);
-    struct CaseRange
-    {
-        uint32_t Lo{};
-        uint32_t Hi{};
-        d Delta{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct CaseRange& value);
-    bool is16(gocpp::slice<Range16> ranges, uint16_t r);
-    bool is32(gocpp::slice<Range32> ranges, uint32_t r);
-    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
-    bool Is(RangeTable* rangeTab, gocpp::rune r);
-    bool isExcludingLatin(RangeTable* rangeTab, gocpp::rune r);
-    CaseRange* lookupCaseRange(gocpp::rune r, gocpp::slice<CaseRange> caseRange);
-    gocpp::rune convertCase(int64_t _case, gocpp::rune r, CaseRange* cr);
-    std::tuple<gocpp::rune, bool> to(int64_t _case, gocpp::rune r, gocpp::slice<CaseRange> caseRange);
 
     namespace rec
     {

@@ -14,7 +14,29 @@ namespace golang::runtime
 {
     void stkobjinit();
 }
-#include "golang/runtime/stack.h"
+#include "golang/runtime/stack.fwd.h"
+
+namespace golang::runtime
+{
+    struct reflectMethodValue
+    {
+        uintptr_t fn{};
+        bitvector* stack{}; // ptrmap for both args and results
+        uintptr_t argLen{}; // just args
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
+}
 #include "golang/runtime/symtab.h"
 
 namespace golang::runtime
@@ -70,24 +92,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stkframe& value);
-    struct reflectMethodValue
-    {
-        uintptr_t fn{};
-        bitvector* stack{}; // ptrmap for both args and results
-        uintptr_t argLen{}; // just args
+}
+#include "golang/runtime/stack.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct reflectMethodValue& value);
+namespace golang::runtime
+{
     extern gocpp::array<stackObjectRecord, 1> methodValueCallFrameObjs;
 }
 

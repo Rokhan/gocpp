@@ -9,17 +9,25 @@
 #include "golang/golang.org/x/tools/internal/gcimporter/gcimporter.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.fwd.h"
 #include "golang/go/types/package.fwd.h"
-#include "golang/go/types/universe.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace types = golang::go::types;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     namespace token = golang::go::token;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     namespace io = golang::io;
 }
+#include "golang/go/types/universe.fwd.h"
 #include "golang/io/io.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter

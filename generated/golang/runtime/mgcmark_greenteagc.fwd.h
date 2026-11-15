@@ -10,12 +10,12 @@ namespace golang::runtime
     struct spanInlineMarkBits;
     struct GoTag_spanScanOwnership;
     using spanScanOwnership = gocpp::defined<uint8_t, GoTag_spanScanOwnership>;
+    inline constexpr spanScanOwnership spanScanUnowned = 0;
     inline constexpr int64_t spanScanOneMark = 1 << 1;
+    inline constexpr spanScanOwnership spanScanManyMark = 1 << 2;
     struct spanQueue;
     struct spanSPMC;
     struct GoTag_objptr;
     using objptr = gocpp::defined<uintptr_t, GoTag_objptr>;
     struct sizeClassScanStats;
-    inline constexpr spanScanOwnership spanScanUnowned = 0;
-    inline constexpr spanScanOwnership spanScanManyMark = 1 << 2;
 }

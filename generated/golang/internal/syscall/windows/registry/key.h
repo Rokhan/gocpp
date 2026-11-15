@@ -16,10 +16,9 @@ namespace golang::internal::syscall::windows::registry
     std::tuple<Key, bool, gocpp::error> CreateKey(Key k, gocpp::string path, uint32_t access);
     gocpp::error DeleteKey(Key k, gocpp::string path);
 }
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/types_windows.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows::registry
 {

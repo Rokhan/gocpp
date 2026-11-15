@@ -8,9 +8,6 @@ namespace golang::internal::goarch
 {
     struct GoTag_ArchFamilyType;
     using ArchFamilyType = gocpp::defined<int64_t, GoTag_ArchFamilyType>;
-    // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
-    // It is also the size of the machine's native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
-    inline constexpr int64_t PtrSize = 4 << (~ uintptr_t(0) >> 63);
     inline constexpr ArchFamilyType AMD64 = 0;
     inline constexpr ArchFamilyType ARM = 1;
     inline constexpr ArchFamilyType ARM64 = 2;
@@ -22,20 +19,20 @@ namespace golang::internal::goarch
     inline constexpr ArchFamilyType RISCV64 = 8;
     inline constexpr ArchFamilyType S390X = 9;
     inline constexpr ArchFamilyType WASM = 10;
+    // PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
+    // It is also the size of the machine's native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
+    inline constexpr int64_t PtrSize = 4 << (~ uintptr_t(0) >> 63);
     // PtrBits is bit width of a pointer.
     inline constexpr int64_t PtrBits = PtrSize * 8;
     // Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
     inline constexpr int64_t Int64Align = PtrSize;
 }
 #include "golang/internal/goarch/goarch_amd64.fwd.h"
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
 namespace golang::internal::goarch
 {
     // ArchFamily is the architecture family (AMD64, ARM, ...)
     inline constexpr ArchFamilyType ArchFamily = _ArchFamily;
-    // BigEndian reports whether the architecture is big-endian.
-    inline constexpr bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
     // DefaultPhysPageSize is the default physical page size.
     inline constexpr int64_t DefaultPhysPageSize = _DefaultPhysPageSize;
     // PCQuantum is the minimal unit for a program counter (1 on x86, 4 on most other systems).
@@ -50,4 +47,11 @@ namespace golang::internal::goarch
     // StackAlign is the required alignment of the SP register.
     // The stack must be at least word aligned, but some architectures require more.
     inline constexpr int64_t StackAlign = _StackAlign;
+}
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+
+namespace golang::internal::goarch
+{
+    // BigEndian reports whether the architecture is big-endian.
+    inline constexpr bool BigEndian = IsArmbe | IsArm64be | IsMips | IsMips64 | IsPpc | IsPpc64 | IsS390 | IsS390x | IsSparc | IsSparc64 == 1;
 }

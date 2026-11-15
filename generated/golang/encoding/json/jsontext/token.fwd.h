@@ -23,15 +23,19 @@ namespace golang::encoding::json::jsontext
     inline constexpr golang::encoding::json::jsontext::Kind KindEndArray = ']';
     inline constexpr golang::encoding::json::jsontext::Kind invalidKind = 0;
 }
-#include "golang/math/bits.fwd.h"
 #include "golang/math/const.fwd.h"
-#include "golang/math/floor.fwd.h"
-#include "golang/math/signbit.fwd.h"
-#include "golang/math/unsafe.fwd.h"
 
 namespace golang::encoding::json::jsontext
 {
     namespace math = golang::math;
+}
+#include "golang/math/unsafe.fwd.h"
+#include "golang/math/bits.fwd.h"
+#include "golang/math/floor.fwd.h"
+#include "golang/math/signbit.fwd.h"
+
+namespace golang::encoding::json::jsontext
+{
     inline constexpr int64_t maxInt64 = math::MaxInt64;
     inline constexpr int64_t minInt64 = math::MinInt64;
     inline constexpr uint64_t maxUint64 = uint64_t(math::MaxUint64);

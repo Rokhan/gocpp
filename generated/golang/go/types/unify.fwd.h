@@ -27,7 +27,6 @@ namespace golang::go::types
     struct unifier;
     struct GoTag_unifyMode;
     using unifyMode = gocpp::defined<uint64_t, GoTag_unifyMode>;
-    struct GoTag_typeParamsById;
     // If assign is set, we are unifying types involved in an assignment:
     // they may match inexactly at the top, but element types must match
     // exactly.
@@ -39,6 +38,7 @@ namespace golang::go::types
     // if there is an interface, the other type must implement the
     // interface.
     inline constexpr unifyMode exact = 1 << 1;
+    struct GoTag_typeParamsById;
 }
 #include "golang/go/types/typeparam.fwd.h"
 

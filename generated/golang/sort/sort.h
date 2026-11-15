@@ -102,6 +102,7 @@ namespace golang::sort
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
+    void Sort(Interface data);
     struct GoTag_sortedHint { };
     using sortedHint = gocpp::defined<int64_t, GoTag_sortedHint>;
     struct GoTag_xorshift { };
@@ -124,20 +125,6 @@ namespace golang::sort
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lessSwap& value);
-    struct GoTag_IntSlice { };
-    using IntSlice = gocpp::defined<gocpp::slice<int64_t>, GoTag_IntSlice>;
-    struct GoTag_Float64Slice { };
-    using Float64Slice = gocpp::defined<gocpp::slice<double>, GoTag_Float64Slice>;
-    bool isNaN(double f);
-    struct GoTag_StringSlice { };
-    using StringSlice = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
-    void Ints(gocpp::slice<int64_t> x);
-    void Float64s(gocpp::slice<double> x);
-    void Strings(gocpp::slice<gocpp::string> x);
-    bool IntsAreSorted(gocpp::slice<int64_t> x);
-    bool Float64sAreSorted(gocpp::slice<double> x);
-    bool StringsAreSorted(gocpp::slice<gocpp::string> x);
-    void Sort(Interface data);
     struct reverse
     {
         // This embedded Interface permits Reverse to use the methods of
@@ -155,24 +142,33 @@ namespace golang::sort
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct reverse& value);
+    Interface Reverse(Interface data);
+    bool IsSorted(Interface data);
+    struct GoTag_IntSlice { };
+    using IntSlice = gocpp::defined<gocpp::slice<int64_t>, GoTag_IntSlice>;
+    struct GoTag_Float64Slice { };
+    using Float64Slice = gocpp::defined<gocpp::slice<double>, GoTag_Float64Slice>;
+    bool isNaN(double f);
+    struct GoTag_StringSlice { };
+    using StringSlice = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
+    void Ints(gocpp::slice<int64_t> x);
+    void Float64s(gocpp::slice<double> x);
+    void Strings(gocpp::slice<gocpp::string> x);
+    bool IntsAreSorted(gocpp::slice<int64_t> x);
+    bool Float64sAreSorted(gocpp::slice<double> x);
+    bool StringsAreSorted(gocpp::slice<gocpp::string> x);
+    void Stable(Interface data);
+
     namespace rec
     {
+        uint64_t Next(xorshift* r);
         int64_t Len(const gocpp::PtrRecv<struct reverse, false>& self);
         int64_t Len(const gocpp::ObjRecv<struct reverse>& self);
         bool Less(const gocpp::PtrRecv<struct reverse, false>& self, int64_t i, int64_t j);
         bool Less(const gocpp::ObjRecv<struct reverse>& self, int64_t i, int64_t j);
         void Swap(const gocpp::PtrRecv<struct reverse, false>& self, int64_t i, int64_t j);
         void Swap(const gocpp::ObjRecv<struct reverse>& self, int64_t i, int64_t j);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct reverse& value);
-    Interface Reverse(Interface data);
-    bool IsSorted(Interface data);
-    void Stable(Interface data);
-
-    namespace rec
-    {
-        uint64_t Next(xorshift* r);
         bool Less(reverse r, int64_t i, int64_t j);
         int64_t Len(IntSlice x);
         bool Less(IntSlice x, int64_t i, int64_t j);

@@ -10,13 +10,15 @@
 #include "gocpp/support.h"
 
 #include "golang/go/types/type.h"
-#include "golang/go/types/operand.fwd.h"
-#include "golang/go/types/signature.fwd.h"
-#include "golang/go/types/under.fwd.h"
 
 namespace golang::go::types
 {
-    std::tuple<golang::go::types::Type, typeError*> sliceElem(operand* x);
+    golang::go::types::Type arrayPtrDeref(golang::go::types::Type typ);
+}
+#include "golang/go/types/signature.fwd.h"
+
+namespace golang::go::types
+{
     golang::go::types::Signature* makeSig(golang::go::types::Type res, gocpp::slice<golang::go::types::Type> args);
 
     template<typename... Args>
@@ -30,7 +32,13 @@ namespace golang::go::types
     {
         return makeSig(res, gocpp::ToSlice<golang::go::types::Type>(value, args...));
     }
-    golang::go::types::Type arrayPtrDeref(golang::go::types::Type typ);
+}
+#include "golang/go/types/operand.fwd.h"
+#include "golang/go/types/under.fwd.h"
+
+namespace golang::go::types
+{
+    std::tuple<golang::go::types::Type, typeError*> sliceElem(operand* x);
 }
 
 #include "golang/go/ast/ast.h"

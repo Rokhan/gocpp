@@ -48,11 +48,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct suspendGState& value);
+    suspendGState suspendG(g* gp);
+    void resumeG(suspendGState state);
     bool canPreemptM(m* mp);
     bool wantAsyncPreempt(g* gp);
     std::tuple<bool, uintptr_t> isAsyncSafePoint(g* gp, uintptr_t pc, uintptr_t sp, uintptr_t lr);
-    suspendGState suspendG(g* gp);
-    void resumeG(suspendGState state);
 
     namespace rec
     {

@@ -39,7 +39,6 @@ namespace golang::runtime
     using limiterEventStamp = gocpp::defined<uint64_t, GoTag_limiterEventStamp>;
     limiterEventStamp makeLimiterEventStamp(limiterEventType typ, int64_t now);
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
@@ -91,22 +90,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gcCPULimiterState& value);
-    struct limiterEvent
-    {
-        atomic::Uint64 stamp{}; // Stores a limiterEventStamp.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
     // gcCPULimiter is a mechanism to limit GC CPU utilization in situations
     // where it might become excessive and inhibit application progress (e.g.
     // a death spiral).
@@ -129,6 +112,22 @@ namespace golang::runtime
     // kick in until at least 1 full cpu-second in the last 2 cpu-second window
     // is spent on GC CPU time.
     extern gcCPULimiterState gcCPULimiter;
+    struct limiterEvent
+    {
+        atomic::Uint64 stamp{}; // Stores a limiterEventStamp.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct limiterEvent& value);
 
     namespace rec
     {

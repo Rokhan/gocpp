@@ -9,22 +9,6 @@ namespace golang::go::build
     struct Context;
     struct GoTag_ImportMode;
     using ImportMode = gocpp::defined<uint64_t, GoTag_ImportMode>;
-    struct Package;
-    struct Directive;
-    struct NoGoError;
-    struct MultiplePackageError;
-    struct gocpp_id_2;
-    struct fileInfo;
-    struct fileImport;
-    struct fileEmbed;
-    // NOTE: $ is not safe for the shell, but it is allowed here because of linker options like -Wl,$ORIGIN.
-    // We never pass these arguments to a shell (just to programs we construct argv for), so this should be okay.
-    // See golang.org/issue/6038.
-    // The @ is for OS X. See golang.org/issue/13720.
-    // The % is for Jenkins. See golang.org/issue/16959.
-    // The ! is because module paths may use them. See golang.org/issue/26716.
-    // The ~ and ^ are for sr.ht. See golang.org/issue/32260.
-    inline const gocpp::string safeString = "+-.,/0123456789=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz:$@%! ~^"_s;
     // If FindOnly is set, Import stops after locating the directory
     // that should contain the sources for a package. It does not
     // read any files in the directory.
@@ -63,4 +47,20 @@ namespace golang::go::build
     // are always the exact import paths from the source files:
     // Import makes no attempt to resolve or check those paths.
     inline constexpr ImportMode IgnoreVendor = 1 << 3;
+    struct Package;
+    struct Directive;
+    struct NoGoError;
+    struct MultiplePackageError;
+    struct gocpp_id_2;
+    struct fileInfo;
+    struct fileImport;
+    struct fileEmbed;
+    // NOTE: $ is not safe for the shell, but it is allowed here because of linker options like -Wl,$ORIGIN.
+    // We never pass these arguments to a shell (just to programs we construct argv for), so this should be okay.
+    // See golang.org/issue/6038.
+    // The @ is for OS X. See golang.org/issue/13720.
+    // The % is for Jenkins. See golang.org/issue/16959.
+    // The ! is because module paths may use them. See golang.org/issue/26716.
+    // The ~ and ^ are for sr.ht. See golang.org/issue/32260.
+    inline const gocpp::string safeString = "+-.,/0123456789=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz:$@%! ~^"_s;
 }

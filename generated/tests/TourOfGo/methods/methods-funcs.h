@@ -29,8 +29,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    void main();
     double Abs(Vertex v);
+    void main();
 
     namespace rec
     {

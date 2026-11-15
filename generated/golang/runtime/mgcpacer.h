@@ -18,8 +18,6 @@ namespace golang::runtime
     int64_t readGOMEMLIMIT();
     void gcControllerCommit();
 }
-#include "golang/internal/cpu/cpu.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/cpu/cpu.h"
 #include "golang/internal/runtime/atomic/types.h"
 

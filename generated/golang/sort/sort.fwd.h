@@ -9,6 +9,9 @@ namespace golang::sort
     struct Interface;
     struct GoTag_sortedHint;
     using sortedHint = gocpp::defined<int64_t, GoTag_sortedHint>;
+    inline constexpr sortedHint unknownHint = 0;
+    inline constexpr sortedHint increasingHint = 1;
+    inline constexpr sortedHint decreasingHint = 2;
     struct GoTag_xorshift;
     using xorshift = gocpp::defined<uint64_t, GoTag_xorshift>;
     struct lessSwap;
@@ -19,7 +22,4 @@ namespace golang::sort
     using Float64Slice = gocpp::defined<gocpp::slice<double>, GoTag_Float64Slice>;
     struct GoTag_StringSlice;
     using StringSlice = gocpp::defined<gocpp::slice<gocpp::string>, GoTag_StringSlice>;
-    inline constexpr sortedHint unknownHint = 0;
-    inline constexpr sortedHint increasingHint = 1;
-    inline constexpr sortedHint decreasingHint = 2;
 }

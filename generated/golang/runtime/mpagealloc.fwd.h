@@ -25,8 +25,6 @@ namespace golang::runtime
     struct gocpp_id_1;
     struct GoTag_pallocSum;
     using pallocSum = gocpp::defined<uint64_t, GoTag_pallocSum>;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    /*inline constexpr uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>() [known mising deps] */;
 }
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
@@ -34,23 +32,22 @@ namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
     inline constexpr int64_t logPallocChunkPages = 9 * (1 - goarch::IsWasm) + 6 * goarch::IsWasm;
-}
-#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
-
-namespace golang::runtime
-{
     // The size of a bitmap chunk, i.e. the amount of bits (that is, pages) to consider
     // in the bitmap at once. It is 4MB on most platforms, except on Wasm it is 512KB.
     // We use a smaller chuck size on Wasm for the same reason as the smaller arena
     // size (see heapArenaBytes).
     inline constexpr int64_t pallocChunkPages = 1 << logPallocChunkPages;
-    namespace gc = golang::internal::runtime::gc;
+}
+#include "golang/runtime/malloc.fwd.h"
+
+namespace golang::runtime
+{
+    inline constexpr int64_t pallocChunkBytes = pallocChunkPages * pageSize;
 }
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 
 namespace golang::runtime
 {
-    inline constexpr int64_t logPallocChunkBytes = logPallocChunkPages + gc::PageShift;
     inline constexpr int64_t logMaxPackedValue = logPallocChunkPages + (summaryLevels - 1) * summaryLevelBits;
     // maxPackedValue is the maximum value that any of the three fields in
     // the pallocSum may take on.
@@ -59,11 +56,12 @@ namespace golang::runtime
             uint64_t(int64_t(pallocChunkPages) << logMaxPackedValue) |
             uint64_t(int64_t(pallocChunkPages) << (2 * logMaxPackedValue)));
 }
-#include "golang/runtime/malloc.fwd.h"
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
 namespace golang::runtime
 {
-    inline constexpr int64_t pallocChunkBytes = pallocChunkPages * pageSize;
+    namespace gc = golang::internal::runtime::gc;
+    inline constexpr int64_t logPallocChunkBytes = logPallocChunkPages + gc::PageShift;
     inline constexpr int64_t summaryL0Bits = heapAddrBits - logPallocChunkBytes - (summaryLevels - 1) * summaryLevelBits;
     // pallocChunksL2Bits is the number of bits of the chunk index number
     // covered by the second level of the chunks map.
@@ -72,4 +70,6 @@ namespace golang::runtime
     // there should this change.
     inline constexpr int64_t pallocChunksL2Bits = heapAddrBits - logPallocChunkBytes - pallocChunksL1Bits;
     inline constexpr int64_t pallocChunksL1Shift = pallocChunksL2Bits;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    inline constexpr uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>();
 }

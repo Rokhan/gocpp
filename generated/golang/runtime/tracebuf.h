@@ -54,27 +54,45 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct traceBufHeader& value);
 }
-#include "golang/internal/runtime/sys/nih.fwd.h"
-#include "golang/internal/trace/tracev2/events.fwd.h"
 #include "golang/internal/trace/tracev2/spec.fwd.h"
 
 namespace golang::runtime
 {
     namespace tracev2 = golang::internal::trace::tracev2;
-    namespace abi = golang::internal::abi;
 }
 #include "golang/internal/runtime/sys/nih.h"
-#include "golang/internal/trace/tracev2/events.h"
-#include "golang/internal/trace/tracev2/spec.h"
-#include "golang/runtime/traceevent.h"
-#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    namespace sys = golang::internal::runtime::sys;
 }
-#include "golang/runtime/runtime2.fwd.h"
+#include "golang/internal/trace/tracev2/events.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    struct traceBuf
+    {
+        sys::NotInHeap _1{};
+        traceBufHeader traceBufHeader{};
+        gocpp::array<unsigned char, tracev2::MaxBatchSize - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr{}; // underlying buffer for traceBufHeader.buf
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct traceBuf& value);
+    void traceBufFlush(traceBuf* buf, uintptr_t gen);
+}
+#include "golang/internal/trace/tracev2/spec.h"
+#include "golang/runtime/traceruntime.h"
 
 namespace golang::runtime
 {
@@ -94,6 +112,19 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct traceWriter& value);
+    traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf);
+    traceWriter unsafeTraceExpWriter(uintptr_t gen, traceBuf* buf, tracev2::Experiment exp);
+}
+
+#include "golang/internal/trace/tracev2/spec.h"
+#include "golang/runtime/traceevent.h"
+#include "golang/runtime/traceruntime.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
 
     namespace rec
     {
@@ -207,41 +238,6 @@ namespace golang::runtime
         int64_t varintReserve(const gocpp::ObjRecv<struct traceWriter>& self);
         traceWriter writer(const gocpp::PtrRecv<struct traceWriter, false>& self);
         traceWriter writer(const gocpp::ObjRecv<struct traceWriter>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct traceWriter& value);
-    struct traceBuf
-    {
-        sys::NotInHeap _1{};
-        traceBufHeader traceBufHeader{};
-        gocpp::array<unsigned char, tracev2::MaxBatchSize - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr{}; // underlying buffer for traceBufHeader.buf
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct traceBuf& value);
-    traceWriter unsafeTraceWriter(uintptr_t gen, traceBuf* buf);
-    traceWriter unsafeTraceExpWriter(uintptr_t gen, traceBuf* buf, tracev2::Experiment exp);
-    void traceBufFlush(traceBuf* buf, uintptr_t gen);
-}
-
-#include "golang/internal/trace/tracev2/spec.h"
-#include "golang/runtime/traceevent.h"
-#include "golang/runtime/traceruntime.h"
-
-namespace golang::runtime
-{
-
-    namespace rec
-    {
         traceWriter writer(traceLocker tl);
         traceWriter event(traceWriter w, tracev2::EventType ev, gocpp::slice<traceArg> args);
         

@@ -8,9 +8,6 @@ namespace golang::go::types
 {
     struct GoTag_BasicKind;
     using BasicKind = gocpp::defined<int64_t, GoTag_BasicKind>;
-    struct GoTag_BasicInfo;
-    using BasicInfo = gocpp::defined<int64_t, GoTag_BasicInfo>;
-    struct Basic;
     inline constexpr BasicKind Invalid = 0;
     // predeclared types
     inline constexpr BasicKind Bool = 1;
@@ -39,6 +36,11 @@ namespace golang::go::types
     inline constexpr BasicKind UntypedComplex = 23;
     inline constexpr BasicKind UntypedString = 24;
     inline constexpr BasicKind UntypedNil = 25;
+    // aliases
+    inline constexpr types::BasicKind Byte = Uint8;
+    inline constexpr types::BasicKind Rune = Int32;
+    struct GoTag_BasicInfo;
+    using BasicInfo = gocpp::defined<int64_t, GoTag_BasicInfo>;
     // Properties of basic types.
     inline constexpr BasicInfo IsBoolean = 1 << 0;
     inline constexpr BasicInfo IsInteger = 1 << 1;
@@ -47,10 +49,8 @@ namespace golang::go::types
     inline constexpr BasicInfo IsComplex = 1 << 4;
     inline constexpr BasicInfo IsString = 1 << 5;
     inline constexpr BasicInfo IsUntyped = 1 << 6;
-    // aliases
-    inline constexpr types::BasicKind Byte = Uint8;
-    inline constexpr types::BasicKind Rune = Int32;
     inline constexpr types::BasicInfo IsOrdered = IsInteger | IsFloat | IsString;
     inline constexpr types::BasicInfo IsNumeric = IsInteger | IsFloat | IsComplex;
     inline constexpr types::BasicInfo IsConstType = IsBoolean | IsNumeric | IsString;
+    struct Basic;
 }

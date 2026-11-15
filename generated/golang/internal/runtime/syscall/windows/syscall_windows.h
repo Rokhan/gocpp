@@ -32,9 +32,9 @@ namespace golang::internal::runtime::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct StdCallInfo& value);
-    uintptr_t AsmStdCallAddr();
     uint32_t StdCall(StdCallInfo* fn);
     void asmstdcall(StdCallInfo* fn);
+    uintptr_t AsmStdCallAddr();
 
     namespace rec
     {

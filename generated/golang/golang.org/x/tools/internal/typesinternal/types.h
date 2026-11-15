@@ -9,47 +9,43 @@
 #include "golang/golang.org/x/tools/internal/typesinternal/types.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/alias.fwd.h"
 #include "golang/go/types/api.fwd.h"
-#include "golang/go/types/named.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/package.fwd.h"
-#include "golang/go/types/pointer.fwd.h"
-#include "golang/go/types/scope.fwd.h"
-#include "golang/go/types/selection.fwd.h"
-#include "golang/go/types/struct.fwd.h"
-#include "golang/go/types/tuple.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/typelists.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-#include "golang/go/types/typestring.fwd.h"
-#include "golang/go/types/universe.fwd.h"
-#include "golang/golang.org/x/tools/go/ast/inspector/cursor.fwd.h"
-#include "golang/iter/iter.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::typesinternal
 {
     namespace types = golang::go::types;
-    namespace token = golang::go::token;
 }
-#include "golang/go/token/position.h"
-#include "golang/go/types/api.h"
-#include "golang/go/types/object.h"
-#include "golang/go/types/selection.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/typestring.h"
-#include "golang/golang.org/x/tools/go/ast/inspector/cursor.h"
-#include "golang/golang.org/x/tools/internal/typesinternal/errorcode.h"
-#include "golang/iter/iter.h"
+#include "golang/go/types/typestring.fwd.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/object.fwd.h"
+#include "golang/go/types/type.fwd.h"
+#include "golang/go/types/universe.fwd.h"
+#include "golang/go/types/typelists.fwd.h"
+#include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/named.fwd.h"
+#include "golang/go/types/selection.fwd.h"
+#include "golang/go/types/pointer.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+#include "golang/go/types/struct.fwd.h"
+#include "golang/go/types/tuple.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::typesinternal
 {
-    namespace inspector = golang::golang_org::x::tools::go::ast::inspector;
-    namespace iter = golang::iter;
     bool SetUsesCgo(types::Config* conf);
-    std::tuple<ErrorCode, token::Pos, token::Pos, bool> ErrorCodeStartEnd(types::Error err);
+    types::Info* NewTypesInfo();
+    bool Imports(types::Package* pkg, gocpp::string path);
+}
+#include "golang/go/types/typestring.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
     types::Qualifier NameRelativeTo(types::Package* pkg);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
     types::TypeName* TypeNameFor(types::Type t);
     struct NamedOrAlias : virtual gocpp::Interface, types::Type
     {
@@ -138,12 +134,9 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     }
 
     std::ostream& operator<<(std::ostream& os, const struct NamedOrAlias& value);
-    bool IsPackageLevel(types::Object obj);
-    types::Info* NewTypesInfo();
-    types::Scope* EnclosingScope(types::Info* info, inspector::Cursor cur);
-    bool Imports(types::Package* pkg, gocpp::string path);
-    gocpp::string ObjectKind(types::Object obj);
-    iter::Seq2<types::Var*, bool> ImplicitFieldSelections(types::Selection seln);
+    extern NamedOrAlias _;
+    extern NamedOrAlias _;
+    NamedOrAlias Origin(NamedOrAlias t);
     types::Tuple* TupleOf(gocpp::slice<types::Type> elems);
 
     template<typename... Args>
@@ -157,9 +150,42 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     {
         return TupleOf(gocpp::ToSlice<types::Type>(value, elems...));
     }
-    extern NamedOrAlias _;
-    extern NamedOrAlias _;
-    NamedOrAlias Origin(NamedOrAlias t);
+}
+#include "golang/go/types/object.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    bool IsPackageLevel(types::Object obj);
+    gocpp::string ObjectKind(types::Object obj);
+}
+#include "golang/golang.org/x/tools/go/ast/inspector/cursor.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    namespace inspector = golang::golang_org::x::tools::go::ast::inspector;
+    types::Scope* EnclosingScope(types::Info* info, inspector::Cursor cur);
+}
+#include "golang/go/types/selection.h"
+#include "golang/iter/iter.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    namespace iter = golang::iter;
+    iter::Seq2<types::Var*, bool> ImplicitFieldSelections(types::Selection seln);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/position.h"
+#include "golang/go/types/api.h"
+#include "golang/golang.org/x/tools/internal/typesinternal/errorcode.h"
+
+namespace golang::golang_org::x::tools::internal::typesinternal
+{
+    std::tuple<ErrorCode, token::Pos, token::Pos, bool> ErrorCodeStartEnd(types::Error err);
 
     namespace rec
     {

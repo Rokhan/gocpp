@@ -4,11 +4,15 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/zerrors_windows.fwd.h"
+
+namespace golang::os
+{
     using syscallErrorType = syscall::Errno;
     inline constexpr syscall::Errno errENOSYS = syscall::go_ENOSYS;
     inline constexpr syscall::Errno errERANGE = syscall::go_ERANGE;

@@ -10,13 +10,12 @@
 #include "gocpp/support.h"
 
 #include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/ast/ast.h"
 
 namespace golang::go::types
 {
     namespace ast = golang::go::ast;
 }
+#include "golang/go/ast/ast.h"
 #include "golang/go/token/position.h"
 
 namespace golang::go::types

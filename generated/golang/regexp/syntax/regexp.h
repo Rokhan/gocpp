@@ -17,6 +17,14 @@ namespace golang::regexp::syntax
     struct GoTag_printFlags { };
     using printFlags = gocpp::defined<uint8_t, GoTag_printFlags>;
 }
+#include "golang/strings/builder.fwd.h"
+#include "golang/strings/strings.fwd.h"
+
+namespace golang::regexp::syntax
+{
+    namespace strings = golang::strings;
+    void escape(strings::Builder* b, gocpp::rune r, bool force);
+}
 #include "golang/regexp/syntax/parse.h"
 
 namespace golang::regexp::syntax
@@ -46,17 +54,9 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Regexp& value);
-}
-#include "golang/strings/builder.fwd.h"
-#include "golang/strings/strings.fwd.h"
-
-namespace golang::regexp::syntax
-{
     void addSpan(Regexp* start, Regexp* last, printFlags f, gocpp::map<Regexp*, printFlags>* flags);
     std::tuple<printFlags, printFlags> calcFlags(Regexp* re, gocpp::map<Regexp*, printFlags>* flags);
-    namespace strings = golang::strings;
     void writeRegexp(strings::Builder* b, Regexp* re, printFlags f, gocpp::map<Regexp*, printFlags> flags);
-    void escape(strings::Builder* b, gocpp::rune r, bool force);
 
     namespace rec
     {

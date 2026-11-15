@@ -9,13 +9,22 @@
 #include "golang/go/types/infer.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/type.h"
 #include "golang/go/types/typeparam.fwd.h"
-#include "golang/go/types/typeterm.fwd.h"
 
 namespace golang::go::types
 {
     gocpp::string typeParamsString(gocpp::slice<TypeParam*> list);
+}
+#include "golang/go/types/typeterm.fwd.h"
+
+namespace golang::go::types
+{
+    std::tuple<golang::go::types::term*, bool> coreTerm(TypeParam* tpar);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
     bool isParameterized(gocpp::slice<TypeParam*> tparams, golang::go::types::Type typ);
     struct tpWalker
     {
@@ -34,7 +43,6 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tpWalker& value);
-    std::tuple<golang::go::types::term*, bool> coreTerm(TypeParam* tpar);
     void killCycles(gocpp::slice<TypeParam*> tparams, gocpp::slice<golang::go::types::Type> inferred);
     struct cycleFinder
     {

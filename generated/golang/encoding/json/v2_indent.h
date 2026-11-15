@@ -16,11 +16,15 @@ namespace golang::encoding::json
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> appendIndent(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src, gocpp::string prefix, gocpp::string indent);
 }
 #include "golang/bytes/buffer.fwd.h"
-#include "golang/bytes/bytes.fwd.h"
 
 namespace golang::encoding::json
 {
     namespace bytes = golang::bytes;
+}
+#include "golang/bytes/bytes.fwd.h"
+
+namespace golang::encoding::json
+{
     void HTMLEscape(bytes::Buffer* dst, gocpp::slice<unsigned char> src);
     gocpp::error Compact(bytes::Buffer* dst, gocpp::slice<unsigned char> src);
     gocpp::error Indent(bytes::Buffer* dst, gocpp::slice<unsigned char> src, gocpp::string prefix, gocpp::string indent);

@@ -9,13 +9,20 @@
 #include "golang/go/types/exprstring.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/bytes/buffer.fwd.h"
 #include "golang/go/ast/ast.fwd.h"
 
 namespace golang::go::types
 {
     namespace ast = golang::go::ast;
+}
+#include "golang/bytes/buffer.fwd.h"
+
+namespace golang::go::types
+{
     namespace bytes = golang::bytes;
+    void writeSigExpr(bytes::Buffer* buf, ast::FuncType* sig);
+    void writeFieldList(bytes::Buffer* buf, gocpp::slice<ast::Field*> list, gocpp::string sep, bool iface);
+    void writeIdentList(bytes::Buffer* buf, gocpp::slice<ast::Ident*> list);
 }
 #include "golang/go/ast/ast.h"
 
@@ -23,9 +30,6 @@ namespace golang::go::types
 {
     gocpp::string ExprString(ast::Expr x);
     void WriteExpr(bytes::Buffer* buf, ast::Expr x);
-    void writeSigExpr(bytes::Buffer* buf, ast::FuncType* sig);
-    void writeFieldList(bytes::Buffer* buf, gocpp::slice<ast::Field*> list, gocpp::string sep, bool iface);
-    void writeIdentList(bytes::Buffer* buf, gocpp::slice<ast::Ident*> list);
     void writeExprList(bytes::Buffer* buf, gocpp::slice<ast::Expr> list);
 
     namespace rec

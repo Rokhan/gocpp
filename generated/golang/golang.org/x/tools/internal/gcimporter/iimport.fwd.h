@@ -13,27 +13,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     inline constexpr long iexportVersionGo1_18 = 2;
     inline constexpr long iexportVersionGenerics = 2;
     inline constexpr long iexportVersionGenericMethods = 3;
+    inline constexpr int64_t iexportVersion = iexportVersionGenericMethods;
     inline constexpr long iexportVersionCurrent = 3;
     struct ident;
     inline constexpr long predeclReserved = 32;
     struct GoTag_itag;
     using itag = gocpp::defined<uint64_t, GoTag_itag>;
-    // Object tags
-    inline constexpr char varTag = 'V';
-    inline constexpr char funcTag = 'F';
-    inline constexpr char genericFuncTag = 'G';
-    inline constexpr char constTag = 'C';
-    inline constexpr char aliasTag = 'A';
-    inline constexpr char genericAliasTag = 'B';
-    inline constexpr char typeParamTag = 'P';
-    inline constexpr char typeTag = 'T';
-    inline constexpr char genericTypeTag = 'U';
-    struct GetPackagesItem;
-    struct setConstraintArgs;
-    struct iimporter;
-    struct importReader;
-    struct GoTag_byPath;
-    inline constexpr int64_t iexportVersion = iexportVersionGenericMethods;
     // Types
     inline constexpr itag definedType = 0;
     inline constexpr itag pointerType = 1;
@@ -48,7 +33,22 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     inline constexpr itag instanceType = 10;
     inline constexpr itag unionType = 11;
     inline constexpr itag aliasType = 12;
+    // Object tags
+    inline constexpr char varTag = 'V';
+    inline constexpr char funcTag = 'F';
+    inline constexpr char genericFuncTag = 'G';
+    inline constexpr char constTag = 'C';
+    inline constexpr char aliasTag = 'A';
+    inline constexpr char genericAliasTag = 'B';
+    inline constexpr char typeParamTag = 'P';
+    inline constexpr char typeTag = 'T';
+    inline constexpr char genericTypeTag = 'U';
+    struct GetPackagesItem;
     using GetPackagesFunc = std::function<gocpp::error (gocpp::slice<GetPackagesItem> items)>;
+    struct setConstraintArgs;
+    struct iimporter;
+    struct importReader;
+    struct GoTag_byPath;
 }
 #include "golang/go/types/alias.fwd.h"
 #include "golang/go/types/array.fwd.h"
@@ -67,10 +67,14 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 #include "golang/go/types/tuple.fwd.h"
 #include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typeparam.fwd.h"
-#include "golang/go/types/union.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace types = golang::go::types;
+}
+#include "golang/go/types/union.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     using byPath = gocpp::defined<gocpp::slice<types::Package*>, GoTag_byPath>;
 }

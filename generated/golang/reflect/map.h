@@ -9,6 +9,29 @@
 #include "golang/reflect/map.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/internal/runtime/maps/map.fwd.h"
+#include "golang/internal/runtime/maps/table.fwd.h"
+
+namespace golang::reflect
+{
+    namespace maps = golang::internal::runtime::maps;
+    void mapIterNext(maps::Iter* it);
+}
+#include "golang/internal/abi/map.fwd.h"
+
+namespace golang::reflect
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/abi/escape.fwd.h"
+#include "golang/internal/abi/funcpc.fwd.h"
+
+namespace golang::reflect
+{
+    extern abi::Type* stringType;
+    void mapIterStart(abi::MapType* t, maps::Map* m, maps::Iter* it);
+}
 #include "golang/reflect/type.h"
 
 namespace golang::reflect
@@ -16,26 +39,11 @@ namespace golang::reflect
     golang::reflect::Type MapOf(golang::reflect::Type key, golang::reflect::Type elem);
     golang::reflect::Type groupOf(golang::reflect::Type ktyp, golang::reflect::Type etyp);
 }
-#include "golang/internal/abi/escape.fwd.h"
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/map.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-#include "golang/internal/runtime/maps/map.fwd.h"
-#include "golang/internal/runtime/maps/table.fwd.h"
-
-namespace golang::reflect
-{
-    namespace abi = golang::internal::abi;
-}
 #include "golang/internal/runtime/maps/table.h"
 #include "golang/reflect/value.h"
 
 namespace golang::reflect
 {
-    namespace maps = golang::internal::runtime::maps;
-    extern abi::Type* stringType;
-    void mapIterStart(abi::MapType* t, maps::Map* m, maps::Iter* it);
-    void mapIterNext(maps::Iter* it);
     struct MapIter
     {
         golang::reflect::Value m{};

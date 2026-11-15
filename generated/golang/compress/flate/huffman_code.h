@@ -14,6 +14,7 @@ namespace golang::compress::flate
 {
     struct GoTag_hcode { };
     using hcode = gocpp::defined<uint32_t, GoTag_hcode>;
+    hcode newhcode(uint16_t code, uint8_t length);
     struct literalNode
     {
         uint16_t literal{};
@@ -31,6 +32,29 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct literalNode& value);
+    struct huffmanEncoder
+    {
+        gocpp::slice<hcode> codes{};
+        gocpp::array<int32_t, 17> bitCount{};
+        // freqcache is a reusable buffer with the longest possible frequency table.
+        // Possible lengths are codegenCodeCount, offsetCodeCount and literalCount.
+        // The largest of these is literalCount, so we allocate for that case.
+        gocpp::array<literalNode, literalCount + 1> freqcache{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
+    huffmanEncoder* newHuffmanEncoder(int64_t size);
+    literalNode maxNode();
     struct levelInfo
     {
         // Our level.  for better printing
@@ -59,41 +83,21 @@ namespace golang::compress::flate
 
     std::ostream& operator<<(std::ostream& os, const struct levelInfo& value);
     uint16_t reverseBits(uint16_t x, unsigned char b);
-    void histogram(gocpp::slice<unsigned char> b, gocpp::slice<uint16_t> h);
-    void histogramSplit(gocpp::slice<unsigned char> b, gocpp::slice<uint16_t> h);
-    hcode newhcode(uint16_t code, uint8_t length);
-    struct huffmanEncoder
-    {
-        gocpp::slice<hcode> codes{};
-        gocpp::array<int32_t, 17> bitCount{};
-        // freqcache is a reusable buffer with the longest possible frequency table.
-        // Possible lengths are codegenCodeCount, offsetCodeCount and literalCount.
-        // The largest of these is literalCount, so we allocate for that case.
-        gocpp::array<literalNode, literalCount + 1> freqcache{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct huffmanEncoder& value);
-    literalNode maxNode();
-    huffmanEncoder* newHuffmanEncoder(int64_t size);
     huffmanEncoder* generateFixedLiteralEncoding();
     huffmanEncoder* generateFixedOffsetEncoding();
+    void histogram(gocpp::slice<unsigned char> b, gocpp::slice<uint16_t> h);
+    void histogramSplit(gocpp::slice<unsigned char> b, gocpp::slice<uint16_t> h);
 }
 #include "golang/sync/oncefunc.fwd.h"
-#include "golang/sync/oncefunc.h"
 
 namespace golang::compress::flate
 {
     namespace sync = golang::sync;
+}
+#include "golang/sync/oncefunc.h"
+
+namespace golang::compress::flate
+{
     extern std::function<flate::huffmanEncoder* (void)> fixedLiteralEncoding;
     extern std::function<flate::huffmanEncoder* (void)> fixedOffsetEncoding;
 

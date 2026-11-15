@@ -11,7 +11,6 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     struct GoTag_Index;
     using Index = gocpp::defined<int32_t, GoTag_Index>;
     struct RelocEnt;
-    inline constexpr int64_t numRelocs = 10;
     // Reserved indices within the meta relocation section.
     inline constexpr Index PublicRootIdx = 0;
     inline constexpr Index PrivateRootIdx = 1;
@@ -25,4 +24,5 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     inline constexpr RelocKind RelocObjExt = 7;
     inline constexpr RelocKind RelocObjDict = 8;
     inline constexpr RelocKind RelocBody = 9;
+    inline constexpr int64_t numRelocs = 10;
 }

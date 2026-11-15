@@ -122,10 +122,6 @@ namespace golang::go::constant
     using boolVal = gocpp::defined<bool, GoTag_boolVal>;
     struct GoTag_int64Val { };
     using int64Val = gocpp::defined<int64_t, GoTag_int64Val>;
-    gocpp::slice<gocpp::string> reverse(gocpp::slice<gocpp::string> x);
-    bool smallFloat64(double x);
-    bool is32bit(int64_t x);
-    bool is63bit(int64_t x);
     struct complexVal
     {
         Value re{};
@@ -143,8 +139,11 @@ namespace golang::go::constant
     };
 
     std::ostream& operator<<(std::ostream& os, const struct complexVal& value);
+    gocpp::slice<gocpp::string> reverse(gocpp::slice<gocpp::string> x);
+    complexVal vtoc(Value x);
     Value makeComplex(Value re, Value im);
     Value makeFloatFromLiteral(gocpp::string lit);
+    bool smallFloat64(double x);
     Value MakeUnknown();
     Value MakeBool(bool b);
     Value MakeString(gocpp::string s);
@@ -172,6 +171,8 @@ namespace golang::go::constant
     Value ToInt(Value x);
     Value ToFloat(Value x);
     Value ToComplex(Value x);
+    bool is32bit(int64_t x);
+    bool is63bit(int64_t x);
     int64_t ord(Value x);
     std::tuple<Value, Value> match(Value x, Value y);
     std::tuple<Value, Value> match0(Value x, Value y);
@@ -179,51 +180,19 @@ namespace golang::go::constant
     Value sub(Value x, Value y);
     Value mul(Value x, Value y);
     Value quo(Value x, Value y);
-    complexVal vtoc(Value x);
 }
-#include "golang/go/token/token.fwd.h"
-#include "golang/math/big/arith.fwd.h"
-#include "golang/math/big/float.fwd.h"
 #include "golang/math/big/int.fwd.h"
-#include "golang/math/big/rat.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-
-namespace golang::go::constant
-{
-    namespace sync = golang::sync;
-}
-#include "golang/go/token/token.h"
 
 namespace golang::go::constant
 {
     namespace big = golang::math::big;
 }
-#include "golang/math/big/arith.h"
-#include "golang/sync/mutex.h"
+#include "golang/math/big/rat.fwd.h"
+#include "golang/math/big/float.fwd.h"
+#include "golang/math/big/arith.fwd.h"
 
 namespace golang::go::constant
 {
-    namespace token = golang::go::token;
-    struct stringVal
-    {
-        // Lazy value: either a string (l,r==nil) or an addition (l,r!=nil).
-        mocklib::Mutex mu{};
-        gocpp::string s{};
-        stringVal* l{};
-        stringVal* r{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stringVal& value);
     struct intVal
     {
         big::Int* val{};
@@ -275,27 +244,69 @@ namespace golang::go::constant
     big::Int* newInt();
     big::Rat* newRat();
     big::Float* newFloat();
-    Value makeInt(big::Int* x);
-    Value makeRat(big::Rat* x);
-    Value makeFloat(big::Float* x);
-    bool smallInt(big::Int* x);
-    bool smallFloat(big::Float* x);
-    Value MakeFromLiteral(gocpp::string lit, token::Token tok, uint64_t zero);
-    // Compute the size of a Word in bytes.
-    inline constexpr big::Word _m = ~ big::Word(0);
-    Value UnaryOp(token::Token op, Value y, uint64_t prec);
-    Value BinaryOp(Value x_, token::Token op, Value y_);
-    Value Shift(Value x, token::Token op, uint64_t s);
-    bool cmpZero(int64_t x, token::Token op);
-    bool Compare(Value x_, token::Token op, Value y_);
     intVal i64toi(int64Val x);
     ratVal i64tor(int64Val x);
     floatVal i64tof(int64Val x);
     ratVal itor(intVal x);
     floatVal itof(intVal x);
     floatVal rtof(ratVal x);
+    Value makeInt(big::Int* x);
+    Value makeRat(big::Rat* x);
     extern floatVal floatVal0;
+    Value makeFloat(big::Float* x);
+    bool smallInt(big::Int* x);
+    bool smallFloat(big::Float* x);
+}
+#include "golang/math/big/arith.h"
+
+namespace golang::go::constant
+{
+    // Compute the size of a Word in bytes.
+    inline constexpr big::Word _m = ~ big::Word(0);
+}
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::go::constant
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::go::constant
+{
+    struct stringVal
+    {
+        // Lazy value: either a string (l,r==nil) or an addition (l,r!=nil).
+        mocklib::Mutex mu{};
+        gocpp::string s{};
+        stringVal* l{};
+        stringVal* r{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stringVal& value);
     extern stringVal emptyString;
+}
+#include "golang/go/token/token.h"
+
+namespace golang::go::constant
+{
+    namespace token = golang::go::token;
+    Value MakeFromLiteral(gocpp::string lit, token::Token tok, uint64_t zero);
+    Value UnaryOp(token::Token op, Value y, uint64_t prec);
+    Value BinaryOp(Value x_, token::Token op, Value y_);
+    Value Shift(Value x, token::Token op, uint64_t s);
+    bool cmpZero(int64_t x, token::Token op);
+    bool Compare(Value x_, token::Token op, Value y_);
 
     namespace rec
     {

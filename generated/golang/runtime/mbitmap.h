@@ -37,6 +37,8 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct markBits& value);
+    markBits markBitsForAddr(uintptr_t p);
+    markBits markBitsForSpan(uintptr_t base);
     bool reflect_verifyNotInHeapPtr(uintptr_t p);
     void bulkBarrierBitmap(uintptr_t dst, uintptr_t src, uintptr_t size, uintptr_t maskOffset, uint8_t* bits);
     uintptr_t readUintptr(unsigned char* p);
@@ -44,13 +46,7 @@ namespace golang::runtime
     void dumpGCProg(unsigned char* p);
     gocpp::slice<unsigned char> reflect_gcbits(go_any x);
     gocpp::slice<unsigned char> pointerMask(go_any ep);
-    markBits markBitsForAddr(uintptr_t p);
-    markBits markBitsForSpan(uintptr_t base);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/stack.h"
-#include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
@@ -85,6 +81,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct typePointers& value);
+    void dumpTypePointers(typePointers tp);
+    void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
+}
+#include "golang/runtime/mheap.fwd.h"
+
+namespace golang::runtime
+{
     uintptr_t heapSetTypeNoHeader(uintptr_t x, uintptr_t dataSize, _type* typ, mspan* span);
     uintptr_t heapSetTypeSmallHeader(uintptr_t x, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
     uintptr_t heapSetTypeLarge(uintptr_t x, uintptr_t dataSize, _type* typ, mspan* span);
@@ -92,10 +95,23 @@ namespace golang::runtime
     void doubleCheckHeapPointers(uintptr_t x, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
     void doubleCheckHeapPointersInterior(uintptr_t x, uintptr_t interior, uintptr_t size, uintptr_t dataSize, _type* typ, _type** header, mspan* span);
     void doubleCheckTypePointersOfType(mspan* s, _type* typ, uintptr_t addr, uintptr_t size);
-    bool isMarkedOrNotInHeap(gocpp::unsafe_pointer p);
     void badPointer(mspan* s, uintptr_t p, uintptr_t refBase, uintptr_t refOff);
     std::tuple<uintptr_t, mspan*, uintptr_t> findObject(uintptr_t p, uintptr_t refBase, uintptr_t refOff);
-    void typeBitsBulkBarrier(_type* typ, uintptr_t dst, uintptr_t src, uintptr_t size);
+}
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
+    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    bool isMarkedOrNotInHeap(gocpp::unsafe_pointer p);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct debugPtrmaskStruct
     {
         mutex lock{};
@@ -113,17 +129,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct debugPtrmaskStruct& value);
-    bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
+    extern debugPtrmaskStruct debugPtrmask;
 }
-#include "golang/internal/abi/type.fwd.h"
+#include "golang/runtime/stack.h"
 
 namespace golang::runtime
 {
-    void dumpTypePointers(typePointers tp);
-    extern debugPtrmaskStruct debugPtrmask;
-    namespace abi = golang::internal::abi;
-    void bulkBarrierPreWrite(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
-    void bulkBarrierPreWriteSrcOnly(uintptr_t dst, uintptr_t src, uintptr_t size, abi::Type* typ);
+    bitvector progToPointerMask(unsigned char* prog, uintptr_t size);
 }
 
 #include "golang/internal/abi/type.h"

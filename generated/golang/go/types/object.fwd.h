@@ -13,10 +13,6 @@ namespace golang::go::types
     struct Var;
     struct GoTag_VarKind;
     using VarKind = gocpp::defined<uint8_t, GoTag_VarKind>;
-    struct Func;
-    struct Label;
-    struct Builtin;
-    struct Nil;
     inline constexpr VarKind _ = 0;
     inline constexpr VarKind PackageVar = 1;
     inline constexpr VarKind LocalVar = 2;
@@ -24,6 +20,10 @@ namespace golang::go::types
     inline constexpr VarKind ParamVar = 4;
     inline constexpr VarKind ResultVar = 5;
     inline constexpr VarKind FieldVar = 6;
+    struct Func;
+    struct Label;
+    struct Builtin;
+    struct Nil;
 }
 #include "golang/go/token/position.fwd.h"
 

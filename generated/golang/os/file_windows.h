@@ -24,42 +24,73 @@ namespace golang::os
     std::tuple<gocpp::string, gocpp::error> readReparseLink(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> readlink(gocpp::string name);
 }
-#include "golang/os/types.h"
+#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
     File* newFileFromNewFile(uintptr_t fd, gocpp::string name);
     void epipecheck(File* file, gocpp::error e);
-    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int64_t flag, FileMode perm);
     std::tuple<File*, gocpp::error> openDirNolog(gocpp::string name);
     std::tuple<File*, File*, gocpp::error> Pipe();
 }
 #include "golang/internal/godebug/godebug.fwd.h"
-#include "golang/internal/poll/fd.fwd.h"
-#include "golang/internal/poll/fd_windows.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/oncefunc.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::os
 {
-    namespace poll = golang::internal::poll;
-    namespace atomic = golang::sync::atomic;
-    namespace syscall = golang::syscall;
+    namespace godebug = golang::internal::godebug;
+    extern godebug::Setting* winreadlinkvolume;
 }
-#include "golang/internal/poll/fd_windows.h"
-#include "golang/os/dir_windows.h"
-#include "golang/sync/atomic/type.h"
+#include "golang/os/types.h"
+
+namespace golang::os
+{
+    std::tuple<File*, gocpp::error> openFileNolog(gocpp::string name, int64_t flag, FileMode perm);
+}
 #include "golang/sync/oncefunc.h"
-#include "golang/syscall/syscall_windows.h"
 
 namespace golang::os
 {
     namespace sync = golang::sync;
-    namespace godebug = golang::internal::godebug;
+    extern std::function<bool (void)> useGetTempPath2;
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::os
+{
+    File* newFile(syscall::Handle h, gocpp::string name, newFileKind kind, bool nonBlocking);
+    File* newConsoleFile(syscall::Handle h, gocpp::string name);
+    File* net_newWindowsFile(syscall::Handle h, gocpp::string name);
+    std::tuple<syscall::Handle, gocpp::error> openSymlink(gocpp::string path);
+    std::tuple<gocpp::string, gocpp::error> readReparseLinkHandle(syscall::Handle h);
+}
+#include "golang/internal/poll/fd_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace poll = golang::internal::poll;
+}
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::os
+{
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/internal/poll/fd_windows.h"
+#include "golang/os/dir_windows.h"
+#include "golang/sync/atomic/type.h"
+#include "golang/internal/poll/fd.fwd.h"
+
+namespace golang::os
+{
     struct file
     {
         poll::FD pfd{};
@@ -79,13 +110,6 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct file& value);
-    File* newFile(syscall::Handle h, gocpp::string name, newFileKind kind, bool nonBlocking);
-    File* newConsoleFile(syscall::Handle h, gocpp::string name);
-    File* net_newWindowsFile(syscall::Handle h, gocpp::string name);
-    extern std::function<bool (void)> useGetTempPath2;
-    std::tuple<syscall::Handle, gocpp::error> openSymlink(gocpp::string path);
-    extern godebug::Setting* winreadlinkvolume;
-    std::tuple<gocpp::string, gocpp::error> readReparseLinkHandle(syscall::Handle h);
 }
 
 #include "golang/os/types.h"

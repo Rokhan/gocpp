@@ -27,7 +27,6 @@ namespace golang::math::big
     std::tuple<Float*, int64_t, gocpp::error> ParseFloat(gocpp::string s, int64_t base, uint64_t prec, RoundingMode mode);
 }
 #include "golang/fmt/errors.fwd.h"
-#include "golang/fmt/scan.fwd.h"
 
 namespace golang::math::big
 {

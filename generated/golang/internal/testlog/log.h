@@ -93,11 +93,11 @@ namespace golang::internal::testlog
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Interface& value);
+    void SetLogger(Interface impl);
+    Interface Logger();
     void Getenv(gocpp::string name);
     void Open(gocpp::string name);
     void Stat(gocpp::string name);
-    void SetLogger(Interface impl);
-    Interface Logger();
 }
 #include "golang/sync/atomic/type.fwd.h"
 

@@ -15,9 +15,8 @@ namespace golang::golang_org::x::tools::go::ast::edge
     struct GoTag_Kind { };
     using Kind = gocpp::defined<uint8_t, GoTag_Kind>;
 }
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
 #include "golang/reflect/type.h"
+#include "golang/reflect/value.fwd.h"
 
 namespace golang::golang_org::x::tools::go::ast::edge
 {

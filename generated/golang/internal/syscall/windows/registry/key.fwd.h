@@ -24,12 +24,16 @@ namespace golang::internal::syscall::windows::registry
     struct KeyInfo;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows::registry
+{
+    namespace syscall = golang::syscall;
+}
 #include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows::registry
 {
-    namespace syscall = golang::syscall;
     using Key = syscall::Handle;
     // Windows defines some predefined root keys that are always open.
     // An application can use these keys as entry points to the registry.

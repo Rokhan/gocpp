@@ -18,11 +18,17 @@ namespace golang::main
     using semTable2 = gocpp::defined<gocpp::array<gocpp_id_1, ten>, GoTag_semTable2>;
     struct GoTag_asciiSet { };
     using asciiSet = gocpp::defined<gocpp::array<uint32_t, 8>, GoTag_asciiSet>;
+    asciiSet makeASCIISet(gocpp::string chars);
+    gocpp::array_ptr<asciiSet> makeASCIISetPtr(gocpp::string chars);
     bool contains(gocpp::array_ptr<gocpp::array<uint32_t, 8>> as, unsigned char c);
     void testPtrArray1();
+    extern asciiSet global_as1a;
+    extern asciiSet global_as1b;
+    extern asciiSet global_as2;
     extern gocpp::array_ptr<asciiSet> global_asPtr0;
     extern gocpp::array_ptr<asciiSet> global_asPtr1a;
     extern gocpp::array_ptr<asciiSet> global_asPtr1b;
+    extern gocpp::array_ptr<asciiSet> global_asPtr2;
     void testPtrArray2();
     void testArrayValueSemantics();
     int64_t sumPtr(gocpp::array_ptr<gocpp::array<int64_t, 4>> p);
@@ -35,12 +41,6 @@ namespace golang::main
     void testSymbolicLength();
     void main();
     int64_t arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf);
-    asciiSet makeASCIISet(gocpp::string chars);
-    gocpp::array_ptr<asciiSet> makeASCIISetPtr(gocpp::string chars);
-    extern asciiSet global_as1a;
-    extern asciiSet global_as1b;
-    extern asciiSet global_as2;
-    extern gocpp::array_ptr<asciiSet> global_asPtr2;
 
     namespace rec
     {

@@ -29,8 +29,8 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
-    void main();
     void ScaleFunc(Vertex* v, double f);
+    void main();
 
     namespace rec
     {

@@ -11,14 +11,12 @@ namespace golang::math::big
     struct ErrNaN;
     struct GoTag_form;
     using form = gocpp::defined<unsigned char, GoTag_form>;
-    struct GoTag_RoundingMode;
-    using RoundingMode = gocpp::defined<unsigned char, GoTag_RoundingMode>;
-    struct GoTag_Accuracy;
-    using Accuracy = gocpp::defined<int8_t, GoTag_Accuracy>;
     // The form value order is relevant - do not change!
     inline constexpr form zero = 0;
     inline constexpr form finite = 1;
     inline constexpr form inf = 2;
+    struct GoTag_RoundingMode;
+    using RoundingMode = gocpp::defined<unsigned char, GoTag_RoundingMode>;
     // These constants define supported rounding modes.
     inline constexpr RoundingMode ToNearestEven = 0;
     inline constexpr RoundingMode ToNearestAway = 1;
@@ -26,20 +24,26 @@ namespace golang::math::big
     inline constexpr RoundingMode AwayFromZero = 3;
     inline constexpr RoundingMode ToNegativeInf = 4;
     inline constexpr RoundingMode ToPositiveInf = 5;
+    struct GoTag_Accuracy;
+    using Accuracy = gocpp::defined<int8_t, GoTag_Accuracy>;
     // Constants describing the [Accuracy] of a [Float].
     inline constexpr Accuracy Below = - 1;
     inline constexpr Accuracy Exact = 0;
     inline constexpr Accuracy Above = + 1;
 }
 #include "golang/math/bits.fwd.h"
-#include "golang/math/const.fwd.h"
-#include "golang/math/frexp.fwd.h"
-#include "golang/math/signbit.fwd.h"
-#include "golang/math/unsafe.fwd.h"
 
 namespace golang::math::big
 {
     namespace math = golang::math;
+}
+#include "golang/math/const.fwd.h"
+#include "golang/math/signbit.fwd.h"
+#include "golang/math/frexp.fwd.h"
+#include "golang/math/unsafe.fwd.h"
+
+namespace golang::math::big
+{
     // Exponent and precision limits.
     inline constexpr int64_t MaxExp = math::MaxInt32;
     inline constexpr int64_t MinExp = math::MinInt32;

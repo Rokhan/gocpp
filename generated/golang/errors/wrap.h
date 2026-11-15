@@ -654,19 +654,23 @@ namespace golang::errors
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_12& value);
 }
 #include "golang/internal/reflectlite/type.fwd.h"
-#include "golang/internal/reflectlite/value.fwd.h"
 
 namespace golang::errors
 {
     namespace reflectlite = golang::internal::reflectlite;
 }
+#include "golang/internal/reflectlite/value.fwd.h"
 #include "golang/internal/reflectlite/type.h"
+
+namespace golang::errors
+{
+    extern reflectlite::Type errorType;
+}
 #include "golang/internal/reflectlite/value.h"
 
 namespace golang::errors
 {
     bool as(gocpp::error err, go_any target, reflectlite::Value targetVal, reflectlite::Type targetType);
-    extern reflectlite::Type errorType;
 
     namespace rec
     {

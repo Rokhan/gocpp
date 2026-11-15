@@ -10,6 +10,6 @@ namespace golang::internal::strconv
     // Maximum shift that we can do in one pass without overflow.
     // A uint has 32 or 64 bits, and we have to be able to accommodate 9<<k.
     inline constexpr int64_t uintSize = 32 << (~ (uint64_t)(0) >> 63);
-    struct leftCheat;
     inline constexpr int64_t maxShift = uintSize - 4;
+    struct leftCheat;
 }

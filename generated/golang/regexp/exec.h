@@ -29,11 +29,6 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct entry& value);
-    struct GoTag_lazyFlag { };
-    using lazyFlag = gocpp::defined<uint64_t, GoTag_lazyFlag>;
-    // arrayNoInts is returned by find match if nil dstCap is passed
-    // to it with ncap=0.
-    extern gocpp::array<int64_t, 0> arrayNoInts;
     struct queue
     {
         gocpp::slice<uint32_t> sparse{};
@@ -51,7 +46,35 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct queue& value);
+    struct GoTag_lazyFlag { };
+    using lazyFlag = gocpp::defined<uint64_t, GoTag_lazyFlag>;
     lazyFlag newLazyFlag(gocpp::rune r1, gocpp::rune r2);
+    // arrayNoInts is returned by find match if nil dstCap is passed
+    // to it with ncap=0.
+    extern gocpp::array<int64_t, 0> arrayNoInts;
+}
+#include "golang/regexp/syntax/prog.fwd.h"
+
+namespace golang::regexp
+{
+    namespace syntax = golang::regexp::syntax;
+    struct thread
+    {
+        syntax::Inst* inst{};
+        gocpp::slice<int64_t> cap{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct thread& value);
 }
 #include "golang/regexp/regexp.h"
 
@@ -76,53 +99,6 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct inputs& value);
-}
-#include "golang/regexp/syntax/prog.fwd.h"
-#include "golang/sync/pool.fwd.h"
-
-namespace golang::regexp
-{
-    struct onePassMachine
-    {
-        inputs inputs{};
-        gocpp::slice<int64_t> matchcap{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct onePassMachine& value);
-    namespace syntax = golang::regexp::syntax;
-}
-#include "golang/sync/pool.h"
-
-namespace golang::regexp
-{
-    namespace sync = golang::sync;
-    struct thread
-    {
-        syntax::Inst* inst{};
-        gocpp::slice<int64_t> cap{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct thread& value);
     struct machine
     {
         Regexp* re{}; // corresponding Regexp
@@ -146,9 +122,32 @@ namespace golang::regexp
     };
 
     std::ostream& operator<<(std::ostream& os, const struct machine& value);
-    extern sync::Pool onePassPool;
+    struct onePassMachine
+    {
+        inputs inputs{};
+        gocpp::slice<int64_t> matchcap{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct onePassMachine& value);
     onePassMachine* newOnePassMachine();
     void freeOnePassMachine(onePassMachine* m);
+}
+#include "golang/sync/pool.h"
+
+namespace golang::regexp
+{
+    namespace sync = golang::sync;
+    extern sync::Pool onePassPool;
 }
 
 #include "golang/io/io.h"

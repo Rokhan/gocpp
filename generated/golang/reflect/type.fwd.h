@@ -8,25 +8,6 @@ namespace golang::reflect
 {
     struct GoTag_Kind;
     using Kind = gocpp::defined<uint64_t, GoTag_Kind>;
-    struct common;
-    struct rtype;
-    struct GoTag_ChanDir;
-    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
-    struct interfaceType;
-    struct ptrType;
-    struct sliceType;
-    struct structType;
-    struct Method;
-    struct StructField;
-    using StructTag = gocpp::string;
-    struct fieldScan;
-    struct cacheKey;
-    struct funcLookupCacheStruct;
-    struct structLookupCacheStruct;
-    struct structTypeUncommon;
-    struct layoutKey;
-    struct layoutType;
-    struct bitVector;
     inline constexpr golang::reflect::Kind Invalid = 0;
     inline constexpr golang::reflect::Kind Bool = 1;
     inline constexpr golang::reflect::Kind Int = 2;
@@ -54,23 +35,39 @@ namespace golang::reflect
     inline constexpr golang::reflect::Kind String = 24;
     inline constexpr golang::reflect::Kind Struct = 25;
     inline constexpr golang::reflect::Kind UnsafePointer = 26;
-    inline constexpr golang::reflect::ChanDir RecvDir = 1 << 0;
-    inline constexpr golang::reflect::ChanDir SendDir = 1 << 1;
     // Ptr is the old name for the [Pointer] kind.
     //
     //go:fix inline
     inline constexpr Kind Ptr = reflect::Pointer;
+    struct common;
+    struct rtype;
+    struct GoTag_ChanDir;
+    using ChanDir = gocpp::defined<int64_t, GoTag_ChanDir>;
+    inline constexpr golang::reflect::ChanDir RecvDir = 1 << 0;
+    inline constexpr golang::reflect::ChanDir SendDir = 1 << 1;
     inline constexpr ChanDir BothDir = RecvDir | SendDir;
+    struct interfaceType;
+    struct ptrType;
+    struct sliceType;
+    struct structType;
+    struct Method;
+    struct StructField;
+    using StructTag = gocpp::string;
+    struct fieldScan;
+    struct cacheKey;
+    struct funcLookupCacheStruct;
+    struct structLookupCacheStruct;
+    struct structTypeUncommon;
+    struct layoutKey;
+    struct layoutType;
+    struct bitVector;
 }
 #include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
-#include "golang/iter/iter.fwd.h"
 
 namespace golang::reflect
 {
-    namespace iter = golang::iter;
     namespace abi = golang::internal::abi;
-    struct Type;
     using uncommonType = abi::UncommonType;
     using aNameOff = abi::NameOff;
     using aTypeOff = abi::TypeOff;
@@ -79,4 +76,11 @@ namespace golang::reflect
     using chanType = abi::ChanType;
     using funcType = abi::FuncType;
     using structField = abi::StructField;
+}
+#include "golang/iter/iter.fwd.h"
+
+namespace golang::reflect
+{
+    namespace iter = golang::iter;
+    struct Type;
 }

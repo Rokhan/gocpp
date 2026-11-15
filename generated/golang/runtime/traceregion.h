@@ -16,6 +16,29 @@ namespace golang::runtime
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    struct traceRegionAllocBlockHeader
+    {
+        traceRegionAllocBlock* next{};
+        atomic::Uintptr off{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlockHeader& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    inline constexpr uintptr_t traceRegionAllocBlockData = (64 << 10) - gocpp::Sizeof<traceRegionAllocBlockHeader>();
+}
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
@@ -39,31 +62,12 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAlloc& value);
-    struct traceRegionAllocBlockHeader
-    {
-        traceRegionAllocBlock* next{};
-        atomic::Uintptr off{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlockHeader& value);
 }
-#include "golang/internal/runtime/sys/nih.fwd.h"
 #include "golang/internal/runtime/sys/nih.h"
 
 namespace golang::runtime
 {
     namespace sys = golang::internal::runtime::sys;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct traceRegionAllocBlock
     {
         sys::NotInHeap _1{};
@@ -82,7 +86,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlock& value);
-    inline constexpr uintptr_t traceRegionAllocBlockData = (64 << 10) - gocpp::Sizeof<traceRegionAllocBlockHeader>();
 }
 
 #include "golang/runtime/malloc.h"

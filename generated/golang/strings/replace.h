@@ -49,6 +49,28 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct trieNode& value);
+    struct genericReplacer
+    {
+        trieNode root{};
+        // tableSize is the size of a trie node's lookup table. It is the number
+        // of unique key bytes.
+        int64_t tableSize{};
+        // mapping maps from key bytes to a dense index for trieNode.table.
+        gocpp::array<unsigned char, 256> mapping{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct genericReplacer& value);
+    genericReplacer* makeGenericReplacer(gocpp::slice<gocpp::string> oldnew);
     struct GoTag_appendSliceWriter { };
     using appendSliceWriter = gocpp::defined<gocpp::slice<unsigned char>, GoTag_appendSliceWriter>;
     struct GoTag_byteReplacer { };
@@ -75,33 +97,11 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct byteStringReplacer& value);
-    struct genericReplacer
-    {
-        trieNode root{};
-        // tableSize is the size of a trie node's lookup table. It is the number
-        // of unique key bytes.
-        int64_t tableSize{};
-        // mapping maps from key bytes to a dense index for trieNode.table.
-        gocpp::array<unsigned char, 256> mapping{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct genericReplacer& value);
 }
 #include "golang/strings/search.fwd.h"
 
 namespace golang::strings
 {
-    genericReplacer* makeGenericReplacer(gocpp::slice<gocpp::string> oldnew);
     struct singleStringReplacer
     {
         stringFinder* finder{};
@@ -120,11 +120,6 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct singleStringReplacer& value);
-}
-#include "golang/io/io.fwd.h"
-
-namespace golang::strings
-{
     singleStringReplacer* makeSingleStringReplacer(gocpp::string pattern, gocpp::string value);
 }
 #include "golang/io/io.h"

@@ -27,7 +27,17 @@ namespace golang::syscall
     uintptr_t compileCallback(go_any fn, bool cleanstack);
     uintptr_t NewCallback(go_any fn);
     uintptr_t NewCallbackCDecl(go_any fn);
+    std::tuple<golang::syscall::Handle, gocpp::error> Open(gocpp::string name, int64_t flag, uint32_t perm);
+    std::tuple<int64_t, gocpp::error> Read(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
+    std::tuple<int64_t, gocpp::error> Write(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
     extern int64_t ioSync;
+    gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence);
+    std::tuple<int64_t, gocpp::error> Seek(golang::syscall::Handle fd, int64_t offset, int64_t whence);
+    gocpp::error Close(golang::syscall::Handle fd);
+    extern Handle Stdin;
+    extern Handle Stdout;
+    extern Handle Stderr;
+    golang::syscall::Handle getStdHandle(int64_t h);
     std::tuple<gocpp::string, gocpp::error> Getwd();
     gocpp::error Chdir(gocpp::string path);
     gocpp::error Mkdir(gocpp::string path, uint32_t mode);
@@ -35,6 +45,9 @@ namespace golang::syscall
     gocpp::error Unlink(gocpp::string path);
     gocpp::error Rename(gocpp::string oldpath, gocpp::string newpath);
     std::tuple<gocpp::string, gocpp::error> ComputerName();
+    gocpp::error Ftruncate(golang::syscall::Handle fd, int64_t length);
+    gocpp::error Pipe(gocpp::slice<golang::syscall::Handle> p);
+    gocpp::error Fsync(golang::syscall::Handle fd);
     gocpp::error Chmod(gocpp::string path, uint32_t mode);
     gocpp::error LoadCancelIoEx();
     gocpp::error LoadSetFileCompletionNotificationModes();
@@ -97,6 +110,64 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RawSockaddr& value);
+    struct RawSockaddrAny
+    {
+        RawSockaddr Addr{};
+        gocpp::array<int8_t, 100> Pad{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RawSockaddrAny& value);
+    struct SockaddrInet4
+    {
+        int64_t Port{};
+        gocpp::array<unsigned char, 4> Addr{};
+        RawSockaddrInet4 raw{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SockaddrInet4& value);
+    struct SockaddrInet6
+    {
+        int64_t Port{};
+        uint32_t ZoneId{};
+        gocpp::array<unsigned char, 16> Addr{};
+        RawSockaddrInet6 raw{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SockaddrInet6& value);
+    std::tuple<golang::syscall::Handle, gocpp::error> Socket(int64_t domain, int64_t typ, int64_t proto);
+    gocpp::error SetsockoptInt(golang::syscall::Handle fd, int64_t level, int64_t opt, int64_t value);
+    gocpp::error Listen(golang::syscall::Handle s, int64_t n);
+    gocpp::error Shutdown(golang::syscall::Handle fd, int64_t how);
     gocpp::error LoadGetAddrInfo();
     gocpp::error LoadConnectEx();
     struct WaitStatus
@@ -132,6 +203,9 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Timespec& value);
+    gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts);
+    int64_t TimespecToNsec(Timespec ts);
+    Timespec NsecToTimespec(int64_t nsec);
     struct Linger
     {
         int32_t Onoff{};
@@ -200,12 +274,21 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct IPv6Mreq& value);
+    std::tuple<int64_t, gocpp::error> GetsockoptInt(golang::syscall::Handle fd, int64_t level, int64_t opt);
+    gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int64_t level, int64_t opt, Linger* l);
+    gocpp::error SetsockoptInet4Addr(golang::syscall::Handle fd, int64_t level, int64_t opt, gocpp::array<unsigned char, 4> value);
+    gocpp::error SetsockoptIPMreq(golang::syscall::Handle fd, int64_t level, int64_t opt, IPMreq* mreq);
+    gocpp::error SetsockoptIPv6Mreq(golang::syscall::Handle fd, int64_t level, int64_t opt, IPv6Mreq* mreq);
     int64_t Getpid();
     int64_t Getppid();
+    std::tuple<gocpp::slice<uint16_t>, gocpp::error> fdpath(golang::syscall::Handle fd, gocpp::slice<uint16_t> buf);
+    gocpp::error Fchdir(golang::syscall::Handle fd);
     gocpp::error Link(gocpp::string oldpath, gocpp::string newpath);
     gocpp::error Symlink(gocpp::string path, gocpp::string link);
+    gocpp::error Fchmod(golang::syscall::Handle fd, uint32_t mode);
     gocpp::error Chown(gocpp::string path, int64_t uid, int64_t gid);
     gocpp::error Lchown(gocpp::string path, int64_t uid, int64_t gid);
+    gocpp::error Fchown(golang::syscall::Handle fd, int64_t uid, int64_t gid);
     int64_t Getuid();
     int64_t Geteuid();
     int64_t Getgid();
@@ -215,103 +298,69 @@ namespace golang::syscall
     using Signal = gocpp::defined<int64_t, GoTag_Signal>;
     gocpp::error LoadCreateSymbolicLink();
     std::tuple<int64_t, gocpp::error> Readlink(gocpp::string path, gocpp::slice<unsigned char> buf);
-    std::tuple<golang::syscall::Handle, gocpp::error> Open(gocpp::string name, int64_t flag, uint32_t perm);
-    std::tuple<int64_t, gocpp::error> Read(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
-    std::tuple<int64_t, gocpp::error> Write(golang::syscall::Handle fd, gocpp::slice<unsigned char> p);
-    gocpp::error setFilePointerEx(golang::syscall::Handle handle, int64_t distToMove, int64_t* newFilePointer, uint32_t whence);
-    std::tuple<int64_t, gocpp::error> Seek(golang::syscall::Handle fd, int64_t offset, int64_t whence);
-    gocpp::error Close(golang::syscall::Handle fd);
-    extern Handle Stdin;
-    extern Handle Stdout;
-    extern Handle Stderr;
-    golang::syscall::Handle getStdHandle(int64_t h);
-    gocpp::error Ftruncate(golang::syscall::Handle fd, int64_t length);
-    gocpp::error Pipe(gocpp::slice<golang::syscall::Handle> p);
-    gocpp::error UtimesNano(gocpp::string path, gocpp::slice<Timespec> ts);
-    gocpp::error Fsync(golang::syscall::Handle fd);
-    struct RawSockaddrAny
-    {
-        RawSockaddr Addr{};
-        gocpp::array<int8_t, 100> Pad{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct RawSockaddrAny& value);
-    struct SockaddrInet4
-    {
-        int64_t Port{};
-        gocpp::array<unsigned char, 4> Addr{};
-        RawSockaddrInet4 raw{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SockaddrInet4& value);
-    struct SockaddrInet6
-    {
-        int64_t Port{};
-        uint32_t ZoneId{};
-        gocpp::array<unsigned char, 16> Addr{};
-        RawSockaddrInet6 raw{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SockaddrInet6& value);
-    std::tuple<golang::syscall::Handle, gocpp::error> Socket(int64_t domain, int64_t typ, int64_t proto);
-    gocpp::error SetsockoptInt(golang::syscall::Handle fd, int64_t level, int64_t opt, int64_t value);
-    gocpp::error Listen(golang::syscall::Handle s, int64_t n);
-    gocpp::error Shutdown(golang::syscall::Handle fd, int64_t how);
-    int64_t TimespecToNsec(Timespec ts);
-    Timespec NsecToTimespec(int64_t nsec);
-    std::tuple<int64_t, gocpp::error> GetsockoptInt(golang::syscall::Handle fd, int64_t level, int64_t opt);
-    gocpp::error SetsockoptLinger(golang::syscall::Handle fd, int64_t level, int64_t opt, Linger* l);
-    gocpp::error SetsockoptInet4Addr(golang::syscall::Handle fd, int64_t level, int64_t opt, gocpp::array<unsigned char, 4> value);
-    gocpp::error SetsockoptIPMreq(golang::syscall::Handle fd, int64_t level, int64_t opt, IPMreq* mreq);
-    gocpp::error SetsockoptIPv6Mreq(golang::syscall::Handle fd, int64_t level, int64_t opt, IPv6Mreq* mreq);
-    std::tuple<gocpp::slice<uint16_t>, gocpp::error> fdpath(golang::syscall::Handle fd, gocpp::slice<uint16_t> buf);
-    gocpp::error Fchdir(golang::syscall::Handle fd);
-    gocpp::error Fchmod(golang::syscall::Handle fd, uint32_t mode);
-    gocpp::error Fchown(golang::syscall::Handle fd, int64_t uid, int64_t gid);
     std::tuple<golang::syscall::Handle, gocpp::error> CreateIoCompletionPort(golang::syscall::Handle filehandle, golang::syscall::Handle cphandle, uint32_t key, uint32_t threadcnt);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/syscall/types_windows.h"
-#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {
     SecurityAttributes* makeInheritSa();
     gocpp::error ReadFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, Overlapped* overlapped);
     gocpp::error WriteFile(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, uint32_t* done, Overlapped* overlapped);
-    extern LazyProc* procSetFilePointerEx;
     gocpp::error Gettimeofday(Timeval* tv);
-    gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv);
+    struct RawSockaddrUnix
+    {
+        uint16_t Family{};
+        gocpp::array<int8_t, UNIX_PATH_MAX> Path{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct RawSockaddrUnix& value);
+    struct SockaddrUnix
+    {
+        gocpp::string Name{};
+        RawSockaddrUnix raw{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct SockaddrUnix& value);
+    gocpp::error wsaSendtoInet4(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet4* to, Overlapped* overlapped, unsigned char* croutine);
+    gocpp::error wsaSendtoInet6(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet6* to, Overlapped* overlapped, unsigned char* croutine);
+    gocpp::error SetsockoptTimeval(golang::syscall::Handle fd, int64_t level, int64_t opt, Timeval* tv);
+    std::tuple<golang::syscall::Handle, gocpp::error> FindFirstFile(uint16_t* name, Win32finddata* data);
+    gocpp::error FindNextFile(golang::syscall::Handle handle, Win32finddata* data);
+    std::tuple<ProcessEntry32*, gocpp::error> getProcessEntry(int64_t pid);
+    gocpp::error GetQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uint32_t* key, Overlapped** overlapped, uint32_t timeout);
+    gocpp::error PostQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t qty, uint32_t key, Overlapped* overlapped);
+    std::tuple<procThreadAttributeListContainer*, gocpp::error> newProcThreadAttributeList(uint32_t maxAttrCount);
+    gocpp::error RegEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime);
+    gocpp::error GetStartupInfo(StartupInfo* startupInfo);
+    std::tuple<golang::syscall::Handle, gocpp::error> CreateFile(uint16_t* name, uint32_t access, uint32_t mode, SecurityAttributes* sa, uint32_t createmode, uint32_t attrs, int32_t templatefile);
+}
+#include "golang/syscall/dll_windows.fwd.h"
+
+namespace golang::syscall
+{
+    extern LazyProc* procSetFilePointerEx;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct Sockaddr : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -375,26 +424,22 @@ namespace golang::syscall
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Sockaddr& value);
-    struct RawSockaddrUnix
-    {
-        uint16_t Family{};
-        gocpp::array<int8_t, UNIX_PATH_MAX> Path{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct RawSockaddrUnix& value);
-    gocpp::error wsaSendtoInet4(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet4* to, Overlapped* overlapped, unsigned char* croutine);
-    gocpp::error wsaSendtoInet6(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet6* to, Overlapped* overlapped, unsigned char* croutine);
+    gocpp::error Bind(golang::syscall::Handle fd, golang::syscall::Sockaddr sa);
+    gocpp::error Connect(golang::syscall::Handle fd, golang::syscall::Sockaddr sa);
+    std::tuple<golang::syscall::Sockaddr, gocpp::error> Getsockname(golang::syscall::Handle fd);
+    std::tuple<golang::syscall::Sockaddr, gocpp::error> Getpeername(golang::syscall::Handle fd);
+    gocpp::error WSASendto(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, golang::syscall::Sockaddr to, Overlapped* overlapped, unsigned char* croutine);
     gocpp::error connectEx(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped);
+    gocpp::error ConnectEx(golang::syscall::Handle fd, golang::syscall::Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped);
+    std::tuple<golang::syscall::Handle, golang::syscall::Sockaddr, gocpp::error> Accept(golang::syscall::Handle fd);
+    std::tuple<int64_t, golang::syscall::Sockaddr, gocpp::error> Recvfrom(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int64_t flags);
+    gocpp::error Sendto(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int64_t flags, golang::syscall::Sockaddr to);
+}
+#include "golang/syscall/types_windows.h"
+
+namespace golang::syscall
+{
+    gocpp::error Utimes(gocpp::string path, gocpp::slice<Timeval> tv);
     struct Rusage
     {
         Filetime CreationTime{};
@@ -414,56 +459,24 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Rusage& value);
-    gocpp::error SetsockoptTimeval(golang::syscall::Handle fd, int64_t level, int64_t opt, Timeval* tv);
-    std::tuple<golang::syscall::Handle, gocpp::error> FindFirstFile(uint16_t* name, Win32finddata* data);
-    gocpp::error FindNextFile(golang::syscall::Handle handle, Win32finddata* data);
-    std::tuple<ProcessEntry32*, gocpp::error> getProcessEntry(int64_t pid);
-    gocpp::error GetQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uint32_t* key, Overlapped** overlapped, uint32_t timeout);
-    gocpp::error PostQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t qty, uint32_t key, Overlapped* overlapped);
-    std::tuple<procThreadAttributeListContainer*, gocpp::error> newProcThreadAttributeList(uint32_t maxAttrCount);
-    gocpp::error RegEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime);
-    gocpp::error GetStartupInfo(StartupInfo* startupInfo);
-    std::tuple<golang::syscall::Handle, gocpp::error> CreateFile(uint16_t* name, uint32_t access, uint32_t mode, SecurityAttributes* sa, uint32_t createmode, uint32_t attrs, int32_t templatefile);
 }
 #include "golang/sync/map.fwd.h"
+
+namespace golang::syscall
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/map.h"
 #include "golang/sync/once.fwd.h"
 
 namespace golang::syscall
 {
-    struct SockaddrUnix
-    {
-        gocpp::string Name{};
-        RawSockaddrUnix raw{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct SockaddrUnix& value);
-    gocpp::error Bind(golang::syscall::Handle fd, golang::syscall::Sockaddr sa);
-    gocpp::error Connect(golang::syscall::Handle fd, golang::syscall::Sockaddr sa);
-    std::tuple<golang::syscall::Sockaddr, gocpp::error> Getsockname(golang::syscall::Handle fd);
-    std::tuple<golang::syscall::Sockaddr, gocpp::error> Getpeername(golang::syscall::Handle fd);
-    gocpp::error WSASendto(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, golang::syscall::Sockaddr to, Overlapped* overlapped, unsigned char* croutine);
-    gocpp::error ConnectEx(golang::syscall::Handle fd, golang::syscall::Sockaddr sa, unsigned char* sendBuf, uint32_t sendDataLen, uint32_t* bytesSent, Overlapped* overlapped);
-    std::tuple<golang::syscall::Handle, golang::syscall::Sockaddr, gocpp::error> Accept(golang::syscall::Handle fd);
-    std::tuple<int64_t, golang::syscall::Sockaddr, gocpp::error> Recvfrom(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int64_t flags);
-    gocpp::error Sendto(golang::syscall::Handle fd, gocpp::slice<unsigned char> p, int64_t flags, golang::syscall::Sockaddr to);
-    namespace sync = golang::sync;
+    extern sync::Map errnoErrorCache;
 }
-#include "golang/sync/map.h"
 #include "golang/sync/once.h"
 
 namespace golang::syscall
 {
-    extern sync::Map errnoErrorCache;
     struct connectExFuncStruct
     {
         sync::Once once{};

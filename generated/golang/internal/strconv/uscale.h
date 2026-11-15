@@ -26,6 +26,7 @@ namespace golang::internal::strconv
     std::tuple<uint64_t, int64_t> fixedWidthFloat(uint64_t m, int64_t e, int64_t n, int64_t prec, unsigned char fmt);
     std::tuple<double, gocpp::error> parseFloat64(uint64_t d, int64_t p, uint64_t sign);
     std::tuple<double, gocpp::error> parseFloat32(uint64_t d, int64_t p, uint32_t sign);
+    unrounded unmin(uint64_t x);
 
     template<typename F>
     std::tuple<uint64_t, int64_t> shortFloat(uint64_t m, int64_t e);
@@ -66,11 +67,10 @@ namespace golang::internal::strconv
     };
 
     std::ostream& operator<<(std::ostream& os, const struct scaler& value);
-    std::tuple<int64_t, int64_t> setDigits(gocpp::slice<unsigned char> s, uint64_t d, int64_t p, int64_t nd);
-    int64_t numDigits(uint64_t d);
-    unrounded unmin(uint64_t x);
     void prescale(scaler* pre, int64_t e, int64_t p, int64_t lp);
     unrounded uscale(uint64_t x, scaler* c);
+    std::tuple<int64_t, int64_t> setDigits(gocpp::slice<unsigned char> s, uint64_t d, int64_t p, int64_t nd);
+    int64_t numDigits(uint64_t d);
 
     namespace rec
     {

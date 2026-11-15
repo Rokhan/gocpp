@@ -17,14 +17,14 @@ namespace golang::os
     std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(gocpp::string name);
 }
 #include "golang/io/fs/fs.fwd.h"
-#include "golang/io/fs/readlink.fwd.h"
-#include "golang/io/fs/walk.fwd.h"
 
 namespace golang::os
 {
     namespace fs = golang::io::fs;
 }
 #include "golang/io/fs/fs.h"
+#include "golang/io/fs/walk.fwd.h"
+#include "golang/io/fs/readlink.fwd.h"
 
 namespace golang::os
 {

@@ -34,27 +34,35 @@ namespace golang::encoding::json
     extern gocpp::error errUnexpectedEnd;
     gocpp::error transformSyntacticError(gocpp::error err);
 }
-#include "golang/encoding/json/jsontext/errors.fwd.h"
-#include "golang/encoding/json/jsontext/export.fwd.h"
-#include "golang/strings/replace.fwd.h"
 #include "golang/strings/strings.fwd.h"
 
 namespace golang::encoding::json
 {
-    namespace jsontext = golang::encoding::json::jsontext;
+    namespace strings = golang::strings;
 }
-#include "golang/encoding/json/jsontext/export.h"
+#include "golang/strings/replace.fwd.h"
 
 namespace golang::encoding::json
 {
-    namespace strings = golang::strings;
-    // export exposes internal functionality of the "jsontext" package.
-    extern jsontext::export export;
     // syntaxErrorReplacer replaces certain string literals in the v2 error
     // to better match the historical string rendering of syntax errors.
     // In particular, v2 uses the terminology "object name" to match RFC 8259,
     // while v1 uses "object key", which is not a term found in JSON literature.
     extern strings::Replacer* syntaxErrorReplacer;
+}
+#include "golang/encoding/json/jsontext/export.fwd.h"
+
+namespace golang::encoding::json
+{
+    namespace jsontext = golang::encoding::json::jsontext;
+}
+#include "golang/encoding/json/jsontext/errors.fwd.h"
+#include "golang/encoding/json/jsontext/export.h"
+
+namespace golang::encoding::json
+{
+    // export exposes internal functionality of the "jsontext" package.
+    extern jsontext::export export;
 
     namespace rec
     {

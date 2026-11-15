@@ -20,6 +20,8 @@ namespace golang::internal::syscall::windows
     inline constexpr long SE_GROUP_INTEGRITY = 0x00000020;
     struct GoTag_TokenType;
     using TokenType = gocpp::defined<uint32_t, GoTag_TokenType>;
+    inline constexpr TokenType TokenPrimary = 1;
+    inline constexpr TokenType TokenImpersonation = 2;
     inline constexpr long LG_INCLUDE_INDIRECT = 0x1;
     inline constexpr long MAX_PREFERRED_LENGTH = 0xFFFFFFFFLL;
     struct LocalGroupUserInfo0;
@@ -35,18 +37,20 @@ namespace golang::internal::syscall::windows
     inline constexpr long SECURITY_LOCAL_SERVICE_RID = 19;
     // https://learn.microsoft.com/en-us/windows/win32/services/networkservice-account
     inline constexpr long SECURITY_NETWORK_SERVICE_RID = 20;
-    inline constexpr TokenType TokenPrimary = 1;
-    inline constexpr TokenType TokenImpersonation = 2;
 }
 #include "golang/syscall/security_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
     inline constexpr syscall::Errno NERR_UserNotFound = 2221;
     inline constexpr syscall::Errno NERR_UserExists = 2224;
 }

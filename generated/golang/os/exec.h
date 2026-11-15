@@ -92,87 +92,18 @@ namespace golang::os
     int64_t Getpid();
     int64_t Getppid();
 }
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/mcleanup.fwd.h"
-#include "golang/sync/atomic/type.fwd.h"
-#include "golang/sync/rwmutex.fwd.h"
 #include "golang/syscall/exec_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-
-namespace golang::os
-{
-    namespace atomic = golang::sync::atomic;
-    namespace sync = golang::sync;
-    namespace runtime = golang::runtime;
-}
-#include "golang/runtime/mcleanup.h"
-#include "golang/sync/atomic/type.h"
-#include "golang/sync/rwmutex.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
 #include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
-    struct Process
-    {
-        // Pid is the operating system process ID.
-        int64_t Pid{};
-        // state contains the atomic process state.
-        // This consists of the processStatus fields,
-        // which indicate if the process is done/released.
-        atomic::Uint32 state{};
-        // Used only when handle is nil
-        sync::RWMutex sigMu{}; // avoid race between wait and signal
-        // handle, if not nil, is a pointer to a struct
-        // that holds the OS-specific process handle.
-        // This pointer is set when Process is created,
-        // and never changed afterward.
-        // This is a pointer to a separate memory allocation
-        // so that we can use runtime.AddCleanup.
-        processHandle* handle{};
-        // cleanup is used to clean up the process handle.
-        runtime::Cleanup cleanup{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Process& value);
-    struct processHandle
-    {
-        // The actual handle. This field should not be used directly.
-        // Instead, use the acquire and release methods.
-        // On Windows this is a handle returned by OpenProcess.
-        // On Linux this is a pidfd.
-        uintptr_t handle{};
-        // Number of active references. When this drops to zero
-        // the handle is closed.
-        atomic::Int32 refs{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct processHandle& value);
     struct ProcAttr
     {
         // If Dir is non-empty, the child changes into the directory before
@@ -209,6 +140,91 @@ namespace golang::os
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
+}
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::os
+{
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::os
+{
+    struct processHandle
+    {
+        // The actual handle. This field should not be used directly.
+        // Instead, use the acquire and release methods.
+        // On Windows this is a handle returned by OpenProcess.
+        // On Linux this is a pidfd.
+        uintptr_t handle{};
+        // Number of active references. When this drops to zero
+        // the handle is closed.
+        atomic::Int32 refs{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct processHandle& value);
+}
+#include "golang/sync/rwmutex.fwd.h"
+
+namespace golang::os
+{
+    namespace sync = golang::sync;
+}
+#include "golang/runtime/mcleanup.fwd.h"
+
+namespace golang::os
+{
+    namespace runtime = golang::runtime;
+}
+#include "golang/runtime/mcleanup.h"
+#include "golang/sync/rwmutex.h"
+#include "golang/runtime/extern.fwd.h"
+
+namespace golang::os
+{
+    struct Process
+    {
+        // Pid is the operating system process ID.
+        int64_t Pid{};
+        // state contains the atomic process state.
+        // This consists of the processStatus fields,
+        // which indicate if the process is done/released.
+        atomic::Uint32 state{};
+        // Used only when handle is nil
+        sync::RWMutex sigMu{}; // avoid race between wait and signal
+        // handle, if not nil, is a pointer to a struct
+        // that holds the OS-specific process handle.
+        // This pointer is set when Process is created,
+        // and never changed afterward.
+        // This is a pointer to a separate memory allocation
+        // so that we can use runtime.AddCleanup.
+        processHandle* handle{};
+        // cleanup is used to clean up the process handle.
+        runtime::Cleanup cleanup{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Process& value);
     Process* newPIDProcess(int64_t pid);
     Process* newHandleProcess(int64_t pid, uintptr_t handle);
     Process* newDoneProcess(int64_t pid);

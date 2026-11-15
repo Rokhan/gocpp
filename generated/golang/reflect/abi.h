@@ -91,24 +91,28 @@ namespace golang::reflect
 
     std::ostream& operator<<(std::ostream& os, const struct abiSeq& value);
 }
-#include "golang/internal/abi/abi.fwd.h"
 #include "golang/internal/abi/abi_amd64.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
 
 namespace golang::reflect
 {
     namespace abi = golang::internal::abi;
 }
-#include "golang/internal/abi/abi.h"
+#include "golang/internal/abi/type.fwd.h"
+#include "golang/internal/abi/abi.fwd.h"
 
 namespace golang::reflect
 {
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    void dumpPtrBitMap(abi::IntArgRegBitmap b);
     void intFromReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer to);
     void intToReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer from);
     void floatFromReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer to);
     void floatToReg(abi::RegArgs* r, int64_t reg, uintptr_t argSize, gocpp::unsafe_pointer from);
+}
+#include "golang/internal/abi/abi.h"
+
+namespace golang::reflect
+{
+    void dumpPtrBitMap(abi::IntArgRegBitmap b);
 }
 #include "golang/reflect/type.fwd.h"
 

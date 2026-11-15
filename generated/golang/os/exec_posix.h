@@ -9,6 +9,12 @@
 #include "golang/os/exec_posix.fwd.h"
 #include "gocpp/support.h"
 
+#include "golang/os/exec.fwd.h"
+
+namespace golang::os
+{
+    std::tuple<Process*, gocpp::error> startProcess(gocpp::string name, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
+}
 #include "golang/os/exec.h"
 
 namespace golang::os
@@ -20,16 +26,15 @@ namespace golang::os
     // sending a signal.
     extern golang::os::Signal Interrupt;
     extern golang::os::Signal Kill;
-    std::tuple<Process*, gocpp::error> startProcess(gocpp::string name, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
 }
-#include "golang/syscall/exec_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/exec_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
 
 namespace golang::os

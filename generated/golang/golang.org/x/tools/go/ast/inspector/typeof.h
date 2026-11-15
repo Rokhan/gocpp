@@ -9,7 +9,6 @@
 #include "golang/golang.org/x/tools/go/ast/inspector/typeof.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.fwd.h"
 #include "golang/go/ast/ast.h"
 
 namespace golang::golang_org::x::tools::go::ast::inspector

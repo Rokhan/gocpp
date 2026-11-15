@@ -9,16 +9,20 @@
 #include "golang/math/big/ftoa.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/math/big/decimal.h"
+#include "golang/math/big/decimal.fwd.h"
 #include "golang/math/big/float.fwd.h"
 
 namespace golang::math::big
 {
     void roundShortest(decimal* d, Float* x);
+}
+#include "golang/math/big/decimal.h"
+
+namespace golang::math::big
+{
     gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> buf, unsigned char fmt, int64_t prec, decimal d);
     gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> buf, int64_t prec, decimal d);
 }
-#include "golang/fmt/print.fwd.h"
 #include "golang/fmt/print.h"
 
 namespace golang::math::big

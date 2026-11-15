@@ -11,9 +11,6 @@ namespace golang::os
     struct file;
     struct GoTag_newFileKind;
     using newFileKind = gocpp::defined<int64_t, GoTag_newFileKind>;
-    // DevNull is the name of the operating system's “null device.”
-    // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
-    inline const gocpp::string DevNull = "NUL"_s;
     // kindNewFile means that the descriptor was passed to us via NewFile.
     inline constexpr newFileKind kindNewFile = 0;
     // kindOpenFile means that the descriptor was opened using
@@ -26,4 +23,7 @@ namespace golang::os
     inline constexpr newFileKind kindSock = 3;
     // kindConsole means that the descriptor is a console handle.
     inline constexpr newFileKind kindConsole = 4;
+    // DevNull is the name of the operating system's “null device.”
+    // On Unix-like systems, it is "/dev/null"; on Windows, "NUL".
+    inline const gocpp::string DevNull = "NUL"_s;
 }

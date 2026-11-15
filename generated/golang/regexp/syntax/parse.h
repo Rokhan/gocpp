@@ -54,6 +54,7 @@ namespace golang::regexp::syntax
     gocpp::string canonicalName(gocpp::string name);
     gocpp::slice<gocpp::rune> cleanClass(gocpp::slice<gocpp::rune>* rp);
     bool inCharClass(gocpp::rune r, gocpp::slice<gocpp::rune> go_class);
+    gocpp::slice<gocpp::rune> appendLiteral(gocpp::slice<gocpp::rune> r, gocpp::rune x, Flags flags);
     gocpp::slice<gocpp::rune> appendRange(gocpp::slice<gocpp::rune> r, gocpp::rune lo, gocpp::rune hi);
     gocpp::slice<gocpp::rune> appendFoldedRange(gocpp::slice<gocpp::rune> r, gocpp::rune lo, gocpp::rune hi);
     gocpp::slice<gocpp::rune> appendClass(gocpp::slice<gocpp::rune> r, gocpp::slice<gocpp::rune> x);
@@ -80,7 +81,6 @@ namespace golang::regexp::syntax
     std::tuple<gocpp::rune, gocpp::string, gocpp::error> nextRune(gocpp::string s);
     bool isalnum(gocpp::rune c);
     gocpp::rune unhex(gocpp::rune c);
-    gocpp::slice<gocpp::rune> appendLiteral(gocpp::slice<gocpp::rune> r, gocpp::rune x, Flags flags);
 }
 #include "golang/regexp/syntax/regexp.fwd.h"
 
@@ -121,18 +121,28 @@ namespace golang::regexp::syntax
     bool matchRune(Regexp* re, gocpp::rune r);
     void mergeCharClass(Regexp* dst, Regexp* src);
 }
-#include "golang/sync/once.fwd.h"
 #include "golang/unicode/letter.fwd.h"
-#include "golang/unicode/tables.fwd.h"
-#include "golang/sync/once.h"
 
 namespace golang::regexp::syntax
 {
     namespace unicode = golang::unicode;
-    namespace sync = golang::sync;
+}
+#include "golang/unicode/tables.fwd.h"
+
+namespace golang::regexp::syntax
+{
     extern unicode::RangeTable* anyTable;
     extern unicode::RangeTable* asciiTable;
     extern unicode::RangeTable* asciiFoldTable;
+    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int64_t> unicodeTable(gocpp::string name);
+    gocpp::slice<gocpp::rune> appendTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
+    gocpp::slice<gocpp::rune> appendNegatedTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
+}
+#include "golang/sync/once.h"
+
+namespace golang::regexp::syntax
+{
+    namespace sync = golang::sync;
     struct aliasesStruct
     {
         sync::Once once{};
@@ -151,9 +161,6 @@ namespace golang::regexp::syntax
     };
 
     std::ostream& operator<<(std::ostream& os, const struct aliasesStruct& value);
-    std::tuple<unicode::RangeTable*, unicode::RangeTable*, int64_t> unicodeTable(gocpp::string name);
-    gocpp::slice<gocpp::rune> appendTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
-    gocpp::slice<gocpp::rune> appendNegatedTable(gocpp::slice<gocpp::rune> r, unicode::RangeTable* x);
     // aliases is a lazily constructed copy of unicode.CategoryAliases and unicode.Scripts
     // but with the keys passed through canonicalName, to support inexact matches.
     extern aliasesStruct aliases;

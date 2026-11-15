@@ -27,6 +27,8 @@ namespace golang::iter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
+    void coroswitch(coro*);
+    coro* newcoro(std::function<void (coro* _1)>);
 
     template<typename V>
     std::tuple<std::function<std::tuple<V, bool> ()>, std::function<void ()>> Pull(Seq<V> seq);
@@ -36,8 +38,6 @@ namespace golang::iter
     // goexitPanicValue is a sentinel value indicating that an iterator
     // exited via runtime.Goexit.
     extern go_any goexitPanicValue;
-    void coroswitch(coro*);
-    coro* newcoro(std::function<void (coro* _1)>);
 
     namespace rec
     {

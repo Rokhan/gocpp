@@ -41,13 +41,18 @@ namespace golang::runtime
     // Trace advancer goroutine.
     extern traceAdvancerState traceAdvancer;
 }
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/time.fwd.h"
+#include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
     g* traceReader();
     g* traceReaderAvailable();
+}
+#include "golang/runtime/runtime2.h"
+#include "golang/runtime/time.fwd.h"
+
+namespace golang::runtime
+{
     struct wakeableSleep
     {
         timer* timer{};
@@ -67,13 +72,13 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wakeableSleep& value);
+    wakeableSleep* newWakeableSleep();
 }
 #include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
-    wakeableSleep* newWakeableSleep();
 }
 #include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/profbuf.h"

@@ -14,47 +14,26 @@ namespace golang::golang_org::x::tools::go::types::objectpath
 {
     gocpp::slice<unsigned char> appendOpArg(gocpp::slice<unsigned char> path, unsigned char op, int64_t index);
 }
+#include "golang/go/types/object.h"
+
+namespace golang::golang_org::x::tools::go::types::objectpath
+{
+    namespace types = golang::go::types;
+}
+#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/alias.fwd.h"
+#include "golang/go/types/typeparam.fwd.h"
 #include "golang/go/types/map.fwd.h"
 #include "golang/go/types/named.fwd.h"
-#include "golang/go/types/object.fwd.h"
-#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/predicates.fwd.h"
 #include "golang/go/types/signature.fwd.h"
 #include "golang/go/types/struct.fwd.h"
 #include "golang/go/types/tuple.fwd.h"
 #include "golang/go/types/type.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
-#include "golang/go/types/typeparam.fwd.h"
-#include "golang/sync/mutex.fwd.h"
-#include "golang/go/types/object.h"
 
 namespace golang::golang_org::x::tools::go::types::objectpath
 {
-    namespace types = golang::go::types;
-    namespace sync = golang::sync;
-}
-#include "golang/sync/mutex.h"
-
-namespace golang::golang_org::x::tools::go::types::objectpath
-{
-    struct Encoder
-    {
-        mocklib::Mutex pkgIndexMu{};
-        gocpp::map<types::Package*, pkgIndex*> pkgIndex{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
     struct traversal
     {
         types::Package* pkg{};
@@ -101,6 +80,34 @@ namespace golang::golang_org::x::tools::go::types::objectpath
     std::ostream& operator<<(std::ostream& os, const struct pkgIndex& value);
     std::tuple<types::Object, gocpp::error> Object(types::Package* pkg, Path p);
     std::tuple<Path, gocpp::error> For(types::Object obj);
+}
+#include "golang/sync/mutex.fwd.h"
+
+namespace golang::golang_org::x::tools::go::types::objectpath
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::golang_org::x::tools::go::types::objectpath
+{
+    struct Encoder
+    {
+        mocklib::Mutex pkgIndexMu{};
+        gocpp::map<types::Package*, pkgIndex*> pkgIndex{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
 }
 
 #include "golang/go/types/object.h"

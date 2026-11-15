@@ -41,6 +41,23 @@ namespace golang::encoding::json::jsontext
     gocpp::slice<unsigned char> appendEscapePointerName(gocpp::slice<unsigned char> b, gocpp::slice<unsigned char> name);
     struct GoTag_stateEntry { };
     using stateEntry = gocpp::defined<uint64_t, GoTag_stateEntry>;
+    struct stateMachine
+    {
+        gocpp::slice<stateEntry> Stack{};
+        stateEntry Last{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stateMachine& value);
     struct objectNameStack
     {
         // offsets is a stack of offsets for each name.
@@ -89,23 +106,6 @@ namespace golang::encoding::json::jsontext
     };
 
     std::ostream& operator<<(std::ostream& os, const struct objectNamespace& value);
-    struct stateMachine
-    {
-        gocpp::slice<stateEntry> Stack{};
-        stateEntry Last{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stateMachine& value);
     using objectNamespaceStack = gocpp::defined<gocpp::slice<objectNamespace>, GoTag_objectNamespaceStack>;
     struct state
     {

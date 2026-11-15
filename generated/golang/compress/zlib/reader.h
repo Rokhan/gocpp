@@ -19,42 +19,16 @@ namespace golang::compress::zlib
     // ErrHeader is returned when reading ZLIB data that has an invalid header.
     extern gocpp::error ErrHeader;
 }
-#include "golang/compress/flate/inflate.fwd.h"
-#include "golang/hash/hash.fwd.h"
 #include "golang/io/io.fwd.h"
-#include "golang/compress/flate/inflate.h"
 
 namespace golang::compress::zlib
 {
-    namespace flate = golang::compress::flate;
     namespace io = golang::io;
-    namespace hash = golang::hash;
 }
-#include "golang/hash/hash.h"
 #include "golang/io/io.h"
 
 namespace golang::compress::zlib
 {
-    struct reader
-    {
-        flate::Reader r{};
-        io::ReadCloser decompressor{};
-        hash::Hash32 digest{};
-        gocpp::error err{};
-        gocpp::array<unsigned char, 4> scratch{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct reader& value);
     struct Resetter : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -122,6 +96,43 @@ namespace golang::compress::zlib
     std::ostream& operator<<(std::ostream& os, const struct Resetter& value);
     std::tuple<io::ReadCloser, gocpp::error> NewReader(io::Reader r);
     std::tuple<io::ReadCloser, gocpp::error> NewReaderDict(io::Reader r, gocpp::slice<unsigned char> dict);
+}
+#include "golang/compress/flate/inflate.h"
+
+namespace golang::compress::zlib
+{
+    namespace flate = golang::compress::flate;
+}
+#include "golang/hash/hash.fwd.h"
+
+namespace golang::compress::zlib
+{
+    namespace hash = golang::hash;
+}
+#include "golang/hash/hash.h"
+
+namespace golang::compress::zlib
+{
+    struct reader
+    {
+        flate::Reader r{};
+        io::ReadCloser decompressor{};
+        hash::Hash32 digest{};
+        gocpp::error err{};
+        gocpp::array<unsigned char, 4> scratch{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct reader& value);
 }
 
 #include "golang/io/io.h"

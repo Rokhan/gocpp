@@ -9,18 +9,11 @@
 #include "golang/golang.org/x/tools/go/ast/inspector/walk.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/ast/ast.fwd.h"
 #include "golang/golang.org/x/tools/go/ast/edge/edge.fwd.h"
 
 namespace golang::golang_org::x::tools::go::ast::inspector
 {
     namespace edge = golang::golang_org::x::tools::go::ast::edge;
-}
-#include "golang/go/ast/ast.h"
-
-namespace golang::golang_org::x::tools::go::ast::inspector
-{
-    namespace ast = golang::go::ast;
 }
 #include "golang/golang.org/x/tools/go/ast/edge/edge.h"
 #include "golang/golang.org/x/tools/go/ast/inspector/inspector.fwd.h"
@@ -30,6 +23,17 @@ namespace golang::golang_org::x::tools::go::ast::inspector
 
     template<typename N>
     void walkList(visitor* v, edge::Kind ek, gocpp::slice<N> list);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::golang_org::x::tools::go::ast::inspector
+{
+    namespace ast = golang::go::ast;
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::golang_org::x::tools::go::ast::inspector
+{
     void walk(visitor* v, edge::Kind ek, int64_t index, ast::Node node);
 
     namespace rec

@@ -15,30 +15,22 @@ namespace golang::encoding::json
     struct GoTag_Delim { };
     using Delim = gocpp::defined<gocpp::rune, GoTag_Delim>;
 }
-#include "golang/bytes/buffer.fwd.h"
-#include "golang/bytes/bytes.fwd.h"
-#include "golang/bytes/reader.fwd.h"
 #include "golang/encoding/json/jsontext/decode.fwd.h"
-#include "golang/encoding/json/jsontext/options.fwd.h"
-#include "golang/encoding/json/jsontext/value.fwd.h"
-#include "golang/encoding/json/v2/arshal.fwd.h"
-#include "golang/encoding/json/v2/options.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::encoding::json
 {
     namespace jsontext = golang::encoding::json::jsontext;
 }
-#include "golang/bytes/buffer.h"
+#include "golang/encoding/json/v2/options.fwd.h"
 
 namespace golang::encoding::json
 {
     namespace jsonv2 = golang::encoding::json::v2;
-    namespace io = golang::io;
-    namespace bytes = golang::bytes;
 }
 #include "golang/encoding/json/v2/options.h"
-#include "golang/io/io.h"
+#include "golang/encoding/json/v2/arshal.fwd.h"
+#include "golang/encoding/json/jsontext/options.fwd.h"
+#include "golang/encoding/json/jsontext/value.fwd.h"
 
 namespace golang::encoding::json
 {
@@ -66,6 +58,30 @@ namespace golang::encoding::json
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Decoder& value);
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::encoding::json
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::encoding::json
+{
+    Decoder* NewDecoder(io::Reader r);
+}
+#include "golang/bytes/buffer.h"
+
+namespace golang::encoding::json
+{
+    namespace bytes = golang::bytes;
+}
+#include "golang/bytes/reader.fwd.h"
+#include "golang/bytes/bytes.fwd.h"
+
+namespace golang::encoding::json
+{
     struct Encoder
     {
         io::Writer w{};
@@ -87,7 +103,6 @@ namespace golang::encoding::json
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoder& value);
-    Decoder* NewDecoder(io::Reader r);
     Encoder* NewEncoder(io::Writer w);
 }
 

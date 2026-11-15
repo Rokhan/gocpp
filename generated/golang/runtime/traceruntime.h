@@ -30,9 +30,33 @@ namespace golang::runtime
     void trace_userRegion(uint64_t id, uint64_t mode, gocpp::string name);
     void trace_userLog(uint64_t id, gocpp::string category, gocpp::string message);
 }
-#include "golang/runtime/traceevent.h"
-#include "golang/runtime/tracestatus.h"
 #include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    struct traceLocker
+    {
+        m* mp{};
+        uintptr_t gen{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
+    traceLocker traceAcquire();
+    traceLocker traceAcquireEnabled();
+    void traceRelease(traceLocker tl);
+    void traceThreadDestroy(m* mp);
+}
+#include "golang/runtime/tracestatus.h"
 
 namespace golang::runtime
 {
@@ -50,15 +74,6 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        bool acquireStatus(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
-        traceArg nextSeq(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
-        void readyNextGen(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
-        void setStatusTraced(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
-        bool statusWasTraced(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct gTraceState& value);
     struct pTraceState
@@ -88,52 +103,21 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        bool acquireStatus(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
-        traceArg nextSeq(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
-        void readyNextGen(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
-        void setStatusTraced(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
-        bool statusWasTraced(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct pTraceState& value);
-    struct traceLocker
-    {
-        m* mp{};
-        uintptr_t gen{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct traceLocker& value);
-    void traceThreadDestroy(m* mp);
-}
-#include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/trace/tracev2/events.fwd.h"
-#include "golang/internal/trace/tracev2/spec.fwd.h"
-
-namespace golang::runtime
-{
-    traceLocker traceAcquire();
-    traceLocker traceAcquireEnabled();
-    void traceRelease(traceLocker tl);
 }
 #include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/trace/tracev2/events.fwd.h"
+
+namespace golang::runtime
+{
     namespace tracev2 = golang::internal::trace::tracev2;
 }
+#include "golang/internal/trace/tracev2/spec.fwd.h"
 #include "golang/runtime/tracebuf.fwd.h"
 
 namespace golang::runtime
@@ -169,7 +153,17 @@ namespace golang::runtime
 
     namespace rec
     {
+        bool acquireStatus(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
+        traceArg nextSeq(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
+        void readyNextGen(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
+        void setStatusTraced(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
+        bool statusWasTraced(const gocpp::PtrRecv<struct gTraceState, false>& self, uintptr_t gen);
         void reset(gTraceState* s);
+        bool acquireStatus(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
+        traceArg nextSeq(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
+        void readyNextGen(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
+        void setStatusTraced(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
+        bool statusWasTraced(const gocpp::PtrRecv<struct pTraceState, false>& self, uintptr_t gen);
         bool ok(traceLocker tl);
         void Gomaxprocs(traceLocker tl, int32_t procs);
         void ProcStart(traceLocker tl);

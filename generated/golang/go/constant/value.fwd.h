@@ -8,6 +8,15 @@ namespace golang::go::constant
 {
     struct GoTag_Kind;
     using Kind = gocpp::defined<int64_t, GoTag_Kind>;
+    // unknown values
+    inline constexpr golang::go::constant::Kind Unknown = 0;
+    // non-numeric values
+    inline constexpr golang::go::constant::Kind Bool = 1;
+    inline constexpr golang::go::constant::Kind String = 2;
+    // numeric values
+    inline constexpr golang::go::constant::Kind Int = 3;
+    inline constexpr golang::go::constant::Kind Float = 4;
+    inline constexpr golang::go::constant::Kind Complex = 5;
     struct Value;
     // Maximum supported mantissa precision.
     // The spec requires at least 256 bits; typical implementations use 512 bits.
@@ -26,14 +35,5 @@ namespace golang::go::constant
     // before switching to using floating-point numbers.
     inline constexpr int64_t maxExp = 4 << 10;
     inline constexpr big::Word _log = (int64_t(_m) >> 8) & 1LL + (int64_t(_m) >> 16) & 1LL + (int64_t(_m) >> 32) & 1LL;
-    // unknown values
-    inline constexpr golang::go::constant::Kind Unknown = 0;
-    // non-numeric values
-    inline constexpr golang::go::constant::Kind Bool = 1;
-    inline constexpr golang::go::constant::Kind String = 2;
-    // numeric values
-    inline constexpr golang::go::constant::Kind Int = 3;
-    inline constexpr golang::go::constant::Kind Float = 4;
-    inline constexpr golang::go::constant::Kind Complex = 5;
     inline constexpr int64_t wordSize = 1 << _log;
 }

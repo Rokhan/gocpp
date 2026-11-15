@@ -9,13 +9,7 @@
 #include "golang/runtime/chan.fwd.h"
 #include "gocpp/support.h"
 
-
-namespace golang::runtime
-{
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
 #include "golang/runtime/runtime2.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
@@ -36,9 +30,15 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct waitq& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    bool chanparkcommit(g* gp, gocpp::unsafe_pointer chanLock);
+}
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
     void sendDirect(_type* t, sudog* sg, gocpp::unsafe_pointer src);
     void recvDirect(_type* t, sudog* sg, gocpp::unsafe_pointer dst);
-    bool chanparkcommit(g* gp, gocpp::unsafe_pointer chanLock);
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/synctest.fwd.h"
@@ -79,7 +79,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hchan& value);
-    /*inline constexpr uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int64_t(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1)) [known mising deps] */;
+    inline constexpr uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int64_t(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1));
     golang::runtime::hchan* reflect_makechan(chantype* t, int64_t size);
     golang::runtime::hchan* makechan64(chantype* t, int64_t size);
     golang::runtime::hchan* makechan(chantype* t, int64_t size);

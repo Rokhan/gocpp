@@ -37,10 +37,10 @@ namespace golang::internal::gover
     bool IsLang(gocpp::string x);
     gocpp::string Lang(gocpp::string x);
     bool IsValid(gocpp::string x);
+    Version Parse(gocpp::string x);
     std::tuple<gocpp::string, gocpp::string, bool> cutInt(gocpp::string x);
     int64_t CmpInt(gocpp::string x, gocpp::string y);
     gocpp::string DecInt(gocpp::string decimal);
-    Version Parse(gocpp::string x);
 
     namespace rec
     {

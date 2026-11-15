@@ -15,17 +15,18 @@ namespace golang::golang_org::x::tools::internal::event
     void SetExporter(Exporter e);
 }
 #include "golang/context/context.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/core/export.fwd.h"
-#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::event
 {
     namespace context = golang::context;
-    namespace core = golang::golang_org::x::tools::internal::event::core;
 }
 #include "golang/context/context.h"
-#include "golang/golang.org/x/tools/internal/event/core/event.h"
+
+namespace golang::golang_org::x::tools::internal::event
+{
+    context::Context Detach(context::Context ctx);
+}
+#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::event
 {
@@ -35,9 +36,6 @@ namespace golang::golang_org::x::tools::internal::event
 
 namespace golang::golang_org::x::tools::internal::event
 {
-    bool IsLog(core::Event ev);
-    bool IsError(core::Event ev);
-    bool IsMetric(core::Event ev);
     context::Context Label(context::Context ctx, gocpp::slice<label::Label> labels);
 
     template<typename... Args>
@@ -51,11 +49,6 @@ namespace golang::golang_org::x::tools::internal::event
     {
         return Label(ctx, gocpp::ToSlice<label::Label>(value, labels...));
     }
-    bool IsLabel(core::Event ev);
-    bool IsStart(core::Event ev);
-    bool IsEnd(core::Event ev);
-    context::Context Detach(context::Context ctx);
-    bool IsDetach(core::Event ev);
     void Log(context::Context ctx, gocpp::string message, gocpp::slice<label::Label> labels);
 
     template<typename... Args>
@@ -108,6 +101,25 @@ namespace golang::golang_org::x::tools::internal::event
     {
         return Start(ctx, name, gocpp::ToSlice<label::Label>(value, labels...));
     }
+}
+#include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event
+{
+    namespace core = golang::golang_org::x::tools::internal::event::core;
+}
+#include "golang/golang.org/x/tools/internal/event/core/event.h"
+#include "golang/golang.org/x/tools/internal/event/core/export.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event
+{
+    bool IsLog(core::Event ev);
+    bool IsError(core::Event ev);
+    bool IsMetric(core::Event ev);
+    bool IsLabel(core::Event ev);
+    bool IsStart(core::Event ev);
+    bool IsEnd(core::Event ev);
+    bool IsDetach(core::Event ev);
 
     namespace rec
     {

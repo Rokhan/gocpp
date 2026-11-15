@@ -33,6 +33,15 @@ namespace golang::internal::godebugs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Info& value);
+    // All is the table of known settings, sorted by Name.
+    //
+    // Note: After adding entries to this table, run 'go generate runtime/metrics'
+    // to update the runtime/metrics doc comment.
+    // (Otherwise the runtime/metrics test will fail.)
+    //
+    // Note: After adding entries to this table, update the list in doc/godebug.md as well.
+    // (Otherwise the test in this package will fail.)
+    extern gocpp::slice<Info> All;
     struct RemovedInfo
     {
         gocpp::string Name{}; // name of the removed GODEBUG setting.
@@ -51,22 +60,13 @@ namespace golang::internal::godebugs
     };
 
     std::ostream& operator<<(std::ostream& os, const struct RemovedInfo& value);
-    bool zero(gocpp::string s);
-    bool one(gocpp::string s);
-    // All is the table of known settings, sorted by Name.
-    //
-    // Note: After adding entries to this table, run 'go generate runtime/metrics'
-    // to update the runtime/metrics doc comment.
-    // (Otherwise the runtime/metrics test will fail.)
-    //
-    // Note: After adding entries to this table, update the list in doc/godebug.md as well.
-    // (Otherwise the test in this package will fail.)
-    extern gocpp::slice<Info> All;
     // Removed contains all GODEBUGs that we have removed.
     //
     // Every removed GODEBUG must have a corresponding section in doc/godebug.md,
     // since cmd/go links to that document when a removed GODEBUG is used.
     extern gocpp::slice<RemovedInfo> Removed;
+    bool zero(gocpp::string s);
+    bool one(gocpp::string s);
     Info* Lookup(gocpp::string name);
 
     namespace rec

@@ -24,10 +24,22 @@ namespace golang::runtime
     bool netpollAnyWaiters();
     void netpollAdjustWaiters(int32_t delta);
     extern go_any pdEface;
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    void netpollgoready(g* gp, int64_t traceskip);
+}
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    extern _type* pdType;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    bool netpollblockcommit(g* gp, gocpp::unsafe_pointer gpp);
 }
 #include "golang/runtime/runtime2.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
@@ -49,21 +61,28 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct pollCache& value);
     extern mutex netpollInitLock;
-    bool netpollblockcommit(g* gp, gocpp::unsafe_pointer gpp);
-    void netpollgoready(g* gp, int64_t traceskip);
-    extern _type* pdType;
+    extern pollCache pollcache;
 }
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+}
+#include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+
+namespace golang::runtime
+{
+    extern atomic::Uint32 netpollInited;
+    extern atomic::Uint32 netpollWaiters;
+}
 #include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
-    extern pollCache pollcache;
     namespace sys = golang::internal::runtime::sys;
-    namespace atomic = golang::internal::runtime::atomic;
 }
-#include "golang/internal/runtime/atomic/types.h"
 #include "golang/internal/runtime/sys/nih.h"
 #include "golang/runtime/time.h"
 
@@ -120,8 +139,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollDesc& value);
-    extern atomic::Uint32 netpollInited;
-    extern atomic::Uint32 netpollWaiters;
     std::tuple<pollDesc*, int64_t> poll_runtime_pollOpen(uintptr_t fd);
     void poll_runtime_pollClose(pollDesc* pd);
     int64_t poll_runtime_pollReset(pollDesc* pd, int64_t mode);

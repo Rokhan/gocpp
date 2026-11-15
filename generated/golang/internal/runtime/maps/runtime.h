@@ -20,9 +20,6 @@ namespace golang::internal::runtime::maps
     //go:linkname errNilAssign
     extern gocpp::error errNilAssign;
 }
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/map.fwd.h"
-#include "golang/internal/abi/runtime.fwd.h"
 #include "golang/internal/abi/type.fwd.h"
 
 namespace golang::internal::runtime::maps
@@ -30,8 +27,9 @@ namespace golang::internal::runtime::maps
     namespace abi = golang::internal::abi;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/internal/abi/runtime.h"
-#include "golang/internal/runtime/maps/map.fwd.h"
+#include "golang/internal/abi/runtime.fwd.h"
+#include "golang/internal/abi/map.fwd.h"
+#include "golang/internal/abi/funcpc.fwd.h"
 
 namespace golang::internal::runtime::maps
 {
@@ -39,13 +37,23 @@ namespace golang::internal::runtime::maps
     void typedmemclr(abi::Type* typ, gocpp::unsafe_pointer ptr);
     gocpp::unsafe_pointer newarray(abi::Type* typ, int64_t n);
     gocpp::unsafe_pointer newobject(abi::Type* typ);
+}
+#include "golang/internal/runtime/maps/map.fwd.h"
+
+namespace golang::internal::runtime::maps
+{
+    gocpp::unsafe_pointer runtime_mapaccess1(abi::MapType* typ, golang::internal::runtime::maps::Map* m, gocpp::unsafe_pointer key);
+    std::tuple<gocpp::unsafe_pointer, bool> runtime_mapaccess2(abi::MapType* typ, golang::internal::runtime::maps::Map* m, gocpp::unsafe_pointer key);
+    gocpp::unsafe_pointer runtime_mapassign(abi::MapType* typ, golang::internal::runtime::maps::Map* m, gocpp::unsafe_pointer key);
+}
+#include "golang/internal/abi/runtime.h"
+
+namespace golang::internal::runtime::maps
+{
     // TODO: move zeroVal to internal/abi?
     //
     //go:linkname zeroVal runtime.zeroVal
     extern gocpp::array<unsigned char, abi::ZeroValSize> zeroVal;
-    gocpp::unsafe_pointer runtime_mapaccess1(abi::MapType* typ, golang::internal::runtime::maps::Map* m, gocpp::unsafe_pointer key);
-    std::tuple<gocpp::unsafe_pointer, bool> runtime_mapaccess2(abi::MapType* typ, golang::internal::runtime::maps::Map* m, gocpp::unsafe_pointer key);
-    gocpp::unsafe_pointer runtime_mapassign(abi::MapType* typ, golang::internal::runtime::maps::Map* m, gocpp::unsafe_pointer key);
 
     namespace rec
     {

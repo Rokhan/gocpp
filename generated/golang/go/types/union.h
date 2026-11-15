@@ -35,25 +35,33 @@ namespace golang::go::types
 namespace golang::go::types
 {
     using Term = gocpp::defined<golang::go::types::term, GoTag_Term>;
+    Union* NewUnion(gocpp::slice<golang::go::types::Term*> terms);
+    int64_t overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    golang::go::types::Term* NewTerm(bool tilde, golang::go::types::Type typ);
 }
 #include "golang/go/ast/ast.fwd.h"
 
 namespace golang::go::types
 {
-    Union* NewUnion(gocpp::slice<golang::go::types::Term*> terms);
-    int64_t overlappingTerm(gocpp::slice<golang::go::types::Term*> terms, golang::go::types::Term* y);
     namespace ast = golang::go::ast;
 }
 #include "golang/go/ast/ast.h"
-#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    std::tuple<gocpp::slice<ast::Expr>, gocpp::slice<ast::Expr>> flattenUnion(gocpp::slice<ast::Expr> list, ast::Expr x);
+}
 #include "golang/go/types/check.fwd.h"
 
 namespace golang::go::types
 {
-    golang::go::types::Term* NewTerm(bool tilde, golang::go::types::Type typ);
     golang::go::types::Type parseUnion(Checker* check, ast::Expr uexpr);
     golang::go::types::Term* parseTilde(Checker* check, ast::Expr tx);
-    std::tuple<gocpp::slice<ast::Expr>, gocpp::slice<ast::Expr>> flattenUnion(gocpp::slice<ast::Expr> list, ast::Expr x);
 }
 
 #include "golang/go/types/type.h"

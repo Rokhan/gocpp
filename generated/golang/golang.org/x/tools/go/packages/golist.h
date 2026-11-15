@@ -28,12 +28,6 @@ namespace golang::golang_org::x::tools::go::packages
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        gocpp::string Error(const gocpp::PtrRecv<struct goTooOldError, false>& self);
-        gocpp::string Error(const gocpp::ObjRecv<struct goTooOldError>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct goTooOldError& value);
     gocpp::slice<gocpp::string> appendUniqueStrings(gocpp::slice<gocpp::string> dst, gocpp::slice<gocpp::string> src);
     gocpp::slice<gocpp::string> absJoin(gocpp::string dir, gocpp::slice<gocpp::slice<gocpp::string>> fileses);
@@ -51,8 +45,14 @@ namespace golang::golang_org::x::tools::go::packages
     }
     bool containsGoFile(gocpp::slice<gocpp::string> s);
 }
-#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
 #include "golang/golang.org/x/tools/go/packages/packages.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    gocpp::string jsonFlag(Config* cfg, int64_t goVersion);
+    gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int64_t goVersion);
+}
+#include "golang/golang.org/x/tools/go/packages/external.fwd.h"
 
 namespace golang::golang_org::x::tools::go::packages
 {
@@ -74,69 +74,13 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct responseDeduper& value);
-    gocpp::string jsonFlag(Config* cfg, int64_t goVersion);
-    gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int64_t goVersion);
-}
-#include "golang/context/context.fwd.h"
-#include "golang/golang.org/x/tools/internal/gocommand/invoke.fwd.h"
-#include "golang/golang.org/x/tools/internal/gocommand/version.fwd.h"
-#include "golang/golang.org/x/tools/internal/packagesinternal/packages.fwd.h"
-#include "golang/os/exec/exec.fwd.h"
-#include "golang/os/exec/lp_windows.fwd.h"
-#include "golang/sync/once.fwd.h"
-
-namespace golang::golang_org::x::tools::go::packages
-{
     responseDeduper* newDeduper();
 }
-#include "golang/context/context.h"
-
-namespace golang::golang_org::x::tools::go::packages
-{
-    namespace context = golang::context;
-    namespace gocommand = golang::golang_org::x::tools::internal::gocommand;
-    namespace sync = golang::sync;
-}
-#include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
-#include "golang/sync/once.h"
+#include "golang/golang.org/x/tools/internal/packagesinternal/packages.fwd.h"
 
 namespace golang::golang_org::x::tools::go::packages
 {
     namespace packagesinternal = golang::golang_org::x::tools::internal::packagesinternal;
-    namespace exec = golang::os::exec;
-    struct golistState
-    {
-        Config* cfg{};
-        context::Context ctx{};
-        gocommand::Runner* runner{};
-        // overlay is the JSON file that encodes the Config.Overlay
-        // mapping, used by 'go list -overlay=...'.
-        gocpp::string overlay{};
-        sync::Once envOnce{};
-        gocpp::error goEnvError{};
-        gocpp::map<gocpp::string, gocpp::string> goEnv{};
-        sync::Once rootsOnce{};
-        gocpp::error rootDirsError{};
-        gocpp::map<gocpp::string, gocpp::string> rootDirs{};
-        sync::Once goVersionOnce{};
-        gocpp::error goVersionError{};
-        int64_t goVersion{}; // The X in Go 1.X.
-        // vendorDirs caches the (non)existence of vendor directories.
-        gocpp::map<gocpp::string, bool> vendorDirs{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct golistState& value);
-    std::tuple<DriverResponse*, gocpp::error> goListDriver(Config* cfg, gocommand::Runner* runner, gocpp::string overlay, gocpp::slice<gocpp::string> patterns);
     struct jsonPackage
     {
         gocpp::string ImportPath{};
@@ -185,9 +129,83 @@ namespace golang::golang_org::x::tools::go::packages
     };
 
     std::ostream& operator<<(std::ostream& os, const struct jsonPackage& value);
-    gocpp::string cmdDebugStr(exec::Cmd* cmd);
-    std::tuple<gocpp::string, gocpp::string, gocpp::error> getSizesForArgs(context::Context ctx, gocommand::Invocation inv, gocommand::Runner* gocmdRunner);
     gocpp::slice<gocpp::slice<gocpp::string>> otherFiles(jsonPackage* p);
+}
+#include "golang/os/exec/exec.fwd.h"
+#include "golang/os/exec/lp_windows.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace exec = golang::os::exec;
+    gocpp::string cmdDebugStr(exec::Cmd* cmd);
+}
+#include "golang/golang.org/x/tools/internal/gocommand/invoke.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace gocommand = golang::golang_org::x::tools::internal::gocommand;
+}
+#include "golang/golang.org/x/tools/internal/gocommand/version.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    std::tuple<DriverResponse*, gocpp::error> goListDriver(Config* cfg, gocommand::Runner* runner, gocpp::string overlay, gocpp::slice<gocpp::string> patterns);
+}
+#include "golang/context/context.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace context = golang::context;
+}
+#include "golang/context/context.h"
+#include "golang/golang.org/x/tools/internal/gocommand/invoke.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    std::tuple<gocpp::string, gocpp::string, gocpp::error> getSizesForArgs(context::Context ctx, gocommand::Invocation inv, gocommand::Runner* gocmdRunner);
+}
+#include "golang/sync/once.fwd.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    namespace sync = golang::sync;
+}
+#include "golang/sync/once.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    struct golistState
+    {
+        Config* cfg{};
+        context::Context ctx{};
+        gocommand::Runner* runner{};
+        // overlay is the JSON file that encodes the Config.Overlay
+        // mapping, used by 'go list -overlay=...'.
+        gocpp::string overlay{};
+        sync::Once envOnce{};
+        gocpp::error goEnvError{};
+        gocpp::map<gocpp::string, gocpp::string> goEnv{};
+        sync::Once rootsOnce{};
+        gocpp::error rootDirsError{};
+        gocpp::map<gocpp::string, gocpp::string> rootDirs{};
+        sync::Once goVersionOnce{};
+        gocpp::error goVersionError{};
+        int64_t goVersion{}; // The X in Go 1.X.
+        // vendorDirs caches the (non)existence of vendor directories.
+        gocpp::map<gocpp::string, bool> vendorDirs{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct golistState& value);
 }
 
 #include "golang/bytes/buffer.h"
@@ -201,6 +219,8 @@ namespace golang::golang_org::x::tools::go::packages
 
     namespace rec
     {
+        gocpp::string Error(const gocpp::PtrRecv<struct goTooOldError, false>& self);
+        gocpp::string Error(const gocpp::ObjRecv<struct goTooOldError>& self);
         void addAll(responseDeduper* r, DriverResponse* dr);
         void addPackage(responseDeduper* r, Package* p);
         void addRoot(responseDeduper* r, gocpp::string id);

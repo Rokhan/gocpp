@@ -55,8 +55,8 @@ namespace golang::strings
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stringFinder& value);
-    int64_t longestCommonSuffix(gocpp::string a, gocpp::string b);
     stringFinder* makeStringFinder(gocpp::string pattern);
+    int64_t longestCommonSuffix(gocpp::string a, gocpp::string b);
 
     namespace rec
     {

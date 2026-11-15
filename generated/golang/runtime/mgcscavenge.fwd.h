@@ -49,37 +49,41 @@ namespace golang::runtime
     // scavChunkMaxFlags is the maximum number of flags we can have, given how
     // a scavChunkData is packed into 8 bytes.
     inline constexpr long scavChunkMaxFlags = 6;
+    inline constexpr int64_t scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
     struct GoTag_scavChunkFlags;
     using scavChunkFlags = gocpp::defined<uint8_t, GoTag_scavChunkFlags>;
-    struct piController;
     // scavChunkHasFree indicates whether the chunk has anything left to
     // scavenge. This is the opposite of "empty," used elsewhere in this
     // file. The reason we say "HasFree" here is so the zero value is
     // correct for a newly-grown chunk. (New memory is scavenged.)
     inline constexpr scavChunkFlags scavChunkHasFree = 1 << 0;
-    inline constexpr int64_t scavChunkFlagsMask = (1 << scavChunkMaxFlags) - 1;
+    struct piController;
 }
-#include "golang/runtime/malloc.fwd.h"
-#include "golang/runtime/mheap.fwd.h"
 #include "golang/runtime/mpagealloc.fwd.h"
 
 namespace golang::runtime
 {
-    // maxPagesPerPhysPage is the maximum number of supported runtime pages per
-    // physical page, based on maxPhysPageSize.
-    inline constexpr int64_t maxPagesPerPhysPage = maxPhysPageSize / pageSize;
     inline constexpr uint16_t scavChunkHiOccPages = uint16_t(scavChunkHiOccFrac * pallocChunkPages);
     // logScavChunkInUseMax is the number of bits needed to represent the number
     // of pages allocated in a single chunk. This is 1 more than log2 of the
     // number of pages in the chunk because we need to represent a fully-allocated
     // chunk.
     inline constexpr int64_t logScavChunkInUseMax = logPallocChunkPages + 1;
+    inline constexpr int64_t scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
+}
+#include "golang/runtime/malloc.fwd.h"
+#include "golang/runtime/mheap.fwd.h"
+
+namespace golang::runtime
+{
+    // maxPagesPerPhysPage is the maximum number of supported runtime pages per
+    // physical page, based on maxPhysPageSize.
+    inline constexpr int64_t maxPagesPerPhysPage = maxPhysPageSize / pageSize;
 }
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 
 namespace golang::runtime
 {
-    inline constexpr int64_t scavChunkInUseMask = (1 << logScavChunkInUseMax) - 1;
     namespace goos = golang::internal::goos;
     // scavengeCostRatio is the approximate ratio between the costs of using previously
     // scavenged memory and scavenging memory.

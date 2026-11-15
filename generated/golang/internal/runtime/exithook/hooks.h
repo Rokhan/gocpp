@@ -29,14 +29,14 @@ namespace golang::internal::runtime::exithook
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Hook& value);
+    extern gocpp::slice<Hook> hooks;
     extern bool running;
     // runtime sets these for us
     extern std::function<void ()> Gosched;
     extern std::function<uint64_t ()> Goid;
     extern std::function<void (gocpp::string _1)> Throw;
-    void Run(int64_t code);
-    extern gocpp::slice<Hook> hooks;
     void Add(Hook h);
+    void Run(int64_t code);
 }
 #include "golang/internal/runtime/atomic/types.fwd.h"
 

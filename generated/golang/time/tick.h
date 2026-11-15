@@ -30,8 +30,8 @@ namespace golang::time
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Ticker& value);
-    gocpp::channel<Time> Tick(Duration d);
     Ticker* NewTicker(Duration d);
+    gocpp::channel<Time> Tick(Duration d);
 }
 
 #include "golang/time/time.h"

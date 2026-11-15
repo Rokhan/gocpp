@@ -252,6 +252,91 @@ namespace golang::io::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct DirEntry& value);
+    struct ReadDirFile : virtual gocpp::Interface, File
+    {
+        using gocpp::Interface::operator==;
+        using gocpp::Interface::operator!=;
+
+        ReadDirFile(){}
+        ReadDirFile(ReadDirFile& i) = default;
+        ReadDirFile(const ReadDirFile& i) = default;
+        ReadDirFile& operator=(ReadDirFile& i) = default;
+        ReadDirFile& operator=(const ReadDirFile& i) = default;
+
+        inline ReadDirFile(nullptr_t) {};
+        ReadDirFile& operator=(nullptr_t) { mValue.reset(); }
+
+        template<typename T>
+        ReadDirFile(T& ref);
+
+        template<typename T>
+        ReadDirFile(const T& ref);
+
+        template<typename T>
+        ReadDirFile(T* ptr);
+
+        using isGoInterface = void;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+
+        struct IReadDirFile: virtual File::IFile
+        {
+            // ReadDir reads the contents of the directory and returns
+            // a slice of up to n DirEntry values in directory order.
+            // Subsequent calls on the same file will yield further DirEntry values.
+            // If n > 0, ReadDir returns at most n DirEntry structures.
+            // In this case, if ReadDir returns an empty slice, it will return
+            // a non-nil error explaining why.
+            // At the end of a directory, the error is io.EOF.
+            // (ReadDir must return io.EOF itself, not an error wrapping io.EOF.)
+            // If n <= 0, ReadDir returns all remaining DirEntry values from the directory
+            // in a single slice. In this case, if ReadDir succeeds (reads all the way
+            // to the end of the directory), it returns the slice and a nil error.
+            // If it encounters an error before the end of the directory,
+            // ReadDir returns the DirEntry list read until that point and a non-nil error.
+            virtual std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int64_t n) = 0;
+            virtual void* getPtr() = 0;
+        };
+
+        template<typename T, typename TStore, typename TInterface = IReadDirFile>
+        struct ReadDirFileImpl : virtual TInterface, virtual File::FileImpl<T, TStore, TInterface>
+        {
+            explicit ReadDirFileImpl(T* ptr): File::FileImpl<T, TStore, TInterface>(ptr)
+            {
+                value.reset(ptr);
+            }
+
+            std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int64_t n) override;
+
+            void* getPtr() override
+            {
+                return value.get();
+            }
+
+            TStore value;
+        };
+
+        inline IReadDirFile* value() const;
+
+        std::shared_ptr<IReadDirFile> mValue;
+    };
+
+    namespace rec
+    {
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int64_t n);
+        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int64_t n);
+
+        gocpp::error Close(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
+        gocpp::error Close(const gocpp::ObjRecv<struct ReadDirFile>& self);
+
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0);
+        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0);
+
+        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
+        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const struct ReadDirFile& value);
     // Generic file system errors.
     // Errors returned by file systems can be tested against these errors
     // using [errors.Is].
@@ -350,93 +435,7 @@ namespace golang::io::fs
     }
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct ReadDirFile : virtual gocpp::Interface, File
-    {
-        using gocpp::Interface::operator==;
-        using gocpp::Interface::operator!=;
-
-        ReadDirFile(){}
-        ReadDirFile(ReadDirFile& i) = default;
-        ReadDirFile(const ReadDirFile& i) = default;
-        ReadDirFile& operator=(ReadDirFile& i) = default;
-        ReadDirFile& operator=(const ReadDirFile& i) = default;
-
-        inline ReadDirFile(nullptr_t) {};
-        ReadDirFile& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        ReadDirFile(T& ref);
-
-        template<typename T>
-        ReadDirFile(const T& ref);
-
-        template<typename T>
-        ReadDirFile(T* ptr);
-
-        using isGoInterface = void;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-
-        struct IReadDirFile: virtual File::IFile
-        {
-            // ReadDir reads the contents of the directory and returns
-            // a slice of up to n DirEntry values in directory order.
-            // Subsequent calls on the same file will yield further DirEntry values.
-            // If n > 0, ReadDir returns at most n DirEntry structures.
-            // In this case, if ReadDir returns an empty slice, it will return
-            // a non-nil error explaining why.
-            // At the end of a directory, the error is io.EOF.
-            // (ReadDir must return io.EOF itself, not an error wrapping io.EOF.)
-            // If n <= 0, ReadDir returns all remaining DirEntry values from the directory
-            // in a single slice. In this case, if ReadDir succeeds (reads all the way
-            // to the end of the directory), it returns the slice and a nil error.
-            // If it encounters an error before the end of the directory,
-            // ReadDir returns the DirEntry list read until that point and a non-nil error.
-            virtual std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int64_t n) = 0;
-            virtual void* getPtr() = 0;
-        };
-
-        template<typename T, typename TStore, typename TInterface = IReadDirFile>
-        struct ReadDirFileImpl : virtual TInterface, virtual File::FileImpl<T, TStore, TInterface>
-        {
-            explicit ReadDirFileImpl(T* ptr): File::FileImpl<T, TStore, TInterface>(ptr)
-            {
-                value.reset(ptr);
-            }
-
-            std::tuple<gocpp::slice<DirEntry>, gocpp::error> vReadDir(int64_t n) override;
-
-            void* getPtr() override
-            {
-                return value.get();
-            }
-
-            TStore value;
-        };
-
-        inline IReadDirFile* value() const;
-
-        std::shared_ptr<IReadDirFile> mValue;
-    };
-
-    namespace rec
-    {
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::PtrRecv<struct ReadDirFile, false>& self, int64_t n);
-        std::tuple<gocpp::slice<DirEntry>, gocpp::error> ReadDir(const gocpp::ObjRecv<struct ReadDirFile>& self, int64_t n);
-
-        gocpp::error Close(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
-        gocpp::error Close(const gocpp::ObjRecv<struct ReadDirFile>& self);
-
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct ReadDirFile, false>& self, gocpp::slice<unsigned char> param0);
-        std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct ReadDirFile>& self, gocpp::slice<unsigned char> param0);
-
-        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::PtrRecv<struct ReadDirFile, false>& self);
-        std::tuple<fs::FileInfo, gocpp::error> Stat(const gocpp::ObjRecv<struct ReadDirFile>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct ReadDirFile& value);
 }
-#include "golang/time/time.fwd.h"
 #include "golang/time/time.h"
 
 namespace golang::io::fs

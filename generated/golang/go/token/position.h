@@ -53,17 +53,17 @@ namespace golang::go::token
     };
 
     std::ostream& operator<<(std::ostream& os, const struct lineInfo& value);
-    int64_t searchInts(gocpp::slice<int64_t> a, int64_t x);
     int64_t searchLineInfos(gocpp::slice<lineInfo> a, int64_t x);
+    int64_t searchInts(gocpp::slice<int64_t> a, int64_t x);
 }
 #include "golang/sync/mutex.fwd.h"
-#include "golang/sync/rwmutex.fwd.h"
 
 namespace golang::go::token
 {
     namespace sync = golang::sync;
 }
 #include "golang/sync/mutex.h"
+#include "golang/sync/rwmutex.fwd.h"
 
 namespace golang::go::token
 {
@@ -90,7 +90,6 @@ namespace golang::go::token
 
     std::ostream& operator<<(std::ostream& os, const struct File& value);
 }
-#include "golang/sync/atomic/type.fwd.h"
 #include "golang/go/token/tree.h"
 #include "golang/sync/atomic/type.h"
 #include "golang/sync/rwmutex.h"

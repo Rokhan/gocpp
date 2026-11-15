@@ -28,17 +28,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
 
     std::ostream& operator<<(std::ostream& os, const struct anyType& value);
 }
-#include "golang/go/types/basic.fwd.h"
-#include "golang/go/types/type.fwd.h"
-#include "golang/go/types/universe.fwd.h"
 #include "golang/sync/mutex.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace sync = golang::sync;
-    namespace types = golang::go::types;
 }
-#include "golang/go/types/type.h"
 #include "golang/sync/mutex.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
@@ -48,6 +43,19 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // Cache a distinct result based on the runtime value of any.
     // The pointer value of the any type varies based on GODEBUG settings.
     extern mocklib::Mutex predeclMu;
+}
+#include "golang/go/types/type.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace types = golang::go::types;
+}
+#include "golang/go/types/universe.fwd.h"
+#include "golang/go/types/type.h"
+#include "golang/go/types/basic.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
     extern gocpp::map<types::Type, gocpp::slice<types::Type>> predecl;
     gocpp::slice<types::Type> predeclared();
 }

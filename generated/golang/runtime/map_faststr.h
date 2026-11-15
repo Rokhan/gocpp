@@ -10,17 +10,21 @@
 #include "gocpp/support.h"
 
 #include "golang/internal/abi/map.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+}
 #include "golang/internal/runtime/maps/map.fwd.h"
 
 namespace golang::runtime
 {
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    namespace abi = golang::internal::abi;
     namespace maps = golang::internal::runtime::maps;
+    void mapdelete_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     gocpp::unsafe_pointer mapaccess1_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
     std::tuple<gocpp::unsafe_pointer, bool> mapaccess2_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
     gocpp::unsafe_pointer mapassign_faststr(abi::MapType* t, maps::Map* m, gocpp::string s);
-    void mapdelete_faststr(abi::MapType* t, maps::Map* m, gocpp::string ky);
 
     namespace rec
     {

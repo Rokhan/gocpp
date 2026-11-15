@@ -33,6 +33,7 @@ namespace golang::internal::chacha8rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct State& value);
+    gocpp::slice<unsigned char> Marshal(State* s);
     struct errUnmarshalChaCha8
     {
 
@@ -48,7 +49,6 @@ namespace golang::internal::chacha8rand
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errUnmarshalChaCha8& value);
-    gocpp::slice<unsigned char> Marshal(State* s);
     gocpp::error Unmarshal(State* s, gocpp::slice<unsigned char> data);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }

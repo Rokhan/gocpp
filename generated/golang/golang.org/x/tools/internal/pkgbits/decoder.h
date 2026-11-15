@@ -14,6 +14,13 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 {
     extern gocpp::error overflow;
 }
+#include "golang/strings/reader.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::pkgbits
+{
+    namespace strings = golang::strings;
+    std::tuple<uint64_t, gocpp::error> readUvarint(strings::Reader* r);
+}
 #include "golang/golang.org/x/tools/internal/pkgbits/reloc.h"
 #include "golang/golang.org/x/tools/internal/pkgbits/version.h"
 
@@ -58,13 +65,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     };
 
     std::ostream& operator<<(std::ostream& os, const struct PkgDecoder& value);
-}
-#include "golang/strings/reader.fwd.h"
-
-namespace golang::golang_org::x::tools::internal::pkgbits
-{
     PkgDecoder NewPkgDecoder(gocpp::string pkgPath, gocpp::string input);
-    namespace strings = golang::strings;
 }
 #include "golang/strings/reader.h"
 
@@ -90,7 +91,6 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Decoder& value);
-    std::tuple<uint64_t, gocpp::error> readUvarint(strings::Reader* r);
 }
 
 #include "golang/go/constant/value.h"

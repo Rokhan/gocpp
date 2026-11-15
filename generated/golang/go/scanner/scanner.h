@@ -27,13 +27,13 @@ namespace golang::go::scanner
     gocpp::slice<unsigned char> stripCR(gocpp::slice<unsigned char> b, bool comment);
 }
 #include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::scanner
 {
     namespace token = golang::go::token;
 }
 #include "golang/go/token/position.h"
+#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::scanner
 {

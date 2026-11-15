@@ -29,8 +29,6 @@ namespace golang::image
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Point& value);
-    int64_t mul3NonNeg(int64_t x, int64_t y, int64_t z);
-    int64_t add2NonNeg(int64_t x, int64_t y);
     // ZP is the zero [Point].
     //
     // Deprecated: Use a literal [image.Point] instead.
@@ -58,6 +56,8 @@ namespace golang::image
     // Deprecated: Use a literal [image.Rectangle] instead.
     extern Rectangle ZR;
     Rectangle Rect(int64_t x0, int64_t y0, int64_t x1, int64_t y1);
+    int64_t mul3NonNeg(int64_t x, int64_t y, int64_t z);
+    int64_t add2NonNeg(int64_t x, int64_t y);
 }
 
 #include "golang/image/color/color.h"

@@ -8,31 +8,6 @@ namespace golang::regexp::syntax
 {
     struct Error;
     using ErrorCode = gocpp::string;
-    struct GoTag_Flags;
-    using Flags = gocpp::defined<uint16_t, GoTag_Flags>;
-    // maxHeight is the maximum height of a regexp parse tree.
-    // It is somewhat arbitrarily chosen, but the idea is to be large enough
-    // that no one will actually hit in real use but at the same time small enough
-    // that recursion on the Regexp tree will not hit the 1GB Go stack limit.
-    // The maximum amount of stack for a single recursive frame is probably
-    // closer to 1kB, so this could potentially be raised, but it seems unlikely
-    // that people have regexps nested even this deeply.
-    // We ran a test on Google's C++ code base and turned up only
-    // a single use case with depth > 100; it had depth 128.
-    // Using depth 1000 should be plenty of margin.
-    // As an optimization, we don't even bother calculating heights
-    // until we've allocated at least maxHeight Regexp structures.
-    inline constexpr long maxHeight = 1000;
-    inline constexpr int64_t instSize = 5 * 8;
-    inline constexpr long runeSize = 4;
-    struct parser;
-    struct charGroup;
-    struct aliasesStruct;
-    // minimum and maximum runes involved in folding.
-    // checked during test.
-    inline constexpr long minFold = 0x0041;
-    inline constexpr long maxFold = 0x1e943;
-    struct ranges;
     // Unexpected error
     inline const ErrorCode ErrInternalError = "regexp/syntax: internal error"_s;
     // Parse errors
@@ -51,6 +26,8 @@ namespace golang::regexp::syntax
     inline const ErrorCode ErrUnexpectedParen = "unexpected )"_s;
     inline const ErrorCode ErrNestingDepth = "expression nests too deeply"_s;
     inline const ErrorCode ErrLarge = "expression too large"_s;
+    struct GoTag_Flags;
+    using Flags = gocpp::defined<uint16_t, GoTag_Flags>;
     inline constexpr Flags FoldCase = 1 << 0;
     inline constexpr Flags Literal = 1 << 1;
     inline constexpr Flags ClassNL = 1 << 2;
@@ -61,7 +38,23 @@ namespace golang::regexp::syntax
     inline constexpr Flags UnicodeGroups = 1 << 7;
     inline constexpr Flags WasDollar = 1 << 8;
     inline constexpr Flags Simple = 1 << 9;
+    inline constexpr syntax::Flags MatchNL = ClassNL | DotNL;
+    inline constexpr syntax::Flags Perl = ClassNL | OneLine | PerlX | UnicodeGroups;
     inline constexpr Flags POSIX = 0;
+    // maxHeight is the maximum height of a regexp parse tree.
+    // It is somewhat arbitrarily chosen, but the idea is to be large enough
+    // that no one will actually hit in real use but at the same time small enough
+    // that recursion on the Regexp tree will not hit the 1GB Go stack limit.
+    // The maximum amount of stack for a single recursive frame is probably
+    // closer to 1kB, so this could potentially be raised, but it seems unlikely
+    // that people have regexps nested even this deeply.
+    // We ran a test on Google's C++ code base and turned up only
+    // a single use case with depth > 100; it had depth 128.
+    // Using depth 1000 should be plenty of margin.
+    // As an optimization, we don't even bother calculating heights
+    // until we've allocated at least maxHeight Regexp structures.
+    inline constexpr long maxHeight = 1000;
+    inline constexpr int64_t instSize = 5 * 8;
     // maxSize is the maximum size of a compiled regexp in Insts.
     // It too is somewhat arbitrarily chosen, but the idea is to be large enough
     // to allow significant regexps while at the same time small enough that
@@ -69,6 +62,7 @@ namespace golang::regexp::syntax
     // 128 MB is enough for a 3.3 million Inst structures, which roughly
     // corresponds to a 3.3 MB regexp.
     inline constexpr int64_t maxSize = (128 << 20) / instSize;
+    inline constexpr long runeSize = 4;
     // maxRunes is the maximum number of runes allowed in a regexp tree
     // counting the runes in all the nodes.
     // Ignoring character classes p.numRunes is always less than the length of the regexp.
@@ -85,13 +79,19 @@ namespace golang::regexp::syntax
     // partial sharing between different character classes.
     // So the limit is the best we can do.
     inline constexpr int64_t maxRunes = (128 << 20) / runeSize;
+    struct parser;
+    struct charGroup;
+    struct aliasesStruct;
+    // minimum and maximum runes involved in folding.
+    // checked during test.
+    inline constexpr long minFold = 0x0041;
+    inline constexpr long maxFold = 0x1e943;
+    struct ranges;
 }
 #include "golang/regexp/syntax/regexp.fwd.h"
 
 namespace golang::regexp::syntax
 {
-    inline constexpr syntax::Flags MatchNL = ClassNL | DotNL;
-    inline constexpr syntax::Flags Perl = ClassNL | OneLine | PerlX | UnicodeGroups;
     // Pseudo-ops for parsing stack.
     inline constexpr syntax::Op opLeftParen = opPseudo + 0;
     inline constexpr syntax::Op opVerticalBar = opPseudo + 1;

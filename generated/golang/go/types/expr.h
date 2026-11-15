@@ -44,38 +44,48 @@ namespace golang::go::types
 
     std::ostream& operator<<(std::ostream& os, const struct target& value);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
-#include "golang/go/token/position.fwd.h"
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    target* newTarget(golang::go::types::Type typ, gocpp::string desc);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::types
+{
+    namespace ast = golang::go::ast;
+    gocpp::string opName(ast::Expr e);
+}
+#include "golang/go/constant/value.h"
+
+namespace golang::go::types
+{
+    namespace constant = golang::go::constant;
+    go_any keyVal(constant::Value x);
+}
 #include "golang/go/token/token.fwd.h"
 
 namespace golang::go::types
 {
     namespace token = golang::go::token;
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/constant/value.h"
-#include "golang/go/token/position.h"
 #include "golang/go/token/token.h"
-
-namespace golang::go::types
-{
-    namespace ast = golang::go::ast;
-    namespace constant = golang::go::constant;
-}
-#include "golang/go/types/type.h"
+#include "golang/go/token/position.fwd.h"
 
 namespace golang::go::types
 {
     using opPredicates = gocpp::defined<gocpp::map<token::Token, std::function<bool (golang::go::types::Type _1)>>, GoTag_opPredicates>;
-    token::Pos opPos(ast::Expr x);
-    gocpp::string opName(ast::Expr e);
+    extern opPredicates unaryOpPredicates;
     bool isShift(token::Token op);
     bool isComparison(token::Token op);
-    target* newTarget(golang::go::types::Type typ, gocpp::string desc);
-    go_any keyVal(constant::Value x);
-    extern opPredicates unaryOpPredicates;
     extern opPredicates binaryOpPredicates;
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::types
+{
+    token::Pos opPos(ast::Expr x);
 }
 
 #include "golang/go/ast/ast.h"

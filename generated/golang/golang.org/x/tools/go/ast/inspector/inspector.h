@@ -32,21 +32,24 @@ namespace golang::golang_org::x::tools::go::ast::inspector
 
     std::ostream& operator<<(std::ostream& os, const struct item& value);
 }
-#include "golang/go/ast/ast.fwd.h"
 #include "golang/golang.org/x/tools/go/ast/edge/edge.fwd.h"
 
 namespace golang::golang_org::x::tools::go::ast::inspector
 {
     namespace edge = golang::golang_org::x::tools::go::ast::edge;
 }
-#include "golang/go/ast/ast.h"
 #include "golang/golang.org/x/tools/go/ast/edge/edge.h"
 
 namespace golang::golang_org::x::tools::go::ast::inspector
 {
-    namespace ast = golang::go::ast;
     int32_t packEdgeKindAndIndex(edge::Kind ek, int64_t index);
     std::tuple<edge::Kind, int64_t> unpackEdgeKindAndIndex(int32_t x);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::golang_org::x::tools::go::ast::inspector
+{
+    namespace ast = golang::go::ast;
     struct event
     {
         ast::Node node{};
@@ -82,6 +85,7 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Inspector& value);
+    golang::golang_org::x::tools::go::ast::inspector::Inspector* New(gocpp::slice<ast::File*> files);
     gocpp::slice<event> traverse(gocpp::slice<ast::File*> files);
     struct visitor
     {
@@ -100,7 +104,6 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     };
 
     std::ostream& operator<<(std::ostream& os, const struct visitor& value);
-    golang::golang_org::x::tools::go::ast::inspector::Inspector* New(gocpp::slice<ast::File*> files);
 }
 
 #include "golang/go/ast/ast.h"

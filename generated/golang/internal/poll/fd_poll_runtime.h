@@ -42,20 +42,28 @@ namespace golang::internal::poll
     bool IsPollDescriptor(uintptr_t fd);
 }
 #include "golang/sync/once.fwd.h"
-#include "golang/time/time.fwd.h"
 
 namespace golang::internal::poll
 {
     namespace sync = golang::sync;
-    namespace time = golang::time;
 }
 #include "golang/sync/once.h"
+
+namespace golang::internal::poll
+{
+    extern sync::Once serverInit;
+}
+#include "golang/time/time.fwd.h"
+
+namespace golang::internal::poll
+{
+    namespace time = golang::time;
+}
 #include "golang/time/time.h"
 #include "golang/internal/poll/fd_windows.fwd.h"
 
 namespace golang::internal::poll
 {
-    extern sync::Once serverInit;
     gocpp::error setDeadlineImpl(FD* fd, mocklib::Date t, int64_t mode);
 }
 

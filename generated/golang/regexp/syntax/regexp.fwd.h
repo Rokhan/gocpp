@@ -9,10 +9,6 @@ namespace golang::regexp::syntax
     struct Regexp;
     struct GoTag_Op;
     using Op = gocpp::defined<uint8_t, GoTag_Op>;
-    struct GoTag_printFlags;
-    using printFlags = gocpp::defined<uint8_t, GoTag_printFlags>;
-    inline constexpr long negShift = 5;
-    inline const gocpp::string meta = "\\.+*?()|[]{}^$"_s;
     inline constexpr Op OpNoMatch = 1 + 0;
     inline constexpr Op OpEmptyMatch = 1 + 1;
     inline constexpr Op OpLiteral = 1 + 2;
@@ -33,9 +29,13 @@ namespace golang::regexp::syntax
     inline constexpr Op OpConcat = 1 + 17;
     inline constexpr Op OpAlternate = 1 + 18;
     inline constexpr Op opPseudo = 128;
+    struct GoTag_printFlags;
+    using printFlags = gocpp::defined<uint8_t, GoTag_printFlags>;
     inline constexpr printFlags flagI = 1 << 0;
     inline constexpr printFlags flagM = 1 << 1;
     inline constexpr printFlags flagS = 1 << 2;
     inline constexpr printFlags flagOff = 1 << 3;
     inline constexpr printFlags flagPrec = 1 << 4;
+    inline constexpr long negShift = 5;
+    inline const gocpp::string meta = "\\.+*?()|[]{}^$"_s;
 }

@@ -9,12 +9,16 @@
 #include "golang/golang.org/x/tools/internal/event/core/event.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
 #include "golang/time/time.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::event::core
 {
     namespace time = golang::time;
+}
+#include "golang/golang.org/x/tools/internal/event/label/label.fwd.h"
+
+namespace golang::golang_org::x::tools::internal::event::core
+{
     namespace label = golang::golang_org::x::tools::internal::event::label;
 }
 #include "golang/golang.org/x/tools/internal/event/label/label.h"

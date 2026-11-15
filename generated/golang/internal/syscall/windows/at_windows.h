@@ -20,17 +20,17 @@ namespace golang::internal::syscall::windows
     using SymlinkatFlags = gocpp::defined<uint64_t, GoTag_SymlinkatFlags>;
     gocpp::error withPrivilege(gocpp::string privilege, std::function<gocpp::error ()> f);
 }
-#include "golang/syscall/security_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
 }
+#include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/security_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {

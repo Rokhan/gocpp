@@ -10,6 +10,9 @@ namespace golang::runtime
     // allocated off-heap to avoid blowing up the M and hence the GC'd
     // heap size.
     inline constexpr int64_t debugLogBytes = 16 << 10;
+    // debugLogStringLimit is the maximum number of bytes in a string.
+    // Above this, the string will be truncated with "..(n more bytes).."
+    inline constexpr int64_t debugLogStringLimit = debugLogBytes / 8;
     struct dloggerImpl;
     struct dloggerFake;
     inline constexpr int64_t debugLogUnknown = 1 + 0;
@@ -30,11 +33,8 @@ namespace golang::runtime
     // debugLogHeaderSize is the number of bytes in the framing
     // header of every dlog record.
     inline constexpr long debugLogHeaderSize = 2;
-    struct debugLogReader;
-    struct gocpp_id_0;
-    // debugLogStringLimit is the maximum number of bytes in a string.
-    // Above this, the string will be truncated with "..(n more bytes).."
-    inline constexpr int64_t debugLogStringLimit = debugLogBytes / 8;
     // debugLogSyncSize is the number of bytes in a sync record.
     inline constexpr int64_t debugLogSyncSize = debugLogHeaderSize + 2 * 8;
+    struct debugLogReader;
+    struct gocpp_id_0;
 }

@@ -10,8 +10,6 @@
 #include "gocpp/support.h"
 
 #include "golang/compress/flate/deflate.fwd.h"
-#include "golang/hash/hash.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::compress::zlib
 {

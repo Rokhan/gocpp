@@ -8,7 +8,6 @@ namespace golang::go::types
 {
     struct GoTag_operandMode;
     using operandMode = gocpp::defined<unsigned char, GoTag_operandMode>;
-    struct operand;
     inline constexpr operandMode invalid = 0;
     inline constexpr operandMode novalue = 1;
     inline constexpr operandMode builtin = 2;
@@ -21,4 +20,5 @@ namespace golang::go::types
     inline constexpr operandMode commaok = 9;
     inline constexpr operandMode commaerr = 10;
     inline constexpr operandMode cgofunc = 11;
+    struct operand;
 }

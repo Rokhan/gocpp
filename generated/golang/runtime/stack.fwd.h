@@ -28,39 +28,26 @@ namespace golang::runtime
 }
 #include "golang/internal/abi/funcpc.fwd.h"
 #include "golang/internal/abi/stack.fwd.h"
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
-#include "golang/internal/goos/zgoos_windows.fwd.h"
 #include "golang/internal/runtime/sys/consts.fwd.h"
 #include "golang/internal/runtime/sys/intrinsics.fwd.h"
 #include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
-    namespace goos = golang::internal::goos;
-    namespace goarch = golang::internal::goarch;
     namespace abi = golang::internal::abi;
     namespace sys = golang::internal::runtime::sys;
-    // stackSystem is a number of additional bytes to add
-    // to each stack below the usual guard area for OS-specific
-    // purposes like signal handling. Used on Windows, Plan 9,
-    // and iOS because they do not use a separate stack.
-    inline constexpr int64_t stackSystem = goos::IsWindows * 4096 + goos::IsPlan9 * 512 + goos::IsIos * goarch::IsArm64 * 1024;
     // stackNosplit is the maximum number of bytes that a chain of NOSPLIT
     // functions can use.
     // This arithmetic must match that in cmd/internal/objabi/stack.go:StackNosplit.
     inline constexpr int64_t stackNosplit = abi::StackNosplitBase * sys::StackGuardMultiplier;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goarch = golang::internal::goarch;
     inline constexpr uint64_t uintptrMask = uint64_t((1_bi << (8 * goarch::PtrSize)) - 1_bi);
-    // The minimum stack size to allocate.
-    // The hackery here rounds fixedStack0 up to a power of 2.
-    inline constexpr int64_t fixedStack0 = stackMin + stackSystem;
-    // The stack guard is a pointer this many bytes above the
-    // bottom of the stack.
-    //
-    // The guard leaves enough room for a stackNosplit chain of NOSPLIT calls
-    // plus one stackSmall frame plus stackSystem bytes for the OS.
-    // This arithmetic must match that in cmd/internal/objabi/stack.go:StackLimit.
-    inline constexpr int64_t stackGuard = stackNosplit + stackSystem + abi::StackSmall;
     // Goroutine preemption request.
     // 0xfffffade in hex.
     inline constexpr uint64_t stackPreempt = uint64_t(gocpp::bigint(uintptrMask) & - 1314_bi);
@@ -72,6 +59,20 @@ namespace golang::runtime
     inline constexpr uint64_t stackForceMove = uint64_t(gocpp::bigint(uintptrMask) & - 275_bi);
     // stackPoisonMin is the lowest allowed stack poison value.
     inline constexpr uint64_t stackPoisonMin = uint64_t(gocpp::bigint(uintptrMask) & - 4096_bi);
+}
+#include "golang/internal/goos/zgoos_windows.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goos = golang::internal::goos;
+    // stackSystem is a number of additional bytes to add
+    // to each stack below the usual guard area for OS-specific
+    // purposes like signal handling. Used on Windows, Plan 9,
+    // and iOS because they do not use a separate stack.
+    inline constexpr int64_t stackSystem = goos::IsWindows * 4096 + goos::IsPlan9 * 512 + goos::IsIos * goarch::IsArm64 * 1024;
+    // The minimum stack size to allocate.
+    // The hackery here rounds fixedStack0 up to a power of 2.
+    inline constexpr int64_t fixedStack0 = stackMin + stackSystem;
     inline constexpr int64_t fixedStack1 = fixedStack0 - 1;
     inline constexpr int64_t fixedStack2 = fixedStack1 | (fixedStack1 >> 1);
     inline constexpr int64_t fixedStack3 = fixedStack2 | (fixedStack2 >> 2);
@@ -79,4 +80,11 @@ namespace golang::runtime
     inline constexpr int64_t fixedStack5 = fixedStack4 | (fixedStack4 >> 8);
     inline constexpr int64_t fixedStack6 = fixedStack5 | (fixedStack5 >> 16);
     inline constexpr int64_t fixedStack = fixedStack6 + 1;
+    // The stack guard is a pointer this many bytes above the
+    // bottom of the stack.
+    //
+    // The guard leaves enough room for a stackNosplit chain of NOSPLIT calls
+    // plus one stackSmall frame plus stackSystem bytes for the OS.
+    // This arithmetic must match that in cmd/internal/objabi/stack.go:StackLimit.
+    inline constexpr int64_t stackGuard = stackNosplit + stackSystem + abi::StackSmall;
 }

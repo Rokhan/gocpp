@@ -117,15 +117,7 @@ namespace golang::encoding::json::internal::jsonopts
     struct GoTag_DepthLimit { };
     using DepthLimit = gocpp::defined<int64_t, GoTag_DepthLimit>;
 }
-#include "golang/encoding/json/internal/internal.fwd.h"
-#include "golang/encoding/json/internal/jsonflags/flags.fwd.h"
-
-namespace golang::encoding::json::internal::jsonopts
-{
-    namespace jsonflags = golang::encoding::json::internal::jsonflags;
-}
 #include "golang/encoding/json/internal/internal.h"
-#include "golang/encoding/json/internal/jsonflags/flags.h"
 
 namespace golang::encoding::json::internal::jsonopts
 {
@@ -194,6 +186,26 @@ namespace golang::encoding::json::internal::jsonopts
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Options& value);
+
+    template<typename T>
+    std::tuple<T, bool> GetOption(Options opts, std::function<Options (T _1)> setter);
+
+    template<typename F1>
+    decltype(auto) GetOption(Options opts, F1&& setter)
+    {
+        return GetOption(opts, std::function(std::forward<F1>(setter)));
+    }
+}
+#include "golang/encoding/json/internal/jsonflags/flags.fwd.h"
+
+namespace golang::encoding::json::internal::jsonopts
+{
+    namespace jsonflags = golang::encoding::json::internal::jsonflags;
+}
+#include "golang/encoding/json/internal/jsonflags/flags.h"
+
+namespace golang::encoding::json::internal::jsonopts
+{
     struct Struct
     {
         jsonflags::Flags Flags{};
@@ -219,15 +231,6 @@ namespace golang::encoding::json::internal::jsonopts
     // GetUnknownOption is injected by the "json" package to handle Options
     // declared in that package so that "jsonopts" can handle them.
     extern std::function<std::tuple<go_any, bool> (jsonopts::Struct, jsonopts::Options)> GetUnknownOption;
-
-    template<typename T>
-    std::tuple<T, bool> GetOption(Options opts, std::function<Options (T _1)> setter);
-
-    template<typename F1>
-    decltype(auto) GetOption(Options opts, F1&& setter)
-    {
-        return GetOption(opts, std::function(std::forward<F1>(setter)));
-    }
     // JoinUnknownOption is injected by the "json" package to handle Options
     // declared in that package so that "jsonopts" can handle them.
     extern std::function<jsonopts::Struct (jsonopts::Struct, jsonopts::Options)> JoinUnknownOption;

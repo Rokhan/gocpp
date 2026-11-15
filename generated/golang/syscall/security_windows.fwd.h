@@ -49,6 +49,22 @@ namespace golang::syscall
     inline constexpr int64_t TOKEN_ADJUST_GROUPS = 1 << 6;
     inline constexpr int64_t TOKEN_ADJUST_DEFAULT = 1 << 7;
     inline constexpr int64_t TOKEN_ADJUST_SESSIONID = 1 << 8;
+    inline constexpr int64_t TOKEN_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED |
+            TOKEN_ASSIGN_PRIMARY |
+            TOKEN_DUPLICATE |
+            TOKEN_IMPERSONATE |
+            TOKEN_QUERY |
+            TOKEN_QUERY_SOURCE |
+            TOKEN_ADJUST_PRIVILEGES |
+            TOKEN_ADJUST_GROUPS |
+            TOKEN_ADJUST_DEFAULT |
+            TOKEN_ADJUST_SESSIONID;
+    inline constexpr int64_t TOKEN_READ = STANDARD_RIGHTS_READ | TOKEN_QUERY;
+    inline constexpr int64_t TOKEN_WRITE = STANDARD_RIGHTS_WRITE |
+            TOKEN_ADJUST_PRIVILEGES |
+            TOKEN_ADJUST_GROUPS |
+            TOKEN_ADJUST_DEFAULT;
+    inline constexpr int64_t TOKEN_EXECUTE = STANDARD_RIGHTS_EXECUTE;
     // do not reorder
     inline constexpr int64_t TokenUser = 1 + 0;
     inline constexpr int64_t TokenGroups = 1 + 1;
@@ -83,22 +99,6 @@ namespace golang::syscall
     struct Tokenuser;
     struct Tokenprimarygroup;
     struct GoTag_Token;
-    inline constexpr int64_t TOKEN_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED |
-            TOKEN_ASSIGN_PRIMARY |
-            TOKEN_DUPLICATE |
-            TOKEN_IMPERSONATE |
-            TOKEN_QUERY |
-            TOKEN_QUERY_SOURCE |
-            TOKEN_ADJUST_PRIVILEGES |
-            TOKEN_ADJUST_GROUPS |
-            TOKEN_ADJUST_DEFAULT |
-            TOKEN_ADJUST_SESSIONID;
-    inline constexpr int64_t TOKEN_READ = STANDARD_RIGHTS_READ | TOKEN_QUERY;
-    inline constexpr int64_t TOKEN_WRITE = STANDARD_RIGHTS_WRITE |
-            TOKEN_ADJUST_PRIVILEGES |
-            TOKEN_ADJUST_GROUPS |
-            TOKEN_ADJUST_DEFAULT;
-    inline constexpr int64_t TOKEN_EXECUTE = STANDARD_RIGHTS_EXECUTE;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 

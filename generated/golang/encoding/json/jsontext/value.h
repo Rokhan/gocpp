@@ -36,12 +36,17 @@ namespace golang::encoding::json::jsontext
     };
 
     std::ostream& operator<<(std::ostream& os, const struct objectMember& value);
-    void mustReorderObjects(gocpp::slice<unsigned char> b);
     gocpp::slice<objectMember>* getObjectMembers();
     void putObjectMembers(gocpp::slice<objectMember>* ns);
+    void mustReorderObjects(gocpp::slice<unsigned char> b);
+}
+#include "golang/encoding/json/jsontext/decode.fwd.h"
+
+namespace golang::encoding::json::jsontext
+{
+    void mustReorderObjectsFromDecoder(golang::encoding::json::jsontext::Decoder* d, gocpp::slice<unsigned char>* scratch);
 }
 #include "golang/encoding/json/jsontext/options.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
 
 namespace golang::encoding::json::jsontext
 {
@@ -60,7 +65,6 @@ namespace golang::encoding::json::jsontext
     {
         return AppendFormat(dst, src, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, opts...));
     }
-    void mustReorderObjectsFromDecoder(golang::encoding::json::jsontext::Decoder* d, gocpp::slice<unsigned char>* scratch);
 }
 #include "golang/sync/pool.fwd.h"
 

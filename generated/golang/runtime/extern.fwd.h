@@ -3,17 +3,21 @@
 
 #include "gocpp/support.fwd.h"
 
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 #include "golang/internal/goos/zgoos_windows.fwd.h"
 
 namespace golang::runtime
 {
     namespace goos = golang::internal::goos;
-    namespace goarch = golang::internal::goarch;
     // GOOS is the running program's operating system target:
     // one of darwin, freebsd, linux, and so on.
     // To view possible combinations of GOOS and GOARCH, run "go tool dist list".
     inline const gocpp::string GOOS = goos::GOOS;
+}
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goarch = golang::internal::goarch;
     // GOARCH is the running program's architecture target:
     // one of 386, amd64, arm, s390x, and so on.
     inline const gocpp::string GOARCH = goarch::GOARCH;

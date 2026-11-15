@@ -4,6 +4,11 @@
 #include "gocpp/support.fwd.h"
 
 #include "golang/syscall/exec_windows.fwd.h"
+
+namespace golang::os
+{
+    namespace syscall = golang::syscall;
+}
 #include "golang/syscall/syscall_windows.fwd.h"
 #include "golang/syscall/types_windows.fwd.h"
 #include "golang/syscall/zerrors_windows.fwd.h"
@@ -11,6 +16,5 @@
 
 namespace golang::os
 {
-    namespace syscall = golang::syscall;
     using sysfdType = syscall::Handle;
 }

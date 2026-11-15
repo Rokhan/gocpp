@@ -17,16 +17,20 @@ namespace golang::go::types
     struct GoTag_nodeQueue { };
     using nodeQueue = gocpp::defined<gocpp::slice<graphNode*>, GoTag_nodeQueue>;
 }
-#include "golang/go/token/position.h"
 #include "golang/go/types/object.h"
-#include "golang/go/types/type.h"
-#include "golang/go/types/package.fwd.h"
 #include "golang/go/types/resolver.fwd.h"
-#include "golang/go/types/scope.fwd.h"
 
 namespace golang::go::types
 {
     gocpp::slice<Object> findPath(gocpp::map<Object, declInfo*> objMap, Object from, Object to, gocpp::map<Object, bool> seen);
+}
+#include "golang/go/token/position.h"
+#include "golang/go/types/type.h"
+#include "golang/go/types/package.fwd.h"
+#include "golang/go/types/scope.fwd.h"
+
+namespace golang::go::types
+{
     struct dependency : virtual gocpp::Interface, Object
     {
         using gocpp::Interface::operator==;

@@ -11,15 +11,6 @@ namespace golang::runtime
     struct pTraceState;
     struct GoTag_traceBlockReason;
     using traceBlockReason = gocpp::defined<uint8_t, GoTag_traceBlockReason>;
-    struct GoTag_traceGoStopReason;
-    using traceGoStopReason = gocpp::defined<uint8_t, GoTag_traceGoStopReason>;
-    struct traceLocker;
-    // debugTraceReentrancy checks if the trace is reentrant.
-    //
-    // This is optional because throwing in a function makes it instantly
-    // not inlineable, and we want traceAcquire to be inlineable for
-    // low overhead when the trace is disabled.
-    inline constexpr bool debugTraceReentrancy = false;
     inline constexpr traceBlockReason traceBlockGeneric = 0;
     inline constexpr traceBlockReason traceBlockForever = 1;
     inline constexpr traceBlockReason traceBlockNet = 2;
@@ -37,7 +28,16 @@ namespace golang::runtime
     inline constexpr traceBlockReason traceBlockSleep = 14;
     inline constexpr traceBlockReason traceBlockGCWeakToStrongWait = 15;
     inline constexpr traceBlockReason traceBlockSynctest = 16;
+    struct GoTag_traceGoStopReason;
+    using traceGoStopReason = gocpp::defined<uint8_t, GoTag_traceGoStopReason>;
     inline constexpr traceGoStopReason traceGoStopGeneric = 0;
     inline constexpr traceGoStopReason traceGoStopGoSched = 1;
     inline constexpr traceGoStopReason traceGoStopPreempted = 2;
+    struct traceLocker;
+    // debugTraceReentrancy checks if the trace is reentrant.
+    //
+    // This is optional because throwing in a function makes it instantly
+    // not inlineable, and we want traceAcquire to be inlineable for
+    // low overhead when the trace is disabled.
+    inline constexpr bool debugTraceReentrancy = false;
 }

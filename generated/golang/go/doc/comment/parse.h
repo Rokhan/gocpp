@@ -93,6 +93,25 @@ namespace golang::go::doc::comment
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Block& value);
+    struct Doc
+    {
+        // Content is the sequence of content blocks in the comment.
+        gocpp::slice<Block> Content{};
+        // Links is the link definitions in the comment.
+        gocpp::slice<LinkDef*> Links{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Doc& value);
     struct List
     {
         // Items is the list items.
@@ -124,6 +143,28 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct List& value);
+    struct ListItem
+    {
+        // Number is a decimal string in a numbered list
+        // or an empty string in a bullet list.
+        gocpp::string Number{}; // "1", "2", ...; "" for bullet list
+        // Content is the list content.
+        // Currently, restrictions in the parser and printer
+        // require every element of Content to be a *Paragraph.
+        gocpp::slice<Block> Content{}; // Content of this item.
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct ListItem& value);
     struct Code
     {
         // Text is the preformatted text, ending with a newline character.
@@ -206,76 +247,6 @@ namespace golang::go::doc::comment
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Text& value);
-    struct parseDoc
-    {
-        Parser* Parser{};
-        Doc* Doc{};
-        gocpp::map<gocpp::string, LinkDef*> links{};
-        gocpp::slice<gocpp::string> lines{};
-        std::function<bool (gocpp::string recv, gocpp::string name)> lookupSym{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        comment::Doc* Parse(const gocpp::PtrRecv<struct parseDoc, false>& self, gocpp::string text);
-        comment::Doc* Parse(const gocpp::ObjRecv<struct parseDoc>& self, gocpp::string text);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct parseDoc& value);
-    bool isStdPkg(gocpp::string path);
-    std::tuple<gocpp::string, bool> DefaultLookupPackage(gocpp::string name);
-    struct GoTag_spanKind { };
-    using spanKind = gocpp::defined<int64_t, GoTag_spanKind>;
-    bool indented(gocpp::string line);
-    gocpp::slice<gocpp::string> unindent(gocpp::slice<gocpp::string> lines);
-    bool isBlank(gocpp::string s);
-    gocpp::string commonPrefix(gocpp::string a, gocpp::string b);
-    gocpp::string leadingSpace(gocpp::string s);
-    bool isOldHeading(gocpp::string line, gocpp::slice<gocpp::string> all, int64_t off);
-    bool isHeading(gocpp::string line);
-    std::tuple<gocpp::string, gocpp::string, bool> listMarker(gocpp::string line);
-    bool isList(gocpp::string line);
-    std::tuple<gocpp::string, gocpp::string, bool> splitDocName(gocpp::string text);
-    std::tuple<gocpp::string, bool> autoURL(gocpp::string s);
-    bool isScheme(gocpp::string s);
-    bool isHost(unsigned char c);
-    bool isPunct(unsigned char c);
-    bool isPath(unsigned char c);
-    bool isName(gocpp::string s);
-    std::tuple<gocpp::string, bool> ident(gocpp::string s);
-    bool isIdentASCII(unsigned char c);
-    bool validImportPath(gocpp::string path);
-    bool validImportPathElem(gocpp::string elem);
-    bool importPathOK(unsigned char c);
-    struct Doc
-    {
-        // Content is the sequence of content blocks in the comment.
-        gocpp::slice<Block> Content{};
-        // Links is the link definitions in the comment.
-        gocpp::slice<LinkDef*> Links{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Doc& value);
     struct Heading
     {
         gocpp::slice<golang::go::doc::comment::Text> Text{}; // the heading text
@@ -292,28 +263,6 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Heading& value);
-    struct ListItem
-    {
-        // Number is a decimal string in a numbered list
-        // or an empty string in a bullet list.
-        gocpp::string Number{}; // "1", "2", ...; "" for bullet list
-        // Content is the list content.
-        // Currently, restrictions in the parser and printer
-        // require every element of Content to be a *Paragraph.
-        gocpp::slice<Block> Content{}; // Content of this item.
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct ListItem& value);
     struct Paragraph
     {
         gocpp::slice<golang::go::doc::comment::Text> Text{};
@@ -375,6 +324,28 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct DocLink& value);
+    struct parseDoc
+    {
+        Parser* Parser{};
+        Doc* Doc{};
+        gocpp::map<gocpp::string, LinkDef*> links{};
+        gocpp::slice<gocpp::string> lines{};
+        std::function<bool (gocpp::string recv, gocpp::string name)> lookupSym{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct parseDoc& value);
+    bool isStdPkg(gocpp::string path);
+    std::tuple<gocpp::string, bool> DefaultLookupPackage(gocpp::string name);
     struct Parser
     {
         // Words is a map of Go identifier words that
@@ -424,6 +395,8 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Parser& value);
+    struct GoTag_spanKind { };
+    using spanKind = gocpp::defined<int64_t, GoTag_spanKind>;
     struct span
     {
         int64_t start{};
@@ -442,8 +415,29 @@ namespace golang::go::doc::comment
     };
 
     std::ostream& operator<<(std::ostream& os, const struct span& value);
-    std::tuple<LinkDef*, bool> parseLink(gocpp::string line);
     gocpp::slice<span> parseSpans(gocpp::slice<gocpp::string> lines);
+    bool indented(gocpp::string line);
+    gocpp::slice<gocpp::string> unindent(gocpp::slice<gocpp::string> lines);
+    bool isBlank(gocpp::string s);
+    gocpp::string commonPrefix(gocpp::string a, gocpp::string b);
+    gocpp::string leadingSpace(gocpp::string s);
+    bool isOldHeading(gocpp::string line, gocpp::slice<gocpp::string> all, int64_t off);
+    bool isHeading(gocpp::string line);
+    std::tuple<LinkDef*, bool> parseLink(gocpp::string line);
+    std::tuple<gocpp::string, gocpp::string, bool> listMarker(gocpp::string line);
+    bool isList(gocpp::string line);
+    std::tuple<gocpp::string, gocpp::string, bool> splitDocName(gocpp::string text);
+    std::tuple<gocpp::string, bool> autoURL(gocpp::string s);
+    bool isScheme(gocpp::string s);
+    bool isHost(unsigned char c);
+    bool isPunct(unsigned char c);
+    bool isPath(unsigned char c);
+    bool isName(gocpp::string s);
+    std::tuple<gocpp::string, bool> ident(gocpp::string s);
+    bool isIdentASCII(unsigned char c);
+    bool validImportPath(gocpp::string path);
+    bool validImportPathElem(gocpp::string elem);
+    bool importPathOK(unsigned char c);
 
     namespace rec
     {
@@ -457,6 +451,8 @@ namespace golang::go::doc::comment
         void text(Italic);
         void text(Link*);
         void text(DocLink*);
+        comment::Doc* Parse(const gocpp::PtrRecv<struct parseDoc, false>& self, gocpp::string text);
+        comment::Doc* Parse(const gocpp::ObjRecv<struct parseDoc>& self, gocpp::string text);
         std::tuple<gocpp::string, bool> lookupPkg(parseDoc* d, gocpp::string pkg);
         Doc* Parse(Parser* p, gocpp::string text);
         Block oldHeading(parseDoc* d, gocpp::string line);

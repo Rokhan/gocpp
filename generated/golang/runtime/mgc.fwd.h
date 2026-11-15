@@ -23,15 +23,6 @@ namespace golang::runtime
     inline constexpr int64_t _GCmarktermination = 2;
     struct GoTag_gcMarkWorkerMode;
     using gcMarkWorkerMode = gocpp::defined<int64_t, GoTag_gcMarkWorkerMode>;
-    struct workType;
-    struct GoTag_gcMode;
-    using gcMode = gocpp::defined<int64_t, GoTag_gcMode>;
-    struct gcTrigger;
-    struct GoTag_gcTriggerKind;
-    using gcTriggerKind = gocpp::defined<int64_t, GoTag_gcTriggerKind>;
-    struct gcDebugMarkDoneStruct;
-    struct gcBgMarkWorkerNode;
-    struct gcBgMarkWorkerNodePadded;
     // gcMarkWorkerNotWorker indicates that the next scheduled G is not
     // starting work and the mode should be ignored.
     inline constexpr gcMarkWorkerMode gcMarkWorkerNotWorker = 0;
@@ -53,9 +44,15 @@ namespace golang::runtime
     // should run until it is preempted and account its time
     // against gcController.idleMarkTime.
     inline constexpr gcMarkWorkerMode gcMarkWorkerIdleMode = 3;
+    struct workType;
+    struct GoTag_gcMode;
+    using gcMode = gocpp::defined<int64_t, GoTag_gcMode>;
     inline constexpr gcMode gcBackgroundMode = 0;
     inline constexpr gcMode gcForceMode = 1;
     inline constexpr gcMode gcForceBlockMode = 2;
+    struct gcTrigger;
+    struct GoTag_gcTriggerKind;
+    using gcTriggerKind = gocpp::defined<int64_t, GoTag_gcTriggerKind>;
     // gcTriggerHeap indicates that a cycle should be started when
     // the heap size reaches the trigger heap size computed by the
     // controller.
@@ -68,6 +65,9 @@ namespace golang::runtime
     // we have not yet started cycle number gcTrigger.n (relative
     // to work.cycles).
     inline constexpr gcTriggerKind gcTriggerCycle = 2;
+    struct gcDebugMarkDoneStruct;
+    struct gcBgMarkWorkerNode;
+    struct gcBgMarkWorkerNodePadded;
 }
 #include "golang/runtime/asan0.fwd.h"
 

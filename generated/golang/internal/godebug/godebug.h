@@ -15,6 +15,8 @@ namespace golang::internal::godebug
     void setUpdate(std::function<void (gocpp::string _1, gocpp::string _2)> update);
     void registerMetric(gocpp::string name, std::function<uint64_t ()> read);
     void init();
+    void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
+    std::function<void ()> newIncNonDefault(gocpp::string name);
     void update(gocpp::string def, gocpp::string env);
     void parse(gocpp::map<gocpp::string, bool> did, gocpp::string s);
     struct runtimeStderr
@@ -32,28 +34,46 @@ namespace golang::internal::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct runtimeStderr& value);
-    void setNewIncNonDefault(std::function<std::function<void ()> (gocpp::string _1)> newIncNonDefault);
-    std::function<void ()> newIncNonDefault(gocpp::string name);
     extern runtimeStderr go_stderr;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     int32_t write(uintptr_t fd, gocpp::unsafe_pointer p, int32_t n);
 }
 #include "golang/internal/bisect/bisect.fwd.h"
-#include "golang/sync/map.fwd.h"
-#include "golang/sync/mutex.fwd.h"
+
+namespace golang::internal::godebug
+{
+    namespace bisect = golang::internal::bisect;
+    struct value
+    {
+        gocpp::string text{};
+        bisect::Matcher* bisect{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct value& value);
+    extern value empty;
+}
 #include "golang/sync/once.fwd.h"
 
 namespace golang::internal::godebug
 {
     namespace sync = golang::sync;
 }
-#include "golang/sync/map.h"
-#include "golang/sync/mutex.h"
 #include "golang/sync/once.h"
+#include "golang/sync/map.fwd.h"
+#include "golang/sync/mutex.fwd.h"
 
 namespace golang::internal::godebug
 {
-    namespace bisect = golang::internal::bisect;
     struct Setting
     {
         gocpp::string name{};
@@ -72,23 +92,12 @@ namespace golang::internal::godebug
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Setting& value);
-    struct value
-    {
-        gocpp::string text{};
-        bisect::Matcher* bisect{};
+    Setting* New(gocpp::string name);
+}
+#include "golang/sync/map.h"
 
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct value& value);
+namespace golang::internal::godebug
+{
     // cache is a cache of all the GODEBUG settings,
     // a locked map[string]*atomic.Pointer[string].
     //
@@ -103,18 +112,21 @@ namespace golang::internal::godebug
     // a name=value pair in the $GODEBUG environment variable.
     // Once entered into the map, the name is never removed.
     extern sync::Map cache;
+}
+#include "golang/sync/mutex.h"
+
+namespace golang::internal::godebug
+{
     extern mocklib::Mutex updateMu;
 }
-#include "golang/internal/godebugs/table.fwd.h"
 #include "golang/sync/atomic/type.fwd.h"
 
 namespace golang::internal::godebug
 {
-    Setting* New(gocpp::string name);
-    extern value empty;
     namespace atomic = golang::sync::atomic;
 }
 #include "golang/sync/atomic/type.h"
+#include "golang/internal/godebugs/table.fwd.h"
 
 namespace golang::internal::godebug
 {

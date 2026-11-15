@@ -16,14 +16,17 @@ namespace golang::internal::syscall::windows::registry
     extern gocpp::error ErrUnexpectedType;
     std::tuple<gocpp::string, gocpp::error> ExpandString(gocpp::string value);
 }
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
 #include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::internal::syscall::windows::registry
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/zsyscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows::registry
+{
     // ErrShortBuffer is returned when the buffer was too short for the operation.
     extern syscall::Errno ErrShortBuffer;
     // ErrNotExist is returned when a registry key or value does not exist.

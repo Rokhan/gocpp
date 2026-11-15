@@ -32,8 +32,19 @@ namespace golang::go::types
     extern gocpp::array<unsigned char, 17> basicSizes;
     int64_t align(int64_t x, int64_t a);
 }
-#include "golang/go/types/type.h"
 #include "golang/go/types/gcsizes.fwd.h"
+
+namespace golang::go::types
+{
+    // common architecture word sizes and alignments
+    extern gocpp::map<gocpp::string, gcSizes*> gcArchSizes;
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    bool _IsSyncAtomicAlign64(golang::go::types::Type T);
+}
 #include "golang/go/types/object.fwd.h"
 
 namespace golang::go::types
@@ -122,9 +133,6 @@ namespace golang::go::types
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Sizes& value);
-    bool _IsSyncAtomicAlign64(golang::go::types::Type T);
-    // common architecture word sizes and alignments
-    extern gocpp::map<gocpp::string, gcSizes*> gcArchSizes;
     Sizes SizesFor(gocpp::string compiler, gocpp::string arch);
     // stdSizes is used if Config.Sizes == nil.
     extern types::Sizes stdSizes;

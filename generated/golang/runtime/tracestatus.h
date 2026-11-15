@@ -9,21 +9,11 @@
 #include "golang/runtime/tracestatus.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/trace/tracev2/events.fwd.h"
-
-namespace golang::runtime
-{
-    namespace tracev2 = golang::internal::trace::tracev2;
-}
 #include "golang/internal/runtime/atomic/types.h"
-#include "golang/internal/trace/tracev2/events.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
-    tracev2::GoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr);
     struct traceSchedResourceState
     {
         // statusTraced indicates whether a status event was traced for this resource
@@ -52,6 +42,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct traceSchedResourceState& value);
+}
+#include "golang/internal/trace/tracev2/events.fwd.h"
+
+namespace golang::runtime
+{
+    namespace tracev2 = golang::internal::trace::tracev2;
+}
+#include "golang/internal/trace/tracev2/events.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    tracev2::GoStatus goStatusToTraceGoStatus(uint32_t status, waitReason wr);
 }
 
 #include "golang/internal/trace/tracev2/events.h"

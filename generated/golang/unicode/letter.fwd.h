@@ -15,6 +15,7 @@ namespace golang::unicode
     struct Range32;
     struct CaseRange;
     struct GoTag_SpecialCase;
+    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     // Indices into the Delta arrays inside CaseRanges for case mapping.
     inline constexpr int64_t UpperCase = 0;
     inline constexpr int64_t LowerCase = 1;
@@ -22,13 +23,12 @@ namespace golang::unicode
     inline constexpr int64_t MaxCase = 3;
     struct GoTag_d;
     using d = gocpp::defined<gocpp::array<gocpp::rune, MaxCase>, GoTag_d>;
-    // linearMax is the maximum size table for linear search for non-Latin1 rune.
-    // Derived by running 'go test -calibrate'.
-    inline constexpr long linearMax = 18;
-    struct foldPair;
-    using SpecialCase = gocpp::defined<gocpp::slice<CaseRange>, GoTag_SpecialCase>;
     // If the Delta field of a [CaseRange] is UpperLower, it means
     // this CaseRange represents a sequence of the form (say)
     // [Upper] [Lower] [Upper] [Lower].
     inline constexpr gocpp::rune UpperLower = MaxRune + 1;
+    // linearMax is the maximum size table for linear search for non-Latin1 rune.
+    // Derived by running 'go test -calibrate'.
+    inline constexpr long linearMax = 18;
+    struct foldPair;
 }

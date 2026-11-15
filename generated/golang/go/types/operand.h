@@ -22,8 +22,6 @@ namespace golang::go::types
 {
     gocpp::string compositeKind(golang::go::types::Type typ);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/constant/value.fwd.h"
 #include "golang/go/ast/ast.h"
 #include "golang/go/constant/value.h"
 

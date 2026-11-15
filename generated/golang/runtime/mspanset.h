@@ -16,11 +16,6 @@ namespace golang::runtime
     using headTailIndex = gocpp::defined<uint64_t, GoTag_headTailIndex>;
     headTailIndex makeHeadTailIndex(uint32_t head, uint32_t tail);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
-#include "golang/runtime/lfstack.h"
-
-namespace golang::runtime
-{
     struct spanSetSpinePointer
     {
         gocpp::unsafe_pointer p{};
@@ -37,6 +32,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetSpinePointer& value);
+}
+#include "golang/runtime/lfstack.h"
+
+namespace golang::runtime
+{
     struct spanSetBlockAlloc
     {
         lfstack stack{};
@@ -53,41 +53,19 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSetBlockAlloc& value);
+    // spanSetBlockPool is a global pool of spanSetBlocks.
+    extern spanSetBlockAlloc spanSetBlockPool;
 }
 #include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
-    // spanSetBlockPool is a global pool of spanSetBlocks.
-    extern spanSetBlockAlloc spanSetBlockPool;
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
-#include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
 {
-    struct spanSetBlockHeader
-    {
-        // Free spanSetBlocks are managed via a lock-free stack.
-        lfnode lfnode{};
-        // popped is the number of pop operations that have occurred on
-        // this block. This number is used to help determine when a block
-        // may be safely recycled.
-        atomic::Uint32 popped{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct spanSetBlockHeader& value);
     struct atomicSpanSetSpinePointer
     {
         atomic::UnsafePointer a{};
@@ -136,6 +114,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct atomicMSpanPointer& value);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct spanSet
     {
         mutex spineLock{};
@@ -166,6 +149,27 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSet& value);
+    struct spanSetBlockHeader
+    {
+        // Free spanSetBlocks are managed via a lock-free stack.
+        lfnode lfnode{};
+        // popped is the number of pop operations that have occurred on
+        // this block. This number is used to help determine when a block
+        // may be safely recycled.
+        atomic::Uint32 popped{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct spanSetBlockHeader& value);
 }
 #include "golang/runtime/tagptr.fwd.h"
 

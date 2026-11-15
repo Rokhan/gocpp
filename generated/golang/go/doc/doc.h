@@ -56,18 +56,10 @@ namespace golang::go::doc
     std::ostream& operator<<(std::ostream& os, const struct Package& value);
 }
 #include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::doc
 {
     namespace ast = golang::go::ast;
-    namespace token = golang::go::token;
-}
-#include "golang/go/token/position.h"
-
-namespace golang::go::doc
-{
     struct Value
     {
         gocpp::string Doc{};
@@ -141,6 +133,36 @@ namespace golang::go::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Func& value);
+    Package* New(ast::Package* pkg, gocpp::string importPath, Mode mode);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::doc
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::doc
+{
+    std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, gocpp::slice<go_any> opts);
+
+    template<typename... Args>
+    std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, Args... opts)
+    {
+        return NewFromFiles(fset, files, importPath, gocpp::ToSlice<go_any>(opts...));
+    }
+
+    template<typename... Args>
+    std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, go_any value, Args... opts)
+    {
+        return NewFromFiles(fset, files, importPath, gocpp::ToSlice<go_any>(value, opts...));
+    }
+}
+#include "golang/go/token/position.h"
+
+namespace golang::go::doc
+{
     struct Note
     {
         token::Pos Pos{}; // position range of the comment containing the marker
@@ -160,20 +182,6 @@ namespace golang::go::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Note& value);
-    Package* New(ast::Package* pkg, gocpp::string importPath, Mode mode);
-    std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, gocpp::slice<go_any> opts);
-
-    template<typename... Args>
-    std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, Args... opts)
-    {
-        return NewFromFiles(fset, files, importPath, gocpp::ToSlice<go_any>(opts...));
-    }
-
-    template<typename... Args>
-    std::tuple<Package*, gocpp::error> NewFromFiles(token::FileSet* fset, gocpp::slice<ast::File*> files, gocpp::string importPath, go_any value, Args... opts)
-    {
-        return NewFromFiles(fset, files, importPath, gocpp::ToSlice<go_any>(value, opts...));
-    }
 }
 
 #include "golang/go/doc/comment/parse.h"

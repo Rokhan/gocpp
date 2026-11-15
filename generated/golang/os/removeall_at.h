@@ -15,11 +15,15 @@ namespace golang::os
     gocpp::error removeAll(gocpp::string path);
 }
 #include "golang/os/root_windows.h"
-#include "golang/os/types.fwd.h"
 
 namespace golang::os
 {
     gocpp::error removeAllFrom(sysfdType parentFd, gocpp::string base);
+}
+#include "golang/os/types.fwd.h"
+
+namespace golang::os
+{
     std::tuple<File*, gocpp::error> openDirAt(sysfdType dirfd, gocpp::string name);
 
     namespace rec

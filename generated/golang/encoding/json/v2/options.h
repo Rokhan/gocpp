@@ -46,12 +46,17 @@ namespace golang::encoding::json::v2
     struct GoTag_unmarshalersOption { };
     void init();
 }
-#include "golang/encoding/json/v2/arshal_funcs.h"
+#include "golang/encoding/json/v2/arshal_funcs.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     golang::encoding::json::v2::Options WithMarshalers(Marshalers* v);
     golang::encoding::json::v2::Options WithUnmarshalers(Unmarshalers* v);
+}
+#include "golang/encoding/json/v2/arshal_funcs.h"
+
+namespace golang::encoding::json::v2
+{
     using marshalersOption = gocpp::defined<Marshalers, GoTag_marshalersOption>;
     using unmarshalersOption = gocpp::defined<Unmarshalers, GoTag_unmarshalersOption>;
 }

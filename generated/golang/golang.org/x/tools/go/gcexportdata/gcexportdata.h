@@ -14,8 +14,6 @@ namespace golang::golang_org::x::tools::go::gcexportdata
 {
     std::tuple<gocpp::string, gocpp::string> Find(gocpp::string importPath, gocpp::string srcDir);
 }
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/types/package.fwd.h"
 #include "golang/io/io.fwd.h"
 
 namespace golang::golang_org::x::tools::go::gcexportdata
@@ -26,10 +24,20 @@ namespace golang::golang_org::x::tools::go::gcexportdata
 
 namespace golang::golang_org::x::tools::go::gcexportdata
 {
-    namespace types = golang::go::types;
-    namespace token = golang::go::token;
     std::tuple<io::Reader, gocpp::error> NewReader(io::Reader r);
     std::tuple<gocpp::slice<unsigned char>, gocpp::error> readAll(io::Reader r);
+}
+#include "golang/go/types/package.fwd.h"
+
+namespace golang::golang_org::x::tools::go::gcexportdata
+{
+    namespace types = golang::go::types;
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::golang_org::x::tools::go::gcexportdata
+{
+    namespace token = golang::go::token;
     std::tuple<types::Package*, gocpp::error> Read(io::Reader in, token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports, gocpp::string path);
     gocpp::error Write(io::Writer out, token::FileSet* fset, types::Package* pkg);
     std::tuple<gocpp::slice<types::Package*>, gocpp::error> ReadBundle(io::Reader in, token::FileSet* fset, gocpp::map<gocpp::string, types::Package*> imports);

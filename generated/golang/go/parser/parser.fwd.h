@@ -19,11 +19,15 @@ namespace golang::go::parser
 }
 #include "golang/go/ast/ast.fwd.h"
 #include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::parser
 {
     namespace token = golang::go::token;
     namespace ast = golang::go::ast;
+}
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::parser
+{
     using parseSpecFunction = std::function<ast::Spec (ast::CommentGroup* doc, token::Token keyword, int64_t iota)>;
 }

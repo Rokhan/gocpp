@@ -34,8 +34,6 @@ namespace golang::internal::reflectlite
     gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x, gocpp::string whySafe);
 }
 #include "golang/internal/abi/type.fwd.h"
-#include "golang/internal/abi/type.h"
-#include "golang/internal/abi/map.fwd.h"
 
 namespace golang::internal::reflectlite
 {
@@ -198,6 +196,28 @@ namespace golang::internal::reflectlite
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
+    rtype toRType(abi::Type* t);
+    abi::Type* elem(abi::Type* t);
+    golang::internal::reflectlite::Type TypeOf(go_any i);
+    bool implements(abi::Type* T, abi::Type* V);
+    bool directlyAssignable(abi::Type* T, abi::Type* V);
+    bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
+    bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
+    golang::internal::reflectlite::Type toType(abi::Type* t);
+}
+#include "golang/internal/abi/type.h"
+
+namespace golang::internal::reflectlite
+{
+    gocpp::string pkgPath(abi::Name n);
+}
+
+#include "golang/internal/abi/type.h"
+
+namespace golang::internal::reflectlite
+{
+
     namespace rec
     {
         int64_t Align(const gocpp::PtrRecv<struct rtype, false>& self);
@@ -250,27 +270,6 @@ namespace golang::internal::reflectlite
         abi::StructType* StructType(const gocpp::ObjRecv<struct rtype>& self);
         abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::UncommonType* Uncommon(const gocpp::ObjRecv<struct rtype>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    gocpp::string pkgPath(abi::Name n);
-    rtype toRType(abi::Type* t);
-    abi::Type* elem(abi::Type* t);
-    golang::internal::reflectlite::Type TypeOf(go_any i);
-    bool implements(abi::Type* T, abi::Type* V);
-    bool directlyAssignable(abi::Type* T, abi::Type* V);
-    bool haveIdenticalType(abi::Type* T, abi::Type* V, bool cmpTags);
-    bool haveIdenticalUnderlyingType(abi::Type* T, abi::Type* V, bool cmpTags);
-    golang::internal::reflectlite::Type toType(abi::Type* t);
-}
-
-#include "golang/internal/abi/type.h"
-
-namespace golang::internal::reflectlite
-{
-
-    namespace rec
-    {
         unsigned char* data(golang::internal::reflectlite::name n, int64_t off, gocpp::string whySafe);
         bool isExported(golang::internal::reflectlite::name n);
         bool hasTag(golang::internal::reflectlite::name n);

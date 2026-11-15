@@ -28,6 +28,10 @@ namespace golang::encoding::binary
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
+    // NativeEndian is the native-endian implementation of [ByteOrder] and [AppendByteOrder].
+    extern nativeEndian NativeEndian;
+
     namespace rec
     {
         gocpp::slice<unsigned char> AppendUint16(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b, uint16_t v);
@@ -52,14 +56,6 @@ namespace golang::encoding::binary
         uint32_t Uint32(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b);
         uint64_t Uint64(const gocpp::PtrRecv<struct nativeEndian, false>& self, gocpp::slice<unsigned char> b);
         uint64_t Uint64(const gocpp::ObjRecv<struct nativeEndian>& self, gocpp::slice<unsigned char> b);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct nativeEndian& value);
-    // NativeEndian is the native-endian implementation of [ByteOrder] and [AppendByteOrder].
-    extern nativeEndian NativeEndian;
-
-    namespace rec
-    {
     }
 }
 

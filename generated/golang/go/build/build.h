@@ -98,102 +98,18 @@ namespace golang::go::build
     bool IsLocalImport(gocpp::string path);
     std::tuple<gocpp::string, gocpp::error> ArchChar(gocpp::string goarch);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/position.fwd.h"
 #include "golang/internal/godebug/godebug.fwd.h"
-#include "golang/io/fs/fs.fwd.h"
-#include "golang/io/fs/readdir.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::go::build
 {
-    namespace fs = golang::io::fs;
-    namespace io = golang::io;
+    namespace godebug = golang::internal::godebug;
+    extern godebug::Setting* installgoroot;
 }
 #include "golang/go/token/position.h"
-#include "golang/io/fs/fs.h"
-#include "golang/io/io.h"
 
 namespace golang::go::build
 {
     namespace token = golang::go::token;
-    namespace godebug = golang::internal::godebug;
-    namespace ast = golang::go::ast;
-    struct Context
-    {
-        gocpp::string GOARCH{}; // target architecture
-        gocpp::string GOOS{}; // target operating system
-        gocpp::string GOROOT{}; // Go root
-        gocpp::string GOPATH{}; // Go paths
-        // Dir is the caller's working directory, or the empty string to use
-        // the current directory of the running process. In module mode, this is used
-        // to locate the main module.
-        // If Dir is non-empty, directories passed to Import and ImportDir must
-        // be absolute.
-        gocpp::string Dir{};
-        bool CgoEnabled{}; // whether cgo files are included
-        bool UseAllFiles{}; // use files regardless of go:build lines, file names
-        gocpp::string Compiler{}; // compiler to assume when computing target paths
-        // The build, tool, and release tags specify build constraints
-        // that should be considered satisfied when processing go:build lines.
-        // Clients creating a new context may customize BuildTags, which
-        // defaults to empty, but it is usually an error to customize ToolTags or ReleaseTags.
-        // ToolTags defaults to build tags appropriate to the current Go toolchain configuration.
-        // ReleaseTags defaults to the list of Go releases the current release is compatible with.
-        // BuildTags is not set for the Default build Context.
-        // In addition to the BuildTags, ToolTags, and ReleaseTags, build constraints
-        // consider the values of GOARCH and GOOS as satisfied tags.
-        // The last element in ReleaseTags is assumed to be the current release.
-        gocpp::slice<gocpp::string> BuildTags{};
-        gocpp::slice<gocpp::string> ToolTags{};
-        gocpp::slice<gocpp::string> ReleaseTags{};
-        // The install suffix specifies a suffix to use in the name of the installation
-        // directory. By default it is empty, but custom builds that need to keep
-        // their outputs separate can set InstallSuffix to do so. For example, when
-        // using the race detector, the go command uses InstallSuffix = "race", so
-        // that on a Linux/386 system, packages are written to a directory named
-        // "linux_386_race" instead of the usual "linux_386".
-        gocpp::string InstallSuffix{};
-        // JoinPath joins the sequence of path fragments into a single path.
-        // If JoinPath is nil, Import uses filepath.Join.
-        std::function<gocpp::string (gocpp::slice<gocpp::string> elem)> JoinPath{};
-        // SplitPathList splits the path list into a slice of individual paths.
-        // If SplitPathList is nil, Import uses filepath.SplitList.
-        std::function<gocpp::slice<gocpp::string> (gocpp::string list)> SplitPathList{};
-        // IsAbsPath reports whether path is an absolute path.
-        // If IsAbsPath is nil, Import uses filepath.IsAbs.
-        std::function<bool (gocpp::string path)> IsAbsPath{};
-        // IsDir reports whether the path names a directory.
-        // If IsDir is nil, Import calls os.Stat and uses the result's IsDir method.
-        std::function<bool (gocpp::string path)> IsDir{};
-        // HasSubdir reports whether dir is lexically a subdirectory of
-        // root, perhaps multiple levels below. It does not try to check
-        // whether dir exists.
-        // If so, HasSubdir sets rel to a slash-separated path that
-        // can be joined to root to produce a path equivalent to dir.
-        // If HasSubdir is nil, Import uses an implementation built on
-        // filepath.EvalSymlinks.
-        std::function<std::tuple<gocpp::string, bool> (gocpp::string root, gocpp::string dir)> HasSubdir{};
-        // ReadDir returns a slice of fs.FileInfo, sorted by Name,
-        // describing the content of the named directory.
-        // If ReadDir is nil, Import uses os.ReadDir.
-        std::function<std::tuple<gocpp::slice<fs::FileInfo>, gocpp::error> (gocpp::string dir)> ReadDir{};
-        // OpenFile opens a file (not a directory) for reading.
-        // If OpenFile is nil, Import uses os.Open.
-        std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> OpenFile{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct Context& value);
     struct Directive
     {
         gocpp::string Text{}; // full line comment including leading slashes
@@ -211,48 +127,6 @@ namespace golang::go::build
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Directive& value);
-    extern godebug::Setting* installgoroot;
-    struct fileImport
-    {
-        gocpp::string path{};
-        token::Pos pos{};
-        ast::CommentGroup* doc{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct fileImport& value);
-    struct fileEmbed
-    {
-        gocpp::string pattern{};
-        token::Position pos{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct fileEmbed& value);
-    std::tuple<gocpp::slice<gocpp::string>, gocpp::map<gocpp::string, gocpp::slice<token::Position>>> cleanDecls(gocpp::map<gocpp::string, gocpp::slice<token::Position>> m);
-    // Default is the default Context for builds.
-    // It uses the GOARCH, GOOS, GOROOT, and GOPATH environment variables
-    // if set, or else the compiled code's GOARCH, GOOS, and GOROOT.
-    extern Context Default;
-    Context defaultContext();
     struct Package
     {
         gocpp::string Dir{}; // directory containing package sources
@@ -330,7 +204,52 @@ namespace golang::go::build
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Package& value);
-    bool hasGoFiles(Context* ctxt, gocpp::string dir);
+    gocpp::slice<gocpp::string>* fileListForExt(Package* p, gocpp::string ext);
+    extern Package dummyPkg;
+    struct fileEmbed
+    {
+        gocpp::string pattern{};
+        token::Position pos{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct fileEmbed& value);
+    std::tuple<gocpp::slice<gocpp::string>, gocpp::map<gocpp::string, gocpp::slice<token::Position>>> cleanDecls(gocpp::map<gocpp::string, gocpp::slice<token::Position>> m);
+    std::tuple<Package*, gocpp::error> Import(gocpp::string path, gocpp::string srcDir, ImportMode mode);
+    std::tuple<Package*, gocpp::error> ImportDir(gocpp::string dir, ImportMode mode);
+}
+#include "golang/go/ast/ast.fwd.h"
+
+namespace golang::go::build
+{
+    namespace ast = golang::go::ast;
+    struct fileImport
+    {
+        gocpp::string path{};
+        token::Pos pos{};
+        ast::CommentGroup* doc{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct fileImport& value);
     struct fileInfo
     {
         gocpp::string name{}; // full name including dir
@@ -354,10 +273,106 @@ namespace golang::go::build
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileInfo& value);
-    gocpp::slice<gocpp::string>* fileListForExt(Package* p, gocpp::string ext);
-    extern Package dummyPkg;
-    std::tuple<Package*, gocpp::error> Import(gocpp::string path, gocpp::string srcDir, ImportMode mode);
-    std::tuple<Package*, gocpp::error> ImportDir(gocpp::string dir, ImportMode mode);
+}
+#include "golang/io/fs/fs.fwd.h"
+
+namespace golang::go::build
+{
+    namespace fs = golang::io::fs;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::go::build
+{
+    namespace io = golang::io;
+}
+#include "golang/io/fs/readdir.fwd.h"
+#include "golang/io/fs/fs.h"
+#include "golang/io/io.h"
+
+namespace golang::go::build
+{
+    struct Context
+    {
+        gocpp::string GOARCH{}; // target architecture
+        gocpp::string GOOS{}; // target operating system
+        gocpp::string GOROOT{}; // Go root
+        gocpp::string GOPATH{}; // Go paths
+        // Dir is the caller's working directory, or the empty string to use
+        // the current directory of the running process. In module mode, this is used
+        // to locate the main module.
+        // If Dir is non-empty, directories passed to Import and ImportDir must
+        // be absolute.
+        gocpp::string Dir{};
+        bool CgoEnabled{}; // whether cgo files are included
+        bool UseAllFiles{}; // use files regardless of go:build lines, file names
+        gocpp::string Compiler{}; // compiler to assume when computing target paths
+        // The build, tool, and release tags specify build constraints
+        // that should be considered satisfied when processing go:build lines.
+        // Clients creating a new context may customize BuildTags, which
+        // defaults to empty, but it is usually an error to customize ToolTags or ReleaseTags.
+        // ToolTags defaults to build tags appropriate to the current Go toolchain configuration.
+        // ReleaseTags defaults to the list of Go releases the current release is compatible with.
+        // BuildTags is not set for the Default build Context.
+        // In addition to the BuildTags, ToolTags, and ReleaseTags, build constraints
+        // consider the values of GOARCH and GOOS as satisfied tags.
+        // The last element in ReleaseTags is assumed to be the current release.
+        gocpp::slice<gocpp::string> BuildTags{};
+        gocpp::slice<gocpp::string> ToolTags{};
+        gocpp::slice<gocpp::string> ReleaseTags{};
+        // The install suffix specifies a suffix to use in the name of the installation
+        // directory. By default it is empty, but custom builds that need to keep
+        // their outputs separate can set InstallSuffix to do so. For example, when
+        // using the race detector, the go command uses InstallSuffix = "race", so
+        // that on a Linux/386 system, packages are written to a directory named
+        // "linux_386_race" instead of the usual "linux_386".
+        gocpp::string InstallSuffix{};
+        // JoinPath joins the sequence of path fragments into a single path.
+        // If JoinPath is nil, Import uses filepath.Join.
+        std::function<gocpp::string (gocpp::slice<gocpp::string> elem)> JoinPath{};
+        // SplitPathList splits the path list into a slice of individual paths.
+        // If SplitPathList is nil, Import uses filepath.SplitList.
+        std::function<gocpp::slice<gocpp::string> (gocpp::string list)> SplitPathList{};
+        // IsAbsPath reports whether path is an absolute path.
+        // If IsAbsPath is nil, Import uses filepath.IsAbs.
+        std::function<bool (gocpp::string path)> IsAbsPath{};
+        // IsDir reports whether the path names a directory.
+        // If IsDir is nil, Import calls os.Stat and uses the result's IsDir method.
+        std::function<bool (gocpp::string path)> IsDir{};
+        // HasSubdir reports whether dir is lexically a subdirectory of
+        // root, perhaps multiple levels below. It does not try to check
+        // whether dir exists.
+        // If so, HasSubdir sets rel to a slash-separated path that
+        // can be joined to root to produce a path equivalent to dir.
+        // If HasSubdir is nil, Import uses an implementation built on
+        // filepath.EvalSymlinks.
+        std::function<std::tuple<gocpp::string, bool> (gocpp::string root, gocpp::string dir)> HasSubdir{};
+        // ReadDir returns a slice of fs.FileInfo, sorted by Name,
+        // describing the content of the named directory.
+        // If ReadDir is nil, Import uses os.ReadDir.
+        std::function<std::tuple<gocpp::slice<fs::FileInfo>, gocpp::error> (gocpp::string dir)> ReadDir{};
+        // OpenFile opens a file (not a directory) for reading.
+        // If OpenFile is nil, Import uses os.Open.
+        std::function<std::tuple<io::ReadCloser, gocpp::error> (gocpp::string path)> OpenFile{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Context& value);
+    // Default is the default Context for builds.
+    // It uses the GOARCH, GOOS, GOROOT, and GOPATH environment variables
+    // if set, or else the compiled code's GOARCH, GOOS, and GOROOT.
+    extern Context Default;
+    Context defaultContext();
+    bool hasGoFiles(Context* ctxt, gocpp::string dir);
 }
 
 #include "golang/go/ast/ast.h"

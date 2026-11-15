@@ -11,10 +11,10 @@ namespace golang::runtime
     using profAtomic = gocpp::defined<uint64_t, GoTag_profAtomic>;
     struct GoTag_profIndex;
     using profIndex = gocpp::defined<uint64_t, GoTag_profIndex>;
-    struct GoTag_profBufReadMode;
-    using profBufReadMode = gocpp::defined<int64_t, GoTag_profBufReadMode>;
     inline constexpr profIndex profReaderSleeping = 1LL << 32;
     inline constexpr profIndex profWriteExtra = 1LL << 33;
+    struct GoTag_profBufReadMode;
+    using profBufReadMode = gocpp::defined<int64_t, GoTag_profBufReadMode>;
     inline constexpr profBufReadMode profBufBlocking = 0;
     inline constexpr profBufReadMode profBufNonBlocking = 1;
 }

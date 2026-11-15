@@ -14,13 +14,13 @@ namespace golang::internal::fmtsort
 {
     struct GoTag_SortedMap { };
 }
-#include "golang/reflect/type.fwd.h"
 #include "golang/reflect/value.fwd.h"
 
 namespace golang::internal::fmtsort
 {
     namespace reflect = golang::reflect;
 }
+#include "golang/reflect/type.fwd.h"
 #include "golang/reflect/value.h"
 
 namespace golang::internal::fmtsort
@@ -42,10 +42,10 @@ namespace golang::internal::fmtsort
     };
 
     std::ostream& operator<<(std::ostream& os, const struct KeyValue& value);
-    int64_t compare(reflect::Value aVal, reflect::Value bVal);
-    std::tuple<int64_t, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);
     using SortedMap = gocpp::defined<gocpp::slice<KeyValue>, GoTag_SortedMap>;
     SortedMap Sort(reflect::Value mapValue);
+    int64_t compare(reflect::Value aVal, reflect::Value bVal);
+    std::tuple<int64_t, bool> nilCompare(reflect::Value aVal, reflect::Value bVal);
 
     namespace rec
     {

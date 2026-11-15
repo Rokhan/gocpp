@@ -30,11 +30,21 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct xRegPerG& value);
     void xRegInitAlloc();
 }
-#include "golang/runtime/mfixalloc.h"
-#include "golang/runtime/preempt_amd64.h"
-#include "golang/runtime/runtime2.h"
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    void xRegSave(g* gp);
+    void xRegRestore(g* gp);
+}
 #include "golang/runtime/mgcstack.fwd.h"
 #include "golang/runtime/mgcwork.fwd.h"
+
+namespace golang::runtime
+{
+    void xRegScan(g* gp, gcWork* gcw, stackScanState* state);
+}
+#include "golang/runtime/preempt_amd64.h"
 
 namespace golang::runtime
 {
@@ -64,33 +74,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct xRegPerP& value);
-    struct xRegAllocStruct
-    {
-        mutex lock{};
-        fixalloc alloc{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct xRegAllocStruct& value);
-    void xRegSave(g* gp);
-    void xRegRestore(g* gp);
-    void xRegScan(g* gp, gcWork* gcw, stackScanState* state);
 }
 #include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
-    // xRegAlloc allocates xRegState objects.
-    extern xRegAllocStruct xRegAlloc;
     namespace sys = golang::internal::runtime::sys;
 }
 #include "golang/internal/runtime/sys/nih.h"
@@ -114,6 +102,31 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct xRegState& value);
+}
+#include "golang/runtime/mfixalloc.h"
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    struct xRegAllocStruct
+    {
+        mutex lock{};
+        fixalloc alloc{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct xRegAllocStruct& value);
+    // xRegAlloc allocates xRegState objects.
+    extern xRegAllocStruct xRegAlloc;
 
     namespace rec
     {

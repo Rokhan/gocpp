@@ -14,6 +14,10 @@ namespace golang::main
     inline constexpr int64_t c5 = 5;
     struct GoTag_Kind;
     using Kind = gocpp::defined<uint64_t, GoTag_Kind>;
+    inline constexpr Kind Invalid = 0;
+    inline constexpr Kind Bool = 1;
+    inline constexpr Kind Int = 2;
+    inline constexpr Kind Int8 = 3;
     inline constexpr int64_t a = 1 << 0;
     inline constexpr int64_t b = 1 << 1;
     inline constexpr int64_t c = 1 << 2;
@@ -32,8 +36,4 @@ namespace golang::main
     inline constexpr int64_t mask1 = (1 << 1) - 1;
     inline constexpr int64_t bit3 = 1 << 3;
     inline constexpr int64_t mask3 = (1 << 3) - 1;
-    inline constexpr Kind Invalid = 0;
-    inline constexpr Kind Bool = 1;
-    inline constexpr Kind Int = 2;
-    inline constexpr Kind Int8 = 3;
 }

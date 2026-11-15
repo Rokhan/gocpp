@@ -9,10 +9,10 @@ namespace golang::go::types
     struct GoTag_opPredicates;
     struct GoTag_exprKind;
     using exprKind = gocpp::defined<int64_t, GoTag_exprKind>;
-    struct target;
     inline constexpr exprKind conversion = 0;
     inline constexpr exprKind expression = 1;
     inline constexpr exprKind statement = 2;
+    struct target;
 }
 #include "golang/go/token/position.fwd.h"
 #include "golang/go/token/token.fwd.h"

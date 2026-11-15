@@ -17,24 +17,35 @@ namespace golang::go::doc
     std::tuple<gocpp::string, gocpp::string, bool> splitExampleName(gocpp::string s, int64_t i);
     bool isExampleSuffix(gocpp::string s);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/ast/scope.fwd.h"
-#include "golang/go/ast/walk.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 #include "golang/internal/lazyregexp/lazyre.fwd.h"
+
+namespace golang::go::doc
+{
+    namespace lazyregexp = golang::internal::lazyregexp;
+    extern lazyregexp::Regexp* outputPrefix;
+}
+#include "golang/go/ast/ast.fwd.h"
 
 namespace golang::go::doc
 {
     namespace ast = golang::go::ast;
 }
-#include "golang/go/ast/ast.h"
-#include "golang/go/token/position.h"
+#include "golang/go/ast/scope.fwd.h"
+#include "golang/go/ast/walk.fwd.h"
 
 namespace golang::go::doc
 {
-    namespace token = golang::go::token;
-    namespace lazyregexp = golang::internal::lazyregexp;
+    std::tuple<gocpp::string, bool, bool> exampleOutput(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> comments);
+    ast::File* playExample(ast::File* file, ast::FuncDecl* f);
+    gocpp::slice<ast::ImportSpec*> findImportGroupStarts1(gocpp::slice<ast::ImportSpec*> origImps);
+    ast::File* playExampleFile(ast::File* file);
+    std::tuple<ast::BlockStmt*, gocpp::slice<ast::CommentGroup*>> stripOutputComment(ast::BlockStmt* body, gocpp::slice<ast::CommentGroup*> comments);
+    std::tuple<int64_t, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c);
+}
+#include "golang/go/ast/ast.h"
+
+namespace golang::go::doc
+{
     struct Example
     {
         gocpp::string Name{}; // name of the item being exemplified (including optional suffix)
@@ -60,17 +71,6 @@ namespace golang::go::doc
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Example& value);
-    extern lazyregexp::Regexp* outputPrefix;
-    std::tuple<gocpp::string, bool, bool> exampleOutput(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> comments);
-    ast::File* playExample(ast::File* file, ast::FuncDecl* f);
-    std::tuple<gocpp::slice<ast::Decl>, gocpp::map<gocpp::string, bool>> findDeclsAndUnresolved(ast::Node body, gocpp::map<ast::Object*, ast::Decl> topDecls, gocpp::map<gocpp::string, gocpp::slice<ast::Decl>> typMethods);
-    bool hasIota(ast::Spec s);
-    gocpp::slice<token::Pos> findImportGroupStarts(gocpp::slice<ast::ImportSpec*> imps);
-    gocpp::slice<ast::ImportSpec*> findImportGroupStarts1(gocpp::slice<ast::ImportSpec*> origImps);
-    ast::File* playExampleFile(ast::File* file);
-    std::tuple<ast::BlockStmt*, gocpp::slice<ast::CommentGroup*>> stripOutputComment(ast::BlockStmt* body, gocpp::slice<ast::CommentGroup*> comments);
-    std::tuple<int64_t, ast::CommentGroup*> lastComment(ast::BlockStmt* b, gocpp::slice<ast::CommentGroup*> c);
-    void updateBasicLitPos(ast::BasicLit* lit, token::Pos pos);
     gocpp::slice<Example*> Examples(gocpp::slice<ast::File*> testFiles);
 
     template<typename... Args>
@@ -84,12 +84,23 @@ namespace golang::go::doc
     {
         return Examples(gocpp::ToSlice<ast::File*>(value, testFiles...));
     }
+    std::tuple<gocpp::slice<ast::Decl>, gocpp::map<gocpp::string, bool>> findDeclsAndUnresolved(ast::Node body, gocpp::map<ast::Object*, ast::Decl> topDecls, gocpp::map<gocpp::string, gocpp::slice<ast::Decl>> typMethods);
+    bool hasIota(ast::Spec s);
 }
 #include "golang/go/doc/doc.fwd.h"
 
 namespace golang::go::doc
 {
     void classifyExamples(Package* p, gocpp::slice<Example*> examples);
+}
+#include "golang/go/token/position.h"
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::doc
+{
+    namespace token = golang::go::token;
+    gocpp::slice<token::Pos> findImportGroupStarts(gocpp::slice<ast::ImportSpec*> imps);
+    void updateBasicLitPos(ast::BasicLit* lit, token::Pos pos);
 
     namespace rec
     {

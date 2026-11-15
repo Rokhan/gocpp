@@ -19,11 +19,11 @@ namespace golang::internal::runtime::maps
     using bitset = gocpp::defined<uint64_t, GoTag_bitset>;
     struct GoTag_ctrl;
     using ctrl = gocpp::defined<uint8_t, GoTag_ctrl>;
+    inline constexpr ctrl ctrlEmpty = 0b10000000;
+    inline constexpr ctrl ctrlDeleted = 0b11111110;
+    inline constexpr uint64_t bitsetEmpty = int64_t(bitsetLSB) * uint64_t(int64_t(ctrlEmpty));
     struct GoTag_ctrlGroup;
     using ctrlGroup = gocpp::defined<uint64_t, GoTag_ctrlGroup>;
     struct groupReference;
     struct groupsReference;
-    inline constexpr ctrl ctrlEmpty = 0b10000000;
-    inline constexpr ctrl ctrlDeleted = 0b11111110;
-    inline constexpr uint64_t bitsetEmpty = int64_t(bitsetLSB) * uint64_t(int64_t(ctrlEmpty));
 }

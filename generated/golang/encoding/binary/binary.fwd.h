@@ -12,7 +12,7 @@ namespace golang::encoding::binary
     struct bigEndian;
     struct coder;
     struct GoTag_decoder;
-    struct GoTag_encoder;
     using decoder = gocpp::defined<coder, GoTag_decoder>;
+    struct GoTag_encoder;
     using encoder = gocpp::defined<coder, GoTag_encoder>;
 }

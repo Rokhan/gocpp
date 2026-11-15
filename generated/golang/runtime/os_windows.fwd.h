@@ -17,8 +17,6 @@ namespace golang::runtime
     // part in 4.
     inline constexpr double osRelaxMinNS = 60 * 1e6;
     inline constexpr bool preemptMSupported = true;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    using stdFunction = gocpp::unsafe_pointer;
 }
 #include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
 #include "golang/internal/runtime/syscall/windows/defs_windows_amd64.fwd.h"
@@ -28,4 +26,6 @@ namespace golang::runtime
 {
     namespace windows = golang::internal::runtime::syscall::windows;
     using winlibcall = windows::StdCallInfo;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    using stdFunction = gocpp::unsafe_pointer;
 }

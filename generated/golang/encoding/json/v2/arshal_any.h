@@ -9,15 +9,23 @@
 #include "golang/encoding/json/v2/arshal_any.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/encode.fwd.h"
-#include "golang/encoding/json/jsontext/token.fwd.h"
 
 namespace golang::encoding::json::v2
 {
     namespace jsontext = golang::encoding::json::jsontext;
+}
+#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
+
+namespace golang::encoding::json::v2
+{
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
+}
+#include "golang/encoding/json/jsontext/token.fwd.h"
+#include "golang/encoding/json/jsontext/decode.fwd.h"
+
+namespace golang::encoding::json::v2
+{
     gocpp::error marshalValueAny(jsontext::Encoder* enc, go_any val, jsonopts::Struct* mo);
     std::tuple<go_any, gocpp::error> unmarshalValueAny(jsontext::Decoder* dec, jsonopts::Struct* uo);
     gocpp::error marshalObjectAny(jsontext::Encoder* enc, gocpp::map<gocpp::string, go_any> obj, jsonopts::Struct* mo);

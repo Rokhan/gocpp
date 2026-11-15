@@ -77,6 +77,7 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Fetcher& value);
+    void Crawl(gocpp::string url, int64_t depth, Fetcher fetcher);
     void main();
     struct GoTag_fakeFetcher { };
     using fakeFetcher = gocpp::defined<gocpp::map<gocpp::string, fakeResult*>, GoTag_fakeFetcher>;
@@ -97,7 +98,6 @@ namespace golang::main
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fakeResult& value);
-    void Crawl(gocpp::string url, int64_t depth, Fetcher fetcher);
     // fetcher is a populated fakeFetcher.
     extern fakeFetcher fetcher;
 

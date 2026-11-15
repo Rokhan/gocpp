@@ -65,8 +65,33 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
 }
 #include "golang/internal/runtime/sys/nih.h"
-#include "golang/runtime/mgcwork.h"
 #include "golang/runtime/stack.fwd.h"
+
+namespace golang::runtime
+{
+    struct stackObject
+    {
+        sys::NotInHeap _1{};
+        uint32_t off{}; // offset above stack.lo
+        uint32_t size{}; // size of object
+        stackObjectRecord* r{}; // info of the object (for ptr/nonptr bits). nil if object has been scanned.
+        stackObject* left{}; // objects with lower addresses
+        stackObject* right{}; // objects with higher addresses
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackObject& value);
+}
+#include "golang/runtime/mgcwork.h"
 
 namespace golang::runtime
 {
@@ -106,52 +131,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBufHdr& value);
-    struct stackObject
-    {
-        sys::NotInHeap _1{};
-        uint32_t off{}; // offset above stack.lo
-        uint32_t size{}; // size of object
-        stackObjectRecord* r{}; // info of the object (for ptr/nonptr bits). nil if object has been scanned.
-        stackObject* left{}; // objects with lower addresses
-        stackObject* right{}; // objects with higher addresses
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackObject& value);
-}
-#include "golang/internal/goarch/goarch.fwd.h"
-
-namespace golang::runtime
-{
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    namespace goarch = golang::internal::goarch;
-    struct stackWorkBuf
-    {
-        sys::NotInHeap _1{};
-        stackWorkBufHdr stackWorkBufHdr{};
-        /* gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj; [Known incomplete type] */
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
     struct stackObjectBuf
     {
         sys::NotInHeap _1{};
@@ -171,6 +151,30 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct stackObjectBuf& value);
     std::tuple<stackObject*, stackObjectBuf*, int64_t> binarySearchTree(stackObjectBuf* x, int64_t idx, int64_t n);
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goarch = golang::internal::goarch;
+    struct stackWorkBuf
+    {
+        sys::NotInHeap _1{};
+        stackWorkBufHdr stackWorkBufHdr{};
+        gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct stackWorkBuf& value);
 }
 
 #include "golang/runtime/stack.h"

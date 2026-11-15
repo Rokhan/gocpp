@@ -188,28 +188,19 @@ namespace golang::runtime
     extern bool isarchive;
     uintptr_t getcallerfp();
 }
-#include "golang/runtime/lfstack.h"
-#include "golang/runtime/lockrank.h"
-#include "golang/runtime/lockrank_off.h"
-#include "golang/runtime/proc.h"
-
-namespace golang::runtime
-{
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-}
 #include "golang/runtime/mheap.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
-    struct mutex
+    struct gocpp_id_0
     {
-        // Empty struct if lock ranking is disabled, otherwise includes the lock rank
-        lockRankStruct lockRankStruct{};
-        // Futex-based impl treats it as uint32 key,
-        // while sema-based impl as M* waitm.
-        // Used to be a union, but unions break precise GC.
-        uintptr_t key{};
+        // We need an explicit length here because this field is used
+        // in allocation codepaths where write barriers are not allowed,
+        // and eliminating the write barrier/keeping it eliminated from
+        // slice updates is tricky, more so than just managing the length
+        // ourselves.
+        int64_t len{};
+        gocpp::array<mspan*, 128> buf{};
 
         using isGoStruct = void;
 
@@ -222,7 +213,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct mutex& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct iface
     {
         itab* tab{};
@@ -240,23 +232,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct iface& value);
-    struct eface
-    {
-        _type* _type{};
-        gocpp::unsafe_pointer data{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct eface& value);
     struct gobuf
     {
         // ctxt is unusual with respect to GC: it may be a
@@ -305,149 +280,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct maybeTraceablePtr& value);
-    struct heldLockInfo
-    {
-        uintptr_t lockAddr{};
-        lockRank rank{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct heldLockInfo& value);
-    struct gocpp_id_0
-    {
-        // We need an explicit length here because this field is used
-        // in allocation codepaths where write barriers are not allowed,
-        // and eliminating the write barrier/keeping it eliminated from
-        // slice updates is tricky, more so than just managing the length
-        // ourselves.
-        int64_t len{};
-        gocpp::array<mspan*, 128> buf{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct gocpp_id_1
-    {
-        // user disables scheduling of user goroutines.
-        bool user{};
-        gQueue runnable{}; // pending runnable Gs
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct _panic
-    {
-        go_any arg{}; // argument to panic
-        _panic* link{}; // link to earlier panic
-        // startPC and startSP track where _panic.start was called.
-        // (These are the SP and PC of the gopanic frame itself.)
-        uintptr_t startPC{};
-        gocpp::unsafe_pointer startSP{};
-        // The current stack frame that we're running deferred calls for.
-        uintptr_t pc{};
-        gocpp::unsafe_pointer sp{};
-        gocpp::unsafe_pointer fp{};
-        // retpc stores the PC where the panic should jump back to, if the
-        // function last returned by _panic.nextDefer() recovers the panic.
-        uintptr_t retpc{};
-        // Extra state for handling open-coded defers.
-        uint8_t* deferBitsPtr{};
-        gocpp::unsafe_pointer slotsPtr{};
-        bool recovered{}; // whether this panic has been recovered
-        bool repanicked{}; // whether this panic repanicked
-        bool goexit{};
-        bool deferreturn{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _panic& value);
-    // Bitmask of Ps in _Pidle list, one bit per P. Reads and writes must
-    // be atomic. Length may change at safe points.
-    //
-    // Each P must update only its own bit. In order to maintain
-    // consistency, a P going idle must set the idle mask simultaneously with
-    // updates to the idle P list under the sched.lock, otherwise a racing
-    // pidleget may clear the mask before pidleput sets the mask,
-    // corrupting the bitmap.
-    //
-    // N.B., procresize takes ownership of all Ps in stopTheWorldWithSema.
-    extern pMask idlepMask;
-    // Bitmask of Ps that may have a timer, one bit per P. Reads and writes
-    // must be atomic. Length may change at safe points.
-    //
-    // Ideally, the timer mask would be kept immediately consistent on any timer
-    // operations. Unfortunately, updating a shared global data structure in the
-    // timer hot path adds too much overhead in applications frequently switching
-    // between no timers and some timers.
-    //
-    // As a compromise, the timer mask is updated only on pidleget / pidleput. A
-    // running P (returned by pidleget) may add a timer at any time, so its mask
-    // must be set. An idle P (passed to pidleput) cannot add new timers while
-    // idle, so if it has no timers at that time, its mask may be cleared.
-    //
-    // Thus, we get the following effects on timer-stealing in findRunnable:
-    //
-    //   - Idle Ps with no timers when they go idle are never checked in findRunnable
-    //     (for work- or timer-stealing; this is the ideal case).
-    //   - Running Ps must always be checked.
-    //   - Idle Ps whose timers are stolen must continue to be checked until they run
-    //     again, even after timer expiration.
-    //
-    // When the P starts running again, the mask should be set, as a timer may be
-    // added at any time.
-    //
-    // TODO(prattmic): Additional targeted updates may improve the above cases.
-    // e.g., updating the mask when stealing a timer.
-    extern pMask timerpMask;
-    // Pool of GC parked background workers. Entries are type
-    // *gcBgMarkWorkerNode.
-    extern lfstack gcBgMarkWorkerPool;
-}
-#include "golang/internal/abi/iface.fwd.h"
-#include "golang/internal/abi/symtab.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
-
-namespace golang::runtime
-{
-    eface* efaceOf(go_any* ep);
     struct maybeTraceableChan
     {
         maybeTraceablePtr maybeTraceablePtr{};
@@ -463,57 +295,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        unsafe::Pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
-        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, unsafe::Pointer v);
-        void setTraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
-        void setUntraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
-        uintptr_t uintptr(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct maybeTraceableChan& value);
-    struct gocpp_id_2
-    {
-        mutex lock{};
-        gList stack{}; // Gs with stacks
-        gList noStack{}; // Gs without stacks
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
-    // allpLock protects P-less reads and size changes of allp, idlepMask,
-    // and timerpMask, and all writes to allp.
-    extern mutex allpLock;
-}
-#include "golang/internal/abi/symtab.h"
-#include "golang/internal/runtime/atomic/types.h"
-#include "golang/internal/runtime/sys/nih.h"
-#include "golang/runtime/mprof.h"
-#include "golang/runtime/preempt_xreg.h"
-#include "golang/runtime/traceruntime.h"
-#include "golang/runtime/coro.fwd.h"
-
-namespace golang::runtime
-{
-    namespace atomic = golang::internal::runtime::atomic;
-}
-#include "golang/runtime/synctest.fwd.h"
-#include "golang/runtime/time.fwd.h"
-
-namespace golang::runtime
-{
-    namespace sys = golang::internal::runtime::sys;
-    namespace abi = golang::internal::abi;
     struct sudog
     {
         g* g{};
@@ -554,6 +336,429 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct sudog& value);
+    struct _panic
+    {
+        go_any arg{}; // argument to panic
+        _panic* link{}; // link to earlier panic
+        // startPC and startSP track where _panic.start was called.
+        // (These are the SP and PC of the gopanic frame itself.)
+        uintptr_t startPC{};
+        gocpp::unsafe_pointer startSP{};
+        // The current stack frame that we're running deferred calls for.
+        uintptr_t pc{};
+        gocpp::unsafe_pointer sp{};
+        gocpp::unsafe_pointer fp{};
+        // retpc stores the PC where the panic should jump back to, if the
+        // function last returned by _panic.nextDefer() recovers the panic.
+        uintptr_t retpc{};
+        // Extra state for handling open-coded defers.
+        uint8_t* deferBitsPtr{};
+        gocpp::unsafe_pointer slotsPtr{};
+        bool recovered{}; // whether this panic has been recovered
+        bool repanicked{}; // whether this panic repanicked
+        bool goexit{};
+        bool deferreturn{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _panic& value);
+}
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    struct eface
+    {
+        _type* _type{};
+        gocpp::unsafe_pointer data{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct eface& value);
+    eface* efaceOf(go_any* ep);
+}
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+    struct mWeakPointer
+    {
+        atomic::Pointer<m>* m{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mWeakPointer& value);
+    struct _defer
+    {
+        bool heap{};
+        bool rangefunc{}; // true for rangefunc list
+        uintptr_t sp{}; // sp at time of defer
+        uintptr_t pc{}; // pc at time of defer
+        std::function<void ()> fn{}; // can be nil for open-coded defers
+        _defer* link{}; // next defer on G; can point to either heap or stack!
+        // If rangefunc is true, *head is the head of the atomic linked list
+        // during a range-over-func execution.
+        atomic::Pointer<_defer>* head{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _defer& value);
+}
+#include "golang/runtime/lockrank_off.h"
+
+namespace golang::runtime
+{
+    struct mutex
+    {
+        // Empty struct if lock ranking is disabled, otherwise includes the lock rank
+        lockRankStruct lockRankStruct{};
+        // Futex-based impl treats it as uint32 key,
+        // while sema-based impl as M* waitm.
+        // Used to be a union, but unions break precise GC.
+        uintptr_t key{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mutex& value);
+    // allpLock protects P-less reads and size changes of allp, idlepMask,
+    // and timerpMask, and all writes to allp.
+    extern mutex allpLock;
+}
+#include "golang/runtime/lockrank.h"
+
+namespace golang::runtime
+{
+    struct heldLockInfo
+    {
+        uintptr_t lockAddr{};
+        lockRank rank{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct heldLockInfo& value);
+}
+#include "golang/runtime/proc.h"
+
+namespace golang::runtime
+{
+    struct gocpp_id_1
+    {
+        // user disables scheduling of user goroutines.
+        bool user{};
+        gQueue runnable{}; // pending runnable Gs
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    struct gocpp_id_2
+    {
+        mutex lock{};
+        gList stack{}; // Gs with stacks
+        gList noStack{}; // Gs without stacks
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    // Bitmask of Ps in _Pidle list, one bit per P. Reads and writes must
+    // be atomic. Length may change at safe points.
+    //
+    // Each P must update only its own bit. In order to maintain
+    // consistency, a P going idle must set the idle mask simultaneously with
+    // updates to the idle P list under the sched.lock, otherwise a racing
+    // pidleget may clear the mask before pidleput sets the mask,
+    // corrupting the bitmap.
+    //
+    // N.B., procresize takes ownership of all Ps in stopTheWorldWithSema.
+    extern pMask idlepMask;
+    // Bitmask of Ps that may have a timer, one bit per P. Reads and writes
+    // must be atomic. Length may change at safe points.
+    //
+    // Ideally, the timer mask would be kept immediately consistent on any timer
+    // operations. Unfortunately, updating a shared global data structure in the
+    // timer hot path adds too much overhead in applications frequently switching
+    // between no timers and some timers.
+    //
+    // As a compromise, the timer mask is updated only on pidleget / pidleput. A
+    // running P (returned by pidleget) may add a timer at any time, so its mask
+    // must be set. An idle P (passed to pidleput) cannot add new timers while
+    // idle, so if it has no timers at that time, its mask may be cleared.
+    //
+    // Thus, we get the following effects on timer-stealing in findRunnable:
+    //
+    //   - Idle Ps with no timers when they go idle are never checked in findRunnable
+    //     (for work- or timer-stealing; this is the ideal case).
+    //   - Running Ps must always be checked.
+    //   - Idle Ps whose timers are stolen must continue to be checked until they run
+    //     again, even after timer expiration.
+    //
+    // When the P starts running again, the mask should be set, as a timer may be
+    // added at any time.
+    //
+    // TODO(prattmic): Additional targeted updates may improve the above cases.
+    // e.g., updating the mask when stealing a timer.
+    extern pMask timerpMask;
+}
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    struct forcegcstate
+    {
+        mutex lock{};
+        g* g{};
+        atomic::Bool idle{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct forcegcstate& value);
+    extern forcegcstate forcegc;
+}
+#include "golang/runtime/lfstack.h"
+
+namespace golang::runtime
+{
+    // Pool of GC parked background workers. Entries are type
+    // *gcBgMarkWorkerNode.
+    extern lfstack gcBgMarkWorkerPool;
+}
+#include "golang/internal/abi/symtab.h"
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/internal/abi/iface.fwd.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+    namespace abi = golang::internal::abi;
+    struct _func
+    {
+        sys::NotInHeap NotInHeap{}; // Only in static data
+        uint32_t entryOff{}; // start pc, as offset from moduledata.text
+        int32_t nameOff{}; // function name, as index into moduledata.funcnametab.
+        int32_t args{}; // in/out args size
+        uint32_t deferreturn{}; // offset of start of a deferreturn call instruction from entry, if any.
+        uint32_t pcsp{};
+        uint32_t pcfile{};
+        uint32_t pcln{};
+        uint32_t npcdata{};
+        uint32_t cuOffset{}; // runtime.cutab offset of this function's CU
+        int32_t startLine{}; // line number of start of function (func keyword/TEXT directive)
+        abi::FuncID funcID{}; // set for certain special runtime functions
+        abi::FuncFlag flag{};
+        gocpp::array<unsigned char, 1> _1{}; // pad
+        uint8_t nfuncdata{}; // must be last, must end on a uint32-aligned boundary
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct _func& value);
+}
+#include "golang/runtime/histogram.h"
+#include "golang/runtime/list_manual.h"
+#include "golang/runtime/note_other.h"
+
+namespace golang::runtime
+{
+    struct schedt
+    {
+        atomic::Uint64 goidgen{};
+        atomic::Int64 lastpoll{}; // time of last network poll, 0 if currently polling
+        atomic::Int64 pollUntil{}; // time to which current poll is sleeping
+        atomic::Int32 pollingNet{}; // 1 if some P doing non-blocking network poll
+        mutex lock{};
+        listHeadManual midle{}; // idle m's waiting for work
+        int32_t nmidle{}; // number of idle m's waiting for work
+        int32_t nmidlelocked{}; // number of locked m's waiting for work
+        int64_t mnext{}; // number of m's that have been created and next M ID
+        int32_t maxmcount{}; // maximum number of m's allowed (or die)
+        int32_t nmsys{}; // number of system m's not counted for deadlock
+        int64_t nmfreed{}; // cumulative number of freed m's
+        atomic::Int32 ngsys{}; // number of system goroutines
+        atomic::Int32 nGsyscallNoP{}; // number of goroutines in syscalls without a P but whose M is not isExtraInC
+        puintptr pidle{}; // idle p's
+        atomic::Int32 npidle{};
+        atomic::Int32 nmspinning{}; // See "Worker thread parking/unparking" comment in proc.go.
+        atomic::Uint32 needspinning{}; // See "Delicate dance" comment in proc.go. Boolean. Must hold sched.lock to set to 1.
+        // Global runnable queue.
+        gQueue runq{};
+        // disable controls selective disabling of the scheduler.
+        // Use schedEnableUser to control this.
+        // disable is protected by sched.lock.
+        gocpp_id_1 disable{};
+        // Global cache of dead G's.
+        gocpp_id_2 gFree{};
+        // Central cache of sudog structs.
+        mutex sudoglock{};
+        sudog* sudogcache{};
+        // Central pool of available defer structs.
+        mutex deferlock{};
+        _defer* deferpool{};
+        // freem is the list of m's waiting to be freed when their
+        // m.exited is set. Linked through m.freelink.
+        m* freem{};
+        atomic::Bool gcwaiting{}; // gc is waiting to run
+        int32_t stopwait{};
+        note stopnote{};
+        atomic::Bool sysmonwait{};
+        note sysmonnote{};
+        // safePointFn should be called on each P at the next GC
+        // safepoint if p.runSafePointFn is set.
+        std::function<void (golang::runtime::p* _1)> safePointFn{};
+        int32_t safePointWait{};
+        note safePointNote{};
+        int32_t profilehz{}; // cpu profiling rate
+        int64_t procresizetime{}; // nanotime() of last change to gomaxprocs
+        int64_t totaltime{}; // ∫gomaxprocs dt up to procresizetime
+        bool customGOMAXPROCS{}; // GOMAXPROCS was manually set from the environment or runtime.GOMAXPROCS
+        // sysmonlock protects sysmon's actions on the runtime.
+        // Acquire and hold this mutex to block sysmon from interacting
+        // with the rest of the runtime.
+        mutex sysmonlock{};
+        // timeToRun is a distribution of scheduling latencies, defined
+        // as the sum of time a G spends in the _Grunnable state before
+        // it transitions to _Grunning.
+        timeHistogram timeToRun{};
+        // idleTime is the total CPU time Ps have "spent" idle.
+        // Reset on each GC cycle.
+        atomic::Int64 idleTime{};
+        // totalMutexWaitTime is the sum of time goroutines have spent in _Gwaiting
+        // with a waitreason of the form waitReasonSync{RW,}Mutex{R,}Lock.
+        atomic::Int64 totalMutexWaitTime{};
+        // stwStoppingTimeGC/Other are distributions of stop-the-world stopping
+        // latencies, defined as the time taken by stopTheWorldWithSema to get
+        // all Ps to stop. stwStoppingTimeGC covers all GC-related STWs,
+        // stwStoppingTimeOther covers the others.
+        timeHistogram stwStoppingTimeGC{};
+        timeHistogram stwStoppingTimeOther{};
+        // stwTotalTimeGC/Other are distributions of stop-the-world total
+        // latencies, defined as the total time from stopTheWorldWithSema to
+        // startTheWorldWithSema. This is a superset of
+        // stwStoppingTimeGC/Other. stwTotalTimeGC covers all GC-related STWs,
+        // stwTotalTimeOther covers the others.
+        timeHistogram stwTotalTimeGC{};
+        timeHistogram stwTotalTimeOther{};
+        // totalRuntimeLockWaitTime (plus the value of lockWaitTime on each M in
+        // allm) is the sum of time goroutines have spent in _Grunnable and with an
+        // M, but waiting for locks within the runtime. This field stores the value
+        // for Ms that have exited.
+        atomic::Int64 totalRuntimeLockWaitTime{};
+        // goroutinesCreated (plus the value of goroutinesCreated on each P in allp)
+        // is the sum of all goroutines created by the program.
+        atomic::Uint64 goroutinesCreated{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct schedt& value);
+    extern schedt sched;
+}
+#include "golang/runtime/mprof.h"
+#include "golang/runtime/preempt_xreg.h"
+#include "golang/runtime/traceruntime.h"
+#include "golang/runtime/coro.fwd.h"
+#include "golang/runtime/synctest.fwd.h"
+#include "golang/runtime/time.fwd.h"
+
+namespace golang::runtime
+{
     struct g
     {
         // Stack parameters.
@@ -680,234 +885,21 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct g& value);
-    struct mWeakPointer
-    {
-        atomic::Pointer<m>* m{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mWeakPointer& value);
-    struct _func
-    {
-        sys::NotInHeap NotInHeap{}; // Only in static data
-        uint32_t entryOff{}; // start pc, as offset from moduledata.text
-        int32_t nameOff{}; // function name, as index into moduledata.funcnametab.
-        int32_t args{}; // in/out args size
-        uint32_t deferreturn{}; // offset of start of a deferreturn call instruction from entry, if any.
-        uint32_t pcsp{};
-        uint32_t pcfile{};
-        uint32_t pcln{};
-        uint32_t npcdata{};
-        uint32_t cuOffset{}; // runtime.cutab offset of this function's CU
-        int32_t startLine{}; // line number of start of function (func keyword/TEXT directive)
-        abi::FuncID funcID{}; // set for certain special runtime functions
-        abi::FuncFlag flag{};
-        gocpp::array<unsigned char, 1> _1{}; // pad
-        uint8_t nfuncdata{}; // must be last, must end on a uint32-aligned boundary
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _func& value);
-    struct forcegcstate
-    {
-        mutex lock{};
-        g* g{};
-        atomic::Bool idle{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct forcegcstate& value);
-    struct _defer
-    {
-        bool heap{};
-        bool rangefunc{}; // true for rangefunc list
-        uintptr_t sp{}; // sp at time of defer
-        uintptr_t pc{}; // pc at time of defer
-        std::function<void ()> fn{}; // can be nil for open-coded defers
-        _defer* link{}; // next defer on G; can point to either heap or stack!
-        // If rangefunc is true, *head is the head of the atomic linked list
-        // during a range-over-func execution.
-        atomic::Pointer<_defer>* head{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct _defer& value);
-}
-#include "golang/internal/chacha8rand/chacha8.fwd.h"
-
-namespace golang::runtime
-{
     void setGNoWB(g** gp, g* go_new);
-    extern forcegcstate forcegc;
 }
-#include "golang/internal/chacha8rand/chacha8.h"
-#include "golang/runtime/debuglog_off.h"
-#include "golang/runtime/histogram.h"
-#include "golang/runtime/list_manual.h"
-#include "golang/runtime/lock_spinbit.h"
 #include "golang/runtime/malloc.h"
 #include "golang/runtime/mgc.h"
 #include "golang/runtime/mgclimit.h"
 #include "golang/runtime/mgcwork.h"
 #include "golang/runtime/mpagecache.h"
 #include "golang/runtime/mwbbuf.h"
-#include "golang/runtime/note_other.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/panic.h"
-#include "golang/runtime/signal_windows.h"
-#include "golang/runtime/symtab.h"
 #include "golang/runtime/time.h"
-#include "golang/runtime/cgocall.fwd.h"
 #include "golang/runtime/mcache.fwd.h"
 #include "golang/runtime/mcleanup.fwd.h"
 #include "golang/runtime/pinner.fwd.h"
 
 namespace golang::runtime
 {
-    namespace chacha8rand = golang::internal::chacha8rand;
-    struct m
-    {
-        g* g0{}; // goroutine with scheduling stack
-        gobuf morebuf{}; // gobuf arg to morestack
-        uint32_t divmod{}; // div/mod denominator for arm - known to liblink (cmd/internal/obj/arm/obj5.go)
-        uint64_t procid{}; // for debuggers, but offset not hard-coded
-        g* gsignal{}; // signal-handling g
-        gsignalStack goSigStack{}; // Go-allocated signal handling stack
-        sigset sigmask{}; // storage for saved signal mask
-        gocpp::array<uintptr_t, tlsSlots> tls{}; // thread-local storage (for x86 extern register)
-        std::function<void ()> mstartfn{};
-        g* curg{}; // current running goroutine
-        golang::runtime::guintptr caughtsig{}; // goroutine running during fatal signal
-        // Indicates whether we've received a signal while
-        // running in secret mode.
-        bool signalSecret{};
-        // p is the currently attached P for executing Go code, nil if not executing user Go code.
-        // A non-nil p implies exclusive ownership of the P, unless curg is in _Gsyscall.
-        // In _Gsyscall the scheduler may mutate this instead. The point of synchronization
-        // is the _Gscan bit on curg's status. The scheduler must arrange to prevent curg
-        // from transitioning out of _Gsyscall if it intends to mutate p.
-        puintptr p{};
-        puintptr nextp{}; // The next P to install before executing. Implies exclusive ownership of this P.
-        puintptr oldp{}; // The P that was attached before executing a syscall.
-        int64_t id{};
-        int32_t mallocing{};
-        throwType throwing{};
-        gocpp::string preemptoff{}; // if != "", keep curg running on this m
-        int32_t locks{};
-        int32_t dying{};
-        int32_t profilehz{};
-        bool spinning{}; // m is out of work and is actively looking for work
-        bool blocked{}; // m is blocked on a note
-        bool newSigstack{}; // minit on C thread called sigaltstack
-        int8_t printlock{};
-        bool incgo{}; // m is executing a cgo call
-        bool isextra{}; // m is an extra m
-        bool isExtraInC{}; // m is an extra m that does not have any Go frames
-        bool isExtraInSig{}; // m is an extra m in a signal handler
-        atomic::Uint32 freeWait{}; // Whether it is safe to free g0 and delete m (one of freeMRef, freeMStack, freeMWait)
-        bool needextram{};
-        bool g0StackAccurate{}; // whether the g0 stack has accurate bounds
-        uint8_t traceback{};
-        gocpp::slice<golang::runtime::p*> allpSnapshot{}; // Snapshot of allp for use after dropping P in findRunnable, nil otherwise.
-        uint64_t ncgocall{}; // number of cgo calls in total
-        int32_t ncgo{}; // number of cgo calls currently in progress
-        atomic::Uint32 cgoCallersUse{}; // if non-zero, cgoCallers in use temporarily
-        gocpp::array_ptr<golang::runtime::cgoCallers> cgoCallers{}; // cgo traceback if crashing in cgo call
-        note park{};
-        m* alllink{}; // on allm
-        muintptr schedlink{};
-        listNodeManual idleNode{};
-        golang::runtime::guintptr lockedg{};
-        gocpp::array<uintptr_t, 32> createstack{}; // stack that created this thread, it's used for StackRecord.Stack0, so it must align with it.
-        uint32_t lockedExt{}; // tracking for external LockOSThread
-        uint32_t lockedInt{}; // tracking for internal lockOSThread
-        mWaitList mWaitList{}; // list of runtime lock waiters
-        bool ditEnabled{}; // set if DIT is currently enabled on this M
-        mLockProfile mLockProfile{}; // fields relating to runtime.lock contention
-        gocpp::slice<uintptr_t> profStack{}; // used for memory/block/mutex stack traces
-        // wait* are used to carry arguments from gopark into park_m, because
-        // there's no stack to put them on. That is their sole purpose.
-        std::function<bool (g* _1, gocpp::unsafe_pointer _2)> waitunlockf{};
-        gocpp::unsafe_pointer waitlock{};
-        int64_t waitTraceSkip{};
-        traceBlockReason waitTraceBlockReason{};
-        uint32_t syscalltick{};
-        m* freelink{}; // on sched.freem
-        mTraceState trace{};
-        // These are here to avoid using the G stack so the stack can move during the call.
-        uintptr_t libcallpc{}; // for cpu profiler
-        uintptr_t libcallsp{};
-        golang::runtime::guintptr libcallg{};
-        winlibcall winsyscall{}; // stores syscall parameters on windows
-        uintptr_t vdsoSP{}; // SP for traceback while in VDSO call (0 if not in call)
-        uintptr_t vdsoPC{}; // PC for traceback while in VDSO call
-        // preemptGen counts the number of completed preemption
-        // signals. This is used to detect when a preemption is
-        // requested, but fails.
-        atomic::Uint32 preemptGen{};
-        // Whether this is a pending preemption signal on this M.
-        atomic::Uint32 signalPending{};
-        // pcvalue lookup cache
-        pcvalueCache pcvalueCache{};
-        dlogPerM dlogPerM{};
-        mOS mOS{};
-        chacha8rand::State chacha8{};
-        uint32_t cheaprand{};
-        uint64_t cheaprand64{};
-        // Up to 10 locks held by this m, maintained by the lock ranking code.
-        int64_t locksHeldLen{};
-        gocpp::array<heldLockInfo, 10> locksHeld{};
-        // self points this M until mexit clears it to return nil.
-        mWeakPointer self{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct m& value);
     struct p
     {
         int32_t id{};
@@ -1035,92 +1027,116 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct p& value);
-    struct schedt
+    // len(allp) == gomaxprocs; may change at safe points, otherwise
+    // immutable.
+    extern gocpp::slice<golang::runtime::p*> allp;
+}
+#include "golang/internal/chacha8rand/chacha8.h"
+#include "golang/runtime/debuglog_off.h"
+#include "golang/runtime/lock_spinbit.h"
+#include "golang/runtime/os_windows.h"
+#include "golang/runtime/panic.h"
+#include "golang/runtime/signal_windows.h"
+#include "golang/runtime/symtab.h"
+#include "golang/runtime/cgocall.fwd.h"
+
+namespace golang::runtime
+{
+    namespace chacha8rand = golang::internal::chacha8rand;
+    struct m
     {
-        atomic::Uint64 goidgen{};
-        atomic::Int64 lastpoll{}; // time of last network poll, 0 if currently polling
-        atomic::Int64 pollUntil{}; // time to which current poll is sleeping
-        atomic::Int32 pollingNet{}; // 1 if some P doing non-blocking network poll
-        mutex lock{};
-        listHeadManual midle{}; // idle m's waiting for work
-        int32_t nmidle{}; // number of idle m's waiting for work
-        int32_t nmidlelocked{}; // number of locked m's waiting for work
-        int64_t mnext{}; // number of m's that have been created and next M ID
-        int32_t maxmcount{}; // maximum number of m's allowed (or die)
-        int32_t nmsys{}; // number of system m's not counted for deadlock
-        int64_t nmfreed{}; // cumulative number of freed m's
-        atomic::Int32 ngsys{}; // number of system goroutines
-        atomic::Int32 nGsyscallNoP{}; // number of goroutines in syscalls without a P but whose M is not isExtraInC
-        puintptr pidle{}; // idle p's
-        atomic::Int32 npidle{};
-        atomic::Int32 nmspinning{}; // See "Worker thread parking/unparking" comment in proc.go.
-        atomic::Uint32 needspinning{}; // See "Delicate dance" comment in proc.go. Boolean. Must hold sched.lock to set to 1.
-        // Global runnable queue.
-        gQueue runq{};
-        // disable controls selective disabling of the scheduler.
-        // Use schedEnableUser to control this.
-        // disable is protected by sched.lock.
-        gocpp_id_1 disable{};
-        // Global cache of dead G's.
-        gocpp_id_2 gFree{};
-        // Central cache of sudog structs.
-        mutex sudoglock{};
-        sudog* sudogcache{};
-        // Central pool of available defer structs.
-        mutex deferlock{};
-        _defer* deferpool{};
-        // freem is the list of m's waiting to be freed when their
-        // m.exited is set. Linked through m.freelink.
-        m* freem{};
-        atomic::Bool gcwaiting{}; // gc is waiting to run
-        int32_t stopwait{};
-        note stopnote{};
-        atomic::Bool sysmonwait{};
-        note sysmonnote{};
-        // safePointFn should be called on each P at the next GC
-        // safepoint if p.runSafePointFn is set.
-        std::function<void (golang::runtime::p* _1)> safePointFn{};
-        int32_t safePointWait{};
-        note safePointNote{};
-        int32_t profilehz{}; // cpu profiling rate
-        int64_t procresizetime{}; // nanotime() of last change to gomaxprocs
-        int64_t totaltime{}; // ∫gomaxprocs dt up to procresizetime
-        bool customGOMAXPROCS{}; // GOMAXPROCS was manually set from the environment or runtime.GOMAXPROCS
-        // sysmonlock protects sysmon's actions on the runtime.
-        // Acquire and hold this mutex to block sysmon from interacting
-        // with the rest of the runtime.
-        mutex sysmonlock{};
-        // timeToRun is a distribution of scheduling latencies, defined
-        // as the sum of time a G spends in the _Grunnable state before
-        // it transitions to _Grunning.
-        timeHistogram timeToRun{};
-        // idleTime is the total CPU time Ps have "spent" idle.
-        // Reset on each GC cycle.
-        atomic::Int64 idleTime{};
-        // totalMutexWaitTime is the sum of time goroutines have spent in _Gwaiting
-        // with a waitreason of the form waitReasonSync{RW,}Mutex{R,}Lock.
-        atomic::Int64 totalMutexWaitTime{};
-        // stwStoppingTimeGC/Other are distributions of stop-the-world stopping
-        // latencies, defined as the time taken by stopTheWorldWithSema to get
-        // all Ps to stop. stwStoppingTimeGC covers all GC-related STWs,
-        // stwStoppingTimeOther covers the others.
-        timeHistogram stwStoppingTimeGC{};
-        timeHistogram stwStoppingTimeOther{};
-        // stwTotalTimeGC/Other are distributions of stop-the-world total
-        // latencies, defined as the total time from stopTheWorldWithSema to
-        // startTheWorldWithSema. This is a superset of
-        // stwStoppingTimeGC/Other. stwTotalTimeGC covers all GC-related STWs,
-        // stwTotalTimeOther covers the others.
-        timeHistogram stwTotalTimeGC{};
-        timeHistogram stwTotalTimeOther{};
-        // totalRuntimeLockWaitTime (plus the value of lockWaitTime on each M in
-        // allm) is the sum of time goroutines have spent in _Grunnable and with an
-        // M, but waiting for locks within the runtime. This field stores the value
-        // for Ms that have exited.
-        atomic::Int64 totalRuntimeLockWaitTime{};
-        // goroutinesCreated (plus the value of goroutinesCreated on each P in allp)
-        // is the sum of all goroutines created by the program.
-        atomic::Uint64 goroutinesCreated{};
+        g* g0{}; // goroutine with scheduling stack
+        gobuf morebuf{}; // gobuf arg to morestack
+        uint32_t divmod{}; // div/mod denominator for arm - known to liblink (cmd/internal/obj/arm/obj5.go)
+        uint64_t procid{}; // for debuggers, but offset not hard-coded
+        g* gsignal{}; // signal-handling g
+        gsignalStack goSigStack{}; // Go-allocated signal handling stack
+        sigset sigmask{}; // storage for saved signal mask
+        gocpp::array<uintptr_t, tlsSlots> tls{}; // thread-local storage (for x86 extern register)
+        std::function<void ()> mstartfn{};
+        g* curg{}; // current running goroutine
+        golang::runtime::guintptr caughtsig{}; // goroutine running during fatal signal
+        // Indicates whether we've received a signal while
+        // running in secret mode.
+        bool signalSecret{};
+        // p is the currently attached P for executing Go code, nil if not executing user Go code.
+        // A non-nil p implies exclusive ownership of the P, unless curg is in _Gsyscall.
+        // In _Gsyscall the scheduler may mutate this instead. The point of synchronization
+        // is the _Gscan bit on curg's status. The scheduler must arrange to prevent curg
+        // from transitioning out of _Gsyscall if it intends to mutate p.
+        puintptr p{};
+        puintptr nextp{}; // The next P to install before executing. Implies exclusive ownership of this P.
+        puintptr oldp{}; // The P that was attached before executing a syscall.
+        int64_t id{};
+        int32_t mallocing{};
+        throwType throwing{};
+        gocpp::string preemptoff{}; // if != "", keep curg running on this m
+        int32_t locks{};
+        int32_t dying{};
+        int32_t profilehz{};
+        bool spinning{}; // m is out of work and is actively looking for work
+        bool blocked{}; // m is blocked on a note
+        bool newSigstack{}; // minit on C thread called sigaltstack
+        int8_t printlock{};
+        bool incgo{}; // m is executing a cgo call
+        bool isextra{}; // m is an extra m
+        bool isExtraInC{}; // m is an extra m that does not have any Go frames
+        bool isExtraInSig{}; // m is an extra m in a signal handler
+        atomic::Uint32 freeWait{}; // Whether it is safe to free g0 and delete m (one of freeMRef, freeMStack, freeMWait)
+        bool needextram{};
+        bool g0StackAccurate{}; // whether the g0 stack has accurate bounds
+        uint8_t traceback{};
+        gocpp::slice<golang::runtime::p*> allpSnapshot{}; // Snapshot of allp for use after dropping P in findRunnable, nil otherwise.
+        uint64_t ncgocall{}; // number of cgo calls in total
+        int32_t ncgo{}; // number of cgo calls currently in progress
+        atomic::Uint32 cgoCallersUse{}; // if non-zero, cgoCallers in use temporarily
+        gocpp::array_ptr<golang::runtime::cgoCallers> cgoCallers{}; // cgo traceback if crashing in cgo call
+        note park{};
+        m* alllink{}; // on allm
+        muintptr schedlink{};
+        listNodeManual idleNode{};
+        golang::runtime::guintptr lockedg{};
+        gocpp::array<uintptr_t, 32> createstack{}; // stack that created this thread, it's used for StackRecord.Stack0, so it must align with it.
+        uint32_t lockedExt{}; // tracking for external LockOSThread
+        uint32_t lockedInt{}; // tracking for internal lockOSThread
+        mWaitList mWaitList{}; // list of runtime lock waiters
+        bool ditEnabled{}; // set if DIT is currently enabled on this M
+        mLockProfile mLockProfile{}; // fields relating to runtime.lock contention
+        gocpp::slice<uintptr_t> profStack{}; // used for memory/block/mutex stack traces
+        // wait* are used to carry arguments from gopark into park_m, because
+        // there's no stack to put them on. That is their sole purpose.
+        std::function<bool (g* _1, gocpp::unsafe_pointer _2)> waitunlockf{};
+        gocpp::unsafe_pointer waitlock{};
+        int64_t waitTraceSkip{};
+        traceBlockReason waitTraceBlockReason{};
+        uint32_t syscalltick{};
+        m* freelink{}; // on sched.freem
+        mTraceState trace{};
+        // These are here to avoid using the G stack so the stack can move during the call.
+        uintptr_t libcallpc{}; // for cpu profiler
+        uintptr_t libcallsp{};
+        golang::runtime::guintptr libcallg{};
+        winlibcall winsyscall{}; // stores syscall parameters on windows
+        uintptr_t vdsoSP{}; // SP for traceback while in VDSO call (0 if not in call)
+        uintptr_t vdsoPC{}; // PC for traceback while in VDSO call
+        // preemptGen counts the number of completed preemption
+        // signals. This is used to detect when a preemption is
+        // requested, but fails.
+        atomic::Uint32 preemptGen{};
+        // Whether this is a pending preemption signal on this M.
+        atomic::Uint32 signalPending{};
+        // pcvalue lookup cache
+        pcvalueCache pcvalueCache{};
+        dlogPerM dlogPerM{};
+        mOS mOS{};
+        chacha8rand::State chacha8{};
+        uint32_t cheaprand{};
+        uint64_t cheaprand64{};
+        // Up to 10 locks held by this m, maintained by the lock ranking code.
+        int64_t locksHeldLen{};
+        gocpp::array<heldLockInfo, 10> locksHeld{};
+        // self points this M until mexit clears it to return nil.
+        mWeakPointer self{};
 
         using isGoStruct = void;
 
@@ -1133,21 +1149,17 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct schedt& value);
+    std::ostream& operator<<(std::ostream& os, const struct m& value);
+    void setMNoWB(m** mp, m* go_new);
+    mWeakPointer newMWeakPointer(m* mp);
+    // Linked-list of all Ms. Written under sched.lock, read atomically.
+    extern m* allm;
 }
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
 namespace golang::runtime
 {
-    void setMNoWB(m** mp, m* go_new);
-    mWeakPointer newMWeakPointer(m* mp);
-    // Linked-list of all Ms. Written under sched.lock, read atomically.
-    extern m* allm;
-    extern schedt sched;
-    // len(allp) == gomaxprocs; may change at safe points, otherwise
-    // immutable.
-    extern gocpp::slice<golang::runtime::p*> allp;
     namespace goarch = golang::internal::goarch;
     struct mPadded
     {
@@ -1168,14 +1180,6 @@ namespace golang::runtime
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        void becomeSpinning(const gocpp::PtrRecv<struct mPadded, false>& self);
-        void clearAllpSnapshot(const gocpp::PtrRecv<struct mPadded, false>& self);
-        bool hasCgoOnStack(const gocpp::PtrRecv<struct mPadded, false>& self);
-        gocpp::slice<runtime::p*> snapshotAllp(const gocpp::PtrRecv<struct mPadded, false>& self);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct mPadded& value);
 }
@@ -1200,8 +1204,17 @@ namespace golang::runtime
         void set(maybeTraceablePtr* p, gocpp::unsafe_pointer v);
         gocpp::unsafe_pointer get(maybeTraceablePtr* p);
         uintptr_t uintptr(maybeTraceablePtr* p);
+        unsafe::Pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, unsafe::Pointer v);
+        void setTraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        void setUntraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        uintptr_t uintptr(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
         void set(maybeTraceableChan* p, golang::runtime::hchan* c);
         golang::runtime::hchan* get(maybeTraceableChan* p);
+        void becomeSpinning(const gocpp::PtrRecv<struct mPadded, false>& self);
+        void clearAllpSnapshot(const gocpp::PtrRecv<struct mPadded, false>& self);
+        bool hasCgoOnStack(const gocpp::PtrRecv<struct mPadded, false>& self);
+        gocpp::slice<runtime::p*> snapshotAllp(const gocpp::PtrRecv<struct mPadded, false>& self);
         m* get(mWeakPointer w);
         void clear(mWeakPointer w);
         gocpp::string String(waitReason w);

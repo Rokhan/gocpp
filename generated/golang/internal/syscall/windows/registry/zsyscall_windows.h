@@ -18,20 +18,18 @@ namespace golang::internal::syscall::windows::registry
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     extern gocpp::unsafe_pointer _;
 }
-#include "golang/syscall/dll_windows.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::internal::syscall::windows::registry
 {
     namespace syscall = golang::syscall;
 }
-#include "golang/syscall/syscall_windows.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/dll_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::internal::syscall::windows::registry
 {
-    gocpp::error errnoErr(syscall::Errno e);
     extern syscall::LazyDLL* modadvapi32;
     extern syscall::LazyDLL* modkernel32;
     extern syscall::LazyProc* procRegCreateKeyExW;
@@ -41,6 +39,12 @@ namespace golang::internal::syscall::windows::registry
     extern syscall::LazyProc* procRegLoadMUIStringW;
     extern syscall::LazyProc* procRegSetValueExW;
     extern syscall::LazyProc* procExpandEnvironmentStringsW;
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::internal::syscall::windows::registry
+{
+    gocpp::error errnoErr(syscall::Errno e);
     gocpp::error regCreateKeyEx(syscall::Handle key, uint16_t* subkey, uint32_t reserved, uint16_t* go_class, uint32_t options, uint32_t desired, syscall::SecurityAttributes* sa, syscall::Handle* result, uint32_t* disposition);
     gocpp::error regDeleteKey(syscall::Handle key, uint16_t* subkey);
     gocpp::error regDeleteValue(syscall::Handle key, uint16_t* name);

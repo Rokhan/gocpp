@@ -8,10 +8,6 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct GoTag_Version;
     using Version = gocpp::defined<uint32_t, GoTag_Version>;
-    inline constexpr int64_t numVersions = 5;
-    struct GoTag_Field;
-    using Field = gocpp::defined<int64_t, GoTag_Field>;
-    inline constexpr int64_t numFields = 7;
     // V0: initial prototype.
     //
     // All data that is not assigned a Field is in version V0
@@ -32,6 +28,9 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     inline constexpr golang::golang_org::x::tools::internal::pkgbits::Version V3 = 3;
     // V4: encodes generic methods as standalone function objects
     inline constexpr golang::golang_org::x::tools::internal::pkgbits::Version V4 = 4;
+    inline constexpr int64_t numVersions = 5;
+    struct GoTag_Field;
+    using Field = gocpp::defined<int64_t, GoTag_Field>;
     // Flags in a uint32 in the header of a bitstream
     // that is used to indicate whether optional features are enabled.
     inline constexpr Field Flags = 0;
@@ -50,4 +49,5 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     inline constexpr Field CompactCompLiterals = 5;
     // Generic methods may appear as standalone function objects.
     inline constexpr Field GenericMethods = 6;
+    inline constexpr int64_t numFields = 7;
 }

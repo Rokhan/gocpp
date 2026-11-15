@@ -32,6 +32,23 @@ namespace golang::image::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct YCbCr& value);
+    struct NYCbCrA
+    {
+        YCbCr YCbCr{};
+        uint8_t A{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct NYCbCrA& value);
     std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> RGBToCMYK(uint8_t r, uint8_t g, uint8_t b);
     std::tuple<uint8_t, uint8_t, uint8_t> CMYKToRGB(uint8_t c, uint8_t m, uint8_t y, uint8_t k);
     struct CMYK
@@ -53,29 +70,6 @@ namespace golang::image::color
     };
 
     std::ostream& operator<<(std::ostream& os, const struct CMYK& value);
-    struct NYCbCrA
-    {
-        YCbCr YCbCr{};
-        uint8_t A{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct NYCbCrA, false>& self);
-        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct NYCbCrA>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct NYCbCrA& value);
 }
 #include "golang/image/color/color.h"
 
@@ -95,6 +89,8 @@ namespace golang::image::color
     namespace rec
     {
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(YCbCr c);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::PtrRecv<struct NYCbCrA, false>& self);
+        std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(const gocpp::ObjRecv<struct NYCbCrA>& self);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(NYCbCrA c);
         std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> RGBA(CMYK c);
     }

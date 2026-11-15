@@ -104,29 +104,20 @@ namespace golang::os::exec
     gocpp::error validateLookPath(gocpp::string s);
 }
 #include "golang/internal/godebug/godebug.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/os/env.fwd.h"
-#include "golang/os/exec.fwd.h"
-#include "golang/os/exec_posix.fwd.h"
-#include "golang/os/file.fwd.h"
-#include "golang/os/file_windows.fwd.h"
-#include "golang/os/types.fwd.h"
-#include "golang/time/sleep.fwd.h"
+
+namespace golang::os::exec
+{
+    namespace godebug = golang::internal::godebug;
+    extern godebug::Setting* execwait;
+    extern godebug::Setting* execerrdot;
+}
 #include "golang/time/time.fwd.h"
 
 namespace golang::os::exec
 {
-    namespace io = golang::io;
-    namespace os = golang::os;
-}
-#include "golang/io/io.h"
-
-namespace golang::os::exec
-{
     namespace time = golang::time;
-    namespace godebug = golang::internal::godebug;
 }
-#include "golang/time/time.h"
+#include "golang/time/sleep.fwd.h"
 
 namespace golang::os::exec
 {
@@ -152,9 +143,21 @@ namespace golang::os::exec
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ctxResult& value);
-    extern godebug::Setting* execwait;
-    extern godebug::Setting* execerrdot;
-    void closeDescriptors(gocpp::slice<io::Closer> closers);
+}
+#include "golang/os/types.fwd.h"
+
+namespace golang::os::exec
+{
+    namespace os = golang::os;
+}
+#include "golang/os/exec.fwd.h"
+#include "golang/os/exec_posix.fwd.h"
+#include "golang/os/file.fwd.h"
+#include "golang/os/env.fwd.h"
+#include "golang/os/file_windows.fwd.h"
+
+namespace golang::os::exec
+{
     struct ExitError
     {
         os::ProcessState* ProcessState{};
@@ -179,50 +182,32 @@ namespace golang::os::exec
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        int64_t ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self);
-        int64_t ExitCode(const gocpp::ObjRecv<struct ExitError>& self);
-        bool Exited(const gocpp::PtrRecv<struct ExitError, false>& self);
-        bool Exited(const gocpp::ObjRecv<struct ExitError>& self);
-        int64_t Pid(const gocpp::PtrRecv<struct ExitError, false>& self);
-        int64_t Pid(const gocpp::ObjRecv<struct ExitError>& self);
-        gocpp::string String(const gocpp::PtrRecv<struct ExitError, false>& self);
-        gocpp::string String(const gocpp::ObjRecv<struct ExitError>& self);
-        bool Success(const gocpp::PtrRecv<struct ExitError, false>& self);
-        bool Success(const gocpp::ObjRecv<struct ExitError>& self);
-        go_any Sys(const gocpp::PtrRecv<struct ExitError, false>& self);
-        go_any Sys(const gocpp::ObjRecv<struct ExitError>& self);
-        go_any SysUsage(const gocpp::PtrRecv<struct ExitError, false>& self);
-        go_any SysUsage(const gocpp::ObjRecv<struct ExitError>& self);
-        time::Duration SystemTime(const gocpp::PtrRecv<struct ExitError, false>& self);
-        time::Duration SystemTime(const gocpp::ObjRecv<struct ExitError>& self);
-        time::Duration UserTime(const gocpp::PtrRecv<struct ExitError, false>& self);
-        time::Duration UserTime(const gocpp::ObjRecv<struct ExitError>& self);
-        bool exited(const gocpp::PtrRecv<struct ExitError, false>& self);
-        bool exited(const gocpp::ObjRecv<struct ExitError>& self);
-        bool success(const gocpp::PtrRecv<struct ExitError, false>& self);
-        bool success(const gocpp::ObjRecv<struct ExitError>& self);
-        go_any sys(const gocpp::PtrRecv<struct ExitError, false>& self);
-        go_any sys(const gocpp::ObjRecv<struct ExitError>& self);
-        go_any sysUsage(const gocpp::PtrRecv<struct ExitError, false>& self);
-        go_any sysUsage(const gocpp::ObjRecv<struct ExitError>& self);
-        time::Duration systemTime(const gocpp::PtrRecv<struct ExitError, false>& self);
-        time::Duration systemTime(const gocpp::ObjRecv<struct ExitError>& self);
-        time::Duration userTime(const gocpp::PtrRecv<struct ExitError, false>& self);
-        time::Duration userTime(const gocpp::ObjRecv<struct ExitError>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct ExitError& value);
 }
-#include "golang/context/context.fwd.h"
-#include "golang/syscall/exec_windows.fwd.h"
+#include "golang/io/io.fwd.h"
+
+namespace golang::os::exec
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::os::exec
+{
+    void closeDescriptors(gocpp::slice<io::Closer> closers);
+}
 #include "golang/context/context.h"
+#include "golang/syscall/exec_windows.fwd.h"
 
 namespace golang::os::exec
 {
     namespace syscall = golang::syscall;
     namespace context = golang::context;
+}
+#include "golang/time/time.h"
+
+namespace golang::os::exec
+{
     struct Cmd
     {
         // Path is the path of the command to run.
@@ -466,6 +451,36 @@ namespace golang::os::exec
         gocpp::error Run(Cmd* c);
         gocpp::error Start(Cmd* c);
         void watchCtx(Cmd* c, gocpp::channel<ctxResult> resultc);
+        int64_t ExitCode(const gocpp::PtrRecv<struct ExitError, false>& self);
+        int64_t ExitCode(const gocpp::ObjRecv<struct ExitError>& self);
+        bool Exited(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool Exited(const gocpp::ObjRecv<struct ExitError>& self);
+        int64_t Pid(const gocpp::PtrRecv<struct ExitError, false>& self);
+        int64_t Pid(const gocpp::ObjRecv<struct ExitError>& self);
+        gocpp::string String(const gocpp::PtrRecv<struct ExitError, false>& self);
+        gocpp::string String(const gocpp::ObjRecv<struct ExitError>& self);
+        bool Success(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool Success(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any Sys(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any Sys(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any SysUsage(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any SysUsage(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration SystemTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration SystemTime(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration UserTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration UserTime(const gocpp::ObjRecv<struct ExitError>& self);
+        bool exited(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool exited(const gocpp::ObjRecv<struct ExitError>& self);
+        bool success(const gocpp::PtrRecv<struct ExitError, false>& self);
+        bool success(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any sys(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any sys(const gocpp::ObjRecv<struct ExitError>& self);
+        go_any sysUsage(const gocpp::PtrRecv<struct ExitError, false>& self);
+        go_any sysUsage(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration systemTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration systemTime(const gocpp::ObjRecv<struct ExitError>& self);
+        time::Duration userTime(const gocpp::PtrRecv<struct ExitError, false>& self);
+        time::Duration userTime(const gocpp::ObjRecv<struct ExitError>& self);
         gocpp::string Error(ExitError* e);
         gocpp::error Wait(Cmd* c);
         gocpp::error awaitGoroutines(Cmd* c, time::Timer* timer);

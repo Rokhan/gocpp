@@ -14,6 +14,21 @@ namespace golang::go::types
 {
     uint64_t nextID();
 }
+#include "golang/sync/atomic/type.fwd.h"
+
+namespace golang::go::types
+{
+    namespace atomic = golang::sync::atomic;
+}
+#include "golang/sync/atomic/type.h"
+
+namespace golang::go::types
+{
+    // Note: This is a uint32 rather than a uint64 because the
+    // respective 64 bit atomic instructions are not available
+    // on all platforms.
+    extern atomic::Uint32 lastID;
+}
 #include "golang/go/types/type.h"
 #include "golang/go/types/check.fwd.h"
 #include "golang/go/types/object.fwd.h"
@@ -40,22 +55,7 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TypeParam& value);
-}
-#include "golang/sync/atomic/type.fwd.h"
-
-namespace golang::go::types
-{
     TypeParam* NewTypeParam(TypeName* obj, golang::go::types::Type constraint);
-    namespace atomic = golang::sync::atomic;
-}
-#include "golang/sync/atomic/type.h"
-
-namespace golang::go::types
-{
-    // Note: This is a uint32 rather than a uint64 because the
-    // respective 64 bit atomic instructions are not available
-    // on all platforms.
-    extern atomic::Uint32 lastID;
 }
 
 #include "golang/go/types/check.h"

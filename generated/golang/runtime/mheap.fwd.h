@@ -17,6 +17,9 @@ namespace golang::runtime
     struct arenaHint;
     struct GoTag_mSpanState;
     using mSpanState = gocpp::defined<uint8_t, GoTag_mSpanState>;
+    inline constexpr mSpanState mSpanDead = 0;
+    inline constexpr mSpanState mSpanInUse = 1;
+    inline constexpr mSpanState mSpanManual = 2;
     struct mSpanStateBox;
     struct mspan;
     struct GoTag_spanClass;
@@ -25,6 +28,9 @@ namespace golang::runtime
     using arenaIdx = gocpp::defined<uint64_t, GoTag_arenaIdx>;
     struct GoTag_spanAllocType;
     using spanAllocType = gocpp::defined<uint8_t, GoTag_spanAllocType>;
+    inline constexpr spanAllocType spanAllocHeap = 0;
+    inline constexpr spanAllocType spanAllocStack = 1;
+    inline constexpr spanAllocType spanAllocWorkBuf = 2;
     struct mSpanList;
     // _KindSpecialTinyBlock indicates that a given allocation is a tiny block.
     // Ordered before KindSpecialFinalizer and KindSpecialCleanup so that it
@@ -71,15 +77,7 @@ namespace golang::runtime
     struct gcBitsHeader;
     struct gcBitsArena;
     struct gcBitsArenasStruct;
-    inline constexpr mSpanState mSpanDead = 0;
-    inline constexpr mSpanState mSpanInUse = 1;
-    inline constexpr mSpanState mSpanManual = 2;
-    inline constexpr spanAllocType spanAllocHeap = 0;
-    inline constexpr spanAllocType spanAllocStack = 1;
-    inline constexpr spanAllocType spanAllocWorkBuf = 2;
 }
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/malloc.fwd.h"
 #include "golang/runtime/mpagealloc.fwd.h"
 
 namespace golang::runtime
@@ -87,10 +85,20 @@ namespace golang::runtime
     // maxPhysHugePageSize sets an upper-bound on the maximum huge page size
     // that the runtime supports.
     inline constexpr int64_t maxPhysHugePageSize = pallocChunkBytes;
+}
+#include "golang/runtime/extern.fwd.h"
+
+namespace golang::runtime
+{
     // physPageAlignedStacks indicates whether stack allocations must be
     // physical page aligned. This is a requirement for MAP_STACK on
     // OpenBSD.
     inline const bool physPageAlignedStacks = GOOS == "openbsd"_s;
+}
+#include "golang/runtime/malloc.fwd.h"
+
+namespace golang::runtime
+{
     inline constexpr spanClass tinySpanClass = spanClass((tinySizeClass << 1) | 1);
 }
 #include "golang/internal/runtime/gc/malloc.fwd.h"

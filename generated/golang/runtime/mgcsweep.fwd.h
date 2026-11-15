@@ -9,11 +9,11 @@ namespace golang::runtime
     struct sweepdata;
     struct GoTag_sweepClass;
     using sweepClass = gocpp::defined<uint32_t, GoTag_sweepClass>;
+    inline constexpr sweepClass sweepClassDone = sweepClass(~ uint32_t(0LL));
     inline constexpr int64_t sweepDrainedMask = 1LL << 31;
     struct activeSweep;
     struct sweepLocker;
     struct sweepLocked;
-    inline constexpr sweepClass sweepClassDone = sweepClass(~ uint32_t(0LL));
 }
 #include "golang/runtime/mheap.fwd.h"
 

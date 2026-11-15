@@ -16,6 +16,18 @@ namespace golang::runtime
     void lockVerifyMSize();
     bool mutexSampleContention();
 }
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool mutexPreferLowLatency(mutex* l);
+    bool mutexContended(mutex* l);
+    void lock(mutex* l);
+    void lock2(mutex* l);
+    void unlock(mutex* l);
+    void unlock2(mutex* l);
+    void unlock2Wake(mutex* l, bool haveStackLock, int64_t endTicks);
+}
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
@@ -38,13 +50,6 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct mWaitList& value);
     muintptr mutexWaitListHead(uintptr_t v);
-    bool mutexPreferLowLatency(mutex* l);
-    bool mutexContended(mutex* l);
-    void lock(mutex* l);
-    void lock2(mutex* l);
-    void unlock(mutex* l);
-    void unlock2(mutex* l);
-    void unlock2Wake(mutex* l, bool haveStackLock, int64_t endTicks);
 
     namespace rec
     {

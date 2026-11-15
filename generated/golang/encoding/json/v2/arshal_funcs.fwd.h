@@ -16,9 +16,9 @@ namespace golang::encoding::json::v2
 {
     namespace jsontext = golang::encoding::json::jsontext;
     using typedMarshalers = typedArshalers<jsontext::Encoder>;
+    using Marshalers = typedMarshalers;
     using typedUnmarshalers = typedArshalers<jsontext::Decoder>;
+    using Unmarshalers = typedUnmarshalers;
     using typedMarshaler = typedArshaler<jsontext::Encoder>;
     using typedUnmarshaler = typedArshaler<jsontext::Decoder>;
-    using Marshalers = typedMarshalers;
-    using Unmarshalers = typedUnmarshalers;
 }

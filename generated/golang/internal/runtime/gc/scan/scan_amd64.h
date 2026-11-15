@@ -15,12 +15,12 @@ namespace golang::internal::runtime::gc::scan
     bool HasFastScanSpanPacked();
     bool CanAVX512();
     extern bool avx512ScanPackedReqsMet;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/internal/runtime/gc/scan.fwd.h"
 
 namespace golang::internal::runtime::gc::scan
 {
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace gc = golang::internal::runtime::gc;
     int32_t ScanSpanPacked(gocpp::unsafe_pointer mem, uintptr_t* bufp, gocpp::array_ptr<gc::ObjMask> objMarks, uintptr_t sizeClass, gocpp::array_ptr<gc::PtrMask> ptrMask);
     int32_t ScanSpanPackedAVX512(gocpp::unsafe_pointer mem, uintptr_t* bufp, gocpp::array_ptr<gc::ObjMask> objMarks, uintptr_t sizeClass, gocpp::array_ptr<gc::PtrMask> ptrMask);

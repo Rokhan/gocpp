@@ -65,43 +65,66 @@ namespace golang::runtime
     struct linearAlloc;
     struct notInHeap;
 }
-#include "golang/internal/goarch/goarch.fwd.h"
-#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+#include "golang/internal/goos/zgoos_windows.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goos = golang::internal::goos;
+    // arenaL1Bits is the number of bits of the arena number
+    // covered by the first level arena map.
+    //
+    // This number should be small, since the first level arena
+    // map requires PtrSize*(1<<arenaL1Bits) of space in the
+    // binary's BSS. It can be zero, in which case the first level
+    // index is effectively unused. There is a performance benefit
+    // to this, since the generated code can be more efficient,
+    // but comes at the cost of having a large L2 mapping.
+    //
+    // We use the L1 map on 64-bit Windows because the arena size
+    // is small, but the address space is still 48 bits, and
+    // there's a high cost to having a large L2.
+    inline constexpr int64_t arenaL1Bits = 6 * (_64bit * goos::IsWindows);
+}
 #include "golang/internal/goexperiment/exp_randomizedheapbase64_on.fwd.h"
 #include "golang/internal/goexperiment/exp_runtimefreegc_off.fwd.h"
 #include "golang/internal/goexperiment/exp_runtimesecret_off.fwd.h"
 #include "golang/internal/goexperiment/exp_sizespecializedmalloc_on.fwd.h"
-#include "golang/internal/goos/zgoos_windows.fwd.h"
-#include "golang/internal/runtime/gc/malloc.fwd.h"
-#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
-
-namespace golang::runtime
-{
-    namespace gc = golang::internal::runtime::gc;
-    namespace goarch = golang::internal::goarch;
-    namespace goos = golang::internal::goos;
-}
 #include "golang/runtime/asan0.fwd.h"
-#include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/mem_nonsbrk.fwd.h"
 
 namespace golang::runtime
 {
     namespace goexperiment = golang::internal::goexperiment;
 }
 #include "golang/runtime/msan0.fwd.h"
-#include "golang/runtime/race0.fwd.h"
 #include "golang/runtime/valgrind0.fwd.h"
 
 namespace golang::runtime
 {
-    inline constexpr int64_t maxSmallSize = gc::MaxSmallSize;
-    inline constexpr int64_t pageSize = 1 << gc::PageShift;
-    inline constexpr int64_t minSizeForMallocHeader = gc::MinSizeForMallocHeader;
-    inline constexpr int64_t mallocHeaderSize = gc::MallocHeaderSize;
-    // Tiny allocator parameters, see "Tiny allocator" comment in malloc.go.
-    inline constexpr int64_t _TinySize = gc::TinySize;
-    inline constexpr int8_t _TinySizeClass = int8_t(gc::TinySizeClass);
+    // runtimeFreegcEnabled is the set of conditions where we enable the runtime.freegc
+    // implementation and the corresponding allocation-related changes: the experiment must be
+    // enabled, and none of the memory sanitizers should be enabled. We allow the race detector,
+    // in contrast to sizeSpecializedMallocEnabled.
+    // TODO(thepudds): it would be nice to check Valgrind integration, though there are some hints
+    // there might not be any canned tests in tree for Go's integration with Valgrind.
+    inline constexpr bool runtimeFreegcEnabled = goexperiment::RuntimeFreegc && ! asanenabled && ! msanenabled && ! valgrindenabled;
+}
+#include "golang/runtime/extern.fwd.h"
+#include "golang/runtime/race0.fwd.h"
+
+namespace golang::runtime
+{
+    // sizeSpecializedMallocEnabled is the set of conditions where we enable the size-specialized
+    // mallocgc implementation: the experiment must be enabled, and none of the sanitizers should
+    // be enabled. The tables used to select the size-specialized malloc function do not compile
+    // properly on plan9, so size-specialized malloc is also disabled on plan9.
+    inline const bool sizeSpecializedMallocEnabled = goexperiment::SizeSpecializedMalloc && GOOS != "plan9"_s && ! asanenabled && ! raceenabled && ! msanenabled && ! valgrindenabled;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/internal/goarch/zgoarch_amd64.fwd.h"
+
+namespace golang::runtime
+{
+    namespace goarch = golang::internal::goarch;
     // Number of orders that get caching. Order 0 is FixedStack
     // and each successive order is twice as large.
     // We want to cache 2KB, 4KB, 8KB, and 16KB stacks. Larger stacks
@@ -177,24 +200,49 @@ namespace golang::runtime
     //
     // WebAssembly currently has a limit of 4GB linear memory.
     inline constexpr int64_t heapAddrBits = (_64bit * (1 - goarch::IsWasm) * (1 - goos::IsIos * goarch::IsArm64)) * 48 + (1 - _64bit + goarch::IsWasm) * (32 - (goarch::IsMips + goarch::IsMipsle)) + 40 * goos::IsIos * goarch::IsArm64;
+    // maxAlloc is the maximum size of an allocation. On 64-bit,
+    // it's theoretically possible to allocate 1<<heapAddrBits bytes. On
+    // 32-bit, however, this is one less than 1<<32 because the
+    // number of bytes in the address space doesn't actually fit
+    // in a uintptr.
+    inline constexpr int64_t maxAlloc = (1LL << heapAddrBits) - (1LL - int64_t(_64bit)) * 1LL;
     // logHeapArenaBytes is log_2 of heapArenaBytes. For clarity,
     // prefer using heapArenaBytes where possible (we need the
     // constant to compute some other constants).
     inline constexpr int64_t logHeapArenaBytes = (6 + 20) * (_64bit * (1 - goos::IsWindows) * (1 - goarch::IsWasm) * (1 - goos::IsIos * goarch::IsArm64)) + (2 + 20) * (_64bit * goos::IsWindows) + (2 + 20) * (1 - _64bit) + (9 + 10) * goarch::IsWasm + (2 + 20) * goos::IsIos * goarch::IsArm64;
-    // arenaL1Bits is the number of bits of the arena number
-    // covered by the first level arena map.
+    // heapArenaBytes is the size of a heap arena. The heap
+    // consists of mappings of size heapArenaBytes, aligned to
+    // heapArenaBytes. The initial heap mapping is one arena.
     //
-    // This number should be small, since the first level arena
-    // map requires PtrSize*(1<<arenaL1Bits) of space in the
-    // binary's BSS. It can be zero, in which case the first level
-    // index is effectively unused. There is a performance benefit
-    // to this, since the generated code can be more efficient,
-    // but comes at the cost of having a large L2 mapping.
+    // This is currently 64MB on 64-bit non-Windows, 4MB on
+    // 32-bit and on Windows, and 512KB on Wasm. We use smaller
+    // arenas on Windows because all committed memory is charged
+    // to the process, even if it's not touched. Hence, for
+    // processes with small heaps, the mapped arena space needs
+    // to be commensurate. This is particularly important with
+    // the race detector, since it significantly amplifies the
+    // cost of committed memory. We use smaller arenas on Wasm
+    // because some Wasm programs have very small heap, and
+    // everything in the Wasm linear memory is charged.
+    inline constexpr int64_t heapArenaBytes = 1 << logHeapArenaBytes;
+    inline constexpr int64_t heapArenaWords = heapArenaBytes / goarch::PtrSize;
+    // heapArenaBitmapWords is the size of each heap arena's bitmap in uintptrs.
+    inline constexpr int64_t heapArenaBitmapWords = heapArenaWords / (8 * goarch::PtrSize);
+    // arenaL2Bits is the number of bits of the arena number
+    // covered by the second level arena index.
     //
-    // We use the L1 map on 64-bit Windows because the arena size
-    // is small, but the address space is still 48 bits, and
-    // there's a high cost to having a large L2.
-    inline constexpr int64_t arenaL1Bits = 6 * (_64bit * goos::IsWindows);
+    // The size of each arena map allocation is proportional to
+    // 1<<arenaL2Bits, so it's important that this not be too
+    // large. 48 bits leads to 32MB arena index allocations, which
+    // is about the practical threshold.
+    inline constexpr int64_t arenaL2Bits = heapAddrBits - logHeapArenaBytes - arenaL1Bits;
+    // arenaL1Shift is the number of bits to shift an arena frame
+    // number by to compute an index into the first level arena map.
+    inline constexpr int64_t arenaL1Shift = arenaL2Bits;
+    // arenaBits is the total bits in a combined arena map index.
+    // This is split between the index into the L1 arena map and
+    // the L2 arena map.
+    inline constexpr int64_t arenaBits = arenaL1Bits + arenaL2Bits;
     // arenaBaseOffset is the pointer value that corresponds to
     // index 0 in the heap arena map.
     //
@@ -211,69 +259,41 @@ namespace golang::runtime
     // On other platforms, the user address space is contiguous
     // and starts at 0, so no offset is necessary.
     inline constexpr uint64_t arenaBaseOffset = uint64_t(0xffff800000000000_bi * goarch::IsAmd64 + 0x0a00000000000000_bi * goos::IsAix);
-    // randomizeHeapBase indicates if the heap base address should be randomized.
-    // See comment in mallocinit for how the randomization is performed.
-    inline constexpr bool randomizeHeapBase = goexperiment::RandomizedHeapBase64 && goarch::PtrSize == 8 && ! isSbrkPlatform && ! raceenabled && ! msanenabled && ! asanenabled;
-    // sizeSpecializedMallocEnabled is the set of conditions where we enable the size-specialized
-    // mallocgc implementation: the experiment must be enabled, and none of the sanitizers should
-    // be enabled. The tables used to select the size-specialized malloc function do not compile
-    // properly on plan9, so size-specialized malloc is also disabled on plan9.
-    inline const bool sizeSpecializedMallocEnabled = goexperiment::SizeSpecializedMalloc && GOOS != "plan9"_s && ! asanenabled && ! raceenabled && ! msanenabled && ! valgrindenabled;
-    // runtimeFreegcEnabled is the set of conditions where we enable the runtime.freegc
-    // implementation and the corresponding allocation-related changes: the experiment must be
-    // enabled, and none of the memory sanitizers should be enabled. We allow the race detector,
-    // in contrast to sizeSpecializedMallocEnabled.
-    // TODO(thepudds): it would be nice to check Valgrind integration, though there are some hints
-    // there might not be any canned tests in tree for Go's integration with Valgrind.
-    inline constexpr bool runtimeFreegcEnabled = goexperiment::RuntimeFreegc && ! asanenabled && ! msanenabled && ! valgrindenabled;
-    inline constexpr int64_t maxTinySize = _TinySize;
-    inline constexpr int8_t tinySizeClass = _TinySizeClass;
-    inline constexpr int64_t pageMask = pageSize - 1;
-    // Unused. Left for viewcore.
-    inline constexpr int64_t _PageSize = pageSize;
-    // maxAlloc is the maximum size of an allocation. On 64-bit,
-    // it's theoretically possible to allocate 1<<heapAddrBits bytes. On
-    // 32-bit, however, this is one less than 1<<32 because the
-    // number of bytes in the address space doesn't actually fit
-    // in a uintptr.
-    inline constexpr int64_t maxAlloc = (1LL << heapAddrBits) - (1LL - int64_t(_64bit)) * 1LL;
-    // heapArenaBytes is the size of a heap arena. The heap
-    // consists of mappings of size heapArenaBytes, aligned to
-    // heapArenaBytes. The initial heap mapping is one arena.
-    //
-    // This is currently 64MB on 64-bit non-Windows, 4MB on
-    // 32-bit and on Windows, and 512KB on Wasm. We use smaller
-    // arenas on Windows because all committed memory is charged
-    // to the process, even if it's not touched. Hence, for
-    // processes with small heaps, the mapped arena space needs
-    // to be commensurate. This is particularly important with
-    // the race detector, since it significantly amplifies the
-    // cost of committed memory. We use smaller arenas on Wasm
-    // because some Wasm programs have very small heap, and
-    // everything in the Wasm linear memory is charged.
-    inline constexpr int64_t heapArenaBytes = 1 << logHeapArenaBytes;
-    // arenaL2Bits is the number of bits of the arena number
-    // covered by the second level arena index.
-    //
-    // The size of each arena map allocation is proportional to
-    // 1<<arenaL2Bits, so it's important that this not be too
-    // large. 48 bits leads to 32MB arena index allocations, which
-    // is about the practical threshold.
-    inline constexpr int64_t arenaL2Bits = heapAddrBits - logHeapArenaBytes - arenaL1Bits;
     // A typed version of this constant that will make it into DWARF (for viewcore).
     inline constexpr uintptr_t arenaBaseOffsetUintptr = uintptr_t(arenaBaseOffset);
     // randHeapBasePrefixMask is used to extract the top byte of the randomized
     // heap base address.
     inline constexpr uintptr_t randHeapBasePrefixMask = ~ uintptr_t(0xffLL << (heapAddrBits - 8));
-    inline constexpr int64_t heapArenaWords = heapArenaBytes / goarch::PtrSize;
+}
+#include "golang/runtime/mem_nonsbrk.fwd.h"
+
+namespace golang::runtime
+{
+    // randomizeHeapBase indicates if the heap base address should be randomized.
+    // See comment in mallocinit for how the randomization is performed.
+    inline constexpr bool randomizeHeapBase = goexperiment::RandomizedHeapBase64 && goarch::PtrSize == 8 && ! isSbrkPlatform && ! raceenabled && ! msanenabled && ! asanenabled;
+}
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
+
+namespace golang::runtime
+{
+    namespace gc = golang::internal::runtime::gc;
+}
+#include "golang/internal/runtime/gc/malloc.fwd.h"
+
+namespace golang::runtime
+{
+    inline constexpr int64_t maxSmallSize = gc::MaxSmallSize;
+    inline constexpr int64_t pageSize = 1 << gc::PageShift;
+    inline constexpr int64_t pageMask = pageSize - 1;
+    // Unused. Left for viewcore.
+    inline constexpr int64_t _PageSize = pageSize;
+    inline constexpr int64_t minSizeForMallocHeader = gc::MinSizeForMallocHeader;
+    inline constexpr int64_t mallocHeaderSize = gc::MallocHeaderSize;
+    // Tiny allocator parameters, see "Tiny allocator" comment in malloc.go.
+    inline constexpr int64_t _TinySize = gc::TinySize;
+    inline constexpr int64_t maxTinySize = _TinySize;
+    inline constexpr int8_t _TinySizeClass = int8_t(gc::TinySizeClass);
+    inline constexpr int8_t tinySizeClass = _TinySizeClass;
     inline constexpr int64_t pagesPerArena = heapArenaBytes / pageSize;
-    // arenaL1Shift is the number of bits to shift an arena frame
-    // number by to compute an index into the first level arena map.
-    inline constexpr int64_t arenaL1Shift = arenaL2Bits;
-    // arenaBits is the total bits in a combined arena map index.
-    // This is split between the index into the L1 arena map and
-    // the L2 arena map.
-    inline constexpr int64_t arenaBits = arenaL1Bits + arenaL2Bits;
-    // heapArenaBitmapWords is the size of each heap arena's bitmap in uintptrs.
-    inline constexpr int64_t heapArenaBitmapWords = heapArenaWords / (8 * goarch::PtrSize);
 }

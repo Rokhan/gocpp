@@ -15,6 +15,35 @@ namespace golang::internal::runtime::maps
     uintptr_t h1(uintptr_t h);
     uintptr_t h2(uintptr_t h);
     uint8_t depthToShift(uint8_t depth);
+}
+#include "golang/internal/abi/map.fwd.h"
+
+namespace golang::internal::runtime::maps
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/iface.fwd.h"
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::internal::runtime::maps
+{
+    struct unhashableTypeError
+    {
+        abi::Type* typ{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct unhashableTypeError& value);
+    gocpp::string typeString(abi::Type* typ);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct Map
     {
@@ -68,35 +97,10 @@ namespace golang::internal::runtime::maps
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Map& value);
-}
-#include "golang/internal/abi/iface.fwd.h"
-#include "golang/internal/abi/map.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-
-namespace golang::internal::runtime::maps
-{
-    golang::internal::runtime::maps::Map* NewEmptyMap();
-    namespace abi = golang::internal::abi;
     golang::internal::runtime::maps::Map* NewMap(abi::MapType* mt, uintptr_t hint, golang::internal::runtime::maps::Map* m, uintptr_t maxAlloc);
+    golang::internal::runtime::maps::Map* NewEmptyMap();
     gocpp::error mapKeyError(abi::MapType* t, gocpp::unsafe_pointer p);
     gocpp::error mapKeyError2(abi::Type* t, gocpp::unsafe_pointer p);
-    struct unhashableTypeError
-    {
-        abi::Type* typ{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct unhashableTypeError& value);
-    gocpp::string typeString(abi::Type* typ);
 }
 
 #include "golang/internal/abi/map.h"

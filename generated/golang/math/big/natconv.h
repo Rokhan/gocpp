@@ -23,12 +23,16 @@ namespace golang::math::big
     extern int64_t leafSize;
 }
 #include "golang/math/big/arith.h"
-#include "golang/math/big/nat.h"
 
 namespace golang::math::big
 {
     std::tuple<Word, int64_t> maxPow(Word b);
     Word pow(Word x, int64_t n);
+}
+#include "golang/math/big/nat.h"
+
+namespace golang::math::big
+{
     struct divisor
     {
         golang::math::big::nat bbb{}; // divisor
@@ -47,6 +51,7 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct divisor& value);
+    gocpp::slice<divisor> divisors(stack* stk, int64_t m, Word b, int64_t ndigits, Word bb);
 }
 #include "golang/sync/mutex.fwd.h"
 
@@ -74,15 +79,7 @@ namespace golang::math::big
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        void Lock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
-        bool TryLock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
-        void Unlock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct cacheBase10Struct& value);
-    gocpp::slice<divisor> divisors(stack* stk, int64_t m, Word b, int64_t ndigits, Word bb);
     extern cacheBase10Struct cacheBase10;
 }
 
@@ -100,6 +97,9 @@ namespace golang::math::big
         gocpp::slice<unsigned char> utoa(golang::math::big::nat x, int64_t base);
         gocpp::slice<unsigned char> itoa(golang::math::big::nat x, bool neg, int64_t base);
         void convertWords(golang::math::big::nat q, stack* stk, gocpp::slice<unsigned char> s, Word b, int64_t ndigits, Word bb, gocpp::slice<divisor> table);
+        void Lock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
+        bool TryLock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
+        void Unlock(const gocpp::PtrRecv<struct cacheBase10Struct, false>& self);
         golang::math::big::nat expWW(golang::math::big::nat z, stack* stk, Word x, Word y);
     }
 }

@@ -21,12 +21,16 @@ namespace golang::internal::runtime::gc
 {
     namespace goarch = golang::internal::goarch;
 }
-#include "golang/internal/runtime/gc/malloc.fwd.h"
 #include "golang/internal/runtime/gc/sizeclasses.fwd.h"
 
 namespace golang::internal::runtime::gc
 {
     using ObjMask = gocpp::defined<gocpp::array<uintptr_t, MaxObjsPerSpan / (goarch::PtrSize * 8)>, GoTag_ObjMask>;
+}
+#include "golang/internal/runtime/gc/malloc.fwd.h"
+
+namespace golang::internal::runtime::gc
+{
     using PtrMask = gocpp::defined<gocpp::array<uintptr_t, PageSize / goarch::PtrSize / (goarch::PtrSize * 8)>, GoTag_PtrMask>;
 
     namespace rec

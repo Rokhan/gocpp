@@ -21,14 +21,14 @@ namespace golang::runtime
     void sigInitIgnored(uint32_t s);
     bool signal_ignored(uint32_t s);
 }
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
 #include "golang/internal/runtime/atomic/types.fwd.h"
 
 namespace golang::runtime
 {
     namespace atomic = golang::internal::runtime::atomic;
 }
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
 #include "golang/internal/runtime/atomic/types.h"
 #include "golang/runtime/note_other.h"
 #include "golang/runtime/os_windows.fwd.h"

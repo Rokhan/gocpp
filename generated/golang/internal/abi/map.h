@@ -54,6 +54,8 @@ namespace golang::internal::abi
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct MapType& value);
+
     namespace rec
     {
         int64_t Align(const gocpp::PtrRecv<struct MapType, false>& self);
@@ -79,12 +81,6 @@ namespace golang::internal::abi
         abi::SliceType* SliceType(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::StructType* StructType(const gocpp::PtrRecv<struct MapType, false>& self);
         abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct MapType, false>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct MapType& value);
-
-    namespace rec
-    {
         bool NeedKeyUpdate(golang::internal::abi::MapType* mt);
         bool HashMightPanic(golang::internal::abi::MapType* mt);
         bool IndirectKey(golang::internal::abi::MapType* mt);

@@ -20,7 +20,6 @@ namespace golang::runtime
     void netpollBreak();
     bool netpollQueueTimer(int64_t delay);
 }
-#include "golang/runtime/proc.h"
 #include "golang/runtime/netpoll.fwd.h"
 
 namespace golang::runtime
@@ -28,17 +27,36 @@ namespace golang::runtime
     uintptr_t packNetpollKey(uint8_t source, pollDesc* pd);
     int32_t netpollopen(uintptr_t fd, pollDesc* pd);
     void netpollarm(pollDesc* pd, int64_t mode);
-    std::tuple<gList, int32_t> netpoll(int64_t delay);
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/syscall/windows/defs_windows.fwd.h"
-#include "golang/internal/runtime/atomic/types.h"
-#include "golang/internal/runtime/syscall/windows/defs_windows.h"
 
 namespace golang::runtime
 {
     namespace windows = golang::internal::runtime::syscall::windows;
-    namespace atomic = golang::internal::runtime::atomic;
+    struct overlappedEntry
+    {
+        uintptr_t key{};
+        windows::Overlapped* ov{};
+        uintptr_t internal{};
+        uint32_t qty{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value);
+}
+#include "golang/internal/runtime/syscall/windows/defs_windows.h"
+
+namespace golang::runtime
+{
     struct pollOperation
     {
         // used by windows
@@ -59,27 +77,20 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pollOperation& value);
-    struct overlappedEntry
-    {
-        uintptr_t key{};
-        windows::Overlapped* ov{};
-        uintptr_t internal{};
-        uint32_t qty{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct overlappedEntry& value);
-    extern atomic::Uint32 netpollWakeSig;
     pollOperation* pollOperationFromOverlappedEntry(overlappedEntry* e);
+}
+#include "golang/runtime/proc.h"
+
+namespace golang::runtime
+{
+    std::tuple<gList, int32_t> netpoll(int64_t delay);
+}
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+    extern atomic::Uint32 netpollWakeSig;
 
     namespace rec
     {

@@ -38,8 +38,36 @@ namespace golang::internal::sync
 {
     namespace atomic = golang::sync::atomic;
 }
-#include "golang/internal/sync/mutex.h"
 #include "golang/sync/atomic/type.h"
+
+namespace golang::internal::sync
+{
+    template<typename K, typename V> 
+    struct entry
+    {
+        node<K, V> node{};
+        atomic::Pointer<golang::internal::sync::entry<K, V>> overflow{}; // Overflow for hash collisions.
+        K key{};
+        V value{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    template<typename K, typename V>
+    std::ostream& operator<<(std::ostream& os, const struct entry<K, V>& value);
+
+    template<typename K, typename V>
+    golang::internal::sync::entry<K, V>* newEntryNode(K key, V value);
+}
+#include "golang/internal/sync/mutex.h"
 
 namespace golang::internal::sync
 {
@@ -86,51 +114,11 @@ namespace golang::internal::sync
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        template<typename K, typename V>
-        sync::entry<K, V>* entry(const gocpp::PtrRecv<struct indirect<K, V>, false>& self);
-        template<typename K, typename V>
-        sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct indirect<K, V>, false>& self);
-    }
-
     template<typename K, typename V>
     std::ostream& operator<<(std::ostream& os, const struct indirect<K, V>& value);
-    template<typename K, typename V> 
-    struct entry
-    {
-        node<K, V> node{};
-        atomic::Pointer<golang::internal::sync::entry<K, V>> overflow{}; // Overflow for hash collisions.
-        K key{};
-        V value{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    namespace rec
-    {
-        template<typename K, typename V>
-        sync::entry<K, V>* entry(const gocpp::PtrRecv<struct entry<K, V>, false>& self);
-        template<typename K, typename V>
-        sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct entry<K, V>, false>& self);
-    }
-
-    template<typename K, typename V>
-    std::ostream& operator<<(std::ostream& os, const struct entry<K, V>& value);
 
     template<typename K, typename V>
     golang::internal::sync::indirect<K, V>* newIndirectNode(golang::internal::sync::indirect<K, V>* parent);
-
-    template<typename K, typename V>
-    golang::internal::sync::entry<K, V>* newEntryNode(K key, V value);
 }
 
 #include "golang/sync/atomic/type.h"
@@ -188,9 +176,13 @@ namespace golang::internal::sync
         
         template<typename K, typename V>
         void Clear(HashTrieMap<K, V>* ht);
+        template<typename K, typename V> sync::entry<K, V>* entry(const gocpp::PtrRecv<struct indirect<K, V>, false>& self);
+        template<typename K, typename V> sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct indirect<K, V>, false>& self);
         
         template<typename K, typename V>
         bool empty(golang::internal::sync::indirect<K, V>* i);
+        template<typename K, typename V> sync::entry<K, V>* entry(const gocpp::PtrRecv<struct entry<K, V>, false>& self);
+        template<typename K, typename V> sync::indirect<K, V>* indirect(const gocpp::PtrRecv<struct entry<K, V>, false>& self);
         
         template<typename K, typename V>
         std::tuple<V, bool> lookup(golang::internal::sync::entry<K, V>* e, K key);

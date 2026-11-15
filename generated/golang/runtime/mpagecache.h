@@ -31,7 +31,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct pageCache& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    /*inline constexpr uintptr_t pageCachePages = 8 * gocpp::Sizeof<uint64_t>() [known mising deps] */;
+    inline constexpr uintptr_t pageCachePages = 8 * gocpp::Sizeof<uint64_t>();
 }
 
 #include "golang/runtime/mpagealloc.h"

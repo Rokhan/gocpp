@@ -90,6 +90,24 @@ namespace golang::golang_org::x::tools::internal::event::label
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Key& value);
+    struct Label
+    {
+        golang::golang_org::x::tools::internal::event::label::Key key{};
+        uint64_t packed{};
+        go_any untyped{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct Label& value);
     struct Map : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
@@ -226,12 +244,9 @@ namespace golang::golang_org::x::tools::internal::event::label
     }
 
     std::ostream& operator<<(std::ostream& os, const struct List& value);
-    extern list* emptyList;
-    struct Label
+    struct list
     {
-        golang::golang_org::x::tools::internal::event::label::Key key{};
-        uint64_t packed{};
-        go_any untyped{};
+        gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels{};
 
         using isGoStruct = void;
 
@@ -244,7 +259,7 @@ namespace golang::golang_org::x::tools::internal::event::label
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct Label& value);
+    std::ostream& operator<<(std::ostream& os, const struct list& value);
     struct filter
     {
         gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys{};
@@ -262,64 +277,6 @@ namespace golang::golang_org::x::tools::internal::event::label
     };
 
     std::ostream& operator<<(std::ostream& os, const struct filter& value);
-    struct mapChain
-    {
-        gocpp::slice<Map> maps{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct mapChain& value);
-    List Filter(List l, gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys);
-
-    template<typename... Args>
-    List Filter(List l, Args... keys)
-    {
-        return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(keys...));
-    }
-
-    template<typename... Args>
-    List Filter(List l, golang::golang_org::x::tools::internal::event::label::Key value, Args... keys)
-    {
-        return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(value, keys...));
-    }
-    Map MergeMaps(gocpp::slice<Map> srcs);
-
-    template<typename... Args>
-    Map MergeMaps(Args... srcs)
-    {
-        return MergeMaps(gocpp::ToSlice<Map>(srcs...));
-    }
-
-    template<typename... Args>
-    Map MergeMaps(Map value, Args... srcs)
-    {
-        return MergeMaps(gocpp::ToSlice<Map>(value, srcs...));
-    }
-    struct list
-    {
-        gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct list& value);
     struct listMap
     {
         gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels{};
@@ -336,9 +293,26 @@ namespace golang::golang_org::x::tools::internal::event::label
     };
 
     std::ostream& operator<<(std::ostream& os, const struct listMap& value);
+    struct mapChain
+    {
+        gocpp::slice<Map> maps{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct mapChain& value);
     golang::golang_org::x::tools::internal::event::label::Label OfValue(golang::golang_org::x::tools::internal::event::label::Key k, go_any value);
     golang::golang_org::x::tools::internal::event::label::Label Of64(golang::golang_org::x::tools::internal::event::label::Key k, uint64_t v);
     golang::golang_org::x::tools::internal::event::label::Label OfString(golang::golang_org::x::tools::internal::event::label::Key k, gocpp::string v);
+    extern list* emptyList;
     List NewList(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels);
 
     template<typename... Args>
@@ -352,6 +326,19 @@ namespace golang::golang_org::x::tools::internal::event::label
     {
         return NewList(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(value, labels...));
     }
+    List Filter(List l, gocpp::slice<golang::golang_org::x::tools::internal::event::label::Key> keys);
+
+    template<typename... Args>
+    List Filter(List l, Args... keys)
+    {
+        return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(keys...));
+    }
+
+    template<typename... Args>
+    List Filter(List l, golang::golang_org::x::tools::internal::event::label::Key value, Args... keys)
+    {
+        return Filter(l, gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Key>(value, keys...));
+    }
     Map NewMap(gocpp::slice<golang::golang_org::x::tools::internal::event::label::Label> labels);
 
     template<typename... Args>
@@ -364,6 +351,19 @@ namespace golang::golang_org::x::tools::internal::event::label
     Map NewMap(golang::golang_org::x::tools::internal::event::label::Label value, Args... labels)
     {
         return NewMap(gocpp::ToSlice<golang::golang_org::x::tools::internal::event::label::Label>(value, labels...));
+    }
+    Map MergeMaps(gocpp::slice<Map> srcs);
+
+    template<typename... Args>
+    Map MergeMaps(Args... srcs)
+    {
+        return MergeMaps(gocpp::ToSlice<Map>(srcs...));
+    }
+
+    template<typename... Args>
+    Map MergeMaps(Map value, Args... srcs)
+    {
+        return MergeMaps(gocpp::ToSlice<Map>(value, srcs...));
     }
 }
 

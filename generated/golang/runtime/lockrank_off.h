@@ -31,8 +31,15 @@ namespace golang::runtime
     void worldStarted();
     void assertWorldStopped();
 }
-#include "golang/runtime/lockrank.h"
 #include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    void unlockWithRank(mutex* l);
+    void assertLockHeld(mutex* l);
+    void assertWorldStoppedOrLockHeld(mutex* l);
+}
+#include "golang/runtime/lockrank.h"
 
 namespace golang::runtime
 {
@@ -40,12 +47,9 @@ namespace golang::runtime
     lockRank getLockRank(mutex* l);
     void lockWithRank(mutex* l, lockRank rank);
     void acquireLockRankAndM(lockRank rank);
-    void unlockWithRank(mutex* l);
     void releaseLockRankAndM(lockRank rank);
     void lockWithRankMayAcquire(mutex* l, lockRank rank);
-    void assertLockHeld(mutex* l);
     void assertRankHeld(lockRank r);
-    void assertWorldStoppedOrLockHeld(mutex* l);
 
     namespace rec
     {

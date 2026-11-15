@@ -14,11 +14,15 @@ namespace golang::encoding::json
     using Delim = gocpp::defined<gocpp::rune, GoTag_Delim>;
 }
 #include "golang/encoding/json/jsontext/decode.fwd.h"
+
+namespace golang::encoding::json
+{
+    namespace jsontext = golang::encoding::json::jsontext;
+}
 #include "golang/encoding/json/jsontext/options.fwd.h"
 #include "golang/encoding/json/jsontext/value.fwd.h"
 
 namespace golang::encoding::json
 {
-    namespace jsontext = golang::encoding::json::jsontext;
     using RawMessage = jsontext::Value;
 }

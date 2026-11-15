@@ -30,6 +30,7 @@ namespace golang::encoding::base32
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
+    Encoding* NewEncoding(gocpp::string encoder);
     // StdEncoding is the standard base32 encoding, as defined in RFC 4648.
     extern base32::Encoding* StdEncoding;
     // HexEncoding is the “Extended Hex Alphabet” defined in RFC 4648.
@@ -39,7 +40,6 @@ namespace golang::encoding::base32
     using CorruptInputError = gocpp::defined<int64_t, GoTag_CorruptInputError>;
     int64_t stripNewlines(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src);
     int64_t decodedLen(int64_t n, gocpp::rune padChar);
-    Encoding* NewEncoding(gocpp::string encoder);
 }
 #include "golang/io/io.fwd.h"
 

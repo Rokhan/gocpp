@@ -52,13 +52,16 @@ namespace golang::strings
     int64_t lastIndexFunc(gocpp::string s, std::function<bool (gocpp::rune _1)> f, bool truth);
     struct GoTag_asciiSet { };
     using asciiSet = gocpp::defined<gocpp::array<bool, 256>, GoTag_asciiSet>;
+    std::tuple<asciiSet, bool> makeASCIISet(gocpp::string chars);
     bool shouldUseASCIISet(int64_t bufLen);
     gocpp::string Trim(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimLeft(gocpp::string s, gocpp::string cutset);
     gocpp::string trimLeftByte(gocpp::string s, unsigned char c);
+    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as);
     gocpp::string trimLeftUnicode(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimRight(gocpp::string s, gocpp::string cutset);
     gocpp::string trimRightByte(gocpp::string s, unsigned char c);
+    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as);
     gocpp::string trimRightUnicode(gocpp::string s, gocpp::string cutset);
     gocpp::string TrimSpace(gocpp::string s);
     gocpp::string TrimPrefix(gocpp::string s, gocpp::string prefix);
@@ -71,14 +74,10 @@ namespace golang::strings
     std::tuple<gocpp::string, bool> CutPrefix(gocpp::string s, gocpp::string prefix);
     std::tuple<gocpp::string, bool> CutSuffix(gocpp::string s, gocpp::string suffix);
     std::tuple<gocpp::string, gocpp::string, bool> CutLast(gocpp::string s, gocpp::string sep);
-    std::tuple<asciiSet, bool> makeASCIISet(gocpp::string chars);
-    gocpp::string trimLeftASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as);
-    gocpp::string trimRightASCII(gocpp::string s, gocpp::array_ptr<asciiSet> as);
 }
+#include "golang/unicode/letter.h"
 #include "golang/unicode/digit.fwd.h"
 #include "golang/unicode/graphic.fwd.h"
-#include "golang/unicode/letter.fwd.h"
-#include "golang/unicode/letter.h"
 
 namespace golang::strings
 {

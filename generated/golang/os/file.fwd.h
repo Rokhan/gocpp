@@ -19,14 +19,18 @@ namespace golang::os
     struct fileWithoutWriteTo;
     using dirFS = gocpp::string;
 }
-#include "golang/syscall/net.fwd.h"
 #include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/net.fwd.h"
+#include "golang/syscall/zerrors_windows.fwd.h"
+
+namespace golang::os
+{
     // Flags to OpenFile wrapping those of the underlying system. Not all
     // flags may be implemented on a given system.
     // Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.

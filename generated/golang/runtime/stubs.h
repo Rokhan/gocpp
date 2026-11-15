@@ -36,6 +36,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct neverCallThisFunction& value);
+    void goexit(neverCallThisFunction);
     void publicationBarrier();
     void morestack();
     void morestack_noctxt();
@@ -59,6 +60,7 @@ namespace golang::runtime
     void duffcopy();
     void addmoduledata();
     void sigpanic0();
+    void systemstack(std::function<void ()> fn);
     // intArgRegs is used by the various register assignment
     // algorithm implementations in the runtime. These include:.
     // - Finalizers (mfinal.go)
@@ -79,36 +81,32 @@ namespace golang::runtime
     //
     // Protected by finlock.
     extern int64_t intArgRegs;
-    void systemstack(std::function<void ()> fn);
-    void goexit(neverCallThisFunction);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
 #include "golang/runtime/runtime2.fwd.h"
 
 namespace golang::runtime
 {
-    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x);
     g* getg();
     void mcall(std::function<void (g* _1)> fn);
+    void gogo(gobuf* buf);
+    void setg(g* gg);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    gocpp::unsafe_pointer add(gocpp::unsafe_pointer p, uintptr_t x);
     void memclrNoHeapPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
     void reflect_memclrNoHeapPointers(gocpp::unsafe_pointer ptr, uintptr_t n);
     void memmove(gocpp::unsafe_pointer to, gocpp::unsafe_pointer from, uintptr_t n);
     void reflect_memmove(gocpp::unsafe_pointer to, gocpp::unsafe_pointer from, uintptr_t n);
     bool memequal(gocpp::unsafe_pointer a, gocpp::unsafe_pointer b, uintptr_t size);
     gocpp::unsafe_pointer noescape(gocpp::unsafe_pointer p);
-    void gogo(gobuf* buf);
-    void setg(g* gg);
     int32_t asmcgocall(gocpp::unsafe_pointer fn, gocpp::unsafe_pointer arg);
     bool memequal_varlen(gocpp::unsafe_pointer a, gocpp::unsafe_pointer b);
 }
 #include "golang/internal/abi/abi.fwd.h"
 #include "golang/internal/abi/abi_amd64.fwd.h"
-#include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime
 {
     namespace abi = golang::internal::abi;
-    void reflectcall(_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call16(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call32(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call64(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
@@ -136,6 +134,12 @@ namespace golang::runtime
     void call268435456(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call536870912(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
     void call1073741824(gocpp::unsafe_pointer typ, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
+}
+#include "golang/runtime/type.fwd.h"
+
+namespace golang::runtime
+{
+    void reflectcall(_type* stackArgsType, gocpp::unsafe_pointer fn, gocpp::unsafe_pointer stackArgs, uint32_t stackArgsSize, uint32_t stackRetOffset, uint32_t frameSize, abi::RegArgs* regArgs);
 
     namespace rec
     {

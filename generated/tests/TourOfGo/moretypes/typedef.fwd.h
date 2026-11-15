@@ -10,14 +10,14 @@ namespace golang::main
     using ArbitraryType = gocpp::defined<int64_t, GoTag_ArbitraryType>;
     struct GoTag_IntegerType;
     using IntegerType = gocpp::defined<int64_t, GoTag_IntegerType>;
+    using Pointer = ArbitraryType*;
     struct Vertex;
     struct GoTag_VertexAlias;
-    struct GoTag_vvvv2;
-    using str1 = gocpp::string;
-    using str2 = gocpp::string;
-    using Pointer = ArbitraryType*;
     using VertexAlias = gocpp::defined<Vertex, GoTag_VertexAlias>;
     using VertexPtr = Vertex*;
     using vvvv1 = Vertex;
+    struct GoTag_vvvv2;
     using vvvv2 = gocpp::defined<Vertex, GoTag_vvvv2>;
+    using str1 = gocpp::string;
+    using str2 = gocpp::string;
 }

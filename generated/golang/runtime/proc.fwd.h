@@ -14,6 +14,26 @@ namespace golang::runtime
     inline constexpr long freezeStopWait = 0x7fffffff;
     struct GoTag_stwReason;
     using stwReason = gocpp::defined<uint8_t, GoTag_stwReason>;
+    // Reasons to stop-the-world.
+    //
+    // Avoid reusing reasons and add new ones instead.
+    inline constexpr stwReason stwUnknown = 0;
+    inline constexpr stwReason stwGCMarkTerm = 1;
+    inline constexpr stwReason stwGCSweepTerm = 2;
+    inline constexpr stwReason stwWriteHeapDump = 3;
+    inline constexpr stwReason stwGoroutineProfile = 4;
+    inline constexpr stwReason stwGoroutineProfileCleanup = 5;
+    inline constexpr stwReason stwAllGoroutinesStack = 6;
+    inline constexpr stwReason stwReadMemStats = 7;
+    inline constexpr stwReason stwAllThreadsSyscall = 8;
+    inline constexpr stwReason stwGOMAXPROCS = 9;
+    inline constexpr stwReason stwStartTrace = 10;
+    inline constexpr stwReason stwStopTrace = 11;
+    inline constexpr stwReason stwForTestCountPagesInUse = 12;
+    inline constexpr stwReason stwForTestReadMetricsSlow = 13;
+    inline constexpr stwReason stwForTestReadMemStatsSlow = 14;
+    inline constexpr stwReason stwForTestPageCachePagesLeaked = 15;
+    inline constexpr stwReason stwForTestResetDebugLog = 16;
     struct worldStop;
     struct cgothreadstart;
     // These errors are reported (via writeErrStr) by some OS-specific
@@ -40,29 +60,8 @@ namespace golang::runtime
     struct randomEnum;
     struct initTask;
     struct tracestat;
-    // Reasons to stop-the-world.
-    //
-    // Avoid reusing reasons and add new ones instead.
-    inline constexpr stwReason stwUnknown = 0;
-    inline constexpr stwReason stwGCMarkTerm = 1;
-    inline constexpr stwReason stwGCSweepTerm = 2;
-    inline constexpr stwReason stwWriteHeapDump = 3;
-    inline constexpr stwReason stwGoroutineProfile = 4;
-    inline constexpr stwReason stwGoroutineProfileCleanup = 5;
-    inline constexpr stwReason stwAllGoroutinesStack = 6;
-    inline constexpr stwReason stwReadMemStats = 7;
-    inline constexpr stwReason stwAllThreadsSyscall = 8;
-    inline constexpr stwReason stwGOMAXPROCS = 9;
-    inline constexpr stwReason stwStartTrace = 10;
-    inline constexpr stwReason stwStopTrace = 11;
-    inline constexpr stwReason stwForTestCountPagesInUse = 12;
-    inline constexpr stwReason stwForTestReadMetricsSlow = 13;
-    inline constexpr stwReason stwForTestReadMemStatsSlow = 14;
-    inline constexpr stwReason stwForTestPageCachePagesLeaked = 15;
-    inline constexpr stwReason stwForTestResetDebugLog = 16;
 }
 #include "golang/runtime/extern.fwd.h"
-#include "golang/runtime/race0.fwd.h"
 
 namespace golang::runtime
 {
@@ -77,6 +76,11 @@ namespace golang::runtime
     //
     // No threads on wasm yet, so no sysmon.
     inline const bool haveSysmon = GOARCH != "wasm"_s;
+}
+#include "golang/runtime/race0.fwd.h"
+
+namespace golang::runtime
+{
     // To shake out latent assumptions about scheduling order,
     // we introduce some randomness into scheduling decisions
     // when running with the race detector.

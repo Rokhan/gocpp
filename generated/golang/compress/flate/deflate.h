@@ -32,6 +32,7 @@ namespace golang::compress::flate
     };
 
     std::ostream& operator<<(std::ostream& os, const struct compressionLevel& value);
+    extern gocpp::slice<compressionLevel> levels;
     struct advancedState
     {
         // deflate state
@@ -68,7 +69,6 @@ namespace golang::compress::flate
     uint32_t hash4u(uint32_t u, uint8_t h);
     void bulkHash4(gocpp::slice<unsigned char> b, gocpp::slice<uint32_t> dst);
     extern gocpp::error errWriterClosed;
-    extern gocpp::slice<compressionLevel> levels;
 }
 #include "golang/compress/flate/deflatefast.h"
 #include "golang/compress/flate/token.h"
@@ -126,7 +126,6 @@ namespace golang::compress::flate
 
     std::ostream& operator<<(std::ostream& os, const struct Writer& value);
 }
-#include "golang/io/io.fwd.h"
 #include "golang/io/io.h"
 
 namespace golang::compress::flate

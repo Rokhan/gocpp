@@ -41,18 +41,22 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ProcAttr& value);
-    gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
     extern ProcAttr zeroProcAttr;
     std::tuple<int64_t, uintptr_t, gocpp::error> StartProcess(gocpp::string argv0, gocpp::slice<gocpp::string> argv, ProcAttr* attr);
+    gocpp::error Exec(gocpp::string argv0, gocpp::slice<gocpp::string> argv, gocpp::slice<gocpp::string> envv);
 }
-#include "golang/syscall/security_windows.h"
 #include "golang/syscall/syscall_windows.h"
-#include "golang/syscall/types_windows.fwd.h"
 
 namespace golang::syscall
 {
     void CloseOnExec(golang::syscall::Handle fd);
     gocpp::error SetNonblock(golang::syscall::Handle fd, bool nonblocking);
+}
+#include "golang/syscall/security_windows.h"
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::syscall
+{
     struct SysProcAttr
     {
         bool HideWindow{};
@@ -77,12 +81,12 @@ namespace golang::syscall
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SysProcAttr& value);
+    extern SysProcAttr zeroSysProcAttr;
 }
 #include "golang/sync/rwmutex.fwd.h"
 
 namespace golang::syscall
 {
-    extern SysProcAttr zeroSysProcAttr;
     namespace sync = golang::sync;
 }
 #include "golang/sync/rwmutex.h"

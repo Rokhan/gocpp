@@ -12,12 +12,16 @@ namespace golang::encoding::json
     using Number = gocpp::string;
 }
 #include "golang/encoding/json/v2/arshal.fwd.h"
+
+namespace golang::encoding::json
+{
+    namespace jsonv2 = golang::encoding::json::v2;
+}
 #include "golang/encoding/json/v2/arshal_methods.fwd.h"
 #include "golang/encoding/json/v2/errors.fwd.h"
 #include "golang/encoding/json/v2/options.fwd.h"
 
 namespace golang::encoding::json
 {
-    namespace jsonv2 = golang::encoding::json::v2;
     using Unmarshaler = jsonv2::Unmarshaler;
 }

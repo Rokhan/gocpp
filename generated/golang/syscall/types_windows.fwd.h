@@ -60,6 +60,17 @@ namespace golang::syscall
     inline constexpr long _FILE_FLAG_NO_BUFFERING = 0x20000000;
     inline constexpr long FILE_FLAG_OVERLAPPED = 0x40000000;
     inline constexpr long _FILE_FLAG_WRITE_THROUGH = 0x80000000LL;
+    inline constexpr int64_t validFileFlagsMask = int64_t(FILE_FLAG_OPEN_REPARSE_POINT) |
+        int64_t(FILE_FLAG_BACKUP_SEMANTICS) |
+        int64_t(FILE_FLAG_OVERLAPPED) |
+        int64_t(_FILE_FLAG_OPEN_NO_RECALL) |
+        int64_t(_FILE_FLAG_SESSION_AWARE) |
+        int64_t(_FILE_FLAG_POSIX_SEMANTICS) |
+        int64_t(_FILE_FLAG_DELETE_ON_CLOSE) |
+        int64_t(_FILE_FLAG_SEQUENTIAL_SCAN) |
+        int64_t(_FILE_FLAG_NO_BUFFERING) |
+        int64_t(_FILE_FLAG_RANDOM_ACCESS) |
+        int64_t(_FILE_FLAG_WRITE_THROUGH);
     inline constexpr long HANDLE_FLAG_INHERIT = 0x00000001;
     inline constexpr long STARTF_USESTDHANDLES = 0x00000100;
     inline constexpr long STARTF_USESHOWWINDOW = 0x00000001;
@@ -118,6 +129,7 @@ namespace golang::syscall
     inline constexpr long TH32CS_SNAPTHREAD = 0x04;
     inline constexpr long TH32CS_SNAPMODULE = 0x08;
     inline constexpr long TH32CS_SNAPMODULE32 = 0x10;
+    inline constexpr int64_t TH32CS_SNAPALL = TH32CS_SNAPHEAPLIST | TH32CS_SNAPMODULE | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD;
     inline constexpr long TH32CS_INHERIT = 0x80000000LL;
     // do not reorder
     inline constexpr int64_t FILE_NOTIFY_CHANGE_FILE_NAME = 1 << 0;
@@ -265,7 +277,11 @@ namespace golang::syscall
     inline constexpr long IOC_OUT = 0x40000000;
     inline constexpr long IOC_IN = 0x80000000LL;
     inline constexpr long IOC_VENDOR = 0x18000000;
+    inline constexpr int64_t IOC_INOUT = int64_t(IOC_IN) | int64_t(IOC_OUT);
     inline constexpr long IOC_WS2 = 0x08000000;
+    inline constexpr int64_t SIO_GET_EXTENSION_FUNCTION_POINTER = int64_t(IOC_INOUT) | int64_t(IOC_WS2) | 6LL;
+    inline constexpr int64_t SIO_KEEPALIVE_VALS = int64_t(IOC_IN) | int64_t(IOC_VENDOR) | 4LL;
+    inline constexpr int64_t SIO_UDP_CONNRESET = int64_t(IOC_IN) | int64_t(IOC_VENDOR) | 12LL;
     inline constexpr long IP_TOS = 0x3;
     inline constexpr long IP_TTL = 0x4;
     inline constexpr long IP_MULTICAST_IF = 0x9;
@@ -402,6 +418,7 @@ namespace golang::syscall
     struct InterfaceInfo;
     struct IpAddressString;
     struct GoTag_IpMaskString;
+    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
     struct IpAddrString;
     inline constexpr long MAX_ADAPTER_NAME_LENGTH = 256;
     inline constexpr long MAX_ADAPTER_DESCRIPTION_LENGTH = 128;
@@ -459,6 +476,8 @@ namespace golang::syscall
     inline constexpr int64_t REG_FULL_RESOURCE_DESCRIPTOR = 9;
     inline constexpr int64_t REG_RESOURCE_REQUIREMENTS_LIST = 10;
     inline constexpr int64_t REG_QWORD_LITTLE_ENDIAN = 11;
+    inline constexpr int64_t REG_DWORD = REG_DWORD_LITTLE_ENDIAN;
+    inline constexpr int64_t REG_QWORD = REG_QWORD_LITTLE_ENDIAN;
     struct AddrinfoW;
     inline constexpr long AI_PASSIVE = 1;
     inline constexpr long AI_CANONNAME = 2;
@@ -507,24 +526,6 @@ namespace golang::syscall
     inline constexpr long SYMBOLIC_LINK_FLAG_DIRECTORY = 0x1;
     inline constexpr long _SYMLINK_FLAG_RELATIVE = 1;
     inline constexpr long UNIX_PATH_MAX = 108;
-    inline constexpr int64_t validFileFlagsMask = int64_t(FILE_FLAG_OPEN_REPARSE_POINT) |
-        int64_t(FILE_FLAG_BACKUP_SEMANTICS) |
-        int64_t(FILE_FLAG_OVERLAPPED) |
-        int64_t(_FILE_FLAG_OPEN_NO_RECALL) |
-        int64_t(_FILE_FLAG_SESSION_AWARE) |
-        int64_t(_FILE_FLAG_POSIX_SEMANTICS) |
-        int64_t(_FILE_FLAG_DELETE_ON_CLOSE) |
-        int64_t(_FILE_FLAG_SEQUENTIAL_SCAN) |
-        int64_t(_FILE_FLAG_NO_BUFFERING) |
-        int64_t(_FILE_FLAG_RANDOM_ACCESS) |
-        int64_t(_FILE_FLAG_WRITE_THROUGH);
-    inline constexpr int64_t TH32CS_SNAPALL = TH32CS_SNAPHEAPLIST | TH32CS_SNAPMODULE | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD;
-    inline constexpr int64_t IOC_INOUT = int64_t(IOC_IN) | int64_t(IOC_OUT);
-    inline constexpr int64_t SIO_KEEPALIVE_VALS = int64_t(IOC_IN) | int64_t(IOC_VENDOR) | 4LL;
-    inline constexpr int64_t SIO_UDP_CONNRESET = int64_t(IOC_IN) | int64_t(IOC_VENDOR) | 12LL;
-    using IpMaskString = gocpp::defined<IpAddressString, GoTag_IpMaskString>;
-    inline constexpr int64_t REG_DWORD = REG_DWORD_LITTLE_ENDIAN;
-    inline constexpr int64_t REG_QWORD = REG_QWORD_LITTLE_ENDIAN;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 
@@ -570,5 +571,4 @@ namespace golang::syscall
     inline constexpr Signal go_SIGPIPE = Signal(0xd);
     inline constexpr Signal go_SIGALRM = Signal(0xe);
     inline constexpr Signal go_SIGTERM = Signal(0xf);
-    inline constexpr int64_t SIO_GET_EXTENSION_FUNCTION_POINTER = int64_t(IOC_INOUT) | int64_t(IOC_WS2) | 6LL;
 }

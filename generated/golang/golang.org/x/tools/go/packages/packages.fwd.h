@@ -8,18 +8,6 @@ namespace golang::golang_org::x::tools::go::packages
 {
     struct GoTag_LoadMode;
     using LoadMode = gocpp::defined<int64_t, GoTag_LoadMode>;
-    struct Config;
-    struct Package;
-    struct Module;
-    struct ModuleError;
-    struct Error;
-    struct GoTag_ErrorKind;
-    using ErrorKind = gocpp::defined<int64_t, GoTag_ErrorKind>;
-    struct flatPackage;
-    struct loaderPackage;
-    struct loader;
-    struct parseValue;
-    struct unit;
     // NeedName adds Name and PkgPath.
     inline constexpr LoadMode NeedName = 1 << 0;
     // NeedFiles adds Dir, GoFiles, OtherFiles, and IgnoredFiles
@@ -58,16 +46,36 @@ namespace golang::golang_org::x::tools::go::packages
     inline constexpr LoadMode NeedEmbedPatterns = 1 << 15;
     // NeedTarget adds Target.
     inline constexpr LoadMode NeedTarget = 1 << 16;
-    inline constexpr ErrorKind UnknownError = 0;
-    inline constexpr ErrorKind ListError = 1;
-    inline constexpr ErrorKind ParseError = 2;
-    inline constexpr ErrorKind TypeError = 3;
     // LoadFiles loads the name and file names for the initial packages.
     inline constexpr packages::LoadMode LoadFiles = NeedName | NeedFiles | NeedCompiledGoFiles;
+    // LoadImports loads the name, file names, and import mapping for the initial packages.
+    inline constexpr packages::LoadMode LoadImports = LoadFiles | NeedImports;
+    // LoadTypes loads exported type information for the initial packages.
+    inline constexpr packages::LoadMode LoadTypes = LoadImports | NeedTypes | NeedTypesSizes;
+    // LoadSyntax loads typed syntax for the initial packages.
+    inline constexpr packages::LoadMode LoadSyntax = LoadTypes | NeedSyntax | NeedTypesInfo;
+    // LoadAllSyntax loads typed syntax for the initial packages and all dependencies.
+    inline constexpr packages::LoadMode LoadAllSyntax = LoadSyntax | NeedDeps;
     // Deprecated: NeedExportsFile is a historical misspelling of NeedExportFile.
     //
     //go:fix inline
     inline constexpr packages::LoadMode NeedExportsFile = NeedExportFile;
+    struct Config;
+    struct Package;
+    struct Module;
+    struct ModuleError;
+    struct Error;
+    struct GoTag_ErrorKind;
+    using ErrorKind = gocpp::defined<int64_t, GoTag_ErrorKind>;
+    inline constexpr ErrorKind UnknownError = 0;
+    inline constexpr ErrorKind ListError = 1;
+    inline constexpr ErrorKind ParseError = 2;
+    inline constexpr ErrorKind TypeError = 3;
+    struct flatPackage;
+    struct loaderPackage;
+    struct loader;
+    struct parseValue;
+    struct unit;
 }
 #include "golang/go/types/api.fwd.h"
 #include "golang/go/types/check.fwd.h"
@@ -80,14 +88,6 @@ namespace golang::golang_org::x::tools::go::packages
 
 namespace golang::golang_org::x::tools::go::packages
 {
-    // LoadImports loads the name, file names, and import mapping for the initial packages.
-    inline constexpr packages::LoadMode LoadImports = LoadFiles | NeedImports;
     namespace types = golang::go::types;
-    // LoadTypes loads exported type information for the initial packages.
-    inline constexpr packages::LoadMode LoadTypes = LoadImports | NeedTypes | NeedTypesSizes;
     using importerFunc = std::function<std::tuple<types::Package*, gocpp::error> (gocpp::string path)>;
-    // LoadSyntax loads typed syntax for the initial packages.
-    inline constexpr packages::LoadMode LoadSyntax = LoadTypes | NeedSyntax | NeedTypesInfo;
-    // LoadAllSyntax loads typed syntax for the initial packages and all dependencies.
-    inline constexpr packages::LoadMode LoadAllSyntax = LoadSyntax | NeedDeps;
 }

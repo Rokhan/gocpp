@@ -15,12 +15,16 @@ namespace golang::os
     std::tuple<uintptr_t, gocpp::error> pidfdFind(int64_t _1);
 }
 #include "golang/syscall/exec_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
 
 namespace golang::os
 {
     namespace syscall = golang::syscall;
+}
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::os
+{
     std::tuple<syscall::SysProcAttr*, bool> ensurePidfd(syscall::SysProcAttr* sysAttr);
     std::tuple<uintptr_t, bool> getPidfd(syscall::SysProcAttr* _1, bool _2);
 }

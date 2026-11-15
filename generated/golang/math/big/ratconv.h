@@ -21,19 +21,22 @@ namespace golang::math::big
     extern golang::math::big::Rat ratZero;
 }
 #include "golang/fmt/scan.fwd.h"
-#include "golang/io/io.fwd.h"
 
 namespace golang::math::big
 {
     namespace fmt = golang::fmt;
 }
 #include "golang/fmt/scan.h"
+
+namespace golang::math::big
+{
+    extern fmt::Scanner _;
+}
 #include "golang/io/io.h"
 
 namespace golang::math::big
 {
     namespace io = golang::io;
-    extern fmt::Scanner _;
     std::tuple<int64_t, int64_t, gocpp::error> scanExponent(io::ByteScanner r, bool base2ok, bool sepOk);
 }
 

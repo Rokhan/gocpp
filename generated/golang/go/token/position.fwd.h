@@ -12,12 +12,12 @@ namespace golang::go::token
     struct Position;
     struct GoTag_Pos;
     using Pos = gocpp::defined<int64_t, GoTag_Pos>;
-    struct File;
-    struct lineInfo;
-    struct FileSet;
     // The zero value for [Pos] is NoPos; there is no file and line information
     // associated with it, and NoPos.IsValid() is false. NoPos is always
     // smaller than any other [Pos] value. The corresponding [Position] value
     // for NoPos is the zero value for [Position].
     inline constexpr golang::go::token::Pos NoPos = 0;
+    struct File;
+    struct lineInfo;
+    struct FileSet;
 }

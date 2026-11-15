@@ -13,9 +13,9 @@ namespace golang::runtime
     struct GoTag_semTable;
     struct GoTag_semaProfileFlags;
     using semaProfileFlags = gocpp::defined<int64_t, GoTag_semaProfileFlags>;
-    struct notifyList;
     inline constexpr semaProfileFlags semaBlockProfile = 1 << 0;
     inline constexpr semaProfileFlags semaMutexProfile = 1 << 1;
+    struct notifyList;
 }
 #include "golang/internal/cpu/cpu_x86.fwd.h"
 

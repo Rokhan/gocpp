@@ -139,15 +139,16 @@ namespace golang::encoding::json::jsontext
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    namespace rec
-    {
-        gocpp::string Error(const gocpp::PtrRecv<struct pointerSuffixError, false>& self);
-        gocpp::string Error(const gocpp::ObjRecv<struct pointerSuffixError>& self);
-    }
-
     std::ostream& operator<<(std::ostream& os, const struct pointerSuffixError& value);
     gocpp::error wrapWithObjectName(gocpp::error err, gocpp::slice<unsigned char> quotedName);
     gocpp::error wrapWithArrayIndex(gocpp::error err, int64_t index);
+}
+#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
+
+namespace golang::encoding::json::jsontext
+{
+    namespace jsonopts = golang::encoding::json::internal::jsonopts;
+    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int64_t pos, int64_t where);
 }
 #include "golang/encoding/json/jsontext/doc.h"
 #include "golang/encoding/json/jsontext/state.h"
@@ -178,13 +179,6 @@ namespace golang::encoding::json::jsontext
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SyntacticError& value);
-}
-#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
-
-namespace golang::encoding::json::jsontext
-{
-    namespace jsonopts = golang::encoding::json::internal::jsonopts;
-    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int64_t pos, int64_t where);
 
     namespace rec
     {
@@ -194,6 +188,8 @@ namespace golang::encoding::json::jsontext
         gocpp::error Unwrap(numError* e);
         gocpp::string Error(SyntacticError* e);
         gocpp::error Unwrap(SyntacticError* e);
+        gocpp::string Error(const gocpp::PtrRecv<struct pointerSuffixError, false>& self);
+        gocpp::string Error(const gocpp::ObjRecv<struct pointerSuffixError>& self);
         gocpp::slice<unsigned char> appendPointer(pointerSuffixError* e, gocpp::slice<unsigned char> pointer);
     }
 }

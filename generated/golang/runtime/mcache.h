@@ -55,17 +55,21 @@ namespace golang::runtime
     // dummy mspan that contains no free objects.
     extern mspan emptymspan;
 }
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
     namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
 #include "golang/internal/runtime/sys/nih.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 #include "golang/runtime/malloc.fwd.h"
 
 namespace golang::runtime

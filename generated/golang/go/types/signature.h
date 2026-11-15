@@ -9,8 +9,13 @@
 #include "golang/go/types/signature.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/go/types/type.h"
 #include "golang/go/types/object.fwd.h"
+
+namespace golang::go::types
+{
+    // sentinel value for detecting method expressions
+    extern Var* methodExprSentinel;
+}
 #include "golang/go/types/scope.fwd.h"
 #include "golang/go/types/tuple.fwd.h"
 #include "golang/go/types/typelists.fwd.h"
@@ -44,23 +49,26 @@ namespace golang::go::types
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Signature& value);
-    // sentinel value for detecting method expressions
-    extern Var* methodExprSentinel;
-    golang::go::types::Type unpointer(golang::go::types::Type t);
-}
-#include "golang/go/token/position.fwd.h"
-
-namespace golang::go::types
-{
     golang::go::types::Signature* NewSignature(Var* recv, Tuple* params, Tuple* results, bool variadic);
-    namespace token = golang::go::token;
 }
 #include "golang/go/types/typeparam.fwd.h"
 
 namespace golang::go::types
 {
     golang::go::types::Signature* NewSignatureType(Var* recv, gocpp::slice<TypeParam*> recvTypeParams, gocpp::slice<TypeParam*> typeParams, Tuple* params, Tuple* results, bool variadic);
+}
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::types
+{
+    namespace token = golang::go::token;
     bool isCGoTypeObj(token::FileSet* fset, TypeName* obj);
+}
+#include "golang/go/types/type.h"
+
+namespace golang::go::types
+{
+    golang::go::types::Type unpointer(golang::go::types::Type t);
 }
 
 #include "golang/go/ast/ast.h"

@@ -8,16 +8,14 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 {
     struct GoTag_CodeVal;
     using CodeVal = gocpp::defined<int64_t, GoTag_CodeVal>;
-    struct GoTag_CodeType;
-    using CodeType = gocpp::defined<int64_t, GoTag_CodeType>;
-    struct GoTag_CodeObj;
-    using CodeObj = gocpp::defined<int64_t, GoTag_CodeObj>;
     inline constexpr CodeVal ValBool = 0;
     inline constexpr CodeVal ValString = 1;
     inline constexpr CodeVal ValInt64 = 2;
     inline constexpr CodeVal ValBigInt = 3;
     inline constexpr CodeVal ValBigRat = 4;
     inline constexpr CodeVal ValBigFloat = 5;
+    struct GoTag_CodeType;
+    using CodeType = gocpp::defined<int64_t, GoTag_CodeType>;
     inline constexpr CodeType TypeBasic = 0;
     inline constexpr CodeType TypeNamed = 1;
     inline constexpr CodeType TypePointer = 2;
@@ -30,6 +28,8 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     inline constexpr CodeType TypeInterface = 9;
     inline constexpr CodeType TypeUnion = 10;
     inline constexpr CodeType TypeTypeParam = 11;
+    struct GoTag_CodeObj;
+    using CodeObj = gocpp::defined<int64_t, GoTag_CodeObj>;
     inline constexpr CodeObj ObjAlias = 0;
     inline constexpr CodeObj ObjConst = 1;
     inline constexpr CodeObj ObjType = 2;

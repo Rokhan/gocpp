@@ -16,17 +16,7 @@ namespace golang::image
     extern gocpp::error ErrFormat;
     bool match(gocpp::string magic, gocpp::slice<unsigned char> b);
 }
-#include "golang/io/io.fwd.h"
-#include "golang/sync/atomic/value.fwd.h"
 #include "golang/sync/mutex.fwd.h"
-
-namespace golang::image
-{
-    namespace io = golang::io;
-}
-#include "golang/image/image.h"
-#include "golang/io/io.h"
-#include "golang/sync/atomic/value.h"
 
 namespace golang::image
 {
@@ -36,30 +26,26 @@ namespace golang::image
 
 namespace golang::image
 {
-    namespace atomic = golang::sync::atomic;
-    struct format
-    {
-        gocpp::string name{};
-        gocpp::string magic{};
-        std::function<std::tuple<Image, gocpp::error> (io::Reader _1)> decode{};
-        std::function<std::tuple<Config, gocpp::error> (io::Reader _1)> decodeConfig{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct format& value);
     // Formats is the list of registered formats.
     extern mocklib::Mutex formatsMu;
+}
+#include "golang/sync/atomic/value.h"
+
+namespace golang::image
+{
+    namespace atomic = golang::sync::atomic;
     extern atomic::Value atomicFormats;
-    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<Image, gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<Config, gocpp::error> (io::Reader _1)> decodeConfig);
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::image
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::image
+{
     struct reader : virtual gocpp::Interface, io::Reader
     {
         using gocpp::Interface::operator==;
@@ -126,10 +112,35 @@ namespace golang::image
     }
 
     std::ostream& operator<<(std::ostream& os, const struct reader& value);
+    reader asReader(io::Reader r);
+}
+#include "golang/image/image.h"
+
+namespace golang::image
+{
+    struct format
+    {
+        gocpp::string name{};
+        gocpp::string magic{};
+        std::function<std::tuple<Image, gocpp::error> (io::Reader _1)> decode{};
+        std::function<std::tuple<Config, gocpp::error> (io::Reader _1)> decodeConfig{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct format& value);
+    void RegisterFormat(gocpp::string name, gocpp::string magic, std::function<std::tuple<Image, gocpp::error> (io::Reader _1)> decode, std::function<std::tuple<Config, gocpp::error> (io::Reader _1)> decodeConfig);
+    format sniff(reader r);
     std::tuple<Image, gocpp::string, gocpp::error> Decode(io::Reader r);
     std::tuple<Config, gocpp::string, gocpp::error> DecodeConfig(io::Reader r);
-    reader asReader(io::Reader r);
-    format sniff(reader r);
 
     namespace rec
     {

@@ -9,10 +9,6 @@ namespace golang::regexp::syntax
     struct Prog;
     struct GoTag_InstOp;
     using InstOp = gocpp::defined<uint8_t, GoTag_InstOp>;
-    struct GoTag_EmptyOp;
-    using EmptyOp = gocpp::defined<uint8_t, GoTag_EmptyOp>;
-    struct Inst;
-    inline constexpr long noMatch = - 1;
     inline constexpr InstOp InstAlt = 0;
     inline constexpr InstOp InstAltMatch = 1;
     inline constexpr InstOp InstCapture = 2;
@@ -24,10 +20,14 @@ namespace golang::regexp::syntax
     inline constexpr InstOp InstRune1 = 8;
     inline constexpr InstOp InstRuneAny = 9;
     inline constexpr InstOp InstRuneAnyNotNL = 10;
+    struct GoTag_EmptyOp;
+    using EmptyOp = gocpp::defined<uint8_t, GoTag_EmptyOp>;
     inline constexpr EmptyOp EmptyBeginLine = 1 << 0;
     inline constexpr EmptyOp EmptyEndLine = 1 << 1;
     inline constexpr EmptyOp EmptyBeginText = 1 << 2;
     inline constexpr EmptyOp EmptyEndText = 1 << 3;
     inline constexpr EmptyOp EmptyWordBoundary = 1 << 4;
     inline constexpr EmptyOp EmptyNoWordBoundary = 1 << 5;
+    struct Inst;
+    inline constexpr long noMatch = - 1;
 }

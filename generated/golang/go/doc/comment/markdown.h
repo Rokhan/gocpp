@@ -10,14 +10,13 @@
 #include "gocpp/support.h"
 
 #include "golang/bytes/buffer.fwd.h"
-#include "golang/bytes/bytes.fwd.h"
 
 namespace golang::go::doc::comment
 {
     namespace bytes = golang::bytes;
 }
 #include "golang/bytes/buffer.h"
-#include "golang/go/doc/comment/parse.fwd.h"
+#include "golang/bytes/bytes.fwd.h"
 #include "golang/go/doc/comment/print.fwd.h"
 
 namespace golang::go::doc::comment
@@ -39,6 +38,16 @@ namespace golang::go::doc::comment
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct mdPrinter& value);
+}
+
+#include "golang/bytes/buffer.h"
+#include "golang/go/doc/comment/parse.h"
+#include "golang/go/doc/comment/print.h"
+
+namespace golang::go::doc::comment
+{
+
     namespace rec
     {
         gocpp::slice<unsigned char> Comment(const gocpp::PtrRecv<struct mdPrinter, false>& self, comment::Doc* d);
@@ -55,20 +64,6 @@ namespace golang::go::doc::comment
         gocpp::string headingID(const gocpp::ObjRecv<struct mdPrinter>& self, comment::Heading* h);
         int64_t headingLevel(const gocpp::PtrRecv<struct mdPrinter, false>& self);
         int64_t headingLevel(const gocpp::ObjRecv<struct mdPrinter>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct mdPrinter& value);
-}
-
-#include "golang/bytes/buffer.h"
-#include "golang/go/doc/comment/parse.h"
-#include "golang/go/doc/comment/print.h"
-
-namespace golang::go::doc::comment
-{
-
-    namespace rec
-    {
         gocpp::slice<unsigned char> Markdown(Printer* p, Doc* d);
         void block(mdPrinter* p, bytes::Buffer* out, Block x);
         void text(mdPrinter* p, bytes::Buffer* out, gocpp::slice<golang::go::doc::comment::Text> x);

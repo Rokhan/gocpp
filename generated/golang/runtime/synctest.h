@@ -31,12 +31,30 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct synctestDeadlockError& value);
     extern gocpp::error _;
     void synctestWait();
+    void synctestRun(std::function<void ()> f);
     bool synctest_isInBubble();
     go_any synctest_acquire();
     void synctest_release(go_any bubble);
-    void synctestRun(std::function<void ()> f);
     void synctest_inBubble(go_any bubble, std::function<void ()> f);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    int64_t getOrSetBubbleSpecial(gocpp::unsafe_pointer p, uint64_t bubbleid, bool add);
+    int64_t synctest_associate(gocpp::unsafe_pointer p);
+    void synctest_disassociate(gocpp::unsafe_pointer p);
+    bool synctest_isAssociated(gocpp::unsafe_pointer p);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    bool synctestidle_c(g* gp, gocpp::unsafe_pointer _1);
+    bool synctestwait_c(g* gp, gocpp::unsafe_pointer _1);
+}
+#include "golang/internal/runtime/atomic/types.h"
+
+namespace golang::runtime
+{
+    namespace atomic = golang::internal::runtime::atomic;
+    extern atomic::Uint64 bubbleGen;
 }
 #include "golang/runtime/runtime2.h"
 #include "golang/runtime/time.h"
@@ -79,21 +97,11 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct synctestBubble& value);
-    bool synctestidle_c(g* gp, gocpp::unsafe_pointer _1);
-    bool synctestwait_c(g* gp, gocpp::unsafe_pointer _1);
-    int64_t getOrSetBubbleSpecial(gocpp::unsafe_pointer p, uint64_t bubbleid, bool add);
-    int64_t synctest_associate(gocpp::unsafe_pointer p);
-    void synctest_disassociate(gocpp::unsafe_pointer p);
-    bool synctest_isAssociated(gocpp::unsafe_pointer p);
 }
-#include "golang/internal/runtime/atomic/types.fwd.h"
 #include "golang/internal/runtime/sys/intrinsics.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
-#include "golang/internal/runtime/atomic/types.h"
 
 namespace golang::runtime
 {
-    namespace atomic = golang::internal::runtime::atomic;
     namespace sys = golang::internal::runtime::sys;
 }
 #include "golang/internal/runtime/sys/nih.h"
@@ -101,7 +109,6 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    extern atomic::Uint64 bubbleGen;
     struct specialBubble
     {
         sys::NotInHeap _1{};

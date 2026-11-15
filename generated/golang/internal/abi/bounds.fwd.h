@@ -8,8 +8,6 @@ namespace golang::internal::abi
 {
     struct GoTag_BoundsErrorCode;
     using BoundsErrorCode = gocpp::defined<uint8_t, GoTag_BoundsErrorCode>;
-    inline constexpr long BoundsMaxReg = 15;
-    inline constexpr long BoundsMaxConst = 31;
     inline constexpr BoundsErrorCode BoundsIndex = 0;
     inline constexpr BoundsErrorCode BoundsSliceAlen = 1;
     inline constexpr BoundsErrorCode BoundsSliceAcap = 2;
@@ -20,4 +18,6 @@ namespace golang::internal::abi
     inline constexpr BoundsErrorCode BoundsSlice3C = 7;
     inline constexpr BoundsErrorCode BoundsConvert = 8;
     inline constexpr BoundsErrorCode numBoundsCodes = 9;
+    inline constexpr long BoundsMaxReg = 15;
+    inline constexpr long BoundsMaxConst = 31;
 }

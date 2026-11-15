@@ -54,9 +54,9 @@ namespace golang::main
     void go_while();
     void go_template();
     void go_class();
+    extern std::function<void (void)> funcVar1;
     std::tuple<bool, gocpp::error> ParseBool(gocpp::string str);
     std::tuple<bool, gocpp::string, int64_t, double> FourValues();
-    extern std::function<void (void)> funcVar1;
 
     namespace rec
     {

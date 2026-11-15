@@ -50,6 +50,8 @@ namespace golang::internal::buildcfg
     };
 
     std::ostream& operator<<(std::ostream& os, const struct GoarmFeatures& value);
+    extern buildcfg::GoarmFeatures GOARM;
+    GoarmFeatures goarm();
     struct Goarm64Features
     {
         gocpp::string Version{};
@@ -74,6 +76,9 @@ namespace golang::internal::buildcfg
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Goarm64Features& value);
+    extern buildcfg::Goarm64Features GOARM64;
+    std::tuple<Goarm64Features, gocpp::error> ParseGoarm64(gocpp::string v);
+    Goarm64Features goarm64();
     gocpp::string gomips();
     gocpp::string gomips64();
     int64_t goppc64();
@@ -93,18 +98,13 @@ namespace golang::internal::buildcfg
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gowasmFeatures& value);
+    extern buildcfg::gowasmFeatures GOWASM;
+    gowasmFeatures gowasm();
     gocpp::string Getgoextlinkenabled();
     gocpp::slice<gocpp::string> toolTags();
     gocpp::slice<gocpp::string> experimentTags();
     std::tuple<gocpp::string, gocpp::string> GOGOARCH();
     gocpp::slice<gocpp::string> gogoarchTags();
-    extern buildcfg::GoarmFeatures GOARM;
-    extern buildcfg::Goarm64Features GOARM64;
-    extern buildcfg::gowasmFeatures GOWASM;
-    GoarmFeatures goarm();
-    std::tuple<Goarm64Features, gocpp::error> ParseGoarm64(gocpp::string v);
-    Goarm64Features goarm64();
-    gowasmFeatures gowasm();
 
     namespace rec
     {

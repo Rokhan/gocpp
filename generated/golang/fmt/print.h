@@ -286,6 +286,7 @@ namespace golang::fmt
     }
 
     std::ostream& operator<<(std::ostream& os, const struct GoStringer& value);
+    gocpp::string FormatString(State state, gocpp::rune verb);
     struct GoTag_buffer { };
     using buffer = gocpp::defined<gocpp::slice<unsigned char>, GoTag_buffer>;
     std::tuple<int64_t, gocpp::error> Printf(gocpp::string format, gocpp::slice<go_any> a);
@@ -409,7 +410,6 @@ namespace golang::fmt
     std::tuple<int64_t, bool, int64_t> parsenum(gocpp::string s, int64_t start, int64_t end);
     std::tuple<int64_t, bool, int64_t> intFromArg(gocpp::slice<go_any> a, int64_t argNum);
     std::tuple<int64_t, int64_t, bool> parseArgNumber(gocpp::string format);
-    gocpp::string FormatString(State state, gocpp::rune verb);
 }
 #include "golang/fmt/format.h"
 
@@ -445,30 +445,25 @@ namespace golang::fmt
     };
 
     std::ostream& operator<<(std::ostream& os, const struct pp& value);
+    pp* newPrinter();
 }
-#include "golang/io/io.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
 #include "golang/sync/pool.fwd.h"
 
 namespace golang::fmt
 {
-    pp* newPrinter();
+    namespace sync = golang::sync;
+}
+#include "golang/sync/pool.h"
+
+namespace golang::fmt
+{
+    extern sync::Pool ppFree;
 }
 #include "golang/io/io.h"
 
 namespace golang::fmt
 {
-    namespace sync = golang::sync;
     namespace io = golang::io;
-}
-#include "golang/reflect/value.h"
-#include "golang/sync/pool.h"
-
-namespace golang::fmt
-{
-    namespace reflect = golang::reflect;
-    extern sync::Pool ppFree;
     std::tuple<int64_t, gocpp::error> Fprintf(io::Writer w, gocpp::string format, gocpp::slice<go_any> a);
 
     template<typename... Args>
@@ -508,6 +503,17 @@ namespace golang::fmt
     {
         return Fprintln(w, gocpp::ToSlice<go_any>(value, a...));
     }
+}
+#include "golang/reflect/value.h"
+
+namespace golang::fmt
+{
+    namespace reflect = golang::reflect;
+}
+#include "golang/reflect/type.fwd.h"
+
+namespace golang::fmt
+{
     reflect::Value getField(reflect::Value v, int64_t i);
 }
 

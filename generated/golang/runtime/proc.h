@@ -69,6 +69,33 @@ namespace golang::runtime
     // If you change the values of any of the stw* constants, bump the trace
     // version number and make a copy of this.
     extern gocpp::array<gocpp::string, 17> stwReasonStrings;
+    struct worldStop
+    {
+        stwReason reason{};
+        int64_t startedStopping{};
+        int64_t finishedStopping{};
+        int64_t stoppingCPUTime{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
+    // Temporary variable for stopTheWorld, when it can't write to the stack.
+    //
+    // Protected by worldsema.
+    extern worldStop stopTheWorldContext;
+    worldStop stopTheWorld(stwReason reason);
+    void startTheWorld(worldStop w);
+    worldStop stopTheWorldGC(stwReason reason);
+    void startTheWorldGC(worldStop w);
     // Holding worldsema grants an M the right to try to stop the world.
     extern uint32_t worldsema;
     // Holding gcsema grants the M the right to block a GC, and blocks
@@ -78,6 +105,8 @@ namespace golang::runtime
     // TODO(mknyszek): Once gomaxprocs and the execution tracer can handle
     // being changed/enabled during a GC, remove this.
     extern uint32_t gcsema;
+    worldStop stopTheWorldWithSema(stwReason reason);
+    int64_t startTheWorldWithSema(int64_t now, worldStop w);
     bool usesLibcall();
     bool mStackIsSystemAllocated();
     void mstart();
@@ -190,6 +219,8 @@ namespace golang::runtime
     void internal_sync_runtime_doSpin();
     bool sync_runtime_canSpin(int64_t i);
     void sync_runtime_doSpin();
+    void switchToCrashStack(std::function<void ()> fn);
+    void switchToCrashStack0(std::function<void ()> fn);
     struct randomOrder
     {
         uint32_t count{};
@@ -207,6 +238,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct randomOrder& value);
+    extern randomOrder stealOrder;
     struct randomEnum
     {
         uint32_t i{};
@@ -244,6 +276,9 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct initTask& value);
+    // This slice records the initializing tasks that need to be
+    // done to start up the runtime. It is built by the linker.
+    extern gocpp::slice<initTask*> runtime_inittasks;
     struct tracestat
     {
         bool active{}; // init tracing activation status
@@ -263,71 +298,27 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct tracestat& value);
-    // This slice records the initializing tasks that need to be
-    // done to start up the runtime. It is built by the linker.
-    extern gocpp::slice<initTask*> runtime_inittasks;
-    void switchToCrashStack(std::function<void ()> fn);
-    void switchToCrashStack0(std::function<void ()> fn);
-    struct worldStop
-    {
-        stwReason reason{};
-        int64_t startedStopping{};
-        int64_t finishedStopping{};
-        int64_t stoppingCPUTime{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct worldStop& value);
-    extern randomOrder stealOrder;
     // inittrace stores statistics for init functions which are
     // updated by malloc and newproc when active is true.
     extern tracestat inittrace;
     void doInit(gocpp::slice<initTask*> ts);
     void doInit1(initTask* t);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/runtime/note_other.h"
-#include "golang/runtime/os_windows.h"
-#include "golang/runtime/runtime2.h"
-#include "golang/runtime/rwmutex.h"
-#include "golang/runtime/traceruntime.h"
 #include "golang/runtime/mcache.fwd.h"
-#include "golang/runtime/runtime.fwd.h"
 
 namespace golang::runtime
 {
-    extern m m0;
-    extern g g0;
     extern mcache* mcache0;
-    extern mutex raceFiniLock;
-    // Value to use for signal mask for newly created M's.
-    extern sigset initSigmask;
-    void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip);
-    void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip);
+}
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
     void goready(g* gp, int64_t traceskip);
     sudog* acquireSudog();
     void releaseSudog(sudog* s);
     void badmcall(std::function<void (g* _1)> fn);
     void badmcall2(std::function<void (g* _1)> fn);
-    // gcrash is a fake g that can be used when crashing due to bad
-    // stack conditions.
-    extern g gcrash;
-    // allgs contains all Gs ever created (including dead Gs), and thus
-    // never shrinks.
-    //
-    // Access via the slice is protected by allglock or stop-the-world.
-    // Readers that cannot take the lock may (carefully!) use the atomic
-    // variables below.
-    extern mutex allglock;
     extern gocpp::slice<g*> allgs;
     extern g** allgptr;
     void allgadd(g* gp);
@@ -342,85 +333,15 @@ namespace golang::runtime
     void casfrom_Gscanstatus(g* gp, uint32_t oldval, uint32_t newval);
     bool castogscanstatus(g* gp, uint32_t oldval, uint32_t newval);
     void casgstatus(g* gp, uint32_t oldval, uint32_t newval);
-    void casGToWaiting(g* gp, uint32_t old, waitReason reason);
-    void casGToWaitingForSuspendG(g* gp, uint32_t old, waitReason reason);
     void casGToPreemptScan(g* gp, uint32_t old, uint32_t go_new);
     bool casGFromPreempted(g* gp, uint32_t old, uint32_t go_new);
-    // Temporary variable for stopTheWorld, when it can't write to the stack.
-    //
-    // Protected by worldsema.
-    extern worldStop stopTheWorldContext;
-    worldStop stopTheWorld(stwReason reason);
-    void startTheWorld(worldStop w);
-    worldStop stopTheWorldGC(stwReason reason);
-    void startTheWorldGC(worldStop w);
-    worldStop stopTheWorldWithSema(stwReason reason);
-    int64_t startTheWorldWithSema(int64_t now, worldStop w);
-    void forEachP(waitReason reason, std::function<void (golang::runtime::p* _1)> fn);
     void forEachPInternal(std::function<void (golang::runtime::p* _1)> fn);
-    // When running with cgo, we call _cgo_thread_start
-    // to start threads for us so that we can play nicely with
-    // foreign code.
-    extern gocpp::unsafe_pointer cgoThreadStart;
-    struct cgothreadstart
-    {
-        golang::runtime::guintptr g{};
-        uint64_t* tls{};
-        gocpp::unsafe_pointer fn{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
     m* allocm(golang::runtime::p* pp, std::function<void ()> fn, int64_t id);
     m* lockextra(bool nilokay);
     void unlockextra(m* mp, int32_t delta);
     std::tuple<m*, bool> getExtraM();
     void putExtraM(m* mp);
     void addExtraM(m* mp);
-    // allocmLock is locked for read when creating new Ms in allocm and their
-    // addition to allm. Thus acquiring this lock for write blocks the
-    // creation of new Ms.
-    extern rwmutex allocmLock;
-    // execLock serializes exec and clone to avoid bugs or unspecified
-    // behaviour around exec'ing while creating/destroying threads. See
-    // issue #19546.
-    extern rwmutex execLock;
-    struct newmHandoffStruct
-    {
-        mutex lock{};
-        // newm points to a list of M structures that need new OS
-        // threads. The list is linked through m.schedlink.
-        muintptr newm{};
-        // waiting indicates that wake needs to be notified when an m
-        // is put on the list.
-        bool waiting{};
-        note wake{};
-        // haveTemplateThread indicates that the templateThread has
-        // been started. This is not protected by lock. Use cas to set
-        // to 1.
-        uint32_t haveTemplateThread{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct newmHandoffStruct& value);
     void newm(std::function<void ()> fn, golang::runtime::p* pp, int64_t id);
     void newm1(m* mp);
     void startm(golang::runtime::p* pp, bool spinning, bool lockheld);
@@ -432,7 +353,6 @@ namespace golang::runtime
     golang::runtime::p* checkRunqsNoP(gocpp::slice<golang::runtime::p*> allpSnapshot, pMask idlepMaskSnapshot);
     int64_t checkTimersNoP(gocpp::slice<golang::runtime::p*> allpSnapshot, pMask timerpMaskSnapshot, int64_t pollUntil);
     std::tuple<golang::runtime::p*, g*> checkIdleGCNoP();
-    bool parkunlock_c(g* gp, gocpp::unsafe_pointer lock);
     void park_m(g* gp);
     void goschedImpl(g* gp, bool preempted);
     void gosched_m(g* gp);
@@ -442,14 +362,12 @@ namespace golang::runtime
     void goyield_m(g* gp);
     void goexit0(g* gp);
     void gdestroy(g* gp);
-    void entersyscallHandleGCWait(traceLocker trace);
     golang::runtime::p* exitsyscallTryGetP(golang::runtime::p* oldp);
     void exitsyscallNoP(g* gp);
     void addGSyscallNoP(m* mp);
     void decGSyscallNoP(m* mp);
     g* malg(int32_t stacksize);
     void newproc(funcval* fn);
-    g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc, bool parked, waitReason waitreason);
     gocpp::slice<ancestorInfo>* saveAncestors(g* callergp);
     void gfput(golang::runtime::p* pp, g* gp);
     g* gfget(golang::runtime::p* pp);
@@ -480,10 +398,80 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct syscallingThread& value);
+    std::tuple<syscallingThread, bool> setBlockOnExitSyscall(golang::runtime::p* pp);
     bool preemptone(golang::runtime::p* pp);
+    bool schedEnabled(g* gp);
+    void mput(m* mp);
+    m* mget();
+    m* mgetSpecific(m* mp);
+    void globrunqput(g* gp);
+    void globrunqputhead(g* gp);
+    void forEachG(std::function<void (g* gp)> fn);
+    void forEachGRace(std::function<void (g* gp)> fn);
+    g* globrunqget();
+    int64_t pidleput(golang::runtime::p* pp, int64_t now);
+    std::tuple<golang::runtime::p*, int64_t> pidleget(int64_t now);
+    std::tuple<golang::runtime::p*, int64_t> pidlegetSpinning(int64_t now);
+    bool runqempty(golang::runtime::p* pp);
+    void runqput(golang::runtime::p* pp, g* gp, bool next);
+    bool runqputslow(golang::runtime::p* pp, g* gp, uint32_t h, uint32_t t);
+    std::tuple<g*, bool> runqget(golang::runtime::p* pp);
+    uint32_t runqgrab(golang::runtime::p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG);
+    g* runqsteal(golang::runtime::p* pp, golang::runtime::p* p2, bool stealRunNextG);
+}
+#include "golang/runtime/runtime.fwd.h"
+
+namespace golang::runtime
+{
     // GOMAXPROCS update godebug metric. Incremented if automatic
     // GOMAXPROCS updates actually change the value of GOMAXPROCS.
     extern godebugInc* updatemaxprocs;
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    // When running with cgo, we call _cgo_thread_start
+    // to start threads for us so that we can play nicely with
+    // foreign code.
+    extern gocpp::unsafe_pointer cgoThreadStart;
+    bool parkunlock_c(g* gp, gocpp::unsafe_pointer lock);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
+    extern m m0;
+    extern g g0;
+    extern mutex raceFiniLock;
+    // gcrash is a fake g that can be used when crashing due to bad
+    // stack conditions.
+    extern g gcrash;
+    // allgs contains all Gs ever created (including dead Gs), and thus
+    // never shrinks.
+    //
+    // Access via the slice is protected by allglock or stop-the-world.
+    // Readers that cannot take the lock may (carefully!) use the atomic
+    // variables below.
+    extern mutex allglock;
+    void casGToWaiting(g* gp, uint32_t old, waitReason reason);
+    void casGToWaitingForSuspendG(g* gp, uint32_t old, waitReason reason);
+    void forEachP(waitReason reason, std::function<void (golang::runtime::p* _1)> fn);
+    struct cgothreadstart
+    {
+        golang::runtime::guintptr g{};
+        uint64_t* tls{};
+        gocpp::unsafe_pointer fn{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct cgothreadstart& value);
+    g* newproc1(funcval* fn, g* callergp, uintptr_t callerpc, bool parked, waitReason waitreason);
     // Synchronization between GOMAXPROCS and sysmon.
     //
     // Setting GOMAXPROCS via a call to GOMAXPROCS disables automatic
@@ -532,22 +520,6 @@ namespace golang::runtime
     // avoid holding that lock during the potentially slow
     // defaultGOMAXPROCS.
     extern mutex computeMaxProcsLock;
-    bool schedEnabled(g* gp);
-    void mput(m* mp);
-    m* mget();
-    m* mgetSpecific(m* mp);
-    void globrunqput(g* gp);
-    void globrunqputhead(g* gp);
-    g* globrunqget();
-    int64_t pidleput(golang::runtime::p* pp, int64_t now);
-    std::tuple<golang::runtime::p*, int64_t> pidleget(int64_t now);
-    std::tuple<golang::runtime::p*, int64_t> pidlegetSpinning(int64_t now);
-    bool runqempty(golang::runtime::p* pp);
-    void runqput(golang::runtime::p* pp, g* gp, bool next);
-    bool runqputslow(golang::runtime::p* pp, g* gp, uint32_t h, uint32_t t);
-    std::tuple<g*, bool> runqget(golang::runtime::p* pp);
-    uint32_t runqgrab(golang::runtime::p* pp, gocpp::array_ptr<gocpp::array<golang::runtime::guintptr, 256>> batch, uint32_t batchHead, bool stealRunNextG);
-    g* runqsteal(golang::runtime::p* pp, golang::runtime::p* p2, bool stealRunNextG);
     struct gQueue
     {
         golang::runtime::guintptr head{};
@@ -566,6 +538,10 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gQueue& value);
+    void globrunqputbatch(gQueue* batch);
+    std::tuple<g*, gQueue> globrunqgetbatch(int32_t n);
+    void runqputbatch(golang::runtime::p* pp, gQueue* q);
+    gQueue runqdrain(golang::runtime::p* pp);
     struct gList
     {
         golang::runtime::guintptr head{};
@@ -583,28 +559,81 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gList& value);
+    void injectglist(gList* glist);
 }
-#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
+#include "golang/runtime/os_windows.h"
 
 namespace golang::runtime
 {
-    void forEachG(std::function<void (g* gp)> fn);
-    void forEachGRace(std::function<void (g* gp)> fn);
+    // Value to use for signal mask for newly created M's.
+    extern sigset initSigmask;
+}
+#include "golang/runtime/traceruntime.h"
+
+namespace golang::runtime
+{
+    void gopark(std::function<bool (g* _1, gocpp::unsafe_pointer _2)> unlockf, gocpp::unsafe_pointer lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip);
+    void goparkunlock(mutex* lock, waitReason reason, traceBlockReason traceReason, int64_t traceskip);
+    void entersyscallHandleGCWait(traceLocker trace);
+}
+#include "golang/runtime/rwmutex.h"
+
+namespace golang::runtime
+{
+    // allocmLock is locked for read when creating new Ms in allocm and their
+    // addition to allm. Thus acquiring this lock for write blocks the
+    // creation of new Ms.
+    extern rwmutex allocmLock;
+    // execLock serializes exec and clone to avoid bugs or unspecified
+    // behaviour around exec'ing while creating/destroying threads. See
+    // issue #19546.
+    extern rwmutex execLock;
+}
+#include "golang/runtime/note_other.h"
+
+namespace golang::runtime
+{
+    struct newmHandoffStruct
+    {
+        mutex lock{};
+        // newm points to a list of M structures that need new OS
+        // threads. The list is linked through m.schedlink.
+        muintptr newm{};
+        // waiting indicates that wake needs to be notified when an m
+        // is put on the list.
+        bool waiting{};
+        note wake{};
+        // haveTemplateThread indicates that the templateThread has
+        // been started. This is not protected by lock. Use cas to set
+        // to 1.
+        uint32_t haveTemplateThread{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct newmHandoffStruct& value);
     // newmHandoff contains a list of m structures that need new OS threads.
     // This is used by newm in situations where newm itself can't safely
     // start an OS thread.
     extern newmHandoffStruct newmHandoff;
-    void injectglist(gList* glist);
-    std::tuple<syscallingThread, bool> setBlockOnExitSyscall(golang::runtime::p* pp);
-    void globrunqputbatch(gQueue* batch);
-    std::tuple<g*, gQueue> globrunqgetbatch(int32_t n);
-    void runqputbatch(golang::runtime::p* pp, gQueue* q);
-    gQueue runqdrain(golang::runtime::p* pp);
+}
+#include "golang/internal/runtime/atomic/types.fwd.h"
+
+namespace golang::runtime
+{
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
+#include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 
 namespace golang::runtime
 {
@@ -651,6 +680,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct profStruct& value);
+    extern profStruct prof;
     struct updateMaxProcsGState
     {
         mutex lock{};
@@ -671,7 +701,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct updateMaxProcsGState& value);
-    extern profStruct prof;
     // Synchronization and state between updateMaxProcsGoroutine and
     // sysmon.
     extern updateMaxProcsGState updateMaxProcsG;

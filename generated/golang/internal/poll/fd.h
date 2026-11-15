@@ -27,6 +27,9 @@ namespace golang::internal::poll
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errNetClosing& value);
+    // ErrNetClosing is returned when a network descriptor is used after
+    // it has been closed.
+    extern errNetClosing ErrNetClosing;
     // ErrFileClosing is returned when a file descriptor is used after it
     // has been closed.
     extern gocpp::error ErrFileClosing;
@@ -58,9 +61,6 @@ namespace golang::internal::poll
     void consume(gocpp::slice<gocpp::slice<unsigned char>>* v, int64_t n);
     // TestHookDidWritev is a hook for testing writev.
     extern std::function<void (int64_t)> TestHookDidWritev;
-    // ErrNetClosing is returned when a network descriptor is used after
-    // it has been closed.
-    extern errNetClosing ErrNetClosing;
 
     namespace rec
     {

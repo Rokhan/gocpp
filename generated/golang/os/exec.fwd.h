@@ -8,10 +8,6 @@ namespace golang::os
 {
     struct GoTag_processStatus;
     using processStatus = gocpp::defined<uint32_t, GoTag_processStatus>;
-    struct Process;
-    struct processHandle;
-    struct ProcAttr;
-    struct Signal;
     // statusOK means that the Process is ready to use.
     inline constexpr processStatus statusOK = 0;
     // statusDone indicates that the PID/handle should not be used because
@@ -20,4 +16,8 @@ namespace golang::os
     // statusReleased indicates that the PID/handle should not be used
     // because the process is released.
     inline constexpr processStatus statusReleased = 2;
+    struct Process;
+    struct processHandle;
+    struct ProcAttr;
+    struct Signal;
 }

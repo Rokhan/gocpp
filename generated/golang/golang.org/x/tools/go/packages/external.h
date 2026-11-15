@@ -9,35 +9,10 @@
 #include "golang/golang.org/x/tools/go/packages/external.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/golang.org/x/tools/go/packages/packages.h"
+#include "golang/golang.org/x/tools/go/packages/packages.fwd.h"
 
 namespace golang::golang_org::x::tools::go::packages
 {
-    struct DriverRequest
-    {
-        LoadMode Mode{};
-        // Env specifies the environment the underlying build system should be run in.
-        gocpp::slice<gocpp::string> Env{};
-        // BuildFlags are flags that should be passed to the underlying build system.
-        gocpp::slice<gocpp::string> BuildFlags{};
-        // Tests specifies whether the patterns should also return test packages.
-        bool Tests{};
-        // Overlay maps file paths (relative to the driver's working directory)
-        // to the contents of overlay files (see Config.Overlay).
-        gocpp::map<gocpp::string, gocpp::slice<unsigned char>> Overlay{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct DriverRequest& value);
     struct DriverResponse
     {
         // NotHandled is returned if the request can't be handled by the current
@@ -79,6 +54,36 @@ namespace golang::golang_org::x::tools::go::packages
 
     std::ostream& operator<<(std::ostream& os, const struct DriverResponse& value);
     driver findExternalDriver(Config* cfg);
+}
+#include "golang/golang.org/x/tools/go/packages/packages.h"
+
+namespace golang::golang_org::x::tools::go::packages
+{
+    struct DriverRequest
+    {
+        LoadMode Mode{};
+        // Env specifies the environment the underlying build system should be run in.
+        gocpp::slice<gocpp::string> Env{};
+        // BuildFlags are flags that should be passed to the underlying build system.
+        gocpp::slice<gocpp::string> BuildFlags{};
+        // Tests specifies whether the patterns should also return test packages.
+        bool Tests{};
+        // Overlay maps file paths (relative to the driver's working directory)
+        // to the contents of overlay files (see Config.Overlay).
+        gocpp::map<gocpp::string, gocpp::slice<unsigned char>> Overlay{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct DriverRequest& value);
 
     namespace rec
     {

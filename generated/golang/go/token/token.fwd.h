@@ -8,14 +8,6 @@ namespace golang::go::token
 {
     struct GoTag_Token;
     using Token = gocpp::defined<int64_t, GoTag_Token>;
-    // A set of constants for precedence-based expression parsing.
-    // Non-operators have lowest precedence, followed by operators
-    // starting with precedence 1 up to unary operators. The highest
-    // precedence serves as "catch-all" precedence for selector,
-    // indexing, and other operator and delimiter tokens.
-    inline constexpr long LowestPrec = 0;
-    inline constexpr long UnaryPrec = 6;
-    inline constexpr long HighestPrec = 7;
     // The list of tokens.
     // Special tokens
     inline constexpr Token ILLEGAL = 0;
@@ -113,4 +105,12 @@ namespace golang::go::token
     // additional tokens, handled in an ad-hoc manner
     inline constexpr Token TILDE = 88;
     inline constexpr Token additional_end = 89;
+    // A set of constants for precedence-based expression parsing.
+    // Non-operators have lowest precedence, followed by operators
+    // starting with precedence 1 up to unary operators. The highest
+    // precedence serves as "catch-all" precedence for selector,
+    // indexing, and other operator and delimiter tokens.
+    inline constexpr long LowestPrec = 0;
+    inline constexpr long UnaryPrec = 6;
+    inline constexpr long HighestPrec = 7;
 }

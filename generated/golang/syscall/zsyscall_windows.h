@@ -53,18 +53,11 @@ namespace golang::syscall
     std::tuple<gocpp::array_ptr<gocpp::array<gocpp::array_ptr<gocpp::array<uint16_t, 8192>>, 8192>>, gocpp::error> CommandLineToArgv(uint16_t* cmd, int32_t* argc);
     gocpp::error WSACleanup();
     uint16_t Ntohs(uint16_t netshort);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
 }
-#include "golang/syscall/security_windows.h"
-#include "golang/syscall/syscall_windows.h"
 #include "golang/syscall/dll_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/types_windows_amd64.fwd.h"
 
 namespace golang::syscall
 {
-    extern gocpp::unsafe_pointer _;
-    gocpp::error errnoErr(Errno e);
     extern LazyDLL* modadvapi32;
     extern LazyDLL* modcrypt32;
     extern LazyDLL* moddnsapi;
@@ -225,17 +218,72 @@ namespace golang::syscall
     extern LazyProc* procsetsockopt;
     extern LazyProc* procshutdown;
     extern LazyProc* procsocket;
+}
+#include "golang/syscall/security_windows.fwd.h"
+
+namespace golang::syscall
+{
     gocpp::error ConvertSidToStringSid(SID* sid, uint16_t** stringSid);
     gocpp::error ConvertStringSidToSid(uint16_t* stringSid, SID** sid);
     gocpp::error CopySid(uint32_t destSidLen, SID* destSid, SID* srcSid);
-    gocpp::error CreateProcessAsUser(Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo);
-    gocpp::error CryptAcquireContext(golang::syscall::Handle* provhandle, uint16_t* container, uint16_t* provider, uint32_t provtype, uint32_t flags);
-    gocpp::error CryptGenRandom(golang::syscall::Handle provhandle, uint32_t buflen, unsigned char* buf);
-    gocpp::error CryptReleaseContext(golang::syscall::Handle provhandle, uint32_t flags);
     uint32_t GetLengthSid(SID* sid);
-    gocpp::error GetTokenInformation(Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen);
     gocpp::error LookupAccountName(uint16_t* systemName, uint16_t* accountName, SID* sid, uint32_t* sidLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use);
     gocpp::error LookupAccountSid(uint16_t* systemName, SID* sid, uint16_t* name, uint32_t* nameLen, uint16_t* refdDomainName, uint32_t* refdDomainNameLen, uint32_t* use);
+}
+#include "golang/syscall/syscall_windows.fwd.h"
+
+namespace golang::syscall
+{
+    gocpp::error CryptAcquireContext(golang::syscall::Handle* provhandle, uint16_t* container, uint16_t* provider, uint32_t provtype, uint32_t flags);
+    void GetAcceptExSockaddrs(unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, RawSockaddrAny** lrsa, int32_t* lrsalen, RawSockaddrAny** rrsa, int32_t* rrsalen);
+}
+#include "golang/syscall/types_windows.fwd.h"
+
+namespace golang::syscall
+{
+    std::tuple<CertContext*, gocpp::error> CertCreateCertificateContext(uint32_t certEncodingType, unsigned char* certEncoded, uint32_t encodedLen);
+    void CertFreeCertificateChain(CertChainContext* ctx);
+    gocpp::error CertFreeCertificateContext(CertContext* ctx);
+    gocpp::error CertVerifyCertificateChainPolicy(uintptr_t policyOID, CertChainContext* chain, CertChainPolicyPara* para, CertChainPolicyStatus* status);
+    gocpp::error DnsQuery(gocpp::string name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr);
+    gocpp::error _DnsQuery(uint16_t* name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr);
+    void DnsRecordListFree(DNSRecord* rl, uint32_t freetype);
+    gocpp::error GetAdaptersInfo(IpAdapterInfo* ai, uint32_t* ol);
+    gocpp::error GetIfEntry(MibIfRow* pIfRow);
+    gocpp::error CreateDirectory(uint16_t* path, SecurityAttributes* sa);
+    gocpp::error CreatePipe(golang::syscall::Handle* readhandle, golang::syscall::Handle* writehandle, SecurityAttributes* sa, uint32_t size);
+    gocpp::error CreateProcess(uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo);
+    void deleteProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist);
+    void getStartupInfo(StartupInfo* startupInfo);
+    void GetSystemTimeAsFileTime(Filetime* time);
+    std::tuple<uint32_t, gocpp::error> GetTimeZoneInformation(Timezoneinformation* tzi);
+    gocpp::error initializeProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t attrcount, uint32_t flags, uintptr_t* size);
+    void FreeAddrInfoW(AddrinfoW* addrinfo);
+    gocpp::error GetAddrInfoW(uint16_t* nodename, uint16_t* servicename, AddrinfoW* hints, AddrinfoW** result);
+    std::tuple<int32_t, gocpp::error> WSAEnumProtocols(int32_t* protocols, WSAProtocolInfo* protocolBuffer, uint32_t* bufferLength);
+    std::tuple<Hostent*, gocpp::error> GetHostByName(gocpp::string name);
+    std::tuple<Hostent*, gocpp::error> _GetHostByName(unsigned char* name);
+    std::tuple<Protoent*, gocpp::error> GetProtoByName(gocpp::string name);
+    std::tuple<Protoent*, gocpp::error> _GetProtoByName(unsigned char* name);
+}
+#include "golang/syscall/types_windows_amd64.fwd.h"
+
+namespace golang::syscall
+{
+    gocpp::error WSAStartup(uint32_t verreq, WSAData* data);
+    std::tuple<Servent*, gocpp::error> GetServByName(gocpp::string name, gocpp::string proto);
+    std::tuple<Servent*, gocpp::error> _GetServByName(unsigned char* name, unsigned char* proto);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    extern gocpp::unsafe_pointer _;
+    gocpp::error updateProcThreadAttribute(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, gocpp::unsafe_pointer value, uintptr_t size, gocpp::unsafe_pointer prevvalue, uintptr_t* returnedsize);
+}
+#include "golang/syscall/syscall_windows.h"
+
+namespace golang::syscall
+{
+    gocpp::error errnoErr(Errno e);
+    gocpp::error CryptGenRandom(golang::syscall::Handle provhandle, uint32_t buflen, unsigned char* buf);
+    gocpp::error CryptReleaseContext(golang::syscall::Handle provhandle, uint32_t flags);
     gocpp::error OpenProcessToken(golang::syscall::Handle h, uint32_t access, Token* token);
     gocpp::error RegCloseKey(golang::syscall::Handle key);
     gocpp::error regEnumKeyEx(golang::syscall::Handle key, uint32_t index, uint16_t* name, uint32_t* nameLen, uint32_t* reserved, uint16_t* go_class, uint32_t* classLen, Filetime* lastWriteTime);
@@ -244,30 +292,17 @@ namespace golang::syscall
     gocpp::error RegQueryValueEx(golang::syscall::Handle key, uint16_t* name, uint32_t* reserved, uint32_t* valtype, unsigned char* buf, uint32_t* buflen);
     gocpp::error CertAddCertificateContextToStore(golang::syscall::Handle store, CertContext* certContext, uint32_t addDisposition, CertContext** storeContext);
     gocpp::error CertCloseStore(golang::syscall::Handle store, uint32_t flags);
-    std::tuple<CertContext*, gocpp::error> CertCreateCertificateContext(uint32_t certEncodingType, unsigned char* certEncoded, uint32_t encodedLen);
     std::tuple<CertContext*, gocpp::error> CertEnumCertificatesInStore(golang::syscall::Handle store, CertContext* prevContext);
-    void CertFreeCertificateChain(CertChainContext* ctx);
-    gocpp::error CertFreeCertificateContext(CertContext* ctx);
     gocpp::error CertGetCertificateChain(golang::syscall::Handle engine, CertContext* leaf, Filetime* time, golang::syscall::Handle additionalStore, CertChainPara* para, uint32_t flags, uintptr_t reserved, CertChainContext** chainCtx);
     std::tuple<golang::syscall::Handle, gocpp::error> CertOpenStore(uintptr_t storeProvider, uint32_t msgAndCertEncodingType, uintptr_t cryptProv, uint32_t flags, uintptr_t para);
     std::tuple<golang::syscall::Handle, gocpp::error> CertOpenSystemStore(golang::syscall::Handle hprov, uint16_t* name);
-    gocpp::error CertVerifyCertificateChainPolicy(uintptr_t policyOID, CertChainContext* chain, CertChainPolicyPara* para, CertChainPolicyStatus* status);
-    gocpp::error DnsQuery(gocpp::string name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr);
-    gocpp::error _DnsQuery(uint16_t* name, uint16_t qtype, uint32_t options, unsigned char* extra, DNSRecord** qrs, unsigned char* pr);
-    void DnsRecordListFree(DNSRecord* rl, uint32_t freetype);
-    gocpp::error GetAdaptersInfo(IpAdapterInfo* ai, uint32_t* ol);
-    gocpp::error GetIfEntry(MibIfRow* pIfRow);
     gocpp::error CancelIo(golang::syscall::Handle s);
     gocpp::error CancelIoEx(golang::syscall::Handle s, Overlapped* o);
     gocpp::error CloseHandle(golang::syscall::Handle handle);
-    gocpp::error CreateDirectory(uint16_t* path, SecurityAttributes* sa);
     std::tuple<golang::syscall::Handle, gocpp::error> CreateFileMapping(golang::syscall::Handle fhandle, SecurityAttributes* sa, uint32_t prot, uint32_t maxSizeHigh, uint32_t maxSizeLow, uint16_t* name);
     std::tuple<golang::syscall::Handle, gocpp::error> createFile(uint16_t* name, uint32_t access, uint32_t mode, SecurityAttributes* sa, uint32_t createmode, uint32_t attrs, int32_t templatefile);
     std::tuple<golang::syscall::Handle, gocpp::error> createIoCompletionPort(golang::syscall::Handle filehandle, golang::syscall::Handle cphandle, uintptr_t key, uint32_t threadcnt);
-    gocpp::error CreatePipe(golang::syscall::Handle* readhandle, golang::syscall::Handle* writehandle, SecurityAttributes* sa, uint32_t size);
-    gocpp::error CreateProcess(uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo);
     std::tuple<golang::syscall::Handle, gocpp::error> CreateToolhelp32Snapshot(uint32_t flags, uint32_t processId);
-    void deleteProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist);
     gocpp::error DeviceIoControl(golang::syscall::Handle handle, uint32_t ioControlCode, unsigned char* inBuffer, uint32_t inBufferSize, unsigned char* outBuffer, uint32_t outBufferSize, uint32_t* bytesReturned, Overlapped* overlapped);
     gocpp::error DuplicateHandle(golang::syscall::Handle hSourceProcessHandle, golang::syscall::Handle hSourceHandle, golang::syscall::Handle hTargetProcessHandle, golang::syscall::Handle* lpTargetHandle, uint32_t dwDesiredAccess, bool bInheritHandle, uint32_t dwOptions);
     gocpp::error FindClose(golang::syscall::Handle handle);
@@ -285,11 +320,7 @@ namespace golang::syscall
     std::tuple<uintptr_t, gocpp::error> _GetProcAddress(golang::syscall::Handle module, unsigned char* procname);
     gocpp::error GetProcessTimes(golang::syscall::Handle handle, Filetime* creationTime, Filetime* exitTime, Filetime* kernelTime, Filetime* userTime);
     gocpp::error getQueuedCompletionStatus(golang::syscall::Handle cphandle, uint32_t* qty, uintptr_t* key, Overlapped** overlapped, uint32_t timeout);
-    void getStartupInfo(StartupInfo* startupInfo);
     std::tuple<golang::syscall::Handle, gocpp::error> GetStdHandle(int64_t stdhandle);
-    void GetSystemTimeAsFileTime(Filetime* time);
-    std::tuple<uint32_t, gocpp::error> GetTimeZoneInformation(Timezoneinformation* tzi);
-    gocpp::error initializeProcThreadAttributeList(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t attrcount, uint32_t flags, uintptr_t* size);
     std::tuple<golang::syscall::Handle, gocpp::error> LoadLibrary(gocpp::string libname);
     std::tuple<golang::syscall::Handle, gocpp::error> _LoadLibrary(uint16_t* libname);
     std::tuple<golang::syscall::Handle, gocpp::error> LocalFree(golang::syscall::Handle hmem);
@@ -308,39 +339,34 @@ namespace golang::syscall
     gocpp::error SetFileTime(golang::syscall::Handle handle, Filetime* ctime, Filetime* atime, Filetime* wtime);
     gocpp::error SetHandleInformation(golang::syscall::Handle handle, uint32_t mask, uint32_t flags);
     gocpp::error TerminateProcess(golang::syscall::Handle handle, uint32_t exitcode);
-    gocpp::error updateProcThreadAttribute(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, gocpp::unsafe_pointer value, uintptr_t size, gocpp::unsafe_pointer prevvalue, uintptr_t* returnedsize);
     std::tuple<uint32_t, gocpp::error> WaitForSingleObject(golang::syscall::Handle handle, uint32_t waitMilliseconds);
     gocpp::error WriteConsole(golang::syscall::Handle console, uint16_t* buf, uint32_t towrite, uint32_t* written, unsigned char* reserved);
     gocpp::error writeFile(golang::syscall::Handle handle, gocpp::slice<unsigned char> buf, uint32_t* done, Overlapped* overlapped);
     gocpp::error AcceptEx(golang::syscall::Handle ls, golang::syscall::Handle as, unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, uint32_t* recvd, Overlapped* overlapped);
-    void GetAcceptExSockaddrs(unsigned char* buf, uint32_t rxdatalen, uint32_t laddrlen, uint32_t raddrlen, RawSockaddrAny** lrsa, int32_t* lrsalen, RawSockaddrAny** rrsa, int32_t* rrsalen);
     gocpp::error TransmitFile(golang::syscall::Handle s, golang::syscall::Handle handle, uint32_t bytesToWrite, uint32_t bytsPerSend, Overlapped* overlapped, TransmitFileBuffers* transmitFileBuf, uint32_t flags);
-    gocpp::error GetUserProfileDirectory(Token t, uint16_t* dir, uint32_t* dirLen);
-    void FreeAddrInfoW(AddrinfoW* addrinfo);
-    gocpp::error GetAddrInfoW(uint16_t* nodename, uint16_t* servicename, AddrinfoW* hints, AddrinfoW** result);
-    std::tuple<int32_t, gocpp::error> WSAEnumProtocols(int32_t* protocols, WSAProtocolInfo* protocolBuffer, uint32_t* bufferLength);
     gocpp::error WSAIoctl(golang::syscall::Handle s, uint32_t iocc, unsigned char* inbuf, uint32_t cbif, unsigned char* outbuf, uint32_t cbob, uint32_t* cbbr, Overlapped* overlapped, uintptr_t completionRoutine);
     gocpp::error WSARecv(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* recvd, uint32_t* flags, Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSARecvFrom(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* recvd, uint32_t* flags, RawSockaddrAny* from, int32_t* fromlen, Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSASend(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, Overlapped* overlapped, unsigned char* croutine);
     gocpp::error WSASendTo(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, RawSockaddrAny* to, int32_t tolen, Overlapped* overlapped, unsigned char* croutine);
-    gocpp::error WSAStartup(uint32_t verreq, WSAData* data);
     gocpp::error bind(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen);
     gocpp::error Closesocket(golang::syscall::Handle s);
     gocpp::error connect(golang::syscall::Handle s, gocpp::unsafe_pointer name, int32_t namelen);
-    std::tuple<Hostent*, gocpp::error> GetHostByName(gocpp::string name);
-    std::tuple<Hostent*, gocpp::error> _GetHostByName(unsigned char* name);
     gocpp::error getpeername(golang::syscall::Handle s, RawSockaddrAny* rsa, int32_t* addrlen);
-    std::tuple<Protoent*, gocpp::error> GetProtoByName(gocpp::string name);
-    std::tuple<Protoent*, gocpp::error> _GetProtoByName(unsigned char* name);
-    std::tuple<Servent*, gocpp::error> GetServByName(gocpp::string name, gocpp::string proto);
-    std::tuple<Servent*, gocpp::error> _GetServByName(unsigned char* name, unsigned char* proto);
     gocpp::error getsockname(golang::syscall::Handle s, RawSockaddrAny* rsa, int32_t* addrlen);
     gocpp::error Getsockopt(golang::syscall::Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t* optlen);
     gocpp::error listen(golang::syscall::Handle s, int32_t backlog);
     gocpp::error Setsockopt(golang::syscall::Handle s, int32_t level, int32_t optname, unsigned char* optval, int32_t optlen);
     gocpp::error shutdown(golang::syscall::Handle s, int32_t how);
     std::tuple<golang::syscall::Handle, gocpp::error> socket(int32_t af, int32_t typ, int32_t protocol);
+}
+#include "golang/syscall/security_windows.h"
+
+namespace golang::syscall
+{
+    gocpp::error CreateProcessAsUser(Token token, uint16_t* appName, uint16_t* commandLine, SecurityAttributes* procSecurity, SecurityAttributes* threadSecurity, bool inheritHandles, uint32_t creationFlags, uint16_t* env, uint16_t* currentDir, StartupInfo* startupInfo, ProcessInformation* outProcInfo);
+    gocpp::error GetTokenInformation(Token t, uint32_t infoClass, unsigned char* info, uint32_t infoLen, uint32_t* returnedLen);
+    gocpp::error GetUserProfileDirectory(Token t, uint16_t* dir, uint32_t* dirLen);
 
     namespace rec
     {

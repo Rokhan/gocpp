@@ -201,40 +201,6 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct Closer& value);
-    struct myReader
-    {
-        int64_t val{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct myReader& value);
-    struct myReaderWriterTo
-    {
-        int64_t val{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct myReaderWriterTo& value);
-    void testCloser();
-    void main();
     struct ReadCloser : virtual gocpp::Interface, Reader, Closer
     {
         using gocpp::Interface::operator==;
@@ -298,6 +264,7 @@ namespace golang::main
     }
 
     std::ostream& operator<<(std::ostream& os, const struct ReadCloser& value);
+    ReadCloser NopCloser(Reader r);
     struct nopCloser
     {
         Reader Reader{};
@@ -312,12 +279,6 @@ namespace golang::main
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
-
-    namespace rec
-    {
-        int64_t Read(const gocpp::PtrRecv<struct nopCloser, false>& self);
-        int64_t Read(const gocpp::ObjRecv<struct nopCloser>& self);
-    }
 
     std::ostream& operator<<(std::ostream& os, const struct nopCloser& value);
     struct nopCloserWriterTo
@@ -335,18 +296,49 @@ namespace golang::main
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
+    std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
+    struct myReader
+    {
+        int64_t val{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct myReader& value);
+    struct myReaderWriterTo
+    {
+        int64_t val{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct myReaderWriterTo& value);
+    void testCloser();
+    void main();
+
     namespace rec
     {
+        int64_t Read(const gocpp::PtrRecv<struct nopCloser, false>& self);
+        int64_t Read(const gocpp::ObjRecv<struct nopCloser>& self);
+        gocpp::string Close(nopCloser);
         int64_t Read(const gocpp::PtrRecv<struct nopCloserWriterTo, false>& self);
         int64_t Read(const gocpp::ObjRecv<struct nopCloserWriterTo>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct nopCloserWriterTo& value);
-    ReadCloser NopCloser(Reader r);
-
-    namespace rec
-    {
-        gocpp::string Close(nopCloser);
         gocpp::string Close(nopCloserWriterTo);
         int64_t WriteTo(nopCloserWriterTo c);
         int64_t Read(myReader r);

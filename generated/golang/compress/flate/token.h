@@ -22,9 +22,6 @@ namespace golang::compress::flate
     extern gocpp::array<uint32_t, 256> offsetCodes14;
     struct GoTag_token { };
     using token = gocpp::defined<uint32_t, GoTag_token>;
-    double mFastLog2(double val);
-    uint8_t lengthCode(uint8_t len);
-    uint32_t offsetCode(uint32_t off);
     struct tokens
     {
         gocpp::array<uint16_t, 32> extraHist{}; // codes 256->maxnumlit
@@ -48,6 +45,9 @@ namespace golang::compress::flate
     std::ostream& operator<<(std::ostream& os, const struct tokens& value);
     tokens indexTokens(gocpp::slice<token> in);
     void emitLiterals(tokens* dst, gocpp::slice<unsigned char> lit);
+    double mFastLog2(double val);
+    uint8_t lengthCode(uint8_t len);
+    uint32_t offsetCode(uint32_t off);
 
     namespace rec
     {

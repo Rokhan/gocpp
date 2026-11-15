@@ -10,31 +10,38 @@
 #include "gocpp/support.h"
 
 #include "golang/go/ast/ast.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
 
 namespace golang::go::doc
 {
     namespace ast = golang::go::ast;
+    gocpp::slice<ast::Ident*> filterIdentList(gocpp::slice<ast::Ident*> list);
+    extern ast::Ident* underscore;
+    bool updateIdentList(gocpp::slice<ast::Ident*> list);
+    bool hasExportedName(gocpp::slice<ast::Ident*> list);
+    void removeAnonymousField(gocpp::string name, ast::InterfaceType* ityp);
+}
+#include "golang/go/doc/filter.h"
+
+namespace golang::go::doc
+{
+    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool export);
 }
 #include "golang/go/ast/ast.h"
 
 namespace golang::go::doc
 {
+    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool export);
+}
+#include "golang/go/token/token.fwd.h"
+
+namespace golang::go::doc
+{
     namespace token = golang::go::token;
 }
-#include "golang/go/doc/filter.h"
 #include "golang/go/token/position.h"
 
 namespace golang::go::doc
 {
-    gocpp::slice<ast::Ident*> filterIdentList(gocpp::slice<ast::Ident*> list);
-    extern ast::Ident* underscore;
-    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool export);
-    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool export);
-    bool updateIdentList(gocpp::slice<ast::Ident*> list);
-    bool hasExportedName(gocpp::slice<ast::Ident*> list);
-    void removeAnonymousField(gocpp::string name, ast::InterfaceType* ityp);
     ast::Expr copyConstType(ast::Expr typ, token::Pos pos);
 }
 

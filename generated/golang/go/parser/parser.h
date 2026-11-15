@@ -14,28 +14,80 @@ namespace golang::go::parser
 {
     void assert(bool cond, gocpp::string msg);
 }
-#include "golang/go/ast/ast.fwd.h"
-#include "golang/go/scanner/errors.fwd.h"
-#include "golang/go/scanner/scanner.fwd.h"
-#include "golang/go/token/position.fwd.h"
-#include "golang/go/token/token.fwd.h"
-
-namespace golang::go::parser
-{
-    namespace token = golang::go::token;
-    namespace scanner = golang::go::scanner;
-}
 #include "golang/go/ast/ast.h"
 
 namespace golang::go::parser
 {
     namespace ast = golang::go::ast;
+    struct field
+    {
+        ast::Ident* name{};
+        ast::Expr typ{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct field& value);
+    bool isTypeSwitchAssert(ast::Expr x);
+    std::tuple<ast::Ident*, ast::Expr> extractName(ast::Expr x, bool force);
+    bool isTypeElem(ast::Expr x);
 }
+#include "golang/go/token/position.fwd.h"
+
+namespace golang::go::parser
+{
+    namespace token = golang::go::token;
+}
+#include "golang/go/token/token.fwd.h"
+#include "golang/go/token/position.h"
+
+namespace golang::go::parser
+{
+    struct bailout
+    {
+        token::Pos pos{};
+        gocpp::string msg{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct bailout& value);
+    ast::Expr packIndexExpr(ast::Expr x, token::Pos lbrack, gocpp::slice<ast::Expr> exprs, token::Pos rbrack);
+}
+#include "golang/go/token/token.h"
+
+namespace golang::go::parser
+{
+    extern gocpp::map<token::Token, bool> stmtStart;
+    extern gocpp::map<token::Token, bool> declStart;
+    extern gocpp::map<token::Token, bool> exprEnd;
+}
+#include "golang/go/scanner/errors.fwd.h"
+
+namespace golang::go::parser
+{
+    namespace scanner = golang::go::scanner;
+}
+#include "golang/go/scanner/scanner.fwd.h"
 #include "golang/go/parser/interface.h"
 #include "golang/go/scanner/errors.h"
 #include "golang/go/scanner/scanner.h"
-#include "golang/go/token/position.h"
-#include "golang/go/token/token.h"
 
 namespace golang::go::parser
 {
@@ -84,47 +136,6 @@ namespace golang::go::parser
     };
 
     std::ostream& operator<<(std::ostream& os, const struct parser& value);
-    struct bailout
-    {
-        token::Pos pos{};
-        gocpp::string msg{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct bailout& value);
-    extern gocpp::map<token::Token, bool> stmtStart;
-    extern gocpp::map<token::Token, bool> declStart;
-    extern gocpp::map<token::Token, bool> exprEnd;
-    struct field
-    {
-        ast::Ident* name{};
-        ast::Expr typ{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct field& value);
-    bool isTypeSwitchAssert(ast::Expr x);
-    std::tuple<ast::Ident*, ast::Expr> extractName(ast::Expr x, bool force);
-    bool isTypeElem(ast::Expr x);
-    ast::Expr packIndexExpr(ast::Expr x, token::Pos lbrack, gocpp::slice<ast::Expr> exprs, token::Pos rbrack);
     golang::go::parser::parser* trace(golang::go::parser::parser* p, gocpp::string msg);
     void un(golang::go::parser::parser* p);
     golang::go::parser::parser* incNestLev(golang::go::parser::parser* p);

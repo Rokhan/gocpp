@@ -26,6 +26,7 @@ namespace golang::internal::buildcfg
 namespace golang::internal::buildcfg
 {
     namespace goexperiment = golang::internal::goexperiment;
+    gocpp::slice<gocpp::string> expList(goexperiment::Flags* exp, goexperiment::Flags* base, bool all);
 }
 #include "golang/internal/goexperiment/flags.h"
 
@@ -48,7 +49,6 @@ namespace golang::internal::buildcfg
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ExperimentFlags& value);
-    gocpp::slice<gocpp::string> expList(goexperiment::Flags* exp, goexperiment::Flags* base, bool all);
     // Experiment contains the toolchain experiments enabled for the
     // current build.
     //

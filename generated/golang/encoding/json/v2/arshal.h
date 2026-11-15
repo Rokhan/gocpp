@@ -60,6 +60,43 @@ namespace golang::encoding::json::v2
     stringSlice* getStrings(int64_t n);
     void putStrings(stringSlice* s);
 }
+#include "golang/sync/map.fwd.h"
+#include "golang/sync/pool.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace sync = golang::sync;
+    extern sync::Pool* stringsPools;
+}
+#include "golang/encoding/json/jsontext/export.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace jsontext = golang::encoding::json::jsontext;
+}
+#include "golang/encoding/json/jsontext/encode.fwd.h"
+#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace jsonopts = golang::encoding::json::internal::jsonopts;
+}
+#include "golang/encoding/json/jsontext/decode.fwd.h"
+#include "golang/encoding/json/jsontext/errors.fwd.h"
+#include "golang/encoding/json/jsontext/token.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    gocpp::error marshalEncode(jsontext::Encoder* out, go_any in, jsonopts::Struct* mo);
+    gocpp::error unmarshalDecode(jsontext::Decoder* in, go_any out, jsonopts::Struct* uo, bool last);
+}
+#include "golang/encoding/json/jsontext/export.h"
+
+namespace golang::encoding::json::v2
+{
+    // export exposes internal functionality of the "jsontext" package.
+    extern jsontext::export export;
+}
 #include "golang/encoding/json/v2/options.h"
 
 namespace golang::encoding::json::v2
@@ -77,86 +114,6 @@ namespace golang::encoding::json::v2
     {
         return Marshal(in, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
-    gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
-
-    template<typename... Args>
-    gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, Args... opts)
-    {
-        return Unmarshal(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
-    }
-
-    template<typename... Args>
-    gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
-    {
-        return Unmarshal(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
-    }
-}
-#include "golang/encoding/encoding.fwd.h"
-#include "golang/encoding/json/internal/jsonopts/options.fwd.h"
-#include "golang/encoding/json/jsontext/decode.fwd.h"
-#include "golang/encoding/json/jsontext/encode.fwd.h"
-#include "golang/encoding/json/jsontext/errors.fwd.h"
-#include "golang/encoding/json/jsontext/export.fwd.h"
-#include "golang/encoding/json/jsontext/token.fwd.h"
-#include "golang/io/io.fwd.h"
-#include "golang/reflect/type.fwd.h"
-#include "golang/reflect/value.fwd.h"
-#include "golang/sync/map.fwd.h"
-#include "golang/sync/pool.fwd.h"
-#include "golang/time/time.fwd.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace encoding = golang::encoding;
-}
-#include "golang/encoding/encoding.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace time = golang::time;
-    namespace jsontext = golang::encoding::json::jsontext;
-}
-#include "golang/encoding/json/jsontext/export.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace io = golang::io;
-    namespace reflect = golang::reflect;
-}
-#include "golang/io/io.h"
-#include "golang/reflect/type.h"
-#include "golang/reflect/value.h"
-#include "golang/sync/map.h"
-#include "golang/time/time.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace jsonopts = golang::encoding::json::internal::jsonopts;
-    namespace iter = golang::iter;
-    namespace abi = golang::internal::abi;
-    namespace sync = golang::sync;
-    // Reference encoding and time packages to assist pkgsite
-    // in being able to hotlink references to those packages.
-    extern encoding::TextMarshaler _;
-    extern encoding::TextAppender _;
-    extern encoding::TextUnmarshaler _;
-    extern mocklib::Date _;
-    extern time::Duration _;
-    // export exposes internal functionality of the "jsontext" package.
-    extern jsontext::export export;
-    gocpp::error MarshalWrite(io::Writer out, go_any in, gocpp::slice<golang::encoding::json::v2::Options> opts);
-
-    template<typename... Args>
-    gocpp::error MarshalWrite(io::Writer out, go_any in, Args... opts)
-    {
-        return MarshalWrite(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
-    }
-
-    template<typename... Args>
-    gocpp::error MarshalWrite(io::Writer out, go_any in, golang::encoding::json::v2::Options value, Args... opts)
-    {
-        return MarshalWrite(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
-    }
     gocpp::error MarshalEncode(jsontext::Encoder* out, go_any in, gocpp::slice<golang::encoding::json::v2::Options> opts);
 
     template<typename... Args>
@@ -170,19 +127,18 @@ namespace golang::encoding::json::v2
     {
         return MarshalEncode(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
-    gocpp::error marshalEncode(jsontext::Encoder* out, go_any in, jsonopts::Struct* mo);
-    gocpp::error UnmarshalRead(io::Reader in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
+    gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
 
     template<typename... Args>
-    gocpp::error UnmarshalRead(io::Reader in, go_any out, Args... opts)
+    gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, Args... opts)
     {
-        return UnmarshalRead(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
+        return Unmarshal(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
     }
 
     template<typename... Args>
-    gocpp::error UnmarshalRead(io::Reader in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
+    gocpp::error Unmarshal(gocpp::slice<unsigned char> in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
     {
-        return UnmarshalRead(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
+        return Unmarshal(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
     gocpp::error UnmarshalDecode(jsontext::Decoder* in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
 
@@ -197,7 +153,89 @@ namespace golang::encoding::json::v2
     {
         return UnmarshalDecode(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
     }
-    gocpp::error unmarshalDecode(jsontext::Decoder* in, go_any out, jsonopts::Struct* uo, bool last);
+}
+#include "golang/sync/map.h"
+
+namespace golang::encoding::json::v2
+{
+    extern sync::Map lookupArshalerCache;
+}
+#include "golang/time/time.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace time = golang::time;
+}
+#include "golang/time/time.h"
+
+namespace golang::encoding::json::v2
+{
+    extern mocklib::Date _;
+    extern time::Duration _;
+}
+#include "golang/encoding/encoding.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace encoding = golang::encoding;
+}
+#include "golang/encoding/encoding.h"
+
+namespace golang::encoding::json::v2
+{
+    // Reference encoding and time packages to assist pkgsite
+    // in being able to hotlink references to those packages.
+    extern encoding::TextMarshaler _;
+    extern encoding::TextAppender _;
+    extern encoding::TextUnmarshaler _;
+}
+#include "golang/io/io.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace io = golang::io;
+}
+#include "golang/io/io.h"
+
+namespace golang::encoding::json::v2
+{
+    gocpp::error MarshalWrite(io::Writer out, go_any in, gocpp::slice<golang::encoding::json::v2::Options> opts);
+
+    template<typename... Args>
+    gocpp::error MarshalWrite(io::Writer out, go_any in, Args... opts)
+    {
+        return MarshalWrite(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
+    }
+
+    template<typename... Args>
+    gocpp::error MarshalWrite(io::Writer out, go_any in, golang::encoding::json::v2::Options value, Args... opts)
+    {
+        return MarshalWrite(out, in, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
+    }
+    gocpp::error UnmarshalRead(io::Reader in, go_any out, gocpp::slice<golang::encoding::json::v2::Options> opts);
+
+    template<typename... Args>
+    gocpp::error UnmarshalRead(io::Reader in, go_any out, Args... opts)
+    {
+        return UnmarshalRead(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(opts...));
+    }
+
+    template<typename... Args>
+    gocpp::error UnmarshalRead(io::Reader in, go_any out, golang::encoding::json::v2::Options value, Args... opts)
+    {
+        return UnmarshalRead(in, out, gocpp::ToSlice<golang::encoding::json::v2::Options>(value, opts...));
+    }
+}
+#include "golang/reflect/type.fwd.h"
+
+namespace golang::encoding::json::v2
+{
+    namespace reflect = golang::reflect;
+}
+#include "golang/reflect/value.h"
+
+namespace golang::encoding::json::v2
+{
     struct addressableValue
     {
         reflect::Value Value{};
@@ -216,6 +254,17 @@ namespace golang::encoding::json::v2
 
         std::ostream& PrintTo(std::ostream& os) const;
     };
+
+    std::ostream& operator<<(std::ostream& os, const struct addressableValue& value);
+}
+#include "golang/reflect/type.h"
+
+namespace golang::encoding::json::v2
+{
+    addressableValue newAddressableValue(reflect::Type t);
+    arshaler* lookupArshaler(reflect::Type t);
+    namespace abi = golang::internal::abi;
+    namespace iter = golang::iter;
 
     namespace rec
     {
@@ -429,16 +478,6 @@ namespace golang::encoding::json::v2
         abi::Type* typ(const gocpp::ObjRecv<struct addressableValue>& self);
         reflect::Type typeSlow(const gocpp::PtrRecv<struct addressableValue, false>& self);
         reflect::Type typeSlow(const gocpp::ObjRecv<struct addressableValue>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct addressableValue& value);
-    extern sync::Map lookupArshalerCache;
-    arshaler* lookupArshaler(reflect::Type t);
-    extern sync::Pool* stringsPools;
-    addressableValue newAddressableValue(reflect::Type t);
-
-    namespace rec
-    {
     }
 }
 

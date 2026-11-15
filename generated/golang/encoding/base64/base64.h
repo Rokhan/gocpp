@@ -31,6 +31,7 @@ namespace golang::encoding::base64
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Encoding& value);
+    Encoding* NewEncoding(gocpp::string encoder);
     // StdEncoding is the standard base64 encoding, as defined in RFC 4648.
     extern base64::Encoding* StdEncoding;
     // URLEncoding is the alternate base64 encoding defined in RFC 4648.
@@ -49,7 +50,6 @@ namespace golang::encoding::base64
     std::tuple<uint32_t, bool> assemble32(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4);
     std::tuple<uint64_t, bool> assemble64(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4, unsigned char n5, unsigned char n6, unsigned char n7, unsigned char n8);
     int64_t decodedLen(int64_t n, gocpp::rune padChar);
-    Encoding* NewEncoding(gocpp::string encoder);
 }
 #include "golang/io/io.fwd.h"
 

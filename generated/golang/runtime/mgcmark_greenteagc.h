@@ -18,6 +18,7 @@ namespace golang::runtime
     void freeDeadSpanSPMCs();
     struct GoTag_objptr { };
     using objptr = gocpp::defined<uintptr_t, GoTag_objptr>;
+    objptr makeObjPtr(uintptr_t spanBase, uint16_t objIndex);
     uintptr_t extractHeapBitsSmall(unsigned char* hbits, uintptr_t spanBase, uintptr_t addr, uintptr_t elemsize);
     struct sizeClassScanStats
     {
@@ -41,10 +42,31 @@ namespace golang::runtime
     std::ostream& operator<<(std::ostream& os, const struct sizeClassScanStats& value);
     void dumpScanStats();
     bool gcMarkWorkAvailable();
-    objptr makeObjPtr(uintptr_t spanBase, uint16_t objIndex);
+}
+#include "golang/runtime/mgcwork.fwd.h"
+
+namespace golang::runtime
+{
+    bool tryDeferToSpanScan(uintptr_t p, gcWork* gcw);
+    void scanSpan(objptr p, gcWork* gcw);
+    void scanObjectSmall(uintptr_t spanBase, uintptr_t b, uintptr_t objSize, gcWork* gcw);
+    void scanObject(uintptr_t b, gcWork* gcw);
+}
+#include "golang/internal/runtime/gc/malloc.fwd.h"
+
+namespace golang::runtime
+{
+    namespace gc = golang::internal::runtime::gc;
+}
+#include "golang/internal/runtime/gc/scan.fwd.h"
+#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
+
+namespace golang::runtime
+{
+    void scanObjectsSmall(uintptr_t base, uintptr_t objSize, uint16_t elems, gcWork* gcw, gocpp::array_ptr<gc::ObjMask> scans);
+    gocpp::array_ptr<gc::PtrMask> spanPtrMaskUnsafe(uintptr_t spanBase);
 }
 #include "golang/runtime/mheap.h"
-#include "golang/runtime/mgcwork.fwd.h"
 
 namespace golang::runtime
 {
@@ -67,37 +89,20 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanInlineMarkBits& value);
-    bool tryDeferToSpanScan(uintptr_t p, gcWork* gcw);
-    void scanSpan(objptr p, gcWork* gcw);
-    void scanObjectSmall(uintptr_t spanBase, uintptr_t b, uintptr_t objSize, gcWork* gcw);
-    void scanObject(uintptr_t b, gcWork* gcw);
+    spanInlineMarkBits* spanInlineMarkBitsFromBase(uintptr_t base);
+    int64_t spanSetScans(uintptr_t spanBase, uint16_t nelems, spanInlineMarkBits* imb, gocpp::array_ptr<gc::ObjMask> toScan);
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
-#include "golang/internal/runtime/atomic/stubs.fwd.h"
-#include "golang/internal/runtime/atomic/types.fwd.h"
-#include "golang/internal/runtime/gc/malloc.fwd.h"
-#include "golang/internal/runtime/gc/scan.fwd.h"
-#include "golang/internal/runtime/gc/sizeclasses.fwd.h"
-#include "golang/internal/runtime/sys/intrinsics.fwd.h"
-#include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
-    spanInlineMarkBits* spanInlineMarkBitsFromBase(uintptr_t base);
     namespace atomic = golang::internal::runtime::atomic;
 }
 #include "golang/internal/runtime/atomic/types.h"
-#include "golang/internal/runtime/sys/nih.h"
+#include "golang/internal/runtime/atomic/stubs.fwd.h"
 
 namespace golang::runtime
 {
-    namespace gc = golang::internal::runtime::gc;
-}
-#include "golang/runtime/list_manual.h"
-
-namespace golang::runtime
-{
-    namespace sys = golang::internal::runtime::sys;
     struct gocpp_id_0
     {
         // head is the spanSPMC to put to. This is only accessed
@@ -119,6 +124,44 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    struct spanQueue
+    {
+        // head, tail, and ring represent a local non-thread-safe ring buffer.
+        uint32_t head{};
+        uint32_t tail{};
+        gocpp::array<objptr, 256> ring{};
+        // putsSinceDrain counts the number of put calls since the last drain.
+        int64_t putsSinceDrain{};
+        // chain contains state visible to other Ps.
+        // In particular, that means a linked chain of single-producer multi-consumer
+        // ring buffers where the single producer is this P only.
+        // This linked chain structure is based off the sync.Pool dequeue.
+        gocpp_id_0 chain{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct spanQueue& value);
+}
+#include "golang/internal/runtime/sys/nih.h"
+#include "golang/runtime/list_manual.h"
+
+namespace golang::runtime
+{
+    namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/internal/runtime/sys/intrinsics.fwd.h"
+
+namespace golang::runtime
+{
     struct spanSPMC
     {
         sys::NotInHeap _1{};
@@ -154,35 +197,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct spanSPMC& value);
-    int64_t spanSetScans(uintptr_t spanBase, uint16_t nelems, spanInlineMarkBits* imb, gocpp::array_ptr<gc::ObjMask> toScan);
-    void scanObjectsSmall(uintptr_t base, uintptr_t objSize, uint16_t elems, gcWork* gcw, gocpp::array_ptr<gc::ObjMask> scans);
-    gocpp::array_ptr<gc::PtrMask> spanPtrMaskUnsafe(uintptr_t spanBase);
-    struct spanQueue
-    {
-        // head, tail, and ring represent a local non-thread-safe ring buffer.
-        uint32_t head{};
-        uint32_t tail{};
-        gocpp::array<objptr, 256> ring{};
-        // putsSinceDrain counts the number of put calls since the last drain.
-        int64_t putsSinceDrain{};
-        // chain contains state visible to other Ps.
-        // In particular, that means a linked chain of single-producer multi-consumer
-        // ring buffers where the single producer is this P only.
-        // This linked chain structure is based off the sync.Pool dequeue.
-        gocpp_id_0 chain{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct spanQueue& value);
     spanSPMC* newSpanSPMC(uint32_t cap);
 }
 

@@ -20,22 +20,34 @@ namespace golang::runtime
     std::tuple<unsigned char*, uint8_t> getCheckmark(uintptr_t obj);
     void checkFinalizersAndCleanups();
 }
-#include "golang/runtime/mbitmap.h"
 #include "golang/runtime/mgcwork.fwd.h"
+
+namespace golang::runtime
+{
+    void runCheckmark(std::function<void (gcWork* _1)> prepareRootSet);
+}
 #include "golang/runtime/mheap.fwd.h"
 
 namespace golang::runtime
 {
-    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits);
-    void runCheckmark(std::function<void (gcWork* _1)> prepareRootSet);
     void forEachSpecial(std::function<bool (uintptr_t p, mspan* s, special* sp)> yield);
 }
-#include "golang/internal/goarch/goarch.fwd.h"
+#include "golang/runtime/mbitmap.h"
+
+namespace golang::runtime
+{
+    bool setCheckmark(uintptr_t obj, uintptr_t base, uintptr_t off, markBits mbits);
+}
 #include "golang/internal/runtime/sys/nih.fwd.h"
 
 namespace golang::runtime
 {
     namespace sys = golang::internal::runtime::sys;
+}
+#include "golang/internal/goarch/goarch.fwd.h"
+
+namespace golang::runtime
+{
     namespace goarch = golang::internal::goarch;
 }
 #include "golang/internal/runtime/sys/nih.h"

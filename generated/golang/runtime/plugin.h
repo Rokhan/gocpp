@@ -14,14 +14,22 @@ namespace golang::runtime
 {
     bool inRange(uintptr_t r0, uintptr_t r1, uintptr_t v0, uintptr_t v1);
 }
-#include "golang/runtime/type.h"
 #include "golang/runtime/proc.fwd.h"
-#include "golang/runtime/symtab.fwd.h"
 
 namespace golang::runtime
 {
     std::tuple<gocpp::string, gocpp::map<gocpp::string, go_any>, gocpp::slice<initTask*>, gocpp::string> plugin_lastmoduleinit();
+}
+#include "golang/runtime/symtab.fwd.h"
+
+namespace golang::runtime
+{
     void pluginftabverify(moduledata* md);
+}
+#include "golang/runtime/type.h"
+
+namespace golang::runtime
+{
     struct ptabEntry
     {
         golang::runtime::nameOff name{};

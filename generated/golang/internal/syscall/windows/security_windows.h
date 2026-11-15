@@ -29,6 +29,40 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct LUID& value);
+    struct LUID_AND_ATTRIBUTES
+    {
+        LUID Luid{};
+        uint32_t Attributes{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct LUID_AND_ATTRIBUTES& value);
+    struct TOKEN_PRIVILEGES
+    {
+        uint32_t PrivilegeCount{};
+        gocpp::array<LUID_AND_ATTRIBUTES, 1> Privileges{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TOKEN_PRIVILEGES& value);
     struct GoTag_TokenType { };
     using TokenType = gocpp::defined<uint32_t, GoTag_TokenType>;
     struct LocalGroupUserInfo0
@@ -88,54 +122,21 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID_IDENTIFIER_AUTHORITY& value);
-    struct LUID_AND_ATTRIBUTES
-    {
-        LUID Luid{};
-        uint32_t Attributes{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct LUID_AND_ATTRIBUTES& value);
     extern SID_IDENTIFIER_AUTHORITY SECURITY_NT_AUTHORITY;
-    struct TOKEN_PRIVILEGES
-    {
-        uint32_t PrivilegeCount{};
-        gocpp::array<LUID_AND_ATTRIBUTES, 1> Privileges{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TOKEN_PRIVILEGES& value);
 }
 #include "golang/syscall/security_windows.fwd.h"
-#include "golang/syscall/syscall_windows.fwd.h"
-#include "golang/syscall/types_windows.fwd.h"
-#include "golang/syscall/zerrors_windows.fwd.h"
-#include "golang/syscall/zsyscall_windows.fwd.h"
-#include "golang/syscall/security_windows.h"
 
 namespace golang::internal::syscall::windows
 {
     namespace syscall = golang::syscall;
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
+}
+#include "golang/syscall/zerrors_windows.fwd.h"
+#include "golang/syscall/syscall_windows.fwd.h"
+#include "golang/syscall/types_windows.fwd.h"
+#include "golang/syscall/zsyscall_windows.fwd.h"
+
+namespace golang::internal::syscall::windows
+{
     struct SID_AND_ATTRIBUTES
     {
         syscall::SID* Sid{};
@@ -153,6 +154,22 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct SID_AND_ATTRIBUTES& value);
+    struct TOKEN_MANDATORY_LABEL
+    {
+        SID_AND_ATTRIBUTES Label{};
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
     struct UserInfo4
     {
         uint16_t* Name{};
@@ -197,26 +214,6 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct UserInfo4& value);
-    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int64_t initSize);
-    SID_IDENTIFIER_AUTHORITY GetSidIdentifierAuthority(syscall::SID* sid);
-    uint32_t GetSidSubAuthority(syscall::SID* sid, uint32_t subAuthorityIdx);
-    uint8_t GetSidSubAuthorityCount(syscall::SID* sid);
-    struct TOKEN_MANDATORY_LABEL
-    {
-        SID_AND_ATTRIBUTES Label{};
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
-
-    std::ostream& operator<<(std::ostream& os, const struct TOKEN_MANDATORY_LABEL& value);
     struct TOKEN_GROUPS
     {
         uint32_t GroupCount{};
@@ -234,7 +231,18 @@ namespace golang::internal::syscall::windows
     };
 
     std::ostream& operator<<(std::ostream& os, const struct TOKEN_GROUPS& value);
+    SID_IDENTIFIER_AUTHORITY GetSidIdentifierAuthority(syscall::SID* sid);
+    uint32_t GetSidSubAuthority(syscall::SID* sid, uint32_t subAuthorityIdx);
+    uint8_t GetSidSubAuthorityCount(syscall::SID* sid);
+}
+#include "golang/syscall/security_windows.h"
+
+namespace golang::internal::syscall::windows
+{
+    gocpp::error AdjustTokenPrivileges(syscall::Token token, bool disableAllPrivileges, TOKEN_PRIVILEGES* newstate, uint32_t buflen, TOKEN_PRIVILEGES* prevstate, uint32_t* returnlen);
     std::tuple<TOKEN_GROUPS*, gocpp::error> GetTokenGroups(syscall::Token t);
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    std::tuple<gocpp::unsafe_pointer, gocpp::error> getTokenInfo(syscall::Token t, uint32_t go_class, int64_t initSize);
 
     namespace rec
     {

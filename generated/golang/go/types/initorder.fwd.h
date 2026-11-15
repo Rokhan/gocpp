@@ -8,8 +8,8 @@ namespace golang::go::types
 {
     struct graphNode;
     struct GoTag_nodeSet;
-    struct GoTag_nodeQueue;
     using nodeSet = gocpp::defined<gocpp::map<graphNode*, bool>, GoTag_nodeSet>;
+    struct GoTag_nodeQueue;
     using nodeQueue = gocpp::defined<gocpp::slice<graphNode*>, GoTag_nodeQueue>;
 }
 #include "golang/go/types/object.fwd.h"

@@ -19,7 +19,6 @@ namespace golang::main
     gocpp::unsafe_pointer toto1(int64_t x, int64_t y);
     gocpp::unsafe_pointer toto2(int64_t x, int64_t y);
 }
-#include "golang/fmt/print.fwd.h"
 #include "golang/fmt/print.h"
 
 namespace golang::main

@@ -15,10 +15,6 @@ namespace golang::runtime
     inline constexpr long tracebackOuterFrames = 50;
     struct GoTag_unwindFlags;
     using unwindFlags = gocpp::defined<uint8_t, GoTag_unwindFlags>;
-    struct unwinder;
-    struct cgoTracebackArg;
-    struct cgoContextArg;
-    struct cgoSymbolizerArg;
     // unwindPrintErrors indicates that if unwinding encounters an error, it
     // should print a message and stop without throwing. This is used for things
     // like stack printing, where it's better to get incomplete information than
@@ -49,6 +45,10 @@ namespace golang::runtime
     // should resume tracing at the user stack when the system stack is
     // exhausted.
     inline constexpr unwindFlags unwindJumpStack = 1 << 3;
+    struct unwinder;
+    struct cgoTracebackArg;
+    struct cgoContextArg;
+    struct cgoSymbolizerArg;
 }
 #include "golang/internal/runtime/sys/consts.fwd.h"
 #include "golang/internal/runtime/sys/intrinsics.fwd.h"

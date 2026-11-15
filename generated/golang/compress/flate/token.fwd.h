@@ -12,11 +12,11 @@ namespace golang::compress::flate
     // bits 22-30 xlength = length - MIN_MATCH_LENGTH - 8 bits
     // bits 30-32 type, 0 = literal  1=EOF  2=Match   3=Unused - 2 bits
     inline constexpr long lengthShift = 22;
+    inline constexpr int64_t offsetMask = (1 << lengthShift) - 1;
     inline constexpr int64_t typeMask = 3LL << 30;
     inline constexpr int64_t matchType = 1 << 30;
     inline constexpr long matchOffsetOnlyMask = 0xffff;
     struct GoTag_token;
     using token = gocpp::defined<uint32_t, GoTag_token>;
     struct tokens;
-    inline constexpr int64_t offsetMask = (1 << lengthShift) - 1;
 }

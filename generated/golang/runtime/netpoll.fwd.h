@@ -38,6 +38,6 @@ namespace golang::runtime
     inline constexpr int64_t pollExpiredWriteDeadline = 1 << 3;
     inline constexpr int64_t pollFDSeq = 1 << 4;
     inline constexpr long pollFDSeqBits = 20;
-    struct pollCache;
     inline constexpr int64_t pollFDSeqMask = (1 << pollFDSeqBits) - 1;
+    struct pollCache;
 }

@@ -34,6 +34,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct bitCursor& value);
+    void buildGCMask(_type* t, bitCursor dst);
     void reflectOffsLock();
     void reflectOffsUnlock();
     gocpp::string pkgPath(golang::runtime::name n);
@@ -55,15 +56,54 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct _typePair& value);
-    void buildGCMask(_type* t, bitCursor dst);
     bool typesEqual(_type* t, _type* v, gocpp::map<_typePair, gocpp::empty_struct> seen);
 }
-#include "golang/runtime/runtime2.h"
 #include "golang/runtime/symtab.fwd.h"
 
 namespace golang::runtime
 {
+    // moduleToTypelinks maps from moduledata to typelinks.
+    // We build this lazily as needed, since most programs do not need it.
+    extern gocpp::map<moduledata*, gocpp::slice<_type*>> moduleToTypelinks;
+    gocpp::slice<_type*> moduleTypelinks(moduledata* md);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
+    golang::runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
+    _type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
+}
+#include "golang/internal/abi/type.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
+}
+#include "golang/internal/abi/funcpc.fwd.h"
+#include "golang/internal/abi/map.fwd.h"
+
+namespace golang::runtime
+{
+    gocpp::string maps_typeString(abi::Type* typ);
+    struct rtype
+    {
+        abi::Type* Type{}; // embedding is okay here (unlike reflect) because none of this is public
+
+        using isGoStruct = void;
+
+        template<typename T> requires gocpp::GoStruct<T>
+        operator T();
+
+        template<typename T> requires gocpp::GoStruct<T>
+        bool operator==(const T& ref) const;
+
+        std::ostream& PrintTo(std::ostream& os) const;
+    };
+
+    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
+    golang::runtime::rtype toRType(abi::Type* t);
+}
+#include "golang/runtime/runtime2.h"
+
+namespace golang::runtime
+{
     struct reflectOffsStruct
     {
         mutex lock{};
@@ -83,20 +123,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct reflectOffsStruct& value);
-    golang::runtime::name resolveNameOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::nameOff off);
-    _type* resolveTypeOff(gocpp::unsafe_pointer ptrInModule, golang::runtime::typeOff off);
-    // moduleToTypelinks maps from moduledata to typelinks.
-    // We build this lazily as needed, since most programs do not need it.
-    extern gocpp::map<moduledata*, gocpp::slice<_type*>> moduleToTypelinks;
-    extern mutex moduleToTypelinksLock;
-    gocpp::slice<_type*> moduleTypelinks(moduledata* md);
-}
-#include "golang/internal/abi/funcpc.fwd.h"
-#include "golang/internal/abi/map.fwd.h"
-#include "golang/internal/abi/type.fwd.h"
-
-namespace golang::runtime
-{
     // reflectOffs holds type offsets defined at run time by the reflect package.
     //
     // When a type is defined at run time, its *rtype data lives on the heap.
@@ -111,27 +137,7 @@ namespace golang::runtime
     //
     // Entries are created by reflect.addReflectOff.
     extern reflectOffsStruct reflectOffs;
-    namespace abi = golang::internal::abi;
-}
-#include "golang/internal/abi/type.h"
-
-namespace golang::runtime
-{
-    gocpp::string maps_typeString(abi::Type* typ);
-    struct rtype
-    {
-        abi::Type* Type{}; // embedding is okay here (unlike reflect) because none of this is public
-
-        using isGoStruct = void;
-
-        template<typename T> requires gocpp::GoStruct<T>
-        operator T();
-
-        template<typename T> requires gocpp::GoStruct<T>
-        bool operator==(const T& ref) const;
-
-        std::ostream& PrintTo(std::ostream& os) const;
-    };
+    extern mutex moduleToTypelinksLock;
 
     namespace rec
     {
@@ -185,13 +191,6 @@ namespace golang::runtime
         abi::StructType* StructType(const gocpp::ObjRecv<struct rtype>& self);
         abi::UncommonType* Uncommon(const gocpp::PtrRecv<struct rtype, false>& self);
         abi::UncommonType* Uncommon(const gocpp::ObjRecv<struct rtype>& self);
-    }
-
-    std::ostream& operator<<(std::ostream& os, const struct rtype& value);
-    golang::runtime::rtype toRType(abi::Type* t);
-
-    namespace rec
-    {
         gocpp::string string(golang::runtime::rtype t);
         uncommontype* uncommon(golang::runtime::rtype t);
         gocpp::string name(golang::runtime::rtype t);

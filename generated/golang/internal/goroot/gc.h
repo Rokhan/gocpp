@@ -9,16 +9,7 @@
 #include "golang/internal/goroot/gc.fwd.h"
 #include "gocpp/support.h"
 
-#include "golang/os/dir.fwd.h"
-#include "golang/os/env.fwd.h"
-#include "golang/os/stat.fwd.h"
 #include "golang/sync/once.fwd.h"
-
-namespace golang::internal::goroot
-{
-    namespace os = golang::os;
-}
-#include "golang/os/dir.h"
 
 namespace golang::internal::goroot
 {
@@ -28,7 +19,6 @@ namespace golang::internal::goroot
 
 namespace golang::internal::goroot
 {
-    bool IsStandardPackage(std::function<std::tuple<gocpp::slice<os::DirEntry>, gocpp::error> (gocpp::string _1)> readDir, gocpp::string goroot, gocpp::string compiler, gocpp::string path);
     struct gccgoDirs
     {
         sync::Once once{};
@@ -49,6 +39,20 @@ namespace golang::internal::goroot
     // gccgoSearch is used to check whether a gccgo package exists in the
     // standard library.
     extern gccgoDirs gccgoSearch;
+}
+#include "golang/os/dir.fwd.h"
+
+namespace golang::internal::goroot
+{
+    namespace os = golang::os;
+}
+#include "golang/os/dir.h"
+#include "golang/os/env.fwd.h"
+#include "golang/os/stat.fwd.h"
+
+namespace golang::internal::goroot
+{
+    bool IsStandardPackage(std::function<std::tuple<gocpp::slice<os::DirEntry>, gocpp::error> (gocpp::string _1)> readDir, gocpp::string goroot, gocpp::string compiler, gocpp::string path);
 
     namespace rec
     {

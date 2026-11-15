@@ -28,20 +28,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     extern gocpp::slice<int64_t> fakeLines;
 }
 #include "golang/go/token/position.fwd.h"
-#include "golang/go/types/chan.fwd.h"
-#include "golang/sync/once.fwd.h"
 
 namespace golang::golang_org::x::tools::internal::gcimporter
 {
     namespace token = golang::go::token;
-}
-#include "golang/go/types/chan.h"
-#include "golang/sync/once.h"
-
-namespace golang::golang_org::x::tools::internal::gcimporter
-{
-    namespace sync = golang::sync;
-    namespace types = golang::go::types;
     struct fakeFileSet
     {
         token::FileSet* fset{};
@@ -76,7 +66,19 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     };
 
     std::ostream& operator<<(std::ostream& os, const struct fileInfo& value);
+}
+#include "golang/sync/once.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace sync = golang::sync;
     extern sync::Once fakeLinesOnce;
+}
+#include "golang/go/types/chan.h"
+
+namespace golang::golang_org::x::tools::internal::gcimporter
+{
+    namespace types = golang::go::types;
     types::ChanDir chanDir(int64_t d);
 }
 

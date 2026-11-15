@@ -29,10 +29,9 @@ namespace golang::go::ast
     };
 
     std::ostream& operator<<(std::ostream& os, const struct Scope& value);
+    Scope* NewScope(Scope* outer);
     struct GoTag_ObjKind { };
     using ObjKind = gocpp::defined<int64_t, GoTag_ObjKind>;
-    extern gocpp::array<gocpp::string, 7> objKindStrings;
-    Scope* NewScope(Scope* outer);
     struct Object
     {
         ObjKind Kind{};
@@ -54,6 +53,7 @@ namespace golang::go::ast
 
     std::ostream& operator<<(std::ostream& os, const struct Object& value);
     Object* NewObj(ObjKind kind, gocpp::string name);
+    extern gocpp::array<gocpp::string, 7> objKindStrings;
 }
 
 #include "golang/go/token/position.h"

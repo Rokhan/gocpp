@@ -14,6 +14,12 @@ namespace golang::runtime
 {
     void corostart();
 }
+#include "golang/runtime/runtime2.fwd.h"
+
+namespace golang::runtime
+{
+    void coroswitch_m(g* gp);
+}
 #include "golang/runtime/runtime2.h"
 
 namespace golang::runtime
@@ -39,7 +45,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct coro& value);
-    void coroswitch_m(g* gp);
     coro* newcoro(std::function<void (coro* _1)> f);
     void coroexit(coro* c);
     void coroswitch(coro* c);

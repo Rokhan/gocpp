@@ -111,12 +111,18 @@ namespace golang::encoding::json::v2
 {
     namespace reflect = golang::reflect;
 }
-#include "golang/encoding/json/v2/arshal.h"
 #include "golang/reflect/type.h"
 
 namespace golang::encoding::json::v2
 {
     extern reflect::Type isZeroerType;
+    reflect::Type indirectType(reflect::Type t);
+    std::tuple<fieldOptions, bool, gocpp::error> parseFieldOptions(reflect::StructField sf);
+}
+#include "golang/encoding/json/v2/arshal.h"
+
+namespace golang::encoding::json::v2
+{
     struct structField
     {
         int64_t id{}; // unique numeric ID in breadth-first ordering
@@ -140,8 +146,6 @@ namespace golang::encoding::json::v2
     };
 
     std::ostream& operator<<(std::ostream& os, const struct structField& value);
-    reflect::Type indirectType(reflect::Type t);
-    std::tuple<fieldOptions, bool, gocpp::error> parseFieldOptions(reflect::StructField sf);
 }
 #include "golang/encoding/json/v2/errors.fwd.h"
 

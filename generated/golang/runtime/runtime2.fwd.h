@@ -73,6 +73,13 @@ namespace golang::runtime
     // atomicstatus&~Gscan gives the state the goroutine will
     // return to when the scan completes.
     inline constexpr long _Gscan = 0x1000;
+    inline constexpr int64_t _Gscanrunnable = _Gscan + _Grunnable;
+    inline constexpr int64_t _Gscanrunning = _Gscan + _Grunning;
+    inline constexpr int64_t _Gscansyscall = _Gscan + _Gsyscall;
+    inline constexpr int64_t _Gscanwaiting = _Gscan + _Gwaiting;
+    inline constexpr int64_t _Gscanpreempted = _Gscan + _Gpreempted;
+    inline constexpr int64_t _Gscanleaked = _Gscan + _Gleaked;
+    inline constexpr int64_t _Gscandeadextra = _Gscan + _Gdeadextra;
     // _Pidle means a P is not being used to run user code or the
     // scheduler. Typically, it's on the idle P list and available
     // to the scheduler, but it may just be transitioning between
@@ -160,13 +167,6 @@ namespace golang::runtime
     struct ancestorInfo;
     struct GoTag_waitReason;
     using waitReason = gocpp::defined<uint8_t, GoTag_waitReason>;
-    inline constexpr int64_t _Gscanrunnable = _Gscan + _Grunnable;
-    inline constexpr int64_t _Gscanrunning = _Gscan + _Grunning;
-    inline constexpr int64_t _Gscansyscall = _Gscan + _Gsyscall;
-    inline constexpr int64_t _Gscanwaiting = _Gscan + _Gwaiting;
-    inline constexpr int64_t _Gscanpreempted = _Gscan + _Gpreempted;
-    inline constexpr int64_t _Gscanleaked = _Gscan + _Gleaked;
-    inline constexpr int64_t _Gscandeadextra = _Gscan + _Gdeadextra;
     inline constexpr waitReason waitReasonZero = 0;
     inline constexpr waitReason waitReasonGCAssistMarking = 1;
     inline constexpr waitReason waitReasonIOWait = 2;
@@ -216,23 +216,31 @@ namespace golang::runtime
     inline constexpr waitReason waitReasonCleanupWait = 46;
 }
 #include "golang/runtime/asan0.fwd.h"
-#include "golang/runtime/extern.fwd.h"
 
 namespace golang::runtime
 {
     inline constexpr int64_t mRedZoneSize = (16 << 3) * asanenabledBit;
+}
+#include "golang/runtime/extern.fwd.h"
+
+namespace golang::runtime
+{
     // Must agree with internal/buildcfg.FramePointerEnabled.
     inline const bool framepointer_enabled = GOARCH == "amd64"_s || GOARCH == "arm64"_s;
 }
-#include "golang/internal/abi/iface.fwd.h"
-#include "golang/internal/abi/symtab.fwd.h"
 #include "golang/internal/goarch/goarch.fwd.h"
 #include "golang/internal/goarch/zgoarch_amd64.fwd.h"
 
 namespace golang::runtime
 {
     namespace goarch = golang::internal::goarch;
-    namespace abi = golang::internal::abi;
     inline constexpr int64_t tlsSize = tlsSlots * goarch::PtrSize;
+}
+#include "golang/internal/abi/iface.fwd.h"
+#include "golang/internal/abi/symtab.fwd.h"
+
+namespace golang::runtime
+{
+    namespace abi = golang::internal::abi;
     using itab = abi::ITab;
 }

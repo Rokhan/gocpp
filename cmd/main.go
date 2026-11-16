@@ -2735,14 +2735,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 				if s.Type == nil && len(values) == len(s.Names) {
 					for i, nameId := range s.Names {
 						exprType := cv.convertExprCppType(values[i])
-						nameObj := cv.typeInfo.Defs[nameId]
-						switch {
-						case constNeedsBigint(nameObj):
-							exprType = mkCppType("gocpp::bigint", nil)
-						case constFitsOnlyUint64(nameObj):
-							exprType = mkCppType("uint64_t", nil)
-						}
-						expr := cv.convertInitExpr(values[i], tok, exprType)
+						exprType, expr := cv.convertConstInit(cv.typeInfo.Defs[nameId], values[i], tok, exprType)
 						exprType.comments = append(exprType.comments, comments...)
 						name := GetCppName(nameId.Name)
 						cstPrefix := cv.constQualifier(cv.typeInfo.Defs[nameId], values[i])
@@ -2810,13 +2803,6 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						} else {
-							nameObj := cv.typeInfo.Defs[nameId]
-							switch {
-							case constNeedsBigint(nameObj):
-								exprType = mkCppType("gocpp::bigint", nil)
-							case constFitsOnlyUint64(nameObj):
-								exprType = mkCppType("uint64_t", nil)
-							}
 							expr := cv.convertInitExpr(values[i], tok, exprType)
 							cstPrefix := cv.constQualifier(cv.typeInfo.Defs[nameId], values[i])
 
@@ -2870,6 +2856,17 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						for i := range s.Names {
 							goName := s.Names[i].Name
 							name := GetCppName(goName)
+
+							if tok == token.CONST {
+								exprType := cv.convertExprCppType(s.Names[i]) // type of the constant, not "auto": 1<<40 must not become int
+								nameObj := cv.typeInfo.Defs[s.Names[i]]
+								exprType, expr := cv.convertConstInit(nameObj, values[i], tok, cv.convertExprCppType(s.Names[i]))
+								q := cv.localConstQualifier(nameObj, values[i])
+								cv.declareVar(name, false)
+								result = append(result, inlineStrf(s, "%s %s %s = %s%s", q, exprType, name, expr, end)...)
+								continue
+							}
+
 							if isIdentifierUsed(goName, values[i]) {
 								cv.declareVar(name+"_tmp", false)
 								result = append(result, inlineStrf(s, "auto %s_tmp = %s%s", name, cv.convertExpr(values[i]), end)...)
@@ -2914,7 +2911,13 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 						} else {
 							Assertf(len(values) == len(s.Names), "convertSpecs, mismatch declaration length. variable: %v, name:%v, input: %v", reflect.TypeOf(s), s.Names[i], cv.Position(s))
 
-							if isIdentifierUsed(goName, values[i]) {
+							if tok == token.CONST {
+								nameObj := cv.typeInfo.Defs[s.Names[i]]
+								expr := cv.convertInitExpr(values[i], tok, t)
+								q := cv.localConstQualifier(nameObj, values[i])
+								result = append(result, inlineStrf(s, "%s %s %s = %s%s", q, t, name, expr, end)...)
+								cv.declareVar(name, t.isPtr)
+							} else if isIdentifierUsed(goName, values[i]) {
 								result = append(result, inlineStrf(s, "%s %s_tmp = %s%s", t, name, cv.convertExpr(values[i]), end)...)
 								result = append(result, inlineStrf(s, "%s& %s = %s_tmp%s", t, name, name, end)...)
 								cv.declareVar(name+"_tmp", t.isPtr)
@@ -2967,6 +2970,21 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	}
 
 	return result
+}
+
+// convertConstInit converts the initializer of a declaration spec.
+// For a constant too wide for the default C++ type, declType is replaced by
+// gocpp::bigint or uint64_t, and the returned type must be used for the declaration.
+// For non-constants (var), nameObj is not a *types.Const, so both predicates
+// are false and declType is returned unchanged.
+func (cv *cppConverter) convertConstInit(nameObj types.Object, value ast.Expr, tok token.Token, declType cppType) (cppType, cppExpr) {
+	switch {
+	case constNeedsBigint(nameObj):
+		declType = mkCppType("gocpp::bigint", nil)
+	case constFitsOnlyUint64(nameObj):
+		declType = mkCppType("uint64_t", nil)
+	}
+	return declType, cv.convertInitExpr(value, tok, declType)
 }
 
 // constNeedsBigint reports whether obj is an untyped integer constant whose value
@@ -3049,6 +3067,24 @@ func (cv *cppConverter) constQualifier(obj types.Object, init ast.Expr) string {
 	}
 	if q == "inline const" && obj != nil {
 		cv.shared.nonConstexprConsts[obj] = true // so dependents are downgraded too
+	}
+	return q
+}
+
+// Qualifier for a local Go constant: constexpr when C++ can hold the value in a
+// constant expression (arithmetic/bool types), plain const otherwise (strings, complex).
+func (cv *cppConverter) localConstQualifier(obj types.Object, init ast.Expr) string {
+	q := "const"
+	if obj != nil {
+		if b, ok := types.Unalias(obj.Type()).Underlying().(*types.Basic); ok && isWrappableBasic(b) {
+			q = "constexpr"
+		}
+	}
+	if q == "constexpr" && init != nil && cv.usesNonConstexpr(init) {
+		q = "const"
+	}
+	if q == "const" && obj != nil {
+		cv.shared.nonConstexprConsts[obj] = true // dependents get downgraded too
 	}
 	return q
 }

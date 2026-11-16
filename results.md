@@ -324,7 +324,7 @@
 | $(ImportDir)/golang.org/x/tools/internal/gcimporter/iexport.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gcimporter/iexport.cpp), [h](generated/golang/golang.org/x/tools/internal/gcimporter/iexport.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gcimporter/iimport.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gcimporter/iimport.cpp), [h](generated/golang/golang.org/x/tools/internal/gcimporter/iimport.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gcimporter/predeclared.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gcimporter/predeclared.cpp), [h](generated/golang/golang.org/x/tools/internal/gcimporter/predeclared.h))| ❌ | ❌ |
-| $(ImportDir)/golang.org/x/tools/internal/gcimporter/support.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gcimporter/support.cpp), [h](generated/golang/golang.org/x/tools/internal/gcimporter/support.h))| ❌ | ❌ |
+| $(ImportDir)/golang.org/x/tools/internal/gcimporter/support.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gcimporter/support.cpp), [h](generated/golang/golang.org/x/tools/internal/gcimporter/support.h))| ✔️ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gcimporter/ureader.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gcimporter/ureader.cpp), [h](generated/golang/golang.org/x/tools/internal/gcimporter/ureader.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gocommand/invoke.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gocommand/invoke.cpp), [h](generated/golang/golang.org/x/tools/internal/gocommand/invoke.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gocommand/invoke_notunix.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gocommand/invoke_notunix.cpp), [h](generated/golang/golang.org/x/tools/internal/gocommand/invoke_notunix.h))| ❌ | ❌ |
@@ -500,7 +500,7 @@
 | $(ImportDir)/internal/types/errors/codes.go | ✔️ ([cpp](generated/golang/internal/types/errors/codes.cpp), [h](generated/golang/internal/types/errors/codes.h))| ❌ | ❌ |
 | $(ImportDir)/internal/unsafeheader/unsafeheader.go | ✔️ ([cpp](generated/golang/internal/unsafeheader/unsafeheader.cpp), [h](generated/golang/internal/unsafeheader/unsafeheader.h))| ✔️ | ✔️ |
 | $(ImportDir)/io/fs/format.go | ✔️ ([cpp](generated/golang/io/fs/format.cpp), [h](generated/golang/io/fs/format.h))| ❌ | ❌ |
-| $(ImportDir)/io/fs/fs.go | ✔️ ([cpp](generated/golang/io/fs/fs.cpp), [h](generated/golang/io/fs/fs.h))| ✔️ | ❌ |
+| $(ImportDir)/io/fs/fs.go | ✔️ ([cpp](generated/golang/io/fs/fs.cpp), [h](generated/golang/io/fs/fs.h))| ❌ | ❌ |
 | $(ImportDir)/io/fs/readdir.go | ✔️ ([cpp](generated/golang/io/fs/readdir.cpp), [h](generated/golang/io/fs/readdir.h))| ✔️ | ❌ |
 | $(ImportDir)/io/fs/readfile.go | ✔️ ([cpp](generated/golang/io/fs/readfile.cpp), [h](generated/golang/io/fs/readfile.h))| ✔️ | ❌ |
 | $(ImportDir)/io/fs/readlink.go | ✔️ ([cpp](generated/golang/io/fs/readlink.cpp), [h](generated/golang/io/fs/readlink.h))| ✔️ | ❌ |

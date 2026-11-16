@@ -23,4 +23,20 @@ func main() {
 
 	const Truth = true
 	fmt.Println("Go rules?", Truth)
+
+	testLocalConst()
+}
+
+func testLocalConst() {
+	const n = 4
+	const big = 1 << 40
+	const typed int8 = 3
+	const (
+		a = iota
+		b
+	)
+	var arr [n]int
+	var arr2 [n * typed]int // typed constant expression in an array length
+	f := func() int { return len(arr) + b }
+	fmt.Println(len(arr), len(arr2), big, a, b, f())
 }

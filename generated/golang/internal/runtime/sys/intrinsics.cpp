@@ -110,7 +110,7 @@ namespace golang::internal::runtime::sys
         // Per "Hacker's Delight", the first line can be simplified
         // more, but it saves at best one instruction, so we leave
         // it alone for clarity.
-        auto m = (1 << 64) - 1;
+        constexpr uint64_t m = uint64_t((1_bi << 64) - 1_bi);
         x = (x >> 1) & (m0 & m) + x & (m0 & m);
         x = (x >> 2) & (m1 & m) + x & (m1 & m);
         x = ((x >> 4) + x) & (m2 & m);

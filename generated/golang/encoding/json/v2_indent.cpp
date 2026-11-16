@@ -44,7 +44,7 @@ namespace golang::encoding::json
 
     gocpp::slice<unsigned char> appendHTMLEscape(gocpp::slice<unsigned char> dst, gocpp::slice<unsigned char> src)
     {
-        auto hex = "0123456789abcdef"_s;
+        const gocpp::string hex = "0123456789abcdef"_s;
         // The characters can only appear in string literals,
         // so just scan the string one byte at a time.
         int64_t start = 0;

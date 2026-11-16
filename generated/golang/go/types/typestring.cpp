@@ -816,7 +816,7 @@ namespace golang::go::types
     gocpp::string subscript(uint64_t x)
     {
         // all digits 0...9 have the same utf8 width
-        auto w = len("₀"_s);
+        constexpr int64_t w = len("₀"_s);
         gocpp::array<unsigned char, 32 * w> buf = {};
         int64_t i = len(buf);
         for(; ; )

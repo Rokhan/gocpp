@@ -23,7 +23,7 @@ namespace golang::main
 
     void main()
     {
-        auto World = "世界"_s;
+        const gocpp::string World = "世界"_s;
         mocklib::Println("Hello"_s, World);
         mocklib::Println("Happy"_s, Pi, "Day"_s);
 
@@ -32,8 +32,27 @@ namespace golang::main
 
         mocklib::Println("\\t\\n\\0\""_s);
 
-        auto Truth = true;
+        constexpr bool Truth = true;
         mocklib::Println("Go rules?"_s, Truth);
+
+        testLocalConst();
+    }
+
+    void testLocalConst()
+    {
+        constexpr int64_t n = 4;
+        constexpr int64_t big = 1LL << 40;
+        constexpr int8_t typed = 3;
+        constexpr int64_t a = 0;
+        constexpr int64_t b = 1;
+        gocpp::array<int64_t, n> arr = {};
+        // typed constant expression in an array length
+        gocpp::array<int64_t, n * typed> arr2 = {};
+        auto f = [=]() mutable -> int64_t
+        {
+            return len(arr) + b;
+        };
+        mocklib::Println(len(arr), len(arr2), big, a, b, f());
     }
 
 }

@@ -265,7 +265,7 @@ namespace golang::go::build
     {
         gocpp::string rel;
         bool ok;
-        auto sep = gocpp::string(filepath::Separator);
+        const gocpp::string sep = gocpp::string(filepath::Separator);
         root = filepath::Clean(root);
         if(! strings::HasSuffix(root, sep))
         {

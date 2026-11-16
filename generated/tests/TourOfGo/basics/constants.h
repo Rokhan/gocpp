@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void main();
+    void testLocalConst();
 
     namespace rec
     {

@@ -633,7 +633,7 @@ namespace golang::slices
             gocpp::panic("cannot be negative"_s);
         }
 
-        auto maxInt = ~ (uint64_t)(0) >> 1;
+        constexpr uint64_t maxInt = ~ (uint64_t)(0LL) >> 1;
         auto [hi, lo] = bits::Mul((uint64_t)(len(x)), (uint64_t)(count));
         if(hi > 0 || lo > maxInt)
         {

@@ -180,7 +180,7 @@ namespace golang::go::types
         // explicitly in the constraint). If the constraint is a named pointer type (see above),
         // we are ok here because only fields are accepted as results.
         // see go.dev/issue/51576
-        auto enableTParamFieldLookup = false;
+        constexpr bool enableTParamFieldLookup = false;
         if(enableTParamFieldLookup && obj == nullptr && isTypeParam(T))
         {
             if(auto [t, gocpp_id_3] = commonUnder(T, nullptr); t != nullptr)
@@ -582,15 +582,15 @@ namespace golang::go::types
             return {nullptr, false};
         }
 
-        auto ok = 0;
-        auto notFound = 1;
-        auto wrongName = 2;
-        auto unexported = 3;
-        auto wrongSig = 4;
-        auto ambigSel = 5;
-        auto ptrRecv = 6;
-        auto field = 7;
-        auto nointerface = 8;
+        constexpr int64_t ok = 0;
+        constexpr int64_t notFound = 1;
+        constexpr int64_t wrongName = 2;
+        constexpr int64_t unexported = 3;
+        constexpr int64_t wrongSig = 4;
+        constexpr int64_t ambigSel = 5;
+        constexpr int64_t ptrRecv = 6;
+        constexpr int64_t field = 7;
+        constexpr int64_t nointerface = 8;
 
         int64_t state = ok;
         // method on T we're trying to implement

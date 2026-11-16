@@ -2116,7 +2116,7 @@ namespace golang::os
         // one byte for final read at EOF
         size++;
 
-        auto minBuf = 512;
+        constexpr int64_t minBuf = 512;
         // If a file claims a small size, read at least 512 bytes. In particular,
         // files in Linux's /proc claim size 0 but then do not work right if read in
         // small pieces, so an initial read of 1 byte would not work correctly.

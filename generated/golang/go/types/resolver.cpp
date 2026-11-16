@@ -147,7 +147,7 @@ namespace golang::go::types
             r = len(init->Values);
         }
 
-        auto code = WrongAssignCount;
+        constexpr errors::Code code = WrongAssignCount;
         //Go switch emulation
         {
             int conditionId = -1;
@@ -200,7 +200,7 @@ namespace golang::go::types
         {
             return {""_s, mocklib::Errorf("empty string"_s)};
         }
-        auto illegalChars = "!\"#$%&'()*,:;<=>?[\\]^{|}"_s + "`\uFFFD"_s;
+        const gocpp::string illegalChars = "!\"#$%&'()*,:;<=>?[\\]^{|}"_s + "`\uFFFD"_s;
         for(auto [gocpp_ignored, r] : s)
         {
             if(! unicode::IsGraphic(r) || unicode::IsSpace(r) || strings::ContainsRune(illegalChars, r))

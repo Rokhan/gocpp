@@ -219,8 +219,8 @@ namespace golang::runtime
     {
         assertWorldStopped();
 
-        auto reportCycle = 1 << 0;
-        auto reportTiny = 1 << 1;
+        constexpr int64_t reportCycle = 1 << 0;
+        constexpr int64_t reportTiny = 1 << 1;
 
         // Find the arena and page index into that arena for this shard.
         struct report

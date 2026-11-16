@@ -150,7 +150,7 @@ namespace golang::math
             // Round any abs(x) >= 1 containing a fractional component [0,1).
             // Numbers with larger exponents are returned unchanged since they
             // must be either an integer, infinity, or NaN.
-            auto half = 1 << (shift - 1);
+            constexpr int64_t half = 1LL << (shift - 1);
             e -= bias;
             bits += half >> e;
             bits &= ~(fracMask >> e);
@@ -184,7 +184,7 @@ namespace golang::math
             // - Large numbers without fractional components, infinity, and NaN are unchanged.
             // - Add 0.499.. or 0.5 before truncating depending on whether the truncated
             // number is even or odd (respectively).
-            auto halfMinusULP = (1 << (shift - 1)) - 1;
+            constexpr int64_t halfMinusULP = (1LL << (shift - 1)) - 1LL;
             e -= bias;
             bits += (halfMinusULP + (bits >> (shift - e)) & 1) >> e;
             bits &= ~(fracMask >> e);

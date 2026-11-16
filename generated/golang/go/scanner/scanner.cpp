@@ -386,7 +386,7 @@ namespace golang::go::scanner
         // Put a cap on the maximum size of line and column numbers.
         // 30 bits allows for some additional space before wrapping an int32.
         // Keep this consistent with cmd/compile/internal/syntax.PosMax.
-        auto maxLineCol = 1 << 30;
+        constexpr int64_t maxLineCol = 1 << 30;
         int64_t line = {};
         int64_t col = {};
         auto [i2, n2, ok2] = trailingDigits(text.make_slice(0, i - 1));

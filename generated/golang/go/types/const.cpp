@@ -67,7 +67,7 @@ namespace golang::go::types
 
         // Untyped integer values must not grow arbitrarily.
         // 512 is the constant precision
-        auto prec = 512;
+        constexpr int64_t prec = 512;
         if(rec::Kind(gocpp::recv(x->val)) == constant::Int && constant::BitLen(x->val) > prec)
         {
             auto op = opName(x->expr);
@@ -82,7 +82,7 @@ namespace golang::go::types
 
         // String values must not become arbitrarily long (go.dev/issue/78346).
         // cmd/internal/obj.MaxSymSize
-        auto maxLen = int64_t(2'000'000'000);
+        constexpr int64_t maxLen = int64_t(2'000'000'000);
         if(rec::Kind(gocpp::recv(x->val)) == constant::String)
         {
             auto len = constant::StringLen(x->val);
@@ -177,19 +177,19 @@ namespace golang::go::types
                                         break;
                                     case 1:
                                     {
-                                        auto s = 8;
+                                        constexpr int64_t s = 8;
                                         return (- 1 << (s - 1)) <= x && x <= (1 << (s - 1)) - 1;
                                         break;
                                     }
                                     case 2:
                                     {
-                                        auto s = 16;
+                                        constexpr int64_t s = 16;
                                         return (- 1 << (s - 1)) <= x && x <= (1 << (s - 1)) - 1;
                                         break;
                                     }
                                     case 3:
                                     {
-                                        auto s = 32;
+                                        constexpr int64_t s = 32;
                                         return (- 1 << (s - 1)) <= x && x <= (1 << (s - 1)) - 1;
                                         break;
                                     }
@@ -207,19 +207,19 @@ namespace golang::go::types
                                         break;
                                     case 8:
                                     {
-                                        auto s = 8;
+                                        constexpr int64_t s = 8;
                                         return 0 <= x && x <= (1 << s) - 1;
                                         break;
                                     }
                                     case 9:
                                     {
-                                        auto s = 16;
+                                        constexpr int64_t s = 16;
                                         return 0 <= x && x <= (1 << s) - 1;
                                         break;
                                     }
                                     case 10:
                                     {
-                                        auto s = 32;
+                                        constexpr int64_t s = 32;
                                         return 0 <= x && x <= (1 << s) - 1;
                                         break;
                                     }

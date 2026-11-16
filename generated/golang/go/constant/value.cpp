@@ -442,7 +442,7 @@ namespace golang::go::constant
     gocpp::string rec::String(stringVal* x)
     {
         // a reasonable length
-        auto maxLen = 72;
+        constexpr int64_t maxLen = 72;
         auto s = strconv::Quote(rec::string(gocpp::recv(x)));
         if(utf8::RuneCountInString(s) > maxLen)
         {
@@ -1984,7 +1984,7 @@ namespace golang::go::constant
                         // assume x is not an integer because of rounding
                         // errors in prior computations.
                         // a small number of bits > 0
-                        auto delta = 4;
+                        constexpr int64_t delta = 4;
                         big::Float t = {};
                         rec::SetPrec(gocpp::recv(t), prec - delta);
 
@@ -2115,14 +2115,14 @@ namespace golang::go::constant
     // is32bit reports whether x can be represented using 32 bits.
     bool is32bit(int64_t x)
     {
-        auto s = 32;
+        constexpr int64_t s = 32;
         return (- 1 << (s - 1)) <= x && x <= (1 << (s - 1)) - 1;
     }
 
     // is63bit reports whether x can be represented using 63 bits.
     bool is63bit(int64_t x)
     {
-        auto s = 63;
+        constexpr int64_t s = 63;
         return (- 1 << (s - 1)) <= x && x <= (1 << (s - 1)) - 1;
     }
 

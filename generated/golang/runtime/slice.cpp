@@ -466,7 +466,7 @@ namespace golang::runtime
             return newLen;
         }
 
-        auto threshold = 256;
+        constexpr int64_t threshold = 256;
         if(oldCap < threshold)
         {
             return doublecap;

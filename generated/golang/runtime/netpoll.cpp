@@ -860,7 +860,7 @@ namespace golang::runtime
                     return os;
                 }
             };
-            auto pdSize = gocpp::Sizeof<pollDescPadded>();
+            constexpr uintptr_t pdSize = gocpp::Sizeof<pollDescPadded>();
             uintptr_t n = pollBlockSize / pdSize;
             if(n == 0)
             {

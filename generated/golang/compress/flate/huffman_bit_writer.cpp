@@ -1132,12 +1132,12 @@ namespace golang::compress::flate
             clear(w->offsetFreq.make_slice(0));
         }
 
-        auto numLiterals = endBlockMarker + 1;
-        auto numOffsets = 1;
+        constexpr int64_t numLiterals = endBlockMarker + 1;
+        constexpr int64_t numOffsets = 1;
 
         // Estimate size of literal encoding.
         // 70 bytes; see https://stackoverflow.com/a/25454430
-        auto guessHeaderSizeBits = 70 * 8;
+        constexpr int64_t guessHeaderSizeBits = 70 * 8;
         histogram(input, w->literalFreq.make_slice(0, numLiterals));
         auto [ssize, storable] = rec::storedSize(gocpp::recv(w), input);
         if(storable && len(input) > 1024)

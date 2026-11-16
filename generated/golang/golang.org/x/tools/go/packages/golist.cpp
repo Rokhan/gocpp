@@ -1298,7 +1298,7 @@ namespace golang::golang_org::x::tools::go::packages
 
     gocpp::slice<gocpp::string> golistargs(Config* cfg, gocpp::slice<gocpp::string> words, int64_t goVersion)
     {
-        auto findFlags = NeedImports | NeedTypes | NeedSyntax | NeedTypesInfo;
+        constexpr packages::LoadMode findFlags = NeedImports | NeedTypes | NeedSyntax | NeedTypesInfo;
         auto fullargs = gocpp::slice<gocpp::string> {
             "-e"_s, jsonFlag(cfg, goVersion),
             mocklib::Sprintf("-compiled=%t"_s, cfg->Mode & (NeedCompiledGoFiles | NeedSyntax | NeedTypes | NeedTypesInfo | NeedTypesSizes) != 0),
@@ -1439,7 +1439,7 @@ namespace golang::golang_org::x::tools::go::packages
             // Backwards compatibility for Go 1.11 because 1.12 and 1.13 put the directory in the ImportPath.
             // If the package doesn't exist, put the absolute path of the directory into the error message,
             // as Go 1.13 list does.
-            auto noSuchDirectory = "no such directory"_s;
+            const gocpp::string noSuchDirectory = "no such directory"_s;
             if(len(rec::String(gocpp::recv(go_stderr))) > 0 && strings::Contains(rec::String(gocpp::recv(go_stderr)), noSuchDirectory))
             {
                 auto errstr = rec::String(gocpp::recv(go_stderr));

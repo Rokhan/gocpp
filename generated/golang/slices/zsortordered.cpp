@@ -90,7 +90,7 @@ namespace golang::slices
     template<typename E>
     void pdqsortOrdered(gocpp::slice<E> data, int64_t a, int64_t b, int64_t limit)
     {
-        auto maxInsertion = 12;
+        constexpr int64_t maxInsertion = 12;
 
         auto wasBalanced = true;
         auto wasPartitioned = true;
@@ -255,8 +255,8 @@ namespace golang::slices
     template<typename E>
     bool partialInsertionSortOrdered(gocpp::slice<E> data, int64_t a, int64_t b)
     {
-        auto maxSteps = 5;
-        auto shortestShifting = 50;
+        constexpr int64_t maxSteps = 5;
+        constexpr int64_t shortestShifting = 50;
         auto i = a + 1;
         for(int64_t j = 0; j < maxSteps; j++)
         {
@@ -338,8 +338,8 @@ namespace golang::slices
     {
         int64_t pivot;
         sortedHint hint;
-        auto shortestNinther = 50;
-        auto maxSwaps = 4 * 3;
+        constexpr int64_t shortestNinther = 50;
+        constexpr int64_t maxSwaps = 4 * 3;
 
         auto l = b - a;
 

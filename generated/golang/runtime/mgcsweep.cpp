@@ -388,7 +388,7 @@ namespace golang::runtime
             // isn't spare idle time available on other cores. If there's available idle
             // time, helping to sweep can reduce allocation latencies by getting ahead of
             // the proportional sweeper and having spans ready to go for allocation.
-            auto sweepBatchSize = 10;
+            constexpr int64_t sweepBatchSize = 10;
             int64_t nSwept = 0;
             for(; sweepone() != ~ uintptr_t(0); )
             {

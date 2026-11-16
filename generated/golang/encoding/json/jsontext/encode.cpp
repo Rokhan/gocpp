@@ -417,11 +417,11 @@ namespace golang::encoding::json::jsontext
         // Check whether to grow the buffer.
         // Note that cap(e.Buf) may already exceed maxBufferSize since
         // an append elsewhere already grew it to store a large token.
-        auto maxBufferSize = 4 << 10;
+        constexpr int64_t maxBufferSize = 4 << 10;
         // higher value is faster
-        auto growthSizeFactor = 2;
+        constexpr int64_t growthSizeFactor = 2;
         // higher value is slower
-        auto growthRateFactor = 2;
+        constexpr int64_t growthRateFactor = 2;
         // By default, grow if below the maximum buffer size.
         auto grow = cap(e->encodeBuffer.Buf) <= maxBufferSize / growthSizeFactor;
         // Growing can be expensive, so only grow
@@ -1010,7 +1010,7 @@ namespace golang::encoding::json::jsontext
     {
         int64_t n;
         // arbitrary kind as next JSON value
-        auto next = jsontext::Kind('"');
+        constexpr jsontext::Kind next = jsontext::Kind('"');
         auto delim = rec::needDelim(gocpp::recv(e->state.Tokens), next);
         if(delim > 0)
         {

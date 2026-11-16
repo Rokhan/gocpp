@@ -86,9 +86,9 @@ namespace golang::compress::flate
 
     void rec::encode(fastEncL3* e, tokens* dst, gocpp::slice<unsigned char> src)
     {
-        auto inputMargin = 12 - 1;
-        auto minNonLiteralBlockSize = 1 + 1 + inputMargin;
-        auto hashBytes = 5;
+        constexpr int64_t inputMargin = 12 - 1;
+        constexpr int64_t minNonLiteralBlockSize = 1 + 1 + inputMargin;
+        constexpr int64_t hashBytes = 5;
 
         // Protect against e.cur wraparound.
         for(; e->fastGen.cur >= bufferReset; )
@@ -149,7 +149,7 @@ namespace golang::compress::flate
         auto cv = loadLE64(src, s);
         for(; ; )
         {
-            auto skipLog = 7;
+            constexpr int64_t skipLog = 7;
             auto nextS = s;
             tableEntry candidate = {};
             for(; ; )

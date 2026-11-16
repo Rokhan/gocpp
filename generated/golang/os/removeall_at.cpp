@@ -139,7 +139,7 @@ namespace golang::os
         gocpp::error recurseErr = {};
         for(; ; )
         {
-            auto reqSize = 1024;
+            constexpr int64_t reqSize = 1024;
             int64_t respSize = {};
 
             // Open the directory to recurse into.

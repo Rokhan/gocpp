@@ -69,11 +69,11 @@ namespace golang::main
 
     void main()
     {
-        auto World = "世界"_s;
+        const gocpp::string World = "世界"_s;
         mocklib::Println("Hello"_s, World);
         mocklib::Println("Happy"_s, main::Pi, "Day"_s);
 
-        auto Truth = true;
+        constexpr bool Truth = true;
         mocklib::Println("Go rules?"_s, Truth);
 
         mocklib::Println("Pi:"_s, main::Pi);

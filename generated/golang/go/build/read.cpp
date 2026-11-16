@@ -594,7 +594,7 @@ namespace golang::go::build
     // parser in CL 424855, when the parser stopped doing these checks.
     bool isValidImport(gocpp::string s)
     {
-        auto illegalChars = "!\"#$%&'()*,:;<=>?[\\]^{|}"_s + "`\uFFFD"_s;
+        const gocpp::string illegalChars = "!\"#$%&'()*,:;<=>?[\\]^{|}"_s + "`\uFFFD"_s;
         for(auto [gocpp_ignored, r] : s)
         {
             if(! unicode::IsGraphic(r) || unicode::IsSpace(r) || strings::ContainsRune(illegalChars, r))

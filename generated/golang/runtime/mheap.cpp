@@ -1364,7 +1364,7 @@ namespace golang::runtime
         // Refill the cache if necessary.
         if(pp->mspancache.len == 0)
         {
-            auto refillCount = len(pp->mspancache.buf) / 2;
+            constexpr int64_t refillCount = len(pp->mspancache.buf) / 2;
             for(int64_t i = 0; i < refillCount; i++)
             {
                 pp->mspancache.buf[i] = (mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));

@@ -357,7 +357,7 @@ namespace golang::runtime
             if(p->chunks[rec::l1(gocpp::recv(c))] == nullptr)
             {
                 // Create the necessary l2 entry.
-                auto l2Size = gocpp::Sizeof<gocpp::array<pallocData, 8192>>();
+                constexpr uintptr_t l2Size = gocpp::Sizeof<gocpp::array<pallocData, 8192>>();
                 auto r = runtime::sysAlloc(l2Size, p->sysStat, vmaNamePageAllocIndex);
                 if(r == nullptr)
                 {

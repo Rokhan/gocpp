@@ -1435,7 +1435,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         {
             i--;
         }
-        auto dot = "·"_s;
+        const gocpp::string dot = "·"_s;
         if(i >= len(dot) && name.make_slice(i - len(dot), i) == dot)
         {
             i -= len(dot);

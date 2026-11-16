@@ -30,7 +30,7 @@ namespace golang::os::exec
         // Ignore ERROR_BROKEN_PIPE and ERROR_NO_DATA errors copying
         // to stdin if the program completed successfully otherwise.
         // See Issue 20445.
-        auto _ERROR_NO_DATA = syscall::Errno(0xe8);
+        constexpr syscall::Errno _ERROR_NO_DATA = syscall::Errno(0xe8);
         auto [pe, ok] = gocpp::getValue<fs::PathError*>(err);
         return ok &&
                 pe->Op == "write"_s && pe->Path == "|1"_s &&

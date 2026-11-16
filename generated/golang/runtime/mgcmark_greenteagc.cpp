@@ -518,8 +518,8 @@ namespace golang::runtime
         // K puts, then K becomes our effective maximum length. When
         // spillPeriod > spillMax, then we're always spilling spans
         // at a slower rate than we're accumulating them.
-        auto spillPeriod = 64;
-        auto spillMax = 16;
+        constexpr int64_t spillPeriod = 64;
+        constexpr int64_t spillMax = 16;
 
         if(rec::putFast(gocpp::recv(q), s))
         {
@@ -630,7 +630,7 @@ namespace golang::runtime
         // constants of proportionality are small. Simultaneously, we want to
         // avoid a situation where a single worker ends up queuing O(heap)
         // work and then forever retains a queue of that size.
-        auto maxCap = (1 << 20) / goarch::PtrSize;
+        constexpr int64_t maxCap = (1 << 20) / goarch::PtrSize;
         auto newCap = q->chain.head->cap * 2;
         if(newCap > maxCap)
         {

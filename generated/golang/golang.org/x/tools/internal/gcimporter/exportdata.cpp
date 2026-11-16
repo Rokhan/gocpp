@@ -115,7 +115,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // of gcexportdata.NewReader and gcexportdata.Read make checking this
         // ugly so gcimporter gives up enforcing this. The compiler and go/types
         // importer do enforce this, which seems good enough.
-        auto endofsection = "\n$$\n"_s;
+        const gocpp::string endofsection = "\n$$\n"_s;
         size -= int64_t(len(endofsection));
 
         if(size < 0)
@@ -162,7 +162,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         gocpp::error err;
         // We historically guaranteed headers at the default buffer size (4096) work.
         // This ensures we can use ReadSlice throughout.
-        auto minBufferSize = 4096;
+        constexpr int64_t minBufferSize = 4096;
         r = bufio::NewReaderSize(r, minBufferSize);
 
         int64_t size;
@@ -195,7 +195,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         n -= hdrlen;
 
         // size also includes the end of section marker. Remove that many bytes from the end.
-        auto marker = "\n$$\n"_s;
+        const gocpp::string marker = "\n$$\n"_s;
         n -= len(marker);
 
         if(n < 0)

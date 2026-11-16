@@ -1801,17 +1801,17 @@ namespace golang::go::doc::comment
         // so that the byte c can be tested with a shift and an and.
         // If c > 128, then 1<<c and 1<<(c-64) will both be zero,
         // and this function will return false.
-        auto mask = 0 |
-                (((1 << 26) - 1) << 'A') |
-                (((1 << 26) - 1) << 'a') |
-                (((1 << 10) - 1) << '0') |
-                (1 << '_') |
-                (1 << '@') |
-                (1 << '-') |
-                (1 << '.') |
-                (1 << '[') |
-                (1 << ']') |
-                (1 << ':');
+        constexpr gocpp::bigint mask = 0_bi |
+                (((1_bi << 26) - 1_bi) << 'A') |
+                (((1_bi << 26) - 1_bi) << 'a') |
+                (((1_bi << 10) - 1_bi) << '0') |
+                (1_bi << '_') |
+                (1_bi << '@') |
+                (1_bi << '-') |
+                (1_bi << '.') |
+                (1_bi << '[') |
+                (1_bi << ']') |
+                (1_bi << ':');
 
         return ((uint64_t(1) << c) & (mask & ((1 << 64) - 1)) |
                 (uint64_t(1) << (c - 64)) & (mask >> 64)) != 0;
@@ -1825,13 +1825,13 @@ namespace golang::go::doc::comment
         // so that the byte c can be tested with a shift and an and.
         // If c > 128, then 1<<c and 1<<(c-64) will both be zero,
         // and this function will return false.
-        auto mask = 0 |
-                (1 << '.') |
-                (1 << ',') |
-                (1 << ':') |
-                (1 << ';') |
-                (1 << '?') |
-                (1 << '!');
+        constexpr uint64_t mask = uint64_t(0_bi |
+                (1_bi << '.') |
+                (1_bi << ',') |
+                (1_bi << ':') |
+                (1_bi << ';') |
+                (1_bi << '?') |
+                (1_bi << '!'));
 
         return ((uint64_t(1) << c) & (mask & ((1 << 64) - 1)) |
                 (uint64_t(1) << (c - 64)) & (mask >> 64)) != 0;
@@ -1844,29 +1844,29 @@ namespace golang::go::doc::comment
         // so that the byte c can be tested with a shift and an and.
         // If c > 128, then 1<<c and 1<<(c-64) will both be zero,
         // and this function will return false.
-        auto mask = 0 |
-                (((1 << 26) - 1) << 'A') |
-                (((1 << 26) - 1) << 'a') |
-                (((1 << 10) - 1) << '0') |
-                (1 << '$') |
-                (1 << '\'') |
-                (1 << '(') |
-                (1 << ')') |
-                (1 << '*') |
-                (1 << '+') |
-                (1 << '&') |
-                (1 << '#') |
-                (1 << '=') |
-                (1 << '@') |
-                (1 << '~') |
-                (1 << '_') |
-                (1 << '/') |
-                (1 << '-') |
-                (1 << '[') |
-                (1 << ']') |
-                (1 << '{') |
-                (1 << '}') |
-                (1 << '%');
+        constexpr gocpp::bigint mask = 0_bi |
+                (((1_bi << 26) - 1_bi) << 'A') |
+                (((1_bi << 26) - 1_bi) << 'a') |
+                (((1_bi << 10) - 1_bi) << '0') |
+                (1_bi << '$') |
+                (1_bi << '\'') |
+                (1_bi << '(') |
+                (1_bi << ')') |
+                (1_bi << '*') |
+                (1_bi << '+') |
+                (1_bi << '&') |
+                (1_bi << '#') |
+                (1_bi << '=') |
+                (1_bi << '@') |
+                (1_bi << '~') |
+                (1_bi << '_') |
+                (1_bi << '/') |
+                (1_bi << '-') |
+                (1_bi << '[') |
+                (1_bi << ']') |
+                (1_bi << '{') |
+                (1_bi << '}') |
+                (1_bi << '%');
 
         return ((uint64_t(1) << c) & (mask & ((1 << 64) - 1)) |
                 (uint64_t(1) << (c - 64)) & (mask >> 64)) != 0;
@@ -1924,11 +1924,11 @@ namespace golang::go::doc::comment
         // so that the byte c can be tested with a shift and an and.
         // If c > 128, then 1<<c and 1<<(c-64) will both be zero,
         // and this function will return false.
-        auto mask = 0 |
-                (((1 << 26) - 1) << 'A') |
-                (((1 << 26) - 1) << 'a') |
-                (((1 << 10) - 1) << '0') |
-                (1 << '_');
+        constexpr gocpp::bigint mask = 0_bi |
+                (((1_bi << 26) - 1_bi) << 'A') |
+                (((1_bi << 26) - 1_bi) << 'a') |
+                (((1_bi << 10) - 1_bi) << '0') |
+                (1_bi << '_');
 
         return ((uint64_t(1) << c) & (mask & ((1 << 64) - 1)) |
                 (uint64_t(1) << (c - 64)) & (mask >> 64)) != 0;
@@ -1995,15 +1995,15 @@ namespace golang::go::doc::comment
         // so that the byte c can be tested with a shift and an and.
         // If c > 128, then 1<<c and 1<<(c-64) will both be zero,
         // and this function will return false.
-        auto mask = 0 |
-                (((1 << 26) - 1) << 'A') |
-                (((1 << 26) - 1) << 'a') |
-                (((1 << 10) - 1) << '0') |
-                (1 << '-') |
-                (1 << '.') |
-                (1 << '~') |
-                (1 << '_') |
-                (1 << '+');
+        constexpr gocpp::bigint mask = 0_bi |
+                (((1_bi << 26) - 1_bi) << 'A') |
+                (((1_bi << 26) - 1_bi) << 'a') |
+                (((1_bi << 10) - 1_bi) << '0') |
+                (1_bi << '-') |
+                (1_bi << '.') |
+                (1_bi << '~') |
+                (1_bi << '_') |
+                (1_bi << '+');
 
         return ((uint64_t(1) << c) & (mask & ((1 << 64) - 1)) |
                 (uint64_t(1) << (c - 64)) & (mask >> 64)) != 0;

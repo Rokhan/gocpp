@@ -149,7 +149,7 @@ namespace golang::internal::goroot
         auto machine = strings::TrimSpace(gocpp::string(machineB));
 
         auto dirsEntries = strings::Split(gocpp::string(allDirs), "\n"_s);
-        auto prefix = "libraries: ="_s;
+        const gocpp::string prefix = "libraries: ="_s;
         gocpp::slice<gocpp::string> dirs = {};
         for(auto [gocpp_ignored, dirEntry] : dirsEntries)
         {

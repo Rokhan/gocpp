@@ -84,9 +84,9 @@ namespace golang::compress::flate
 
     void rec::encode(fastEncL2* e, tokens* dst, gocpp::slice<unsigned char> src)
     {
-        auto inputMargin = 12 - 1;
-        auto minNonLiteralBlockSize = 1 + 1 + inputMargin;
-        auto hashBytes = 5;
+        constexpr int64_t inputMargin = 12 - 1;
+        constexpr int64_t minNonLiteralBlockSize = 1 + 1 + inputMargin;
+        constexpr int64_t hashBytes = 5;
 
         // Protect against e.cur wraparound.
         for(; e->fastGen.cur >= bufferReset; )
@@ -140,8 +140,8 @@ namespace golang::compress::flate
         for(; ; )
         {
             // When should we start skipping if we haven't found matches in a long while.
-            auto skipLog = 5;
-            auto doEvery = 2;
+            constexpr int64_t skipLog = 5;
+            constexpr int64_t doEvery = 2;
 
             auto nextS = s;
             tableEntry candidate = {};

@@ -97,7 +97,7 @@ namespace golang::runtime
         else
         {
             // Sleep for an arbitrary-but-moderate interval to poll libc interceptors.
-            auto ns = 10e6;
+            constexpr double ns = 10e6;
             for(; atomic::Loaduintptr(& n->key) == 0; )
             {
                 semasleep(ns);
@@ -137,7 +137,7 @@ namespace golang::runtime
             else
             {
                 // Sleep in arbitrary-but-moderate intervals to poll libc interceptors.
-                auto ns = 10e6;
+                constexpr double ns = 10e6;
                 for(; semasleep(ns) < 0; )
                 {
                     asmcgocall(*cgo_yield, nullptr);

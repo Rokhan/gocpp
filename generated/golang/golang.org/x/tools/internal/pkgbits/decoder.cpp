@@ -167,7 +167,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 
         pr.elemData = input.make_slice(pos);
 
-        auto fingerprintSize = 8;
+        constexpr int64_t fingerprintSize = 8;
         assert(len(pr.elemData) - fingerprintSize == int64_t(pr.elemEnds[len(pr.elemEnds) - 1]));
 
         return pr;

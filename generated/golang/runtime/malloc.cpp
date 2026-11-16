@@ -427,7 +427,7 @@ namespace golang::runtime
             // contiguous.
             // 3. We try to stake out a reasonably large initial
             // heap reservation.
-            auto arenaMetaSize = (1 << arenaBits) * gocpp::Sizeof<heapArena>();
+            constexpr uintptr_t arenaMetaSize = (1LL << arenaBits) * gocpp::Sizeof<heapArena>();
             auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize, "heap reservation"_s));
             if(meta != 0)
             {
@@ -2074,7 +2074,7 @@ namespace golang::runtime
             go_throw("nextReusable: pointer on free list is free"_s);
         }
 
-        auto debugReusableEnsureSwept = false;
+        constexpr bool debugReusableEnsureSwept = false;
         if(debugReusableEnsureSwept)
         {
             // Currently disabled.
@@ -2109,7 +2109,7 @@ namespace golang::runtime
     {
         auto v = uintptr_t(x);
         // got this from benchmarking. 128k is too small, 512k is too large.
-        auto chunkBytes = 256 * 1024;
+        constexpr int64_t chunkBytes = 256 * 1024;
         auto vsize = v + size;
         for(auto voff = v; voff < vsize; voff = voff + chunkBytes)
         {
@@ -2286,7 +2286,7 @@ namespace golang::runtime
         // -log_e(q)/mean = x
         // x = -log_e(q) * mean
         // x = log_2(q) * (-log_e(2)) * mean    ; Using log_2 for efficiency
-        auto randomBitCount = 26;
+        constexpr int64_t randomBitCount = 26;
         auto q = cheaprandn(1 << randomBitCount) + 1;
         auto qlog = fastlog2(double(q)) - randomBitCount;
         if(qlog > 0)
@@ -2294,7 +2294,7 @@ namespace golang::runtime
             qlog = 0;
         }
         // -ln(2)
-        auto minusLog2 = - 0.6931471805599453;
+        constexpr double minusLog2 = - 0.6931471805599453;
         return int32_t(qlog * (minusLog2 * double(mean))) + 1;
     }
 
@@ -2397,7 +2397,7 @@ namespace golang::runtime
     //go:systemstack
     notInHeap* persistentalloc1(uintptr_t size, uintptr_t align, sysMemStat* sysStat)
     {
-        auto maxBlock = 64 << 10;
+        constexpr int64_t maxBlock = 64 << 10;
 
         if(size == 0)
         {

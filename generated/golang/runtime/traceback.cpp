@@ -1119,7 +1119,7 @@ namespace golang::runtime
         unwinder u = {};
         auto tracebackWithRuntime = [=](bool showRuntime) mutable -> int64_t
         {
-            int64_t maxInt = 0x7fffffff;
+            constexpr int64_t maxInt = 0x7fffffff;
             rec::initAt(gocpp::recv(u), pc, sp, lr, gp, flags);
             auto [n, lastN] = traceback2(& u, showRuntime, 0, tracebackInnerFrames);
             if(n < tracebackInnerFrames)
@@ -1695,8 +1695,8 @@ namespace golang::runtime
     // hexdumped range, it will mark it as well.
     void tracebackHexdump(golang::runtime::stack stk, stkframe* frame, uintptr_t bad)
     {
-        auto expand = 32 * goarch::PtrSize;
-        auto maxExpand = 256 * goarch::PtrSize;
+        constexpr int64_t expand = 32 * goarch::PtrSize;
+        constexpr int64_t maxExpand = 256 * goarch::PtrSize;
         // Start around frame.sp.
         auto [lo, hi] = std::tuple{frame->sp, frame->sp};
         // Expand to include frame.fp.

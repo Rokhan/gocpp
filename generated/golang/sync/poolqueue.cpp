@@ -104,7 +104,7 @@ namespace golang::sync
     {
         uint32_t head;
         uint32_t tail;
-        auto mask = (1 << dequeueBits) - 1;
+        constexpr int64_t mask = (1LL << dequeueBits) - 1LL;
         head = uint32_t((ptrs >> dequeueBits) & mask);
         tail = uint32_t(ptrs & mask);
         return {head, tail};
@@ -112,7 +112,7 @@ namespace golang::sync
 
     uint64_t rec::pack(poolDequeue* d, uint32_t head, uint32_t tail)
     {
-        auto mask = (1 << dequeueBits) - 1;
+        constexpr int64_t mask = (1LL << dequeueBits) - 1LL;
         return (uint64_t(head) << dequeueBits) |
                 uint64_t(tail & mask);
     }
@@ -349,7 +349,7 @@ namespace golang::sync
         {
             // Initialize the chain.
             // Must be a power of 2
-            auto initSize = 8;
+            constexpr int64_t initSize = 8;
             d = new poolChainElt{};
             d->poolDequeue.vals = gocpp::make(gocpp::Tag<gocpp::slice<eface>>(), initSize);
             c->head = d;

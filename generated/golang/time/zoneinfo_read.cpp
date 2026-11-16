@@ -211,12 +211,12 @@ namespace golang::time
         // number of transition times
         // number of local time zones
         // number of characters of time zone abbrev strings
-        auto NUTCLocal = 0;
-        auto NStdWall = 1;
-        auto NLeap = 2;
-        auto NTime = 3;
-        auto NZone = 4;
-        auto NChar = 5;
+        constexpr int64_t NUTCLocal = 0;
+        constexpr int64_t NStdWall = 1;
+        constexpr int64_t NLeap = 2;
+        constexpr int64_t NTime = 3;
+        constexpr int64_t NZone = 4;
+        constexpr int64_t NChar = 5;
         gocpp::array<int64_t, 6> n = {};
         for(int64_t i = 0; i < 6; i++)
         {
@@ -525,11 +525,11 @@ namespace golang::time
             }
             defer.push_back([=]{ closefd(fd); });
 
-            auto zecheader = 0x06054b50;
-            auto zcheader = 0x02014b50;
-            auto ztailsize = 22;
-            auto zheadersize = 30;
-            auto zheader = 0x04034b50;
+            constexpr int64_t zecheader = 0x06054b50;
+            constexpr int64_t zcheader = 0x02014b50;
+            constexpr int64_t ztailsize = 22;
+            constexpr int64_t zheadersize = 30;
+            constexpr int64_t zheader = 0x04034b50;
 
             auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), ztailsize);
             if(auto err = preadn(fd, buf, - ztailsize); err != nullptr || get4(buf) != zecheader)

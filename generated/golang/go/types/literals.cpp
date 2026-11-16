@@ -124,7 +124,7 @@ namespace golang::go::types
                     // consume a lot of space and time for a useless conversion.
                     // Cap constant length with a generous upper limit that also
                     // allows for separators between all digits.
-                    auto limit = 10000;
+                    constexpr int64_t limit = 10000;
                     if(len(e->Value) > limit)
                     {
                         rec::errorf(gocpp::recv(check), e, InvalidConstVal, "excessively long constant: %s... (%d chars)"_s, e->Value.make_slice(0, 10), len(e->Value));

@@ -423,7 +423,7 @@ namespace golang::runtime
         // Narrow down the search space via a binary search
         // for large addrRanges until we have at most iterMax
         // candidates left.
-        auto iterMax = 8;
+        constexpr int64_t iterMax = 8;
         auto [bot, top] = std::tuple{0, len(a->ranges)};
         for(; top - bot > iterMax; )
         {

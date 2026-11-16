@@ -89,9 +89,9 @@ namespace golang::compress::flate
 
     void rec::encode(fastEncL6* e, tokens* dst, gocpp::slice<unsigned char> src)
     {
-        auto inputMargin = 12 - 1;
-        auto minNonLiteralBlockSize = 1 + 1 + inputMargin;
-        auto hashShortBytes = 4;
+        constexpr int64_t inputMargin = 12 - 1;
+        constexpr int64_t minNonLiteralBlockSize = 1 + 1 + inputMargin;
+        constexpr int64_t hashShortBytes = 4;
 
         // Protect against e.cur wraparound.
         for(; e->fastGen.cur >= bufferReset; )
@@ -169,8 +169,8 @@ namespace golang::compress::flate
         int32_t repeat = int32_t(1);
         for(; ; )
         {
-            auto skipLog = 7;
-            auto doEvery = 1;
+            constexpr int64_t skipLog = 7;
+            constexpr int64_t doEvery = 1;
 
             auto nextS = s;
             int32_t l = {};
@@ -265,7 +265,7 @@ namespace golang::compress::flate
                     }), eLong->cur};
 
                     // Check repeat at s + repOff
-                    auto repOff = 1;
+                    constexpr int64_t repOff = 1;
                     auto t2 = s - repeat + repOff;
                     if(loadLE32(src, t2) == uint32_t(cv >> (8 * repOff)))
                     {
@@ -333,7 +333,7 @@ namespace golang::compress::flate
                 // 3 is only a little better when it is but sometimes a lot worse.
                 // The skipped bytes are tested in extend backwards,
                 // and still picked up as part of the match if they do.
-                auto skipBeginning = 2;
+                constexpr int64_t skipBeginning = 2;
                 auto eLong = & e->bTable[hashLen(loadLE64(src, sAt), tableBits, hashLongBytes)];
                 // Test current
                 auto t2 = eLong->cur.offset - e->fastGen.cur - l + skipBeginning;

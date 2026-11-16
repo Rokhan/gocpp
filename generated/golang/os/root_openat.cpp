@@ -618,8 +618,8 @@ namespace golang::os
             // To limit how many opens a malicious path can cause us to perform, we set
             // a limit on the total number of path steps and the total number of restarts
             // caused by .. components. If *both* limits are exceeded, we halt the operation.
-            auto maxSteps = 255;
-            auto maxRestarts = 8;
+            constexpr int64_t maxSteps = 255;
+            constexpr int64_t maxRestarts = 8;
 
             int64_t i = 0;
             int64_t steps = 0;

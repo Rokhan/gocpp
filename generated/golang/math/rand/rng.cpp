@@ -210,9 +210,9 @@ namespace golang::math::rand
     // seed rng x[n+1] = 48271 * x[n] mod (2**31 - 1)
     int32_t seedrand(int32_t x)
     {
-        auto A = 48271;
-        auto Q = 44488;
-        auto R = 3399;
+        constexpr int64_t A = 48271;
+        constexpr int64_t Q = 44488;
+        constexpr int64_t R = 3399;
 
         auto hi = x / Q;
         auto lo = x % Q;

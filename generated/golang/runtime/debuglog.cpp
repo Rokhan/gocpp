@@ -133,7 +133,7 @@ namespace golang::runtime
         // packet. We set the limit so we don't write more than 6
         // bytes of delta in the record header.
         // ~2ms between sync packets
-        auto deltaLimit = (1 << (3 * 7)) - 1;
+        constexpr int64_t deltaLimit = (1 << (3 * 7)) - 1;
         if(tick - l->w.tick > deltaLimit || nano - l->w.nano > deltaLimit)
         {
             rec::writeSync(gocpp::recv(l->w), tick, nano);

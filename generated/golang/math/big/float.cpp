@@ -445,7 +445,7 @@ namespace golang::math::big
         {
             return "nonzero finite number with empty mantissa"_s;
         }
-        auto msb = 1 << (_W - 1);
+        constexpr uint64_t msb = uint64_t(1_bi << (_W - 1));
         if(x->mant[m - 1] & msb == 0)
         {
             return mocklib::Sprintf("msb not set in last word %#x of %s"_s, x->mant[m - 1], rec::Text(gocpp::recv(x), 'p', 0));
@@ -597,7 +597,7 @@ namespace golang::math::big
                     // adjust mantissa: divide by 2 to compensate for exponent adjustment
                     rshVU(z->mant, z->mant, 1);
                     // set msb == carry == 1 from the mantissa overflow above
-                    auto msb = 1 << (_W - 1);
+                    constexpr uint64_t msb = uint64_t(1_bi << (_W - 1));
                     z->mant[n - 1] |= msb;
                 }
             }
@@ -1075,13 +1075,13 @@ namespace golang::math::big
             {
                 case 0:
                 {
-                    auto fbits = 32;
-                    auto mbits = 23;
-                    auto ebits = fbits - mbits - 1;
-                    auto bias = (1 << (ebits - 1)) - 1;
-                    auto dmin = 1 - bias - mbits;
-                    auto emin = 1 - bias;
-                    auto emax = bias;
+                    constexpr int64_t fbits = 32;
+                    constexpr int64_t mbits = 23;
+                    constexpr int64_t ebits = fbits - mbits - 1;
+                    constexpr int64_t bias = (1 << (ebits - 1)) - 1;
+                    constexpr int64_t dmin = 1 - bias - mbits;
+                    constexpr int64_t emin = 1 - bias;
+                    constexpr int64_t emax = bias;
                     // Float mantissa m is 0.5 <= m < 1.0; compute exponent e for float32 mantissa.
                     // exponent for normal mantissa m with 1.0 <= m < 2.0
                     auto e = x->exp - 1;
@@ -1218,13 +1218,13 @@ namespace golang::math::big
             {
                 case 0:
                 {
-                    auto fbits = 64;
-                    auto mbits = 52;
-                    auto ebits = fbits - mbits - 1;
-                    auto bias = (1 << (ebits - 1)) - 1;
-                    auto dmin = 1 - bias - mbits;
-                    auto emin = 1 - bias;
-                    auto emax = bias;
+                    constexpr int64_t fbits = 64;
+                    constexpr int64_t mbits = 52;
+                    constexpr int64_t ebits = fbits - mbits - 1;
+                    constexpr int64_t bias = (1 << (ebits - 1)) - 1;
+                    constexpr int64_t dmin = 1 - bias - mbits;
+                    constexpr int64_t emin = 1 - bias;
+                    constexpr int64_t emax = bias;
                     // Float mantissa m is 0.5 <= m < 1.0; compute exponent e for float64 mantissa.
                     // exponent for normal mantissa m with 1.0 <= m < 2.0
                     auto e = x->exp - 1;

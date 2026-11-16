@@ -32,8 +32,8 @@ namespace golang::encoding::json::v2
     // it allocates a new string, inserts it into the cache, and returns it.
     gocpp::string makeString(gocpp::array_ptr<stringCache> c, gocpp::slice<unsigned char> b)
     {
-        auto minCachedLen = 2;
-        auto maxCachedLen = 256;
+        constexpr int64_t minCachedLen = 2;
+        constexpr int64_t maxCachedLen = 256;
         if(c == nullptr || len(b) < minCachedLen || len(b) > maxCachedLen)
         {
             return gocpp::string(b);
@@ -93,11 +93,11 @@ namespace golang::encoding::json::v2
         // binary.LittleEndian.PutUint32(b[:4], lo)
         // binary.LittleEndian.PutUint32(b[4:], hi)
         // return xxhash.Sum32(b[:])
-        auto prime1 = 0x9e3779b1;
-        auto prime2 = 0x85ebca77;
-        auto prime3 = 0xc2b2ae3d;
-        auto prime4 = 0x27d4eb2f;
-        auto prime5 = 0x165667b1;
+        constexpr int64_t prime1 = 0x9e3779b1LL;
+        constexpr int64_t prime2 = 0x85ebca77LL;
+        constexpr int64_t prime3 = 0xc2b2ae3dLL;
+        constexpr int64_t prime4 = 0x27d4eb2f;
+        constexpr int64_t prime5 = 0x165667b1;
         uint32_t h = prime5 + uint32_t(8);
         h += lo * prime3;
         h = bits::RotateLeft32(h, 17) * prime4;
@@ -106,7 +106,7 @@ namespace golang::encoding::json::v2
         // Skip final mix (avalanche) step of XXH32 for performance reasons.
         // Empirical testing shows that the improvements in unbiased distribution
         // do not outweigh the extra cost in computational complexity.
-        auto avalanche = false;
+        constexpr bool avalanche = false;
         if(avalanche)
         {
             h ^= h >> 15;

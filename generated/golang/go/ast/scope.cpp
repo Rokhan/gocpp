@@ -69,7 +69,7 @@ namespace golang::go::ast
     Scope* NewScope(Scope* outer)
     {
         // initial scope capacity
-        auto n = 4;
+        constexpr int64_t n = 4;
         return new Scope {outer, gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, Object*>>(), n)};
     }
 

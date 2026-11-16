@@ -370,7 +370,7 @@ namespace golang::runtime
         frame.PC = f.PC;
 
         auto fn = f.Function;
-        auto maxLen = 1 << 10;
+        constexpr int64_t maxLen = 1 << 10;
         if(len(fn) > maxLen)
         {
             fn = fn.make_slice(len(fn) - maxLen);

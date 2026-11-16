@@ -86,7 +86,7 @@ namespace golang::os
             return {""_s, gocpp::error(windows::ERROR_INVALID_NAME)};
         }
 
-        auto fixedPrefix = "\\\\?\\?"_s;
+        const gocpp::string fixedPrefix = "\\\\?\\?"_s;
         auto buf = gocpp::slice<unsigned char>(fixedPrefix);
         for(auto [gocpp_ignored, p] : prefix)
         {

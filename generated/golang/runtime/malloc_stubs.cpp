@@ -105,8 +105,8 @@ namespace golang::runtime
                 }
                 else
                 {
-                    auto spc = spanClass(sizeclass_ << 1) | spanClass(noscanint_);
-                    auto elemsize = uintptr_t(elemsize_);
+                    constexpr spanClass spc = spanClass(sizeclass_ << 1) | spanClass(noscanint_);
+                    constexpr uintptr_t elemsize = uintptr_t(elemsize_);
                     return mallocgcSlowPathStub(size, typ, needzero, spc, elemsize);
                 }
             }
@@ -249,8 +249,8 @@ namespace golang::runtime
     // before returning.
     gocpp::unsafe_pointer smallStub(m* mp, uintptr_t size, _type* typ, bool needzero)
     {
-        auto sizeclass = sizeclass_;
-        auto elemsize = elemsize_;
+        constexpr int64_t sizeclass = sizeclass_;
+        constexpr int64_t elemsize = elemsize_;
 
         // Set mp.mallocing to keep from being preempted by GC.
         if(doubleCheckMalloc)
@@ -268,7 +268,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(noscanint_);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(noscanint_);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -436,7 +436,7 @@ namespace golang::runtime
     // before returning.
     gocpp::unsafe_pointer tinyStub(m* mp, uintptr_t size, _type* typ, bool needzero)
     {
-        auto elemsize = elemsize_;
+        constexpr int64_t elemsize = elemsize_;
 
         // Set mp.mallocing to keep from being preempted by GC.
         if(doubleCheckMalloc)
@@ -505,7 +505,7 @@ namespace golang::runtime
             c->tinyAllocs++;
             mp->mallocing = 0;
             releasem(mp);
-            auto elemsize = 0;
+            constexpr int64_t elemsize = 0;
             postMallocgc(x, typ, size, elemsize);
             return x;
         }
@@ -592,8 +592,8 @@ namespace golang::runtime
     // We won't be able to use elemsize_ but that's probably ok.
     gclinkptr nextFreeFastTiny(mspan* span)
     {
-        auto nbytes = 8192;
-        auto nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / elemsize_);
+        constexpr int64_t nbytes = 8192;
+        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / elemsize_);
         gclinkptr nextFreeFastResult = {};
         if(span->allocCache != 0)
         {
@@ -664,7 +664,7 @@ namespace golang::runtime
         // The objects here are always really small, so a single load is sufficient.
         auto src0 = readUintptr(getGCMask(typ));
 
-        auto elemsize = elemsize_;
+        constexpr int64_t elemsize = elemsize_;
 
         // Create repetitions of the bitmap if we have a small slice backing store.
         uintptr_t scanSize = {};
@@ -728,7 +728,7 @@ namespace golang::runtime
             *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
         }
 
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck)
         {
             writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);

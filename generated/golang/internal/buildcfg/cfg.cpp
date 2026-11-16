@@ -243,8 +243,8 @@ namespace golang::internal::buildcfg
     GoarmFeatures goarm()
     {
         GoarmFeatures g;
-        auto softFloatOpt = ",softfloat"_s;
-        auto hardFloatOpt = ",hardfloat"_s;
+        const gocpp::string softFloatOpt = ",softfloat"_s;
+        const gocpp::string hardFloatOpt = ",hardfloat"_s;
         gocpp::string def = DefaultGOARM;
         if(GOOS == "android"_s && GOARCH == "arm"_s)
         {
@@ -352,8 +352,8 @@ namespace golang::internal::buildcfg
     {
         Goarm64Features g;
         gocpp::error e;
-        auto lseOpt = ",lse"_s;
-        auto cryptoOpt = ",crypto"_s;
+        const gocpp::string lseOpt = ",lse"_s;
+        const gocpp::string cryptoOpt = ",crypto"_s;
 
         g.LSE = false;
         g.Crypto = false;

@@ -144,7 +144,7 @@ namespace golang::runtime
     //go:nosplit
     typePointers rec::typePointersOfUnchecked(mspan* span, uintptr_t addr)
     {
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck && rec::objBase(gocpp::recv(span), addr) != addr)
         {
             print("runtime: addr="_s, addr, " base="_s, rec::objBase(gocpp::recv(span), addr), "\n"_s);
@@ -205,7 +205,7 @@ namespace golang::runtime
     //go:nosplit
     typePointers rec::typePointersOfType(mspan* span, abi::Type* typ, uintptr_t addr)
     {
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck && typ == nullptr)
         {
             go_throw("bad type passed to typePointersOfType"_s);
@@ -497,7 +497,7 @@ namespace golang::runtime
         auto buf = & rec::ptr(gocpp::recv(getg()->m->p))->wbBuf;
 
         // Double-check that the bitmaps generated in the two possible paths match.
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck)
         {
             doubleCheckTypePointersOfType(s, typ, dst, size);
@@ -572,7 +572,7 @@ namespace golang::runtime
         auto s = spanOf(dst);
 
         // Double-check that the bitmaps generated in the two possible paths match.
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck)
         {
             doubleCheckTypePointersOfType(s, typ, dst, size);
@@ -639,7 +639,7 @@ namespace golang::runtime
     //go:nosplit
     gocpp::slice<uintptr_t> rec::heapBits(mspan* span)
     {
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
 
         if(doubleCheck && ! span->isUserArenaChunk)
         {
@@ -798,7 +798,7 @@ namespace golang::runtime
             *dst = ((*dst) & ~((((1 << bits) - 1) << j))) | (src << j);
         }
 
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck)
         {
             auto srcRead = rec::heapBitsSmallForAddr(gocpp::recv(span), x);
@@ -1413,7 +1413,7 @@ namespace golang::runtime
     //go:nosplit
     uintptr_t rec::divideByElemSize(mspan* s, uintptr_t n)
     {
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
 
         // See explanation in mksizeclasses.go's computeDivMagic.
         auto q = uintptr_t((uint64_t(n) * uint64_t(s->divMul)) >> 32);
@@ -1921,7 +1921,7 @@ namespace golang::runtime
             // the pattern to a bit buffer holding at most 7 bits (a partial byte)
             // it will not overflow.
             auto src = dst;
-            auto maxBits = goarch::PtrSize * 8 - 7;
+            constexpr int64_t maxBits = goarch::PtrSize * 8 - 7;
             if(n <= maxBits)
             {
                 // Start with bits in output buffer.

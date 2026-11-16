@@ -82,7 +82,7 @@ namespace golang::math
         double y;
         int64_t exp;
         // 2**-1022
-        auto SmallestNormal = 2.2250738585072014e-308;
+        constexpr double SmallestNormal = 2.2250738585072014e-308;
         if(Abs(x) < SmallestNormal)
         {
             return {x * (1 << 52), - 52};

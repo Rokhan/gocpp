@@ -51,7 +51,7 @@ namespace golang::go::types
         auto pq = nodeQueue(dependencyGraph(check->objMap));
         heap::Init(& pq);
 
-        auto debug = false;
+        constexpr bool debug = false;
         if(debug)
         {
             mocklib::Printf("Computing initialization order for %s\n\n"_s, check->pkg);

@@ -524,7 +524,7 @@ namespace golang::runtime
             // (this is somewhat pessimistic), which implies a worst-case latency of
             // about 160µs for 4 KiB physical pages. The current value is biased
             // toward latency over throughput.
-            auto scavengeQuantum = 64 << 10;
+            constexpr int64_t scavengeQuantum = 64 << 10;
 
             // Accumulate the amount of time spent scavenging.
             auto [r, duration] = s->scavenge(scavengeQuantum);
@@ -535,7 +535,7 @@ namespace golang::runtime
             // In this case, just assume scavenging takes 10 µs per regular physical page
             // (determined empirically), and conservatively ignore the impact of huge pages
             // on timing.
-            auto approxWorkedNSPerPhysicalPage = 10e3;
+            constexpr double approxWorkedNSPerPhysicalPage = 10e3;
             if(duration == 0)
             {
                 worked += approxWorkedNSPerPhysicalPage * double(r / physPageSize);

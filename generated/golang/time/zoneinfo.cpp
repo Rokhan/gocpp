@@ -207,8 +207,8 @@ namespace golang::time
     {
         // Most calls to FixedZone have an unnamed zone with an offset by the hour.
         // Optimize for that case by returning the same *Location for a given hour.
-        auto hoursBeforeUTC = 12;
-        auto hoursAfterUTC = 14;
+        constexpr int64_t hoursBeforeUTC = 12;
+        constexpr int64_t hoursAfterUTC = 14;
         auto hour = offset / 60 / 60;
         if(name == ""_s && - hoursBeforeUTC <= hour && hour <= + hoursAfterUTC && hour * 60 * 60 == offset)
         {

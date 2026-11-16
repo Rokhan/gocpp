@@ -29,8 +29,8 @@ namespace golang::runtime
     // to scale linearly between them.
     double fastlog2(double x)
     {
-        auto fastlogScaleBits = 20;
-        auto fastlogScaleRatio = 1.0 / (1 << fastlogScaleBits);
+        constexpr int64_t fastlogScaleBits = 20;
+        constexpr double fastlogScaleRatio = 1.0 / (1 << fastlogScaleBits);
 
         auto xBits = float64bits(x);
         // Extract the exponent from the IEEE float64, and index a constant

@@ -167,7 +167,7 @@ namespace golang::os
     {
         Process* p;
         gocpp::error err;
-        auto da = syscall::STANDARD_RIGHTS_READ |
+        constexpr int64_t da = syscall::STANDARD_RIGHTS_READ |
                 syscall::PROCESS_QUERY_INFORMATION | syscall::SYNCHRONIZE;
         auto [h, e] = syscall::OpenProcess(da, false, uint32_t(pid));
         if(e != nullptr)

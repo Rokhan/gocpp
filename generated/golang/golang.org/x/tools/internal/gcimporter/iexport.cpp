@@ -201,8 +201,8 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         // fact iexportCommon doesn't even check for I/O errors.
         // TODO(adonovan): handle I/O errors properly.
         // TODO(adonovan): use byte slices throughout, avoiding copying.
-        auto bundle = false;
-        auto shallow = true;
+        constexpr bool bundle = false;
+        constexpr bool shallow = true;
         bytes::Buffer out = {};
         auto err = iexportCommon(& out, fset, bundle, shallow, iexportVersion, gocpp::slice<types::Package*> {pkg}, reportf);
         return {rec::Bytes(gocpp::recv(out)), err};
@@ -222,8 +222,8 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // objectpath encoding.
     std::tuple<types::Package*, gocpp::error> IImportShallow(token::FileSet* fset, GetPackagesFunc getPackages, gocpp::slice<unsigned char> data, gocpp::string path, ReportFunc reportf)
     {
-        auto bundle = false;
-        auto shallow = true;
+        constexpr bool bundle = false;
+        constexpr bool shallow = true;
         auto [pkgs, err] = iimportCommon(fset, getPackages, data, bundle, path, shallow, reportf);
         if(err != nullptr)
         {
@@ -240,16 +240,16 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     // so that calls to IImportData can override with a provided package path.
     gocpp::error IExportData(io::Writer out, token::FileSet* fset, types::Package* pkg)
     {
-        auto bundle = false;
-        auto shallow = false;
+        constexpr bool bundle = false;
+        constexpr bool shallow = false;
         return iexportCommon(out, fset, bundle, shallow, iexportVersion, gocpp::slice<types::Package*> {pkg}, nullptr);
     }
 
     // IExportBundle writes an indexed export bundle for pkgs to out.
     gocpp::error IExportBundle(io::Writer out, token::FileSet* fset, gocpp::slice<types::Package*> pkgs)
     {
-        auto bundle = true;
-        auto shallow = false;
+        constexpr bool bundle = true;
+        constexpr bool shallow = false;
         return iexportCommon(out, fset, bundle, shallow, iexportVersion, pkgs, nullptr);
     }
 
@@ -1704,7 +1704,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         x = constant::ToFloat(x);
         // Use the same floating-point precision (512) as cmd/compile
         // (see Mpprec in cmd/compile/internal/gc/mpfloat.go).
-        auto mpprec = 512;
+        constexpr int64_t mpprec = 512;
         big::Float f = {};
         rec::SetPrec(gocpp::recv(f), mpprec);
         if(auto [v, exact] = constant::Float64Val(x); exact)

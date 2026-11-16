@@ -628,7 +628,7 @@ namespace golang::time
     // of the layout string in detail and is a good reference.
     gocpp::string rec::Format(Time t, gocpp::string layout)
     {
-        auto bufSize = 64;
+        constexpr int64_t bufSize = 64;
         gocpp::slice<unsigned char> b = {};
         auto max = len(layout) + 10;
         if(max < bufSize)

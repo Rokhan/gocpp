@@ -263,9 +263,9 @@ namespace golang::golang_org::x::tools::go::packages
         gocpp::Defer defer;
         try
         {
-            auto windowsArgMax = 32767;
-            auto maxEnvSize = 16384;
-            auto safeArgMax = windowsArgMax - maxEnvSize;
+            constexpr int64_t windowsArgMax = 32767;
+            constexpr int64_t maxEnvSize = 16384;
+            constexpr int64_t safeArgMax = windowsArgMax - maxEnvSize;
             auto [chunks, err] = splitIntoChunks(patterns, safeArgMax);
             if(err != nullptr)
             {
@@ -1056,7 +1056,7 @@ namespace golang::golang_org::x::tools::go::packages
                 ld->Config.ParseFile = [=](token::FileSet* fset, gocpp::string filename, gocpp::slice<unsigned char> src) mutable -> std::tuple<ast::File*, gocpp::error>
                 {
                     // We implicitly promise to keep doing ast.Object resolution. :(
-                    auto mode = parser::AllErrors | parser::ParseComments;
+                    constexpr parser::Mode mode = parser::AllErrors | parser::ParseComments;
                     return parser::ParseFile(fset, filename, src, mode);
                 };
             }
@@ -1129,9 +1129,9 @@ namespace golang::golang_org::x::tools::go::packages
         gocpp::slice<loaderPackage*> leaves = {};
         if(ld->Config.Mode & (NeedImports | NeedSyntax | NeedTypes | NeedTypesInfo) != 0)
         {
-            auto white = 0;
-            auto grey = 1;
-            auto black = 2;
+            constexpr int64_t white = 0;
+            constexpr int64_t grey = 1;
+            constexpr int64_t black = 2;
 
             // visit traverses the import graph, depth-first,
             // and materializes the graph as Packages.Imports.

@@ -811,7 +811,7 @@ namespace golang::go::build::constraint
         // Only allow up to 100 AND/OR operators for "old" syntax.
         // This is much less than the limit for "new" syntax,
         // but uses of old syntax were always very simple.
-        auto maxOldSize = 100;
+        constexpr int64_t maxOldSize = 100;
         int64_t size = 0;
 
         Expr x = {};

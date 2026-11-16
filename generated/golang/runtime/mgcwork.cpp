@@ -642,7 +642,7 @@ namespace golang::runtime
     bool freeSomeWbufs(bool preemptible)
     {
         // ~1–2 µs per span.
-        auto batchSize = 64;
+        constexpr int64_t batchSize = 64;
         lock(& work.wbufSpans.lock);
         if(gcphase != _GCoff || rec::isEmpty(gocpp::recv(work.wbufSpans.free)))
         {

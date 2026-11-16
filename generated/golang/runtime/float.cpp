@@ -47,7 +47,7 @@ namespace golang::runtime
     //	abs(NaN) = NaN
     double abs(double x)
     {
-        auto sign = 1 << 63;
+        constexpr uint64_t sign = uint64_t(1_bi << 63);
         return float64frombits((float64bits(x) & ~(sign)));
     }
 
@@ -55,7 +55,7 @@ namespace golang::runtime
     // of x and the sign of y.
     double copysign(double x, double y)
     {
-        auto sign = 1 << 63;
+        constexpr uint64_t sign = uint64_t(1_bi << 63);
         return float64frombits((float64bits(x) & ~(sign)) | float64bits(y) & sign);
     }
 

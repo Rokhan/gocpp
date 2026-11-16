@@ -185,7 +185,7 @@ namespace golang::syscall
     //go:linkname loadsystemlibrary
     std::tuple<uintptr_t, Errno> loadsystemlibrary(uint16_t* filename)
     {
-        auto _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+        constexpr int64_t _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
         auto [handle, gocpp_id_1, err] = SyscallN(uintptr_t(__LoadLibraryExW), uintptr_t(gocpp::unsafe_pointer(filename)), 0, _LOAD_LIBRARY_SEARCH_SYSTEM32);
         if(handle != 0)
         {

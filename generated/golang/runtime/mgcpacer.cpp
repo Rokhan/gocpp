@@ -247,7 +247,7 @@ namespace golang::runtime
         auto totalUtilizationGoal = double(procs) * gcBackgroundUtilization;
         auto dedicatedMarkWorkersNeeded = int64_t(totalUtilizationGoal + 0.5);
         auto utilError = double(dedicatedMarkWorkersNeeded) / totalUtilizationGoal - 1;
-        auto maxUtilError = 0.3;
+        constexpr double maxUtilError = 0.3;
         if(utilError < - maxUtilError || utilError > maxUtilError)
         {
             // Rounding put us more than 30% off our goal. With
@@ -400,7 +400,7 @@ namespace golang::runtime
             // We're already past our heap goal, even the extrapolated one.
             // Leave ourselves some extra runway, so in the worst case we
             // finish by that point.
-            auto maxOvershoot = 1.1;
+            constexpr double maxOvershoot = 1.1;
             heapGoal = int64_t(double(heapGoal) * maxOvershoot);
 
             // Compute the upper bound on the scan work remaining.
@@ -953,7 +953,7 @@ namespace golang::runtime
             // have the GC respond hard about how close we are to the goal than to
             // push the goal back in such a manner that it could cause us to exceed
             // the memory limit.
-            auto minRunway = 64 << 10;
+            constexpr int64_t minRunway = 64 << 10;
             if(c->triggered != ~ uint64_t(0) && goal < c->triggered + minRunway)
             {
                 goal = c->triggered + minRunway;

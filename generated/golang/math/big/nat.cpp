@@ -82,7 +82,7 @@ namespace golang::math::big
         // Choosing a good value for e has significant performance impact
         // because it increases the chance that a value can be reused.
         // extra capacity
-        auto e = 4;
+        constexpr int64_t e = 4;
         return gocpp::make(gocpp::Tag<nat>(), n, n + e);
     }
 
@@ -1039,7 +1039,7 @@ namespace golang::math::big
             v <<= shift;
             nat q = {};
 
-            auto mask = 1 << (_W - 1);
+            constexpr uint64_t mask = uint64_t(1_bi << (_W - 1));
 
             // We walk through the bits of the exponent one by one. Each time we
             // see a bit, we square, thus doubling the power. If the bit is a one,
@@ -1180,7 +1180,7 @@ namespace golang::math::big
             auto w = int64_t((logM + _W - 1) / _W);
             auto zz = rec::nat(gocpp::recv(stk), w);
 
-            auto n = 4;
+            constexpr int64_t n = 4;
             // powers[i] contains x^i.
             gocpp::array<nat, 1 << n> powers = {};
             for(auto [i, gocpp_ignored] : powers)
@@ -1312,7 +1312,7 @@ namespace golang::math::big
         auto one = gocpp::make(gocpp::Tag<nat>(), numWords);
         one[0] = 1;
 
-        auto n = 4;
+        constexpr int64_t n = 4;
         // powers[i] contains x^i
         gocpp::array<nat, 1 << n> powers = {};
         powers[0] = rec::montgomery(gocpp::recv(powers[0]), one, RR, m, k0, numWords);

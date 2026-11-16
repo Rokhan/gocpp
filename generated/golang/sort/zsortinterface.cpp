@@ -84,7 +84,7 @@ namespace golang::sort
     // limit is the number of allowed bad (very unbalanced) pivots before falling back to heapsort.
     void pdqsort(Interface data, int64_t a, int64_t b, int64_t limit)
     {
-        auto maxInsertion = 12;
+        constexpr int64_t maxInsertion = 12;
 
         auto wasBalanced = true;
         auto wasPartitioned = true;
@@ -246,8 +246,8 @@ namespace golang::sort
     // partialInsertionSort partially sorts a slice, returns true if the slice is sorted at the end.
     bool partialInsertionSort(Interface data, int64_t a, int64_t b)
     {
-        auto maxSteps = 5;
-        auto shortestShifting = 50;
+        constexpr int64_t maxSteps = 5;
+        constexpr int64_t shortestShifting = 50;
         auto i = a + 1;
         for(int64_t j = 0; j < maxSteps; j++)
         {
@@ -327,8 +327,8 @@ namespace golang::sort
     {
         int64_t pivot;
         sortedHint hint;
-        auto shortestNinther = 50;
-        auto maxSwaps = 4 * 3;
+        constexpr int64_t shortestNinther = 50;
+        constexpr int64_t maxSwaps = 4 * 3;
 
         auto l = b - a;
 

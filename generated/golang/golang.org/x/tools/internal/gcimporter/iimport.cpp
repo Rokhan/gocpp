@@ -419,7 +419,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         gocpp::Defer defer;
         try
         {
-            auto currentVersion = iexportVersionCurrent;
+            constexpr int64_t currentVersion = iexportVersionCurrent;
             int64_t version = int64_t(- 1);
             if(! debug)
             {

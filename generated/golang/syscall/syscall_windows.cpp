@@ -783,7 +783,7 @@ namespace golang::syscall
                 return os;
             }
         };
-        auto FileEndOfFileInfo = 6;
+        constexpr int64_t FileEndOfFileInfo = 6;
         _FILE_END_OF_FILE_INFO info = {};
         info.EndOfFile = length;
         return setFileInformationByHandle(fd, FileEndOfFileInfo, gocpp::unsafe_pointer(& info), uint32_t(gocpp::Sizeof<_FILE_END_OF_FILE_INFO>()));
@@ -2116,8 +2116,8 @@ namespace golang::syscall
 
     std::tuple<gocpp::slice<uint16_t>, gocpp::error> fdpath(golang::syscall::Handle fd, gocpp::slice<uint16_t> buf)
     {
-        auto FILE_NAME_NORMALIZED = 0;
-        auto VOLUME_NAME_DOS = 0;
+        constexpr int64_t FILE_NAME_NORMALIZED = 0;
+        constexpr int64_t VOLUME_NAME_DOS = 0;
         for(; ; )
         {
             auto [n, err] = getFinalPathNameByHandle(fd, & buf[0], uint32_t(len(buf)), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
@@ -2409,7 +2409,7 @@ namespace golang::syscall
             }
             return {nullptr, err};
         }
-        auto LMEM_FIXED = 0;
+        constexpr int64_t LMEM_FIXED = 0;
         uintptr_t alloc;
         std::tie(alloc, err) = localAlloc(LMEM_FIXED, uint32_t(size));
         if(err != nullptr)

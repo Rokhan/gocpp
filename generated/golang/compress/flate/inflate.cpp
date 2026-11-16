@@ -239,7 +239,7 @@ namespace golang::compress::flate
         // Sanity enables additional runtime tests during Huffman
         // table construction. It's intended to be used during
         // development to supplement the currently ad-hoc unit tests.
-        auto sanity = false;
+        constexpr bool sanity = false;
 
         if(h->min != 0)
         {
@@ -789,8 +789,8 @@ namespace golang::compress::flate
     // fixed distance encoding associated with fixed Huffman blocks.
     void rec::huffmanBlock(decompressor* f)
     {
-        auto stateInit = 0;
-        auto stateDict = 1;
+        constexpr int64_t stateInit = 0;
+        constexpr int64_t stateDict = 1;
 
         //Go switch emulation
         {

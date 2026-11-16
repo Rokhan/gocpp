@@ -1427,7 +1427,7 @@ namespace golang::runtime
         {
             return golang::runtime::funcInfo {};
         }
-        auto nsub = uintptr_t(len(findfuncbucket {}.subbuckets));
+        constexpr uintptr_t nsub = uintptr_t(len(findfuncbucket {}.subbuckets));
 
         auto [pcOff, ok] = rec::textOff(gocpp::recv(datap), pc);
         if(! ok)
@@ -1613,10 +1613,10 @@ namespace golang::runtime
     {
         // If true, when we get a cache hit, still look up the data and make sure it
         // matches the cached contents.
-        auto debugCheckCache = false;
+        constexpr bool debugCheckCache = false;
 
         // If true, skip checking the cache entirely.
-        auto skipCache = false;
+        constexpr bool skipCache = false;
 
         if(off == 0)
         {

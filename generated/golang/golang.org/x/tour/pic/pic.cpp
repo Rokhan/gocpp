@@ -54,8 +54,8 @@ namespace golang::golang_org::x::tour::pic
     // and the value 255 means full white.
     void Show(std::function<gocpp::slice<gocpp::slice<uint8_t>> (int64_t dx, int64_t dy)> f)
     {
-        auto dx = 256;
-        auto dy = 256;
+        constexpr int64_t dx = 256;
+        constexpr int64_t dy = 256;
         auto data = f(dx, dy);
         auto m = image::NewNRGBA(image::Rect(0, 0, dx, dy));
         for(int64_t y = 0; y < dy; y++)

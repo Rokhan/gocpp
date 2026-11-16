@@ -326,7 +326,7 @@ namespace golang::internal::syscall::windows
                 return deleteatFallback(h);
             }
 
-            auto FileDispositionInformationEx = 64;
+            constexpr int64_t FileDispositionInformationEx = 64;
 
             // First, attempt to delete the file using POSIX semantics
             // (which permit a file to be deleted while it is still open).
@@ -440,8 +440,8 @@ namespace golang::internal::syscall::windows
             copy(renameInfoEx.FileName.make_slice(0), p16);
             renameInfoEx.FileNameLength = uint32_t((len(p16) - 1) * 2);
 
-            auto FileRenameInformation = 10;
-            auto FileRenameInformationEx = 65;
+            constexpr int64_t FileRenameInformation = 10;
+            constexpr int64_t FileRenameInformationEx = 65;
             err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& renameInfoEx), uint32_t(gocpp::Sizeof<FILE_RENAME_INFORMATION_EX>()), FileRenameInformationEx);
             if(err == nullptr)
             {
@@ -506,7 +506,7 @@ namespace golang::internal::syscall::windows
             copy(linkInfo.FileName.make_slice(0), p16);
             linkInfo.FileNameLength = uint32_t((len(p16) - 1) * 2);
 
-            auto FileLinkInformation = 11;
+            constexpr int64_t FileLinkInformation = 11;
             err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& linkInfo), uint32_t(gocpp::Sizeof<FILE_LINK_INFORMATION>()), FileLinkInformation);
             if(auto [st, ok] = gocpp::getValue<NTStatus>(err); ok)
             {
@@ -610,8 +610,8 @@ namespace golang::internal::syscall::windows
                 }
             };
 
-            auto headerSize = uint16_t(gocpp::Offsetof<reparseDataBufferT>(&reparseDataBufferT::SubstituteNameOffset));
-            auto bufferSize = uint16_t(gocpp::Sizeof<reparseDataBufferT>());
+            const uint16_t headerSize = uint16_t(gocpp::Offsetof<reparseDataBufferT>(&reparseDataBufferT::SubstituteNameOffset));
+            constexpr uint16_t bufferSize = uint16_t(gocpp::Sizeof<reparseDataBufferT>());
 
             // Data buffer containing a SymbolicLinkReparseBuffer followed by the link target.
             auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), bufferSize + uint16_t(2 * len(oldnameu16)));
@@ -636,7 +636,7 @@ namespace golang::internal::syscall::windows
             if(err != nullptr)
             {
                 // Creating the symlink has failed, so try to remove the file.
-                auto FileDispositionInformation = 13;
+                constexpr int64_t FileDispositionInformation = 13;
                 NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(gocpp::InitPtr<FILE_DISPOSITION_INFORMATION>([=](auto& x) {
                     x.DeleteFile = 1;
                 })), uint32_t(gocpp::Sizeof<FILE_DISPOSITION_INFORMATION>()), FileDispositionInformation);

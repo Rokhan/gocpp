@@ -413,7 +413,7 @@ namespace golang::go::types
                     // n1 >= 0
                     auto n1 = n - 1;
                     // Final size is ea*n1 + esize; and size must be <= maxInt64.
-                    auto maxInt64 = (1 << 63) - 1;
+                    constexpr int64_t maxInt64 = int64_t((1_bi << 63) - 1_bi);
                     if(n1 > 0 && ea > maxInt64 / n1)
                     {
                         // ea*n1 overflows

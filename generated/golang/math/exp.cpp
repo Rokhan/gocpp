@@ -42,12 +42,12 @@ namespace golang::math
 
     double exp(double x)
     {
-        auto Ln2Hi = 6.93147180369123816490e-01;
-        auto Ln2Lo = 1.90821492927058770002e-10;
-        auto Log2e = 1.44269504088896338700e+00;
-        auto Overflow = 7.09782712893383973096e+02;
-        auto Underflow = - 7.45133219101941108420e+02;
-        auto NearZero = 1.0 / (1 << 28);
+        constexpr double Ln2Hi = 6.93147180369123816490e-01;
+        constexpr double Ln2Lo = 1.90821492927058770002e-10;
+        constexpr double Log2e = 1.44269504088896338700e+00;
+        constexpr double Overflow = 7.09782712893383973096e+02;
+        constexpr double Underflow = - 7.45133219101941108420e+02;
+        constexpr double NearZero = 1.0 / (1 << 28);
 
         // special cases
         //Go switch emulation
@@ -112,10 +112,10 @@ namespace golang::math
 
     double exp2(double x)
     {
-        auto Ln2Hi = 6.93147180369123816490e-01;
-        auto Ln2Lo = 1.90821492927058770002e-10;
-        auto Overflow = 1.0239999999999999e+03;
-        auto Underflow = - 1.0740e+03;
+        constexpr double Ln2Hi = 6.93147180369123816490e-01;
+        constexpr double Ln2Lo = 1.90821492927058770002e-10;
+        constexpr double Overflow = 1.0239999999999999e+03;
+        constexpr double Underflow = - 1.0740e+03;
 
         // special cases
         //Go switch emulation
@@ -167,11 +167,11 @@ namespace golang::math
     // exp1 returns e**r × 2**k where r = hi - lo and |r| ≤ ln(2)/2.
     double expmulti(double hi, double lo, int64_t k)
     {
-        auto P1 = 1.66666666666666657415e-01;
-        auto P2 = - 2.77777777770155933842e-03;
-        auto P3 = 6.61375632143793436117e-05;
-        auto P4 = - 1.65339022054652515390e-06;
-        auto P5 = 4.13813679705723846039e-08;
+        constexpr double P1 = 1.66666666666666657415e-01;
+        constexpr double P2 = - 2.77777777770155933842e-03;
+        constexpr double P3 = 6.61375632143793436117e-05;
+        constexpr double P4 = - 1.65339022054652515390e-06;
+        constexpr double P5 = 4.13813679705723846039e-08;
 
         auto r = hi - lo;
         auto t = r * r;

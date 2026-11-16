@@ -60,7 +60,7 @@ namespace golang::internal::strconv
     // A sign prefix is not permitted.
     std::tuple<uint64_t, gocpp::error> ParseUint(gocpp::string s, int64_t base, int64_t bitSize)
     {
-        auto fnParseUint = "ParseUint"_s;
+        const gocpp::string fnParseUint = "ParseUint"_s;
 
         if(s == ""_s)
         {
@@ -132,7 +132,7 @@ namespace golang::internal::strconv
 
         // Cutoff is the smallest number such that cutoff*base > maxUint64.
         // Use compile-time constants for common cases.
-        auto maxUint64 = (1 << 64) - 1;
+        constexpr uint64_t maxUint64 = uint64_t((1_bi << 64) - 1_bi);
         uint64_t cutoff = {};
         //Go switch emulation
         {
@@ -243,7 +243,7 @@ namespace golang::internal::strconv
     {
         int64_t i;
         gocpp::error err;
-        auto fnParseInt = "ParseInt"_s;
+        const gocpp::string fnParseInt = "ParseInt"_s;
 
         if(s == ""_s)
         {
@@ -303,7 +303,7 @@ namespace golang::internal::strconv
     // Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
     std::tuple<int64_t, gocpp::error> Atoi(gocpp::string s)
     {
-        auto fnAtoi = "Atoi"_s;
+        const gocpp::string fnAtoi = "Atoi"_s;
 
         auto sLen = len(s);
         if(intSize == 32 && (0 < sLen && sLen < 10) ||

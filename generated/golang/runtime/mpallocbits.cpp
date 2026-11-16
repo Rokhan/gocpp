@@ -165,7 +165,7 @@ namespace golang::runtime
         uint64_t most = {};
         uint64_t cur = {};
         // sentinel for start value
-        auto notSetYet = ~ (uint64_t)(0);
+        constexpr uint64_t notSetYet = ~ (uint64_t)(0);
         start = notSetYet;
         for(int64_t i = 0; i < len(b); i++)
         {
@@ -191,7 +191,7 @@ namespace golang::runtime
         if(start == notSetYet)
         {
             // Made it all the way through without finding a single 1 bit.
-            auto n = (uint64_t)(64 * len(b));
+            constexpr uint64_t n = (uint64_t)(64 * len(b));
             return packPallocSum(n, n, n);
         }
         most = gocpp::max(most, cur);

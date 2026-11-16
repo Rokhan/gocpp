@@ -844,7 +844,7 @@ namespace golang::image::png
                                         // 8-bit color to 16-bit color) and 0xffff (which, when
                                         // combined with the division-by-a, converts from
                                         // alpha-premultiplied to non-alpha-premultiplied).
-                                        auto m = 0x101 * 0xffff;
+                                        constexpr int64_t m = 0x101 * 0xffff;
                                         auto a = uint32_t(s[3]) * 0x101;
                                         d[0] = uint8_t((uint32_t(s[0]) * m / a) >> 8);
                                         d[1] = uint8_t((uint32_t(s[1]) * m / a) >> 8);

@@ -1090,7 +1090,7 @@ namespace golang::runtime
         s->largeType->PtrBytes = uintptr_t(ptr) - base + typ->PtrBytes;
 
         // Double-check that the bitmap was written out correctly.
-        auto doubleCheck = false;
+        constexpr bool doubleCheck = false;
         if(doubleCheck)
         {
             doubleCheckHeapPointersInterior(uintptr_t(ptr), uintptr_t(ptr), typ->Size_, typ->Size_, typ, & s->largeType, s);

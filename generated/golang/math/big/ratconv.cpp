@@ -599,7 +599,7 @@ namespace golang::math::big
             // divide q anymore. Then use the table to determine
             // the power of 5 in q.
             // f == 5^fp
-            auto fp = 13;
+            constexpr int64_t fp = 13;
             // tab[i] == (5^fp)^(2^i) == 5^(fp·2^i)
             gocpp::slice<golang::math::big::nat> tab = {};
             // == 5^fp (must fit into a uint32 Word)

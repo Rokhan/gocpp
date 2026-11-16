@@ -89,9 +89,9 @@ namespace golang::compress::flate
 
     void rec::encode(fastEncL5* e, tokens* dst, gocpp::slice<unsigned char> src)
     {
-        auto inputMargin = 12 - 1;
-        auto minNonLiteralBlockSize = 1 + 1 + inputMargin;
-        auto hashShortBytes = 4;
+        constexpr int64_t inputMargin = 12 - 1;
+        constexpr int64_t minNonLiteralBlockSize = 1 + 1 + inputMargin;
+        constexpr int64_t hashShortBytes = 4;
 
         // Protect against e.cur wraparound.
         for(; e->fastGen.cur >= bufferReset; )
@@ -169,8 +169,8 @@ namespace golang::compress::flate
         auto cv = loadLE64(src, s);
         for(; ; )
         {
-            auto skipLog = 6;
-            auto doEvery = 1;
+            constexpr int64_t skipLog = 6;
+            constexpr int64_t doEvery = 1;
 
             auto nextS = s;
             int32_t l = {};
@@ -313,7 +313,7 @@ namespace golang::compress::flate
                 // 3 is only a little better when it is but sometimes a lot worse.
                 // The skipped bytes are tested in Extend backwards,
                 // and still picked up as part of the match if they do.
-                auto skipBeginning = 2;
+                constexpr int64_t skipBeginning = 2;
                 auto eLong = e->bTable[hashLen(loadLE64(src, sAt), tableBits, hashLongBytes)].cur.offset;
                 auto t2 = eLong - e->fastGen.cur - l + skipBeginning;
                 auto s2 = s + skipBeginning;
@@ -360,7 +360,7 @@ namespace golang::compress::flate
             }
 
             // Store every 3rd hash in-between.
-            auto hashEvery = 3;
+            constexpr int64_t hashEvery = 3;
             auto i = s - l + 1;
             if(i < s - 1)
             {

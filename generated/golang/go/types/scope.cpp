@@ -229,7 +229,7 @@ namespace golang::go::types
     // If recurse is set, it also writes nested (children) scopes.
     void rec::WriteTo(golang::go::types::Scope* s, io::Writer w, int64_t n, bool recurse)
     {
-        auto ind = ".  "_s;
+        const gocpp::string ind = ".  "_s;
         auto indn = strings::Repeat(ind, n);
 
         fmt::Fprintf(w, "%s%s scope %p {\n"_s, indn, s->comment, s);

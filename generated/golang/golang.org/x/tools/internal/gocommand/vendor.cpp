@@ -165,7 +165,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
     // if vendoring should be enabled.
     std::tuple<ModuleJSON*, bool, gocpp::error> getMainModuleAnd114(context::Context ctx, Invocation inv, Runner* r)
     {
-        auto format = "{{.Path}}\n{{.Dir}}\n{{.GoMod}}\n{{.GoVersion}}\n{{range context.ReleaseTags}}{{if eq . \"go1.14\"}}{{.}}{{end}}{{end}}\n"_s;
+        const gocpp::string format = "{{.Path}}\n{{.Dir}}\n{{.GoMod}}\n{{.GoVersion}}\n{{range context.ReleaseTags}}{{if eq . \"go1.14\"}}{{.}}{{end}}{{end}}\n"_s;
         inv.Verb = "list"_s;
         inv.Args = gocpp::slice<gocpp::string> {"-m"_s, "-f"_s, format};
         auto [go_stdout, err] = rec::Run(gocpp::recv(r), ctx, inv);
@@ -219,7 +219,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
     // This is the information needed to figure out if vendoring should be enabled.
     std::tuple<gocpp::slice<ModuleJSON*>, gocpp::error> getWorkspaceMainModules(context::Context ctx, Invocation inv, Runner* r)
     {
-        auto format = "{{.Path}}\n{{.Dir}}\n{{.GoMod}}\n{{.GoVersion}}\n"_s;
+        const gocpp::string format = "{{.Path}}\n{{.Dir}}\n{{.GoMod}}\n{{.GoVersion}}\n"_s;
         inv.Verb = "list"_s;
         inv.Args = gocpp::slice<gocpp::string> {"-m"_s, "-f"_s, format};
         auto [go_stdout, err] = rec::Run(gocpp::recv(r), ctx, inv);

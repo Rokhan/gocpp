@@ -31,7 +31,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     int64_t readArchiveHeader(bufio::Reader* b, gocpp::string name)
     {
         // architecture-independent object file output
-        auto HeaderSize = 60;
+        constexpr int64_t HeaderSize = 60;
 
         gocpp::array<unsigned char, HeaderSize> buf = {};
         if(auto [gocpp_id_0, err] = io::ReadFull(b, buf.make_slice(0)); err != nullptr)

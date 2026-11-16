@@ -422,7 +422,7 @@ namespace golang::runtime
 
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name)
     {
-        auto _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+        constexpr int64_t _LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
         return stdcall(_LoadLibraryExW, uintptr_t(gocpp::unsafe_pointer(& name[0])), 0, _LOAD_LIBRARY_SEARCH_SYSTEM32);
     }
 
@@ -484,7 +484,7 @@ namespace golang::runtime
 
     void monitorSuspendResume()
     {
-        auto _DEVICE_NOTIFY_CALLBACK = 2;
+        constexpr int64_t _DEVICE_NOTIFY_CALLBACK = 2;
         struct _DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS
         {
             uintptr_t callback{};
@@ -656,8 +656,8 @@ namespace golang::runtime
     // initLongPathSupport enables long path support.
     void initLongPathSupport()
     {
-        auto IsLongPathAwareProcess = 0x80;
-        auto PebBitFieldOffset = 3;
+        constexpr int64_t IsLongPathAwareProcess = 0x80;
+        constexpr int64_t PebBitFieldOffset = 3;
 
         // Check that we're ≥ 10.0.15063.
         auto info = windows::OSVERSIONINFOW {};
@@ -782,8 +782,8 @@ namespace golang::runtime
     //go:nosplit
     int32_t write1(uintptr_t fd, gocpp::unsafe_pointer buf, int32_t n)
     {
-        auto _STD_OUTPUT_HANDLE = ~ uintptr_t(10);
-        auto _STD_ERROR_HANDLE = ~ uintptr_t(11);
+        constexpr uintptr_t _STD_OUTPUT_HANDLE = ~ uintptr_t(10);
+        constexpr uintptr_t _STD_ERROR_HANDLE = ~ uintptr_t(11);
         uintptr_t handle = {};
         //Go switch emulation
         {
@@ -838,7 +838,7 @@ namespace golang::runtime
     // It returns the number of bytes written.
     int64_t writeConsole(uintptr_t handle, gocpp::unsafe_pointer buf, int32_t bufLen)
     {
-        auto surr2 = (surrogateMin + surrogateMax + 1) / 2;
+        constexpr int64_t surr2 = (surrogateMin + surrogateMax + 1) / 2;
 
         // Do not use defer for unlock. May cause issues when printing a panic.
         lock(& utf16ConsoleBackLock);
@@ -893,10 +893,10 @@ namespace golang::runtime
     //go:nosplit
     int32_t semasleep(int64_t ns)
     {
-        auto _WAIT_ABANDONED = 0x00000080;
-        auto _WAIT_OBJECT_0 = 0x00000000;
-        auto _WAIT_TIMEOUT = 0x00000102;
-        auto _WAIT_FAILED = 0xFFFFFFFF;
+        constexpr int64_t _WAIT_ABANDONED = 0x00000080;
+        constexpr int64_t _WAIT_OBJECT_0 = 0x00000000;
+        constexpr int64_t _WAIT_TIMEOUT = 0x00000102;
+        constexpr int64_t _WAIT_FAILED = 0xFFFFFFFFLL;
 
         uintptr_t result = {};
         if(ns < 0)
@@ -1159,7 +1159,7 @@ namespace golang::runtime
                 print("runtime: CreateWaitableTimerEx failed; errno="_s, getlasterror(), "\n"_s);
                 go_throw("CreateWaitableTimerEx when creating timer failed"_s);
             }
-            auto GENERIC_ALL = 0x10000000;
+            constexpr int64_t GENERIC_ALL = 0x10000000;
             auto errno = stdcall(_NtCreateWaitCompletionPacket, uintptr_t(gocpp::unsafe_pointer(& mp->mOS.waitIocpHandle)), GENERIC_ALL, 0);
             if(mp->mOS.waitIocpHandle == 0)
             {

@@ -116,7 +116,7 @@ namespace golang::runtime
         }
 
         // See https://golang.org/cl/21503 for justification of the yield delay.
-        auto yieldDelay = 10 * 1000;
+        constexpr int64_t yieldDelay = 10 * 1000;
         int64_t nextYield = {};
 
         // Drive the goroutine to a preemption point.

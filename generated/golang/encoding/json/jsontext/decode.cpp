@@ -413,11 +413,11 @@ namespace golang::encoding::json::jsontext
         }
 
         // Check whether to grow the buffer.
-        auto maxBufferSize = 4 << 10;
+        constexpr int64_t maxBufferSize = 4 << 10;
         // higher value is faster
-        auto growthSizeFactor = 2;
+        constexpr int64_t growthSizeFactor = 2;
         // higher value is slower
-        auto growthRateFactor = 2;
+        constexpr int64_t growthRateFactor = 2;
         // By default, grow if below the maximum buffer size.
         auto grow = cap(d->decodeBuffer.buf) <= maxBufferSize / growthSizeFactor;
         // Growing can be expensive, so only grow
@@ -641,7 +641,7 @@ namespace golang::encoding::json::jsontext
         // whether the current delim is at least potentially valid.
         // Since a JSON string is always valid as the next token,
         // conservatively assume that is the next kind for validation.
-        auto next = jsontext::Kind('"');
+        constexpr jsontext::Kind next = jsontext::Kind('"');
         if(rec::needDelim(gocpp::recv(d->state.Tokens), next) != delim)
         {
             err = rec::checkDelim(gocpp::recv(d), delim, next);

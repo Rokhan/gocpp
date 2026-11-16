@@ -1746,7 +1746,7 @@ namespace golang::io
     SectionReader* NewSectionReader(ReaderAt r, int64_t off, int64_t n)
     {
         int64_t remaining = {};
-        auto maxint64 = (1 << 63) - 1;
+        constexpr int64_t maxint64 = int64_t((1_bi << 63) - 1_bi);
         if(off <= maxint64 - n)
         {
             remaining = n + off;

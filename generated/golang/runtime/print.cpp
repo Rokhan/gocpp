@@ -211,7 +211,7 @@ namespace golang::runtime
     long minhexdigits = 0;
     void printhexopts(bool include0x, int64_t mindigits, uint64_t v)
     {
-        auto dig = "0123456789abcdef"_s;
+        const gocpp::string dig = "0123456789abcdef"_s;
         gocpp::array<unsigned char, 100> buf = {};
         int64_t i = len(buf);
         for(i--; i > 0; i--)

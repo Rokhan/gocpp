@@ -185,8 +185,8 @@ namespace golang::go::parser
 
     void rec::printTrace(golang::go::parser::parser* p, gocpp::slice<go_any> a)
     {
-        auto dots = ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "_s;
-        auto n = len(dots);
+        const gocpp::string dots = ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "_s;
+        const int64_t n = len(dots);
         auto pos = rec::Position(gocpp::recv(p->file), p->pos);
         mocklib::Printf("%5d:%3d: "_s, pos.Line, pos.Column);
         auto i = 2 * p->indent;
@@ -2614,7 +2614,7 @@ namespace golang::go::parser
             p->exprLev++;
 
             // change the 3 to 2 to disable 3-index slices
-            auto N = 3;
+            constexpr int64_t N = 3;
             gocpp::slice<ast::Expr> args = {};
             gocpp::array<ast::Expr, N> index = {};
             gocpp::array<token::Pos, N - 1> colons = {};

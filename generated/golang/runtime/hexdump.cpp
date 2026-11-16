@@ -186,7 +186,7 @@ namespace golang::runtime
 
     void rec::init(hexdumper* h)
     {
-        auto bytesPerLine = len(h->dataBuf);
+        constexpr int64_t bytesPerLine = len(h->dataBuf);
 
         if(h->addrBytes == 0)
         {
@@ -240,17 +240,17 @@ namespace golang::runtime
 
     void rec::flushLine(hexdumper* h, gocpp::slice<unsigned char> data)
     {
-        auto bytesPerLine = len(h->dataBuf);
+        constexpr int64_t bytesPerLine = len(h->dataBuf);
 
-        auto maxAddrChars = 2 * goarch::PtrSize;
-        auto addrSep = ": "_s;
+        constexpr int64_t maxAddrChars = 2 * goarch::PtrSize;
+        const gocpp::string addrSep = ": "_s;
         auto dataStart = int64_t(2 * h->addrBytes) + len(addrSep);
         // dataChars uses the same formula to toPos above. We calculate it with the
         // "last field", then add the size of the last field.
-        auto dataChars = (bytesPerLine - 1) * 2 + (bytesPerLine - 1) / 4 + (bytesPerLine - 1) / 8 + 2;
-        auto asciiSep = "  "_s;
+        constexpr int64_t dataChars = (bytesPerLine - 1) * 2 + (bytesPerLine - 1) / 4 + (bytesPerLine - 1) / 8 + 2;
+        const gocpp::string asciiSep = "  "_s;
         auto asciiStart = dataStart + dataChars + len(asciiSep);
-        auto asciiChars = bytesPerLine;
+        constexpr int64_t asciiChars = bytesPerLine;
         auto nlPos = asciiStart + asciiChars;
 
         gocpp::array<unsigned char, maxAddrChars + len(addrSep) + dataChars + len(asciiSep) + asciiChars + 1> lineBuf = {};
@@ -337,7 +337,7 @@ namespace golang::runtime
     // small to represent v, it the output will start with '*'.
     void rec::fmtHex(hexdumper* h, gocpp::slice<unsigned char> buf, uint64_t v)
     {
-        auto dig = "0123456789abcdef"_s;
+        const gocpp::string dig = "0123456789abcdef"_s;
         auto i = len(buf) - 1;
         for(; i >= 0; i--)
         {

@@ -152,7 +152,7 @@ namespace golang::golang_org::x::tools::go::packages
     // value, otherwise it searches for a binary named gopackagesdriver on the PATH.
     driver findExternalDriver(Config* cfg)
     {
-        auto toolPrefix = "GOPACKAGESDRIVER="_s;
+        const gocpp::string toolPrefix = "GOPACKAGESDRIVER="_s;
         gocpp::string tool = ""_s;
         for(auto [gocpp_ignored, env] : cfg->Env)
         {

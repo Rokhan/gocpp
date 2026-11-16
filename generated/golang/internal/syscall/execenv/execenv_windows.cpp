@@ -53,7 +53,7 @@ namespace golang::internal::syscall::execenv
             }
             defer.push_back([=]{ windows::DestroyEnvironmentBlock(blockp); });
 
-            auto size = gocpp::Sizeof<uint16_t>();
+            constexpr uintptr_t size = gocpp::Sizeof<uint16_t>();
             for(; *blockp != 0; )
             {
                 // environment block ends with empty string

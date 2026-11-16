@@ -3737,7 +3737,7 @@ namespace golang::go::ast
                     break;
                 }
                 // opt: check Contains first to avoid unnecessary array allocation in Split.
-                auto prefix = "// Code generated "_s;
+                const gocpp::string prefix = "// Code generated "_s;
                 if(strings::Contains(comment->Text, prefix))
                 {
                     for(auto [line, gocpp_ignored] : strings::SplitSeq(comment->Text, "\n"_s))

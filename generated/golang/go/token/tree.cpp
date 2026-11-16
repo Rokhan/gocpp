@@ -175,7 +175,7 @@ namespace golang::go::token
     // correct.
     void rec::check(node* n, node* parent)
     {
-        auto debugging = false;
+        constexpr bool debugging = false;
         if(debugging)
         {
             if(n == nullptr)

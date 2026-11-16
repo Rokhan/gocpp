@@ -446,7 +446,7 @@ namespace golang::go::doc::comment
                         }
                         for(auto [i, blk] : item->Content)
                         {
-                            auto fourSpace = "    "_s;
+                            const gocpp::string fourSpace = "    "_s;
                             if(i > 0)
                             {
                                 rec::WriteString(gocpp::recv(out), "\n"_s + fourSpace);

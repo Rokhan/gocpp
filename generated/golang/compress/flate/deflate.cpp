@@ -398,7 +398,7 @@ namespace golang::compress::flate
         // Some like it higher (CSV), some like it lower (JSON)
         // Base is 4 bytes at with an additional cost.
         // Matches must be better than this.
-        auto baseCost = 3;
+        constexpr int64_t baseCost = 3;
 
 
 
@@ -518,7 +518,7 @@ namespace golang::compress::flate
         // This allows up to two additional literals, but that could be
         // compensated by a higher quality match.
         // If the match looks better, we extend backwards.
-        auto checkOff = 2;
+        constexpr int64_t checkOff = 2;
         auto s = d->state;
 
         if(prevLength >= maxMatchLength - checkOff)

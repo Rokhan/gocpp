@@ -291,7 +291,7 @@ namespace golang::runtime
                 x.root = gp;
             });
             // midnight UTC 2000-01-01
-            auto synctestBaseTime = 946684800000000000;
+            constexpr int64_t synctestBaseTime = 946684800000000000LL;
             bubble->now = synctestBaseTime;
             lockInit(& bubble->mu, lockRankSynctest);
             lockInit(& bubble->timers.mu, lockRankTimers);

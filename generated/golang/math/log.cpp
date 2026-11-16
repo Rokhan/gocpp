@@ -41,15 +41,15 @@ namespace golang::math
 
     double log(double x)
     {
-        auto Ln2Hi = 6.93147180369123816490e-01;
-        auto Ln2Lo = 1.90821492927058770002e-10;
-        auto L1 = 6.666666666666735130e-01;
-        auto L2 = 3.999999999940941908e-01;
-        auto L3 = 2.857142874366239149e-01;
-        auto L4 = 2.222219843214978396e-01;
-        auto L5 = 1.818357216161805012e-01;
-        auto L6 = 1.531383769920937332e-01;
-        auto L7 = 1.479819860511658591e-01;
+        constexpr double Ln2Hi = 6.93147180369123816490e-01;
+        constexpr double Ln2Lo = 1.90821492927058770002e-10;
+        constexpr double L1 = 6.666666666666735130e-01;
+        constexpr double L2 = 3.999999999940941908e-01;
+        constexpr double L3 = 2.857142874366239149e-01;
+        constexpr double L4 = 2.222219843214978396e-01;
+        constexpr double L5 = 1.818357216161805012e-01;
+        constexpr double L6 = 1.531383769920937332e-01;
+        constexpr double L7 = 1.479819860511658591e-01;
 
         // special cases
         //Go switch emulation

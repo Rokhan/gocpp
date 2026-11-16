@@ -575,7 +575,7 @@ namespace golang::runtime
         // held, we can be certain that when there are no writers there are
         // also no stale generation values left. Therefore, it's safe to flush
         // any buffers that remain in that generation's slot.
-        auto debugDeadlock = false;
+        constexpr bool debugDeadlock = false;
         systemstack([=]() mutable -> void
         {
             // Track iterations for some rudimentary deadlock detection.

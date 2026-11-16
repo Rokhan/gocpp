@@ -1320,7 +1320,7 @@ namespace golang::internal::poll
         // syscall.WriteConsole seems to fail, if given large buffer.
         // So limit the buffer to 16000 characters. This number was
         // discovered by experimenting with syscall.WriteConsole.
-        auto maxWrite = 16000;
+        constexpr int64_t maxWrite = 16000;
         for(; len(runes) > 0; )
         {
             auto m = len(runes);
@@ -2325,7 +2325,7 @@ namespace golang::internal::poll
 
         syscall::Handle nfd = {};
         // analogous to CLOEXEC
-        auto inherit = false;
+        constexpr bool inherit = false;
         if(auto err = syscall::DuplicateHandle(proc, syscall::Handle(fd), proc, & nfd, 0, inherit, syscall::DUPLICATE_SAME_ACCESS); err != nullptr)
         {
             return {0, "DuplicateHandle"_s, err};

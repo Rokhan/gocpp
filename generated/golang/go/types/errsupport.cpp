@@ -50,11 +50,11 @@ namespace golang::go::types
         // missing        x.foo   !=    FoO    type X has no field or method foo
         // inaccessible   x.foo   !=    foo    cannot refer to unexported field foo
         // missing        x.foo   !=    foO    type X has no field or method foo
-        auto ok = 0;
-        auto missing = 1;
-        auto misspelled = 2;
-        auto unexported = 3;
-        auto inaccessible = 4;
+        constexpr int64_t ok = 0;
+        constexpr int64_t missing = 1;
+        constexpr int64_t misspelled = 2;
+        constexpr int64_t unexported = 3;
+        constexpr int64_t inaccessible = 4;
 
         // determine case
         int64_t e = missing;

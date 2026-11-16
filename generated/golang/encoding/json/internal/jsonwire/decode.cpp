@@ -64,7 +64,7 @@ namespace golang::encoding::json::internal::jsonwire
     int64_t ConsumeNull(gocpp::slice<unsigned char> b)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
-        auto literal = "null"_s;
+        const gocpp::string literal = "null"_s;
         if(len(b) >= len(literal) && gocpp::string(b.make_slice(0, len(literal))) == literal)
         {
             return len(literal);
@@ -77,7 +77,7 @@ namespace golang::encoding::json::internal::jsonwire
     int64_t ConsumeFalse(gocpp::slice<unsigned char> b)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
-        auto literal = "false"_s;
+        const gocpp::string literal = "false"_s;
         if(len(b) >= len(literal) && gocpp::string(b.make_slice(0, len(literal))) == literal)
         {
             return len(literal);
@@ -90,7 +90,7 @@ namespace golang::encoding::json::internal::jsonwire
     int64_t ConsumeTrue(gocpp::slice<unsigned char> b)
     {
         // NOTE: The arguments and logic are kept simple to keep this inlinable.
-        auto literal = "true"_s;
+        const gocpp::string literal = "true"_s;
         if(len(b) >= len(literal) && gocpp::string(b.make_slice(0, len(literal))) == literal)
         {
             return len(literal);
@@ -929,7 +929,7 @@ namespace golang::encoding::json::internal::jsonwire
         uint64_t v;
         bool ok;
         // len(fmt.Sprint(uint64(math.MaxUint64)))
-        auto unsafeWidth = 20;
+        constexpr int64_t unsafeWidth = 20;
         int64_t n = {};
         for(; len(b) > n && ('0' <= b[n] && b[n] <= '9'); n++)
         {

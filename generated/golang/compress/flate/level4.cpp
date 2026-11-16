@@ -87,9 +87,9 @@ namespace golang::compress::flate
 
     void rec::encode(fastEncL4* e, tokens* dst, gocpp::slice<unsigned char> src)
     {
-        auto inputMargin = 12 - 1;
-        auto minNonLiteralBlockSize = 1 + 1 + inputMargin;
-        auto hashShortBytes = 4;
+        constexpr int64_t inputMargin = 12 - 1;
+        constexpr int64_t minNonLiteralBlockSize = 1 + 1 + inputMargin;
+        constexpr int64_t hashShortBytes = 4;
         // Protect against e.cur wraparound.
         for(; e->fastGen.cur >= bufferReset; )
         {
@@ -156,8 +156,8 @@ namespace golang::compress::flate
         auto cv = loadLE64(src, s);
         for(; ; )
         {
-            auto skipLog = 6;
-            auto doEvery = 1;
+            constexpr int64_t skipLog = 6;
+            constexpr int64_t doEvery = 1;
 
             auto nextS = s;
             int32_t t = {};

@@ -80,7 +80,7 @@ namespace golang::math::big
     // If f is not finite, SetFloat returns nil.
     golang::math::big::Rat* rec::SetFloat64(golang::math::big::Rat* z, double f)
     {
-        auto expMask = (1 << 11) - 1;
+        constexpr int64_t expMask = (1 << 11) - 1;
         auto bits = math::Float64bits(f);
         auto mantissa = bits & ((1 << 52) - 1);
         auto exp = int64_t((bits >> 52) & expMask);
@@ -137,14 +137,14 @@ namespace golang::math::big
     {
         double f;
         bool exact;
-        auto Fsize = 32;
-        auto Msize = 23;
-        auto Msize1 = Msize + 1;
-        auto Msize2 = Msize1 + 1;
-        auto Esize = Fsize - Msize1;
-        auto Ebias = (1 << (Esize - 1)) - 1;
-        auto Emin = 1 - Ebias;
-        auto Emax = Ebias;
+        constexpr int64_t Fsize = 32;
+        constexpr int64_t Msize = 23;
+        constexpr int64_t Msize1 = Msize + 1;
+        constexpr int64_t Msize2 = Msize1 + 1;
+        constexpr int64_t Esize = Fsize - Msize1;
+        constexpr int64_t Ebias = (1 << (Esize - 1)) - 1;
+        constexpr int64_t Emin = 1 - Ebias;
+        constexpr int64_t Emax = Ebias;
 
         // TODO(adonovan): specialize common degenerate cases: 1.0, integers.
         auto alen = rec::bitLen(gocpp::recv(a));
@@ -252,14 +252,14 @@ namespace golang::math::big
     {
         double f;
         bool exact;
-        auto Fsize = 64;
-        auto Msize = 52;
-        auto Msize1 = Msize + 1;
-        auto Msize2 = Msize1 + 1;
-        auto Esize = Fsize - Msize1;
-        auto Ebias = (1 << (Esize - 1)) - 1;
-        auto Emin = 1 - Ebias;
-        auto Emax = Ebias;
+        constexpr int64_t Fsize = 64;
+        constexpr int64_t Msize = 52;
+        constexpr int64_t Msize1 = Msize + 1;
+        constexpr int64_t Msize2 = Msize1 + 1;
+        constexpr int64_t Esize = Fsize - Msize1;
+        constexpr int64_t Ebias = (1 << (Esize - 1)) - 1;
+        constexpr int64_t Emin = 1 - Ebias;
+        constexpr int64_t Emax = Ebias;
 
         // TODO(adonovan): specialize common degenerate cases: 1.0, integers.
         auto alen = rec::bitLen(gocpp::recv(a));

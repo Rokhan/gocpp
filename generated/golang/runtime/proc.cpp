@@ -937,7 +937,7 @@ namespace golang::runtime
     // Returns nil, false if OS doesn't provide env vars early in the init sequence.
     std::tuple<gocpp::string, bool> getGodebugEarly()
     {
-        auto prefix = "GODEBUG="_s;
+        const gocpp::string prefix = "GODEBUG="_s;
         gocpp::string env = {};
         //Go switch emulation
         {
@@ -1527,7 +1527,7 @@ namespace golang::runtime
         lockWithRankMayAcquire(nullptr, lockRankGscan);
 
         // See https://golang.org/cl/21503 for justification of the yield delay.
-        auto yieldDelay = 5 * 1000;
+        constexpr int64_t yieldDelay = 5 * 1000;
         int64_t nextYield = {};
 
         // loop if gp->atomicstatus is in a scan state giving
@@ -3221,7 +3221,7 @@ namespace golang::runtime
     //go:nosplit
     m* lockextra(bool nilokay)
     {
-        auto locked = 1;
+        constexpr int64_t locked = 1;
 
         bool incr = false;
         for(; ; )
@@ -4465,7 +4465,7 @@ namespace golang::runtime
 
         bool ranTimer = false;
 
-        auto stealTries = 4;
+        constexpr int64_t stealTries = 4;
         for(int64_t i = 0; i < stealTries; i++)
         {
             auto stealTimersOrRunNextG = i == stealTries - 1;

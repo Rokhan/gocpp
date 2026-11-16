@@ -174,7 +174,7 @@ namespace golang::math::bits
         // Per "Hacker's Delight", the first line can be simplified
         // more, but it saves at best one instruction, so we leave
         // it alone for clarity.
-        auto m = (1 << 64) - 1;
+        constexpr uint64_t m = uint64_t((1_bi << 64) - 1_bi);
         x = (x >> 1) & (m0 & m) + x & (m0 & m);
         x = (x >> 2) & (m1 & m) + x & (m1 & m);
         x = ((x >> 4) + x) & (m2 & m);
@@ -203,7 +203,7 @@ namespace golang::math::bits
     // This function's execution time does not depend on the inputs.
     uint8_t RotateLeft8(uint8_t x, int64_t k)
     {
-        auto n = 8;
+        constexpr int64_t n = 8;
         auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
@@ -214,7 +214,7 @@ namespace golang::math::bits
     // This function's execution time does not depend on the inputs.
     uint16_t RotateLeft16(uint16_t x, int64_t k)
     {
-        auto n = 16;
+        constexpr int64_t n = 16;
         auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
@@ -225,7 +225,7 @@ namespace golang::math::bits
     // This function's execution time does not depend on the inputs.
     uint32_t RotateLeft32(uint32_t x, int64_t k)
     {
-        auto n = 32;
+        constexpr int64_t n = 32;
         auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
@@ -236,7 +236,7 @@ namespace golang::math::bits
     // This function's execution time does not depend on the inputs.
     uint64_t RotateLeft64(uint64_t x, int64_t k)
     {
-        auto n = 64;
+        constexpr int64_t n = 64;
         auto s = (uint64_t)(k) & (n - 1);
         return (x << s) | (x >> (n - s));
     }
@@ -266,7 +266,7 @@ namespace golang::math::bits
     // Reverse32 returns the value of x with its bits in reversed order.
     uint32_t Reverse32(uint32_t x)
     {
-        auto m = (1 << 32) - 1;
+        constexpr int64_t m = (1LL << 32) - 1LL;
         x = (x >> 1) & (m0 & m) | (x & (m0 & m) << 1);
         x = (x >> 2) & (m1 & m) | (x & (m1 & m) << 2);
         x = (x >> 4) & (m2 & m) | (x & (m2 & m) << 4);
@@ -276,7 +276,7 @@ namespace golang::math::bits
     // Reverse64 returns the value of x with its bits in reversed order.
     uint64_t Reverse64(uint64_t x)
     {
-        auto m = (1 << 64) - 1;
+        constexpr uint64_t m = uint64_t((1_bi << 64) - 1_bi);
         x = (x >> 1) & (m0 & m) | (x & (m0 & m) << 1);
         x = (x >> 2) & (m1 & m) | (x & (m1 & m) << 2);
         x = (x >> 4) & (m2 & m) | (x & (m2 & m) << 4);
@@ -308,7 +308,7 @@ namespace golang::math::bits
     // This function's execution time does not depend on the inputs.
     uint32_t ReverseBytes32(uint32_t x)
     {
-        auto m = (1 << 32) - 1;
+        constexpr int64_t m = (1LL << 32) - 1LL;
         x = (x >> 8) & (m3 & m) | (x & (m3 & m) << 8);
         return (x >> 16) | (x << 16);
     }
@@ -318,7 +318,7 @@ namespace golang::math::bits
     // This function's execution time does not depend on the inputs.
     uint64_t ReverseBytes64(uint64_t x)
     {
-        auto m = (1 << 64) - 1;
+        constexpr uint64_t m = uint64_t((1_bi << 64) - 1_bi);
         x = (x >> 8) & (m3 & m) | (x & (m3 & m) << 8);
         x = (x >> 16) & (m4 & m) | (x & (m4 & m) << 16);
         return (x >> 32) | (x << 32);
@@ -533,7 +533,7 @@ namespace golang::math::bits
     {
         uint64_t hi;
         uint64_t lo;
-        auto mask32 = (1 << 32) - 1;
+        constexpr int64_t mask32 = (1LL << 32) - 1LL;
         auto x0 = x & mask32;
         auto x1 = x >> 32;
         auto y0 = y & mask32;
@@ -608,8 +608,8 @@ namespace golang::math::bits
         auto s = (uint64_t)(LeadingZeros64(y));
         y <<= s;
 
-        auto two32 = 1 << 32;
-        auto mask32 = two32 - 1;
+        constexpr int64_t two32 = 1LL << 32;
+        constexpr int64_t mask32 = int64_t(two32) - 1LL;
         auto yn1 = y >> 32;
         auto yn0 = y & mask32;
         auto un32 = (hi << s) | (lo >> (64 - s));

@@ -700,7 +700,7 @@ namespace golang::runtime
         // actual system page size is larger than this value.
         // For Android, we set the page size to the MTE size, as MTE
         // might be enforced. See issue 59090.
-        auto pageSize = 4096 * (1 - goos::IsAndroid) + 16 * goos::IsAndroid;
+        constexpr int64_t pageSize = 4096 * (1 - goos::IsAndroid) + 16 * goos::IsAndroid;
 
         int64_t offset = 0;
         auto ptr = gocpp::unsafe_pointer(s);

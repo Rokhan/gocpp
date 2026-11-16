@@ -185,7 +185,7 @@ namespace golang::bytes
     // invalid UTF-8 byte sequence.
     int64_t IndexRune(gocpp::slice<unsigned char> s, gocpp::rune r)
     {
-        auto haveFastIndex = bytealg::MaxBruteForce > 0;
+        constexpr bool haveFastIndex = bytealg::MaxBruteForce > 0;
         //Go switch emulation
         {
             int conditionId = -1;
@@ -860,7 +860,7 @@ namespace golang::bytes
         // have completed the construction of the result.
         // This yields significant speedups (up to +100%) in cases where
         // the result length is large (roughly, over L2 cache size).
-        auto chunkLimit = 8 * 1024;
+        constexpr int64_t chunkLimit = 8 * 1024;
         auto chunkMax = n;
         if(chunkMax > chunkLimit)
         {

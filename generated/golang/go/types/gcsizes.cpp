@@ -265,7 +265,7 @@ namespace golang::go::types
                     }
                     // esize > 0
                     // Final size is esize * n; and size must be <= maxInt64.
-                    auto maxInt64 = (1 << 63) - 1;
+                    constexpr int64_t maxInt64 = int64_t((1_bi << 63) - 1_bi);
                     if(esize > maxInt64 / n)
                     {
                         // esize * n overflows

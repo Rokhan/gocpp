@@ -323,7 +323,7 @@ namespace golang::math::big
             addTo(z.make_slice(n2), z1->abs);
 
             // Debug mode: double-check answer and print trace on failure.
-            auto debug = false;
+            constexpr bool debug = false;
             if(debug)
             {
                 auto zz = gocpp::make(gocpp::Tag<nat>(), len(z));
@@ -437,7 +437,7 @@ namespace golang::math::big
             addTo(z.make_slice(n2), z1->abs);
 
             // Debug mode: double-check answer and print trace on failure.
-            auto debug = false;
+            constexpr bool debug = false;
             if(debug)
             {
                 auto zz = gocpp::make(gocpp::Tag<nat>(), len(z));
@@ -493,7 +493,7 @@ namespace golang::math::big
 
         // Add _ between words.
         // digits per chunk
-        auto D = _W / 4;
+        constexpr int64_t D = _W / 4;
         for(; len(s) > D; )
         {
             std::tie(s, t) = std::tuple{s.make_slice(0, len(s) - D), s.make_slice(len(s) - D) + "_"_s + t};

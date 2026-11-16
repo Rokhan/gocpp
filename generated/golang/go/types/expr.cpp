@@ -1065,7 +1065,7 @@ namespace golang::go::types
                 }
                 // rhs must be within reasonable bounds in constant shifts
                 // so we can express smallestFloat64 (see go.dev/issue/44057)
-                auto shiftBound = 1023 - 1 + 52;
+                constexpr int64_t shiftBound = 1023 - 1 + 52;
                 auto [s, ok] = constant::Uint64Val(yval);
                 if(! ok || s > shiftBound)
                 {

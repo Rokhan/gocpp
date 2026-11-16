@@ -372,7 +372,7 @@ namespace golang::reflect
         runtime::Frame frame = {};
         for(bool more = true; more; )
         {
-            auto prefix = "reflect.Value."_s;
+            const gocpp::string prefix = "reflect.Value."_s;
             std::tie(frame, more) = rec::Next(gocpp::recv(frames));
             auto name = frame.Function;
             if(len(name) > len(prefix) && name.make_slice(0, len(prefix)) == prefix)
@@ -2609,7 +2609,7 @@ namespace golang::reflect
         {
             return true;
         }
-        auto n = 32;
+        constexpr int64_t n = 32;
         // Align memory addresses to 8 bytes.
         for(; uintptr_t(gocpp::unsafe_pointer(& b[0])) % 8 != 0; )
         {

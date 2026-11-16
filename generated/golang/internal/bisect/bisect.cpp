@@ -561,7 +561,7 @@ namespace golang::internal::bisect
     gocpp::error printFileLine(Writer w, uint64_t h, gocpp::string file, int64_t line)
     {
         // overestimate
-        auto markerLen = 40;
+        constexpr int64_t markerLen = 40;
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, markerLen + len(file) + 24);
         b = AppendMarker(b, h);
         b = appendFileLine(b, file, line);
@@ -609,7 +609,7 @@ namespace golang::internal::bisect
     // This lets stack's body handle m == nil and potentially be inlined.
     bool rec::stack(Matcher* m, Writer w)
     {
-        auto maxStack = 16;
+        constexpr int64_t maxStack = 16;
         gocpp::array<uintptr_t, maxStack> stk = {};
         auto n = runtime::Callers(2, stk.make_slice(0));
         // caller #2 is not for printing; need it to normalize PCs if ASLR.
@@ -775,7 +775,7 @@ namespace golang::internal::bisect
     // AppendMarker is like [Marker] but appends the marker to dst.
     gocpp::slice<unsigned char> AppendMarker(gocpp::slice<unsigned char> dst, uint64_t id)
     {
-        auto prefix = "[bisect-match 0x"_s;
+        const gocpp::string prefix = "[bisect-match 0x"_s;
         gocpp::array<unsigned char, len(prefix) + 16 + 1> buf = {};
         copy(buf.make_slice(0), prefix);
         for(int64_t i = 0; i < 16; i++)

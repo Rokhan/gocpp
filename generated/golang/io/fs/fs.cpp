@@ -600,7 +600,7 @@ namespace golang::io::fs
     // The only required bit is [ModeDir] for directories.
     gocpp::string rec::String(FileMode m)
     {
-        auto str = "dalTLDpSugct?"_s;
+        const gocpp::string str = "dalTLDpSugct?"_s;
         // Mode is uint32.
         gocpp::array<unsigned char, 32> buf = {};
         int64_t w = 0;
@@ -617,7 +617,7 @@ namespace golang::io::fs
             buf[w] = '-';
             w++;
         }
-        auto rwx = "rwxrwxrwx"_s;
+        const gocpp::string rwx = "rwxrwxrwx"_s;
         for(auto [i, c] : rwx)
         {
             if(m & (1 << (uint64_t)(9 - 1 - i)) != 0)

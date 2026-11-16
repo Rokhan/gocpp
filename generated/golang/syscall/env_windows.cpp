@@ -118,7 +118,7 @@ namespace golang::syscall
 
             // Empty with room to grow.
             auto r = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::string>>(), 0, 50);
-            auto size = gocpp::Sizeof<uint16_t>();
+            constexpr uintptr_t size = gocpp::Sizeof<uint16_t>();
             for(; *envp != 0; )
             {
                 // environment block ends with empty string

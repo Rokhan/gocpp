@@ -213,7 +213,7 @@ namespace golang::encoding::json::internal::jsonwire
 
     gocpp::slice<unsigned char> appendEscapedUTF16(gocpp::slice<unsigned char> dst, uint16_t x)
     {
-        auto hex = "0123456789abcdef"_s;
+        const gocpp::string hex = "0123456789abcdef"_s;
         return append(dst, '\\', 'u', hex[(x >> 12) & 0xf], hex[(x >> 8) & 0xf], hex[(x >> 4) & 0xf], hex[(x >> 0) & 0xf]);
     }
 
@@ -380,7 +380,7 @@ namespace golang::encoding::json::internal::jsonwire
                     // As an optimization, we can copy integer numbers below 2⁵³ verbatim
                     // since the canonical form is always identical.
                     // len(strconv.AppendUint(nil, 1<<53, 10))
-                    auto maxExactIntegerDigits = 16;
+                    constexpr int64_t maxExactIntegerDigits = 16;
                     if(! rec::Get(gocpp::recv(flags), jsonflags::CanonicalizeRawInts) || n < maxExactIntegerDigits)
                     {
                         // copy the number verbatim

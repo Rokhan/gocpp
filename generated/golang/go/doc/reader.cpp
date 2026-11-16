@@ -538,7 +538,7 @@ namespace golang::go::doc
 
         // determine values list with which to associate the Value for this decl
         auto values = & r->values;
-        auto threshold = 0.75;
+        constexpr double threshold = 0.75;
         if(domName != ""_s && rec::isVisible(gocpp::recv(r), domName) && domFreq >= int64_t(double(len(decl->Specs)) * threshold))
         {
             // typed entries are sufficiently frequent

@@ -65,15 +65,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(1 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(8);
+            constexpr spanClass spc = spanClass(1 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(8);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 1;
-        auto elemsize = 8;
+        constexpr int64_t sizeclass = 1;
+        constexpr int64_t elemsize = 8;
 
         if(doubleCheckMalloc)
         {
@@ -83,7 +83,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -136,7 +136,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 8;
+            constexpr int64_t elemsize = 8;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -184,7 +184,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -241,15 +241,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(2 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(16);
+            constexpr spanClass spc = spanClass(2 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(16);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 2;
-        auto elemsize = 16;
+        constexpr int64_t sizeclass = 2;
+        constexpr int64_t elemsize = 16;
 
         if(doubleCheckMalloc)
         {
@@ -259,7 +259,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -312,7 +312,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 16;
+            constexpr int64_t elemsize = 16;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -360,7 +360,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -417,15 +417,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(3 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(24);
+            constexpr spanClass spc = spanClass(3 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(24);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 3;
-        auto elemsize = 24;
+        constexpr int64_t sizeclass = 3;
+        constexpr int64_t elemsize = 24;
 
         if(doubleCheckMalloc)
         {
@@ -435,7 +435,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -488,7 +488,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 24;
+            constexpr int64_t elemsize = 24;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -536,7 +536,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -593,15 +593,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(4 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(32);
+            constexpr spanClass spc = spanClass(4 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(32);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 4;
-        auto elemsize = 32;
+        constexpr int64_t sizeclass = 4;
+        constexpr int64_t elemsize = 32;
 
         if(doubleCheckMalloc)
         {
@@ -611,7 +611,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -664,7 +664,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 32;
+            constexpr int64_t elemsize = 32;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -712,7 +712,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -769,15 +769,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(5 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(48);
+            constexpr spanClass spc = spanClass(5 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(48);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 5;
-        auto elemsize = 48;
+        constexpr int64_t sizeclass = 5;
+        constexpr int64_t elemsize = 48;
 
         if(doubleCheckMalloc)
         {
@@ -787,7 +787,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -840,7 +840,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 48;
+            constexpr int64_t elemsize = 48;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -888,7 +888,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -945,15 +945,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(6 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(64);
+            constexpr spanClass spc = spanClass(6 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(64);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 6;
-        auto elemsize = 64;
+        constexpr int64_t sizeclass = 6;
+        constexpr int64_t elemsize = 64;
 
         if(doubleCheckMalloc)
         {
@@ -963,7 +963,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1016,7 +1016,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 64;
+            constexpr int64_t elemsize = 64;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -1064,7 +1064,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -1121,15 +1121,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(7 << 1) | spanClass(0);
-            auto elemsize = uintptr_t(80);
+            constexpr spanClass spc = spanClass(7 << 1) | spanClass(0);
+            constexpr uintptr_t elemsize = uintptr_t(80);
             return mallocgcSmallScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 7;
-        auto elemsize = 80;
+        constexpr int64_t sizeclass = 7;
+        constexpr int64_t elemsize = 80;
 
         if(doubleCheckMalloc)
         {
@@ -1139,7 +1139,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(0);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(0);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1192,7 +1192,7 @@ namespace golang::runtime
 
             auto src0 = readUintptr(getGCMask(typ));
 
-            auto elemsize = 80;
+            constexpr int64_t elemsize = 80;
 
             uintptr_t scanSize = {};
             auto src = src0;
@@ -1240,7 +1240,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);
@@ -1302,7 +1302,7 @@ namespace golang::runtime
 
         lockRankMayQueueFinalizer();
 
-        auto elemsize = 16;
+        constexpr int64_t elemsize = 16;
 
         if(doubleCheckMalloc)
         {
@@ -1339,7 +1339,7 @@ namespace golang::runtime
             c->tinyAllocs++;
             mp->mallocing = 0;
             releasem(mp);
-            auto elemsize = 0;
+            constexpr int64_t elemsize = 0;
 
             return x;
         }
@@ -1347,8 +1347,8 @@ namespace golang::runtime
         bool checkGCTrigger = false;
         auto span = c->alloc[tinySpanClass];
 
-        auto nbytes = 8192;
-        auto nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / 16);
+        constexpr int64_t nbytes = 8192;
+        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / 16);
         gclinkptr nextFreeFastResult = {};
         if(span->allocCache != 0)
         {
@@ -1426,15 +1426,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(2 << 1) | spanClass(1);
-            auto elemsize = uintptr_t(16);
+            constexpr spanClass spc = spanClass(2 << 1) | spanClass(1);
+            constexpr uintptr_t elemsize = uintptr_t(16);
             return mallocgcSmallNoScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 2;
-        auto elemsize = 16;
+        constexpr int64_t sizeclass = 2;
+        constexpr int64_t elemsize = 16;
 
         if(doubleCheckMalloc)
         {
@@ -1444,7 +1444,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(1);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1535,15 +1535,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(3 << 1) | spanClass(1);
-            auto elemsize = uintptr_t(24);
+            constexpr spanClass spc = spanClass(3 << 1) | spanClass(1);
+            constexpr uintptr_t elemsize = uintptr_t(24);
             return mallocgcSmallNoScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 3;
-        auto elemsize = 24;
+        constexpr int64_t sizeclass = 3;
+        constexpr int64_t elemsize = 24;
 
         if(doubleCheckMalloc)
         {
@@ -1553,7 +1553,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(1);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1644,15 +1644,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(4 << 1) | spanClass(1);
-            auto elemsize = uintptr_t(32);
+            constexpr spanClass spc = spanClass(4 << 1) | spanClass(1);
+            constexpr uintptr_t elemsize = uintptr_t(32);
             return mallocgcSmallNoScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 4;
-        auto elemsize = 32;
+        constexpr int64_t sizeclass = 4;
+        constexpr int64_t elemsize = 32;
 
         if(doubleCheckMalloc)
         {
@@ -1662,7 +1662,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(1);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1753,15 +1753,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(5 << 1) | spanClass(1);
-            auto elemsize = uintptr_t(48);
+            constexpr spanClass spc = spanClass(5 << 1) | spanClass(1);
+            constexpr uintptr_t elemsize = uintptr_t(48);
             return mallocgcSmallNoScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 5;
-        auto elemsize = 48;
+        constexpr int64_t sizeclass = 5;
+        constexpr int64_t elemsize = 48;
 
         if(doubleCheckMalloc)
         {
@@ -1771,7 +1771,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(1);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1862,15 +1862,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(6 << 1) | spanClass(1);
-            auto elemsize = uintptr_t(64);
+            constexpr spanClass spc = spanClass(6 << 1) | spanClass(1);
+            constexpr uintptr_t elemsize = uintptr_t(64);
             return mallocgcSmallNoScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 6;
-        auto elemsize = 64;
+        constexpr int64_t sizeclass = 6;
+        constexpr int64_t elemsize = 64;
 
         if(doubleCheckMalloc)
         {
@@ -1880,7 +1880,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(1);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -1971,15 +1971,15 @@ namespace golang::runtime
         {
             releasem(mp);
 
-            auto spc = spanClass(7 << 1) | spanClass(1);
-            auto elemsize = uintptr_t(80);
+            constexpr spanClass spc = spanClass(7 << 1) | spanClass(1);
+            constexpr uintptr_t elemsize = uintptr_t(80);
             return mallocgcSmallNoScanSlowPath(size, typ, needzero, spc, elemsize);
         }
 
         lockRankMayQueueFinalizer();
 
-        auto sizeclass = 7;
-        auto elemsize = 80;
+        constexpr int64_t sizeclass = 7;
+        constexpr int64_t elemsize = 80;
 
         if(doubleCheckMalloc)
         {
@@ -1989,7 +1989,7 @@ namespace golang::runtime
 
         bool checkGCTrigger = false;
         auto c = getMCache(mp);
-        auto spc = spanClass(sizeclass << 1) | spanClass(1);
+        constexpr spanClass spc = spanClass(sizeclass << 1) | spanClass(1);
         auto span = c->alloc[spc];
 
         gclinkptr v = {};
@@ -2104,7 +2104,7 @@ namespace golang::runtime
 
         mp = acquirem();
 
-        auto elemsize = 16;
+        constexpr int64_t elemsize = 16;
 
         if(doubleCheckMalloc)
         {
@@ -2141,7 +2141,7 @@ namespace golang::runtime
             c->tinyAllocs++;
             mp->mallocing = 0;
             releasem(mp);
-            auto elemsize = 0;
+            constexpr int64_t elemsize = 0;
             if(gcBlackenEnabled != 0 && elemsize != 0)
             {
                 if(auto assistG = getg()->m->curg; assistG != nullptr)
@@ -2161,8 +2161,8 @@ namespace golang::runtime
         bool checkGCTrigger = false;
         auto span = c->alloc[tinySpanClass];
 
-        auto nbytes = 8192;
-        auto nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / 16);
+        constexpr int64_t nbytes = 8192;
+        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / 16);
         gclinkptr nextFreeFastResult = {};
         if(span->allocCache != 0)
         {
@@ -2384,7 +2384,7 @@ namespace golang::runtime
                 *dst = ((*dst) & ~((((1 << (gocpp::min(bits, ptrBits))) - 1) << j))) | (src << j);
             }
 
-            auto doubleCheck = false;
+            constexpr bool doubleCheck = false;
             if(doubleCheck)
             {
                 writeHeapBitsDoubleCheck(span, x, dataSize, src, src0, i, j, bits, typ);

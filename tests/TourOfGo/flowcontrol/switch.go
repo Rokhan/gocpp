@@ -24,6 +24,32 @@ func testFallThrough(n int) {
 	}
 }
 
+func testDeclarations(kind int) {
+	switch kind {
+	case 0:
+		var hr, mm, ss int
+		hr, mm, ss = 1, 2, 3
+		fmt.Println("case 0:", hr, mm, ss)
+	case 1:
+		var total = 10
+		total += kind
+		fmt.Println("case 1:", total)
+	case 2:
+		const factor = 3
+		fmt.Println("case 2:", kind*factor)
+	case 3:
+		var s string
+		fmt.Println("case 3:", s == "")
+		fallthrough
+	case 4:
+		hr := 40 // same name as in case 0, each clause has its own scope
+		fmt.Println("case 4:", hr)
+	default:
+		var d int
+		fmt.Println("default:", d)
+	}
+}
+
 func main() {
 	fmt.Print("Go runs on ")
 	switch os := runtime.GOOS; os {
@@ -63,4 +89,8 @@ func main() {
 	testFallThrough(1)
 	testFallThrough(2)
 	testFallThrough(3)
+
+	for i := 0; i < 6; i++ {
+		testDeclarations(i)
+	}
 }

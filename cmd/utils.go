@@ -1756,16 +1756,12 @@ func toSortedList(nsSet set[string]) []string {
 func isDeclaration(stmt ast.Stmt) bool {
 	switch s := stmt.(type) {
 	case *ast.AssignStmt:
-		if s.Tok == token.DEFINE {
-			return true
-		}
-		return false
+		return s.Tok == token.DEFINE
 	case *ast.DeclStmt:
 		switch dec := s.Decl.(type) {
 		case *ast.GenDecl:
 			switch dec.Tok {
-			case token.VAR:
-			case token.CONST:
+			case token.VAR, token.CONST:
 				return true
 			default:
 				return false
@@ -1776,7 +1772,6 @@ func isDeclaration(stmt ast.Stmt) bool {
 	default:
 		return false
 	}
-	return false
 }
 
 func hasDeclarations(stmts []ast.Stmt) bool {

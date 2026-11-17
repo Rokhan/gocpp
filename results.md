@@ -606,7 +606,7 @@
 | $(ImportDir)/regexp/exec.go | ✔️ ([cpp](generated/golang/regexp/exec.cpp), [h](generated/golang/regexp/exec.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/onepass.go | ✔️ ([cpp](generated/golang/regexp/onepass.cpp), [h](generated/golang/regexp/onepass.h))| ✔️ | ❌ |
 | $(ImportDir)/regexp/regexp.go | ✔️ ([cpp](generated/golang/regexp/regexp.cpp), [h](generated/golang/regexp/regexp.h))| ❌ | ❌ |
-| $(ImportDir)/regexp/syntax/compile.go | ✔️ ([cpp](generated/golang/regexp/syntax/compile.cpp), [h](generated/golang/regexp/syntax/compile.h))| ❌ | ❌ |
+| $(ImportDir)/regexp/syntax/compile.go | ✔️ ([cpp](generated/golang/regexp/syntax/compile.cpp), [h](generated/golang/regexp/syntax/compile.h))| ✔️ | ❌ |
 | $(ImportDir)/regexp/syntax/parse.go | ✔️ ([cpp](generated/golang/regexp/syntax/parse.cpp), [h](generated/golang/regexp/syntax/parse.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/syntax/perl_groups.go | ✔️ ([cpp](generated/golang/regexp/syntax/perl_groups.cpp), [h](generated/golang/regexp/syntax/perl_groups.h))| ✔️ | ✔️ |
 | $(ImportDir)/regexp/syntax/prog.go | ✔️ ([cpp](generated/golang/regexp/syntax/prog.cpp), [h](generated/golang/regexp/syntax/prog.h))| ❌ | ❌ |
@@ -806,7 +806,7 @@
 | $(ImportDir)/syscall/wtf8_windows.go | ✔️ ([cpp](generated/golang/syscall/wtf8_windows.cpp), [h](generated/golang/syscall/wtf8_windows.h))| ✔️ | ✔️ |
 | $(ImportDir)/syscall/zerrors_windows.go | ✔️ ([cpp](generated/golang/syscall/zerrors_windows.cpp), [h](generated/golang/syscall/zerrors_windows.h))| ✔️ | ✔️ |
 | $(ImportDir)/syscall/zsyscall_windows.go | ✔️ ([cpp](generated/golang/syscall/zsyscall_windows.cpp), [h](generated/golang/syscall/zsyscall_windows.h))| ✔️ | ❌ |
-| $(ImportDir)/time/format.go | ✔️ ([cpp](generated/golang/time/format.cpp), [h](generated/golang/time/format.h))| ❌ | ❌ |
+| $(ImportDir)/time/format.go | ✔️ ([cpp](generated/golang/time/format.cpp), [h](generated/golang/time/format.h))| ✔️ | ❌ |
 | $(ImportDir)/time/format_rfc3339.go | ✔️ ([cpp](generated/golang/time/format_rfc3339.cpp), [h](generated/golang/time/format_rfc3339.h))| ✔️ | ❌ |
 | $(ImportDir)/time/sleep.go | ✔️ ([cpp](generated/golang/time/sleep.cpp), [h](generated/golang/time/sleep.h))| ✔️ | ❌ |
 | $(ImportDir)/time/sys_windows.go | ✔️ ([cpp](generated/golang/time/sys_windows.cpp), [h](generated/golang/time/sys_windows.h))| ✔️ | ❌ |

@@ -149,6 +149,7 @@ custom-stdlib-build: gocpp.exe
 	$(MAKE) $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.md)
 	cat $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.md); echo
 	grep -o "undefined reference to .*" $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.log) | sort | uniq -c | sort -rn | head -20 || true
+	grep -o "multiple definition of .*;" $(LOGDIR)/golang/$(CUSTOM_BUILD_INPUT:.go=.link.log) | sort | uniq -c | sort -rn | head -20 || true
 
 $(OUT_CPP_TEST_FILES): $(OUTDIR)/%.cpp : %.go $(SUPPORT_FILES) gocpp.exe
 	$(call DEBUG_LOG, " => $<")
@@ -258,6 +259,10 @@ $(GENERATED_GOLANG_LIB_LINK_MD_FILES): $(LOGDIR)/%.link.md : $(OUTDIR)/%.cpp $$(
 # Most frequent undefined symbols, to see what to implement next.
 link-undefined:
 	cat $$(find $(LOGDIR)/golang -name '*.link.log') | grep -o "undefined reference to .*" | sort | uniq -c | sort -rn | head -50
+
+# Most frequent multiple definition symbols, to see what to fix next.
+link-multiple-definition:
+	cat $$(find $(LOGDIR)/golang -name '*.link.log') | grep -o "multiple definition of .*;" | sort | uniq -c | sort -rn | head -50
 
 md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES))

@@ -308,19 +308,37 @@ namespace gocpp
     }
 
     // (index, value) iterator
-    struct string::range_iterator
+    template<typename It>
+    struct string::basic_range_iterator
     {
         size_t index;
-        transform_iterator<string_iterator, int> iter;
+        transform_iterator<It, int> iter;
 
-        bool operator != (const range_iterator& other) const { return iter != other.iter; }
-        range_iterator operator ++ () { ++index; ++iter; return *this; }
-        range_iterator operator + (int n) { return { index + n, iter + n }; }
+        bool operator != (const basic_range_iterator& other) const { return iter != other.iter; }
+        basic_range_iterator operator ++ () { ++index; ++iter; return *this; }
+        basic_range_iterator operator + (int n) { return { index + n, iter + n }; }
         auto operator * () const { return std::make_tuple(index, *iter); }
     };
 
-    string::range_iterator string::begin() { return { 0, std::string::begin() }; }
-    string::range_iterator string::end() { return { std::string::size(), std::string::end() }; }
+    string::range_iterator string::begin()
+    {
+        return { 0, std::string::begin() };
+    }
+
+    string::range_iterator string::end()
+    {
+        return { std::string::size(), std::string::end() };
+    }
+
+    inline string::const_range_iterator string::begin() const
+    {
+        return { 0, std::string::begin() };
+    }
+
+    inline string::const_range_iterator string::end() const
+    {
+        return { std::string::size(), std::string::end() };
+    }
 
     template<typename T>
     inline T max(T a)

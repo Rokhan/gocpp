@@ -117,12 +117,18 @@ namespace gocpp
         constexpr inline string& operator=(const rune& r);
 
         using string_iterator = typename std::string::iterator;
+        using const_string_iterator = typename std::string::const_iterator;
 
         // (index, value) iterator
-        struct range_iterator;
+        template<typename It> struct basic_range_iterator;
+        using range_iterator = basic_range_iterator<string_iterator>;
+        using const_range_iterator = basic_range_iterator<const_string_iterator>;
 
         range_iterator begin();
         range_iterator end();
+
+        const_range_iterator begin() const;
+        const_range_iterator end() const;
     };
 }
 

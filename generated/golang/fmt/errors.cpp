@@ -83,6 +83,7 @@ namespace golang::fmt
                     break;
                 }
                 default:
+                {
                     if(p->reordered)
                     {
                         slices::Sort(p->wrappedErrs);
@@ -101,6 +102,7 @@ namespace golang::fmt
                     }
                     err = new wrapErrors {s, errs};
                     break;
+                }
             }
         }
         rec::free(gocpp::recv(p));

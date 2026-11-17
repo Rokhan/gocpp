@@ -172,9 +172,11 @@ namespace golang::go::types
                                 switch(conditionId)
                                 {
                                     case 0:
+                                    {
                                         auto s = (uint64_t)(go_sizeof(typ)) * 8;
                                         return (int64_t(- 1) << (s - 1)) <= x && x <= (int64_t(1) << (s - 1)) - 1;
                                         break;
+                                    }
                                     case 1:
                                     {
                                         constexpr int64_t s = 8;
@@ -247,9 +249,11 @@ namespace golang::go::types
                         {
                             case 0:
                             case 1:
+                            {
                                 auto s = (uint64_t)(go_sizeof(typ)) * 8;
                                 return constant::Sign(x) >= 0 && n <= int64_t(s);
                                 break;
+                            }
                             case 2:
                                 return constant::Sign(x) >= 0 && n <= 64;
                                 break;

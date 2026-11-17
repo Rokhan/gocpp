@@ -346,6 +346,7 @@ namespace golang::runtime
                     newcap = int64_t(capmem / goarch::PtrSize);
                     break;
                 case 2:
+                {
                     uintptr_t shift = {};
                     if(goarch::PtrSize == 8)
                     {
@@ -363,6 +364,7 @@ namespace golang::runtime
                     newcap = int64_t(capmem >> shift);
                     capmem = uintptr_t(newcap) << shift;
                     break;
+                }
                 default:
                     lenmem = uintptr_t(oldLen) * et->Size_;
                     newlenmem = uintptr_t(newLen) * et->Size_;

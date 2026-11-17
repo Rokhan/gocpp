@@ -734,6 +734,7 @@ namespace golang::encoding::json::jsontext
                     break;
                 }
                 default:
+                {
                     // Trying to skip a value when the next token is a '}' or ']'
                     // will result in an error being returned here.
                     jsonwire::ValueFlags flags = {};
@@ -743,6 +744,7 @@ namespace golang::encoding::json::jsontext
                     }
                     return nullptr;
                     break;
+                }
             }
         }
     }
@@ -933,6 +935,7 @@ namespace golang::encoding::json::jsontext
                     break;
 
                 case 3:
+                {
                     // TODO: Preserve this in Token?
                     jsonwire::ValueFlags flags = {};
                     if(n = jsonwire::ConsumeSimpleString(d->decodeBuffer.buf.make_slice(pos)); n == 0)
@@ -979,6 +982,7 @@ namespace golang::encoding::json::jsontext
                         x.num = uint64_t(rec::previousOffsetStart(gocpp::recv(d)));
                     }), nullptr};
                     break;
+                }
 
                 case 4:
                     // NOTE: Since JSON numbers are not self-terminating,

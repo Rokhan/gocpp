@@ -1098,6 +1098,7 @@ namespace golang::go::types
 
                     case 15:
                     case 16:
+                    {
                         // print(x, y, ...)
                         // println(x, y, ...)
                         gocpp::slice<golang::go::types::Type> params = {};
@@ -1120,6 +1121,7 @@ namespace golang::go::types
                             rec::recordBuiltinType(gocpp::recv(check), call->Fun, makeSig(nullptr, params));
                         }
                         break;
+                    }
 
                     case 17:
                         // recover() interface{}

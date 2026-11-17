@@ -356,6 +356,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     break;
 
                 case 1:
+                {
                     unsigned char format = {};
                     std::tie(format, err) = rec::ReadByte(gocpp::recv(r));
                     if(err != nullptr)
@@ -383,6 +384,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                         }
                     }
                     break;
+                }
 
                 default:
                     err = mocklib::Errorf("unknown export data header: %q"_s, hdr);
@@ -423,6 +425,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
             switch(conditionId)
             {
                 default:
+                {
                     // "x" -> "$GOPATH/pkg/$GOOS_$GOARCH/x.ext", "x"
                     // Don't require the source files to be present.
                     if(auto [abs, err] = filepath::Abs(srcDir); err == nullptr)
@@ -454,6 +457,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     }
                     id = bp->ImportPath;
                     break;
+                }
 
                 case 0:
                     // "./x" -> "/this/directory/x.ext", "/this/directory/x"

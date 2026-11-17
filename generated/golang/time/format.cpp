@@ -1526,6 +1526,7 @@ namespace golang::time
                     case 29:
                     case 30:
                     case 31:
+                    {
                         gocpp::string sign = {};
                         gocpp::string hour = {};
                         gocpp::string min = {};
@@ -1636,6 +1637,7 @@ namespace golang::time
                             }
                         }
                         break;
+                    }
                     case 32:
                     {
                         // Does it look like a time zone?

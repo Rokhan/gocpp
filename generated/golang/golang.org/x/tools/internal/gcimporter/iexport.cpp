@@ -1656,6 +1656,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     rec::go_bool(gocpp::recv(w), constant::BoolVal(v));
                     break;
                 case 1:
+                {
                     big::Int i = {};
                     if(auto [i64, exact] = constant::Int64Val(v); exact)
                     {
@@ -1672,6 +1673,7 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     }
                     rec::mpint(gocpp::recv(w), & i, typ);
                     break;
+                }
                 case 2:
                 {
                     auto f = constantToFloat(v);

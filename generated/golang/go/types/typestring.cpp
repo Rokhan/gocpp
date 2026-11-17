@@ -640,6 +640,7 @@ namespace golang::go::types
                     rec::string(gocpp::recv(w), rec::String(gocpp::recv(s->terms)));
                     break;
                 default:
+                {
                     gocpp::slice<gocpp::string> termHashes = {};
                     for(auto [gocpp_ignored, term] : s->terms)
                     {
@@ -659,6 +660,7 @@ namespace golang::go::types
                     }
                     rec::string(gocpp::recv(w), mocklib::StringsJoin(termHashes, "|"_s));
                     break;
+                }
             }
         }
     }

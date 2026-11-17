@@ -47,6 +47,63 @@ namespace golang::main
         }
     }
 
+    void testDeclarations(int64_t kind)
+    {
+        //Go switch emulation
+        {
+            auto condition = kind;
+            int conditionId = -1;
+            if(condition == 0) { conditionId = 0; }
+            else if(condition == 1) { conditionId = 1; }
+            else if(condition == 2) { conditionId = 2; }
+            else if(condition == 3) { conditionId = 3; }
+            else if(condition == 4) { conditionId = 4; }
+            switch(conditionId)
+            {
+                case 0:
+                {
+                    int64_t hr = {};
+                    int64_t mm = {};
+                    int64_t ss = {};
+                    std::tie(hr, mm, ss) = std::tuple{1, 2, 3};
+                    mocklib::Println("case 0:"_s, hr, mm, ss);
+                    break;
+                }
+                case 1:
+                {
+                    auto total = 10;
+                    total += kind;
+                    mocklib::Println("case 1:"_s, total);
+                    break;
+                }
+                case 2:
+                {
+                    constexpr int64_t factor = 3;
+                    mocklib::Println("case 2:"_s, kind * factor);
+                    break;
+                }
+                case 3:
+                {
+                    gocpp::string s = {};
+                    mocklib::Println("case 3:"_s, s == ""_s);
+                }
+                case 4:
+                {
+                    // same name as in case 0, each clause has its own scope
+                    int64_t hr = 40;
+                    mocklib::Println("case 4:"_s, hr);
+                    break;
+                }
+                default:
+                {
+                    int64_t d = {};
+                    mocklib::Println("default:"_s, d);
+                    break;
+                }
+            }
+        }
+    }
+
     void main()
     {
         mocklib::Print("Go runs on "_s);
@@ -131,6 +188,11 @@ namespace golang::main
         testFallThrough(1);
         testFallThrough(2);
         testFallThrough(3);
+
+        for(int64_t i = 0; i < 6; i++)
+        {
+            testDeclarations(i);
+        }
     }
 
 }

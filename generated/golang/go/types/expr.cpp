@@ -1706,6 +1706,7 @@ namespace golang::go::types
                                 });
                                 break;
                             default:
+                            {
                                 golang::go::types::Type base = {};
                                 if(! underIs(rec::typ(gocpp::recv(x)), [=](golang::go::types::Type u) mutable -> bool
                                 {
@@ -1734,6 +1735,7 @@ namespace golang::go::types
                                 x->mode_ = variable;
                                 x->typ_ = base;
                                 break;
+                            }
                         }
                     }
                     break;

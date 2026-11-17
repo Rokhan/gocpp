@@ -1906,6 +1906,7 @@ namespace golang::go::build
                     std::tie(comment, std::ignore, std::ignore) = bytes::Cut(data.make_slice(2), newline);
                     break;
                 case 1:
+                {
                     bool ok = {};
                     std::tie(comment, std::ignore, ok) = bytes::Cut(data.make_slice(2), starSlash);
                     if(! ok)
@@ -1918,6 +1919,7 @@ namespace golang::go::build
                         return {""_s, 0};
                     }
                     break;
+                }
             }
         }
         comment = bytes::TrimSpace(comment);

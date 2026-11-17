@@ -1391,6 +1391,7 @@ namespace golang::regexp::syntax
                                             return {nullptr, gocpp::error(new golang::regexp::syntax::Error {ErrInvalidEscape, t.make_slice(0, 2)})};
                                             break;
                                         case 4:
+                                        {
                                             // \Q ... \E: the ... is always literals
                                             gocpp::string lit = {};
                                             std::tie(lit, t, std::ignore) = strings::Cut(t.make_slice(2), "\\E"_s);
@@ -1406,6 +1407,7 @@ namespace golang::regexp::syntax
                                             }
                                             goto BigSwitch_break_11;
                                             break;
+                                        }
                                         case 5:
                                             rec::op(gocpp::recv(p), OpEndText);
                                             t = t.make_slice(2);

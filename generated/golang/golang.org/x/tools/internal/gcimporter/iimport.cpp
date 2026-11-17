@@ -1246,10 +1246,12 @@ namespace golang::golang_org::x::tools::internal::gcimporter
                     break;
 
                 case 2:
+                {
                     big::Int x = {};
                     rec::mpint(gocpp::recv(r), & x, b);
                     val = constant::Make(& x);
                     break;
+                }
 
                 case 3:
                     val = rec::mpfloat(gocpp::recv(r), b);

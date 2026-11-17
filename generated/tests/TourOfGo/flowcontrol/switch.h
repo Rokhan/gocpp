@@ -13,6 +13,7 @@
 namespace golang::main
 {
     void testFallThrough(int64_t n);
+    void testDeclarations(int64_t kind);
     void main();
 
     namespace rec

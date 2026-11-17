@@ -1777,6 +1777,7 @@ namespace golang::internal::poll
                             newOffset = fd->offset + offset;
                             break;
                         case 2:
+                        {
                             int64_t size = {};
                             if(auto err = windows::GetFileSizeEx(fd->Sysfd, & size); err != nullptr)
                             {
@@ -1784,6 +1785,7 @@ namespace golang::internal::poll
                             }
                             newOffset = size + offset;
                             break;
+                        }
                         default:
                             return {0, gocpp::error(windows::ERROR_INVALID_PARAMETER)};
                             break;

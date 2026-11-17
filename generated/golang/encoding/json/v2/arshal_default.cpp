@@ -2030,6 +2030,7 @@ namespace golang::encoding::json::v2
                         return nullptr;
                         break;
                     case 1:
+                    {
                         rec::Do(gocpp::recv(once), init);
                         if(errInit != nullptr && ! rec::Get(gocpp::recv(uo->Flags), jsonflags::ReportErrorsWithLegacySemantics))
                         {
@@ -2172,6 +2173,7 @@ namespace golang::encoding::json::v2
                         }
                         return errUnmarshal;
                         break;
+                    }
                 }
             }
             return newUnmarshalErrorAfterWithSkipping(dec, t, nullptr);

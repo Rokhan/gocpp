@@ -232,6 +232,7 @@ namespace golang::regexp::syntax
                     return rec::nop(gocpp::recv(c));
                     break;
                 case 2:
+                {
                     if(len(re->Rune) == 0)
                     {
                         return rec::nop(gocpp::recv(c));
@@ -251,6 +252,7 @@ namespace golang::regexp::syntax
                     }
                     return f;
                     break;
+                }
                 case 3:
                     return rec::rune(gocpp::recv(c), re->Rune, re->Flags);
                     break;
@@ -296,6 +298,7 @@ namespace golang::regexp::syntax
                     return rec::quest(gocpp::recv(c), rec::compile(gocpp::recv(c), re->Sub[0]), re->Flags & NonGreedy != 0);
                     break;
                 case 16:
+                {
                     if(len(re->Sub) == 0)
                     {
                         return rec::nop(gocpp::recv(c));
@@ -314,7 +317,9 @@ namespace golang::regexp::syntax
                     }
                     return f;
                     break;
+                }
                 case 17:
+                {
                     frag f = {};
                     for(auto [gocpp_ignored, sub] : re->Sub)
                     {
@@ -322,6 +327,7 @@ namespace golang::regexp::syntax
                     }
                     return f;
                     break;
+                }
             }
         }
         gocpp::panic("regexp: unhandled case in compile"_s);

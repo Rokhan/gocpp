@@ -754,6 +754,7 @@ namespace golang::internal::buildcfg
                     return gocpp::slice<gocpp::string> {GOARCH + "."_s + GO386};
                     break;
                 case 1:
+                {
                     gocpp::slice<gocpp::string> list = {};
                     for(int64_t i = 1; i <= GOAMD64; i++)
                     {
@@ -761,7 +762,9 @@ namespace golang::internal::buildcfg
                     }
                     return list;
                     break;
+                }
                 case 2:
+                {
                     gocpp::slice<gocpp::string> list = {};
                     for(int64_t i = 5; i <= GOARM.Version; i++)
                     {
@@ -769,6 +772,7 @@ namespace golang::internal::buildcfg
                     }
                     return list;
                     break;
+                }
                 case 3:
                 {
                     gocpp::slice<gocpp::string> list = {};
@@ -799,6 +803,7 @@ namespace golang::internal::buildcfg
                     break;
                 case 8:
                 case 9:
+                {
                     gocpp::slice<gocpp::string> list = {};
                     for(int64_t i = 8; i <= GOPPC64; i++)
                     {
@@ -806,6 +811,7 @@ namespace golang::internal::buildcfg
                     }
                     return list;
                     break;
+                }
                 case 10:
                 {
                     auto list = gocpp::slice<gocpp::string> {GOARCH + "."_s + "rva20u64"_s};
@@ -821,6 +827,7 @@ namespace golang::internal::buildcfg
                     break;
                 }
                 case 11:
+                {
                     gocpp::slice<gocpp::string> list = {};
                     // SatConv is always enabled
                     list = append(list, GOARCH + ".satconv"_s);
@@ -828,6 +835,7 @@ namespace golang::internal::buildcfg
                     list = append(list, GOARCH + ".signext"_s);
                     return list;
                     break;
+                }
             }
         }
         return nullptr;

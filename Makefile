@@ -242,14 +242,14 @@ FORCE:
 # Linking test for go std lib files
 # * '-nostartfiles': library files have no main, we only want to see missing/duplicate symbols.
 # * No prerequisite on the .o file on purpose, compilation failure gives ❌ status
-$(GENERATED_GOLANG_LIB_LINK_MD_FILES): $(LOGDIR)/%.link.md : $(OUTDIR)/%.cpp $$(wildcard $(LOGDIR)/$$*.o) $(STDLIB_ARCHIVE)
+$(GENERATED_GOLANG_LIB_LINK_MD_FILES): $(LOGDIR)/%.link.md : $(OUTDIR)/%.cpp $$(wildcard $(LOGDIR)/$$*.o) $(GOLANG_LIB_ARCHIVE)
 	mkdir -p $$(dirname $@) || true
 	if [ ! -f $(LOGDIR)/$*.o ]; then \
 		echo -n " ❌ |" > $@; \
 	else \
 		roots=$$(nm --defined-only $(LOGDIR)/$*.o | awk '$$2 ~ /^[TDBRVWSG]$$/ { print "-Wl,-u," $$3 }'); \
 		if timeout $(LINK_TIMEOUT) g++ -nostartfiles -pthread $(CXX_SANITIZE) \
-				-Wl,--gc-sections $$roots $(LOGDIR)/$*.o $(STDLIB_ARCHIVE) \
+				-Wl,--gc-sections $$roots $(LOGDIR)/$*.o $(GOLANG_LIB_ARCHIVE) \
 				-o $(LOGDIR)/$*.link.out > $(LOGDIR)/$*.link.log 2>&1; \
 		then echo -n " ✔️ |" > $@; \
 		else echo -n " ❌ |" > $@; fi; \

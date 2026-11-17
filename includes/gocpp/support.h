@@ -320,12 +320,12 @@ namespace gocpp
         auto operator * () const { return std::make_tuple(index, *iter); }
     };
 
-    string::range_iterator string::begin()
+    inline string::range_iterator string::begin()
     {
         return { 0, std::string::begin() };
     }
 
-    string::range_iterator string::end()
+    inline string::range_iterator string::end()
     {
         return { std::string::size(), std::string::end() };
     }
@@ -1109,7 +1109,7 @@ namespace gocpp
     template <typename T>
     struct ErrInvalidValueCast
     {
-        static std::string error_message()
+        static inline std::string error_message()
         {
             return std::string("invalid value cast to '") + typeid(T).name() + "'"; 
             // TODO, find a way to get value in error message for debugging
@@ -1146,7 +1146,7 @@ namespace gocpp
     }
     
     template<>
-    result_or_error<std::string, ErrInvalidValueCast<std::string>> getValue(gocpp::go_any value)
+    inline result_or_error<std::string, ErrInvalidValueCast<std::string>> getValue(gocpp::go_any value)
     {
         if(value.type() == typeid(std::string))
         {
@@ -1162,7 +1162,7 @@ namespace gocpp
     }
 
     template<>
-    result_or_error<int64_t, ErrInvalidValueCast<int64_t>> getValue(gocpp::go_any value)
+    inline result_or_error<int64_t, ErrInvalidValueCast<int64_t>> getValue(gocpp::go_any value)
     {
         if(value.type() == typeid(int64_t))
         {
@@ -1229,7 +1229,7 @@ namespace mocklib
     // mock "time" types and functions
 
     // NB: real go api return channel<Time>
-    gocpp::channel<int64_t> After(int64_t duration_ns)
+    inline gocpp::channel<int64_t> After(int64_t duration_ns)
     {
         gocpp::channel<int64_t> c;
         gocpp::go([=]() mutable {
@@ -1240,7 +1240,7 @@ namespace mocklib
     }
 
     // NB: real go api return channel<Time>
-    gocpp::channel<int64_t> Tick(int64_t duration_ns)
+    inline gocpp::channel<int64_t> Tick(int64_t duration_ns)
     {
         gocpp::channel<int64_t> c;
         gocpp::go([=]() mutable {
@@ -1263,9 +1263,9 @@ namespace mocklib
 
     struct Date
     {
-        Date() = default;
-        Date(const Date&) = default;
-        Date& operator=(const Date&) = default;
+        inline Date() = default;
+        inline Date(const Date&) = default;
+        inline Date& operator=(const Date&) = default;
 
         inline Date(const golang::time::Time&) {};
 
@@ -1277,7 +1277,7 @@ namespace mocklib
         inline static const int Saturday = 6;
     };
     
-    std::ostream& operator<<(std::ostream& os, const Date& date)
+    inline std::ostream& operator<<(std::ostream& os, const Date& date)
     {
         os << "[mocklib::DATE]";
         return os;
@@ -1322,7 +1322,7 @@ namespace mocklib
     inline const double Sqrt2 = std::sqrt(2.0);
     inline const double Pi = std::numbers::pi;
 
-    double Pow(double value, double exp)
+    inline double Pow(double value, double exp)
     {
         return std::pow(value, exp);
     }
@@ -1335,12 +1335,12 @@ namespace mocklib
 
     namespace rec
     {
-        void Lock(const Mutex& mutex)
+        inline void Lock(const Mutex& mutex)
         {
             mutex->lock();
         }
 
-        void Unlock(const Mutex& mutex)
+        inline void Unlock(const Mutex& mutex)
         {
             mutex->unlock();
         }

@@ -245,7 +245,7 @@ FORCE:
 # * No prerequisite on the .o file on purpose, compilation failure gives ❌ status
 $(GENERATED_GOLANG_LIB_LINK_MD_FILES): $(LOGDIR)/%.link.md : $(OUTDIR)/%.cpp $$(wildcard $(LOGDIR)/$$*.o) $(GOLANG_LIB_ARCHIVE)
 	mkdir -p $$(dirname $@) || true
-	if [ ! -f $(LOGDIR)/$*.o ]; then \
+	@if [ ! -f $(LOGDIR)/$*.o ]; then \
 		echo -n " ❌ |" > $@; \
 	else \
 		roots=$$(nm --defined-only $(LOGDIR)/$*.o | awk '$$2 ~ /^[TDBRVWSG]$$/ { print "-Wl,-u," $$3 }'); \

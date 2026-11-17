@@ -604,7 +604,7 @@
 | $(ImportDir)/reflect/value.go | ✔️ ([cpp](generated/golang/reflect/value.cpp), [h](generated/golang/reflect/value.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/backtrack.go | ✔️ ([cpp](generated/golang/regexp/backtrack.cpp), [h](generated/golang/regexp/backtrack.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/exec.go | ✔️ ([cpp](generated/golang/regexp/exec.cpp), [h](generated/golang/regexp/exec.h))| ❌ | ❌ |
-| $(ImportDir)/regexp/onepass.go | ✔️ ([cpp](generated/golang/regexp/onepass.cpp), [h](generated/golang/regexp/onepass.h))| ❌ | ❌ |
+| $(ImportDir)/regexp/onepass.go | ✔️ ([cpp](generated/golang/regexp/onepass.cpp), [h](generated/golang/regexp/onepass.h))| ✔️ | ❌ |
 | $(ImportDir)/regexp/regexp.go | ✔️ ([cpp](generated/golang/regexp/regexp.cpp), [h](generated/golang/regexp/regexp.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/syntax/compile.go | ✔️ ([cpp](generated/golang/regexp/syntax/compile.cpp), [h](generated/golang/regexp/syntax/compile.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/syntax/parse.go | ✔️ ([cpp](generated/golang/regexp/syntax/parse.cpp), [h](generated/golang/regexp/syntax/parse.h))| ❌ | ❌ |

@@ -78,6 +78,25 @@ func main() {
 	fmt.Println(debug)
 	fmt.Println(v1, v2, v3, v4)
 	fmt.Println(u1, u2, u3)
+
+	declare()
+}
+
+var (
+	gA int = -1
+	gB int
+	gC string
+	gD *int
+)
+
+func declare() {
+	var (
+		a int = -1
+		b int
+		c string
+		d *int
+	)
+	fmt.Println(gA, gB, gC == "", gD == nil, a, b, c == "", d == nil)
 }
 
 func withNamedResults() (i int, s string) {

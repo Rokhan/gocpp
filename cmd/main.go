@@ -2677,7 +2677,7 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 	var result []place
 
 	cv.ResetIota()
-	var values []ast.Expr
+	var sharedValues []ast.Expr
 	var typeExpr ast.Expr
 	specs := gd.Specs
 
@@ -2713,18 +2713,19 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 				comments = append(comments, cv.ConvertDocToStrings(gd.Doc)...)
 			}
 			comments = append(comments, cv.ConvertDocToStrings(s.Doc)...)
+			var values []ast.Expr
 			if len(s.Values) != 0 {
 				values = s.Values
-
-				// Keep type for iota sequence
-				if s.Type != nil {
-					typeExpr = s.Type
+				if tok == token.CONST {
+					sharedValues = s.Values
+					// Keep type for iota sequence
+					if s.Type != nil {
+						typeExpr = s.Type
+					}
 				}
-
-			} else {
-				// Fix values here to avoid to have to add 'values' parameter to 'cv.getValueDepInfo(s, i)'
-				s.Values = values
-
+			} else if tok == token.CONST {
+				s.Values = sharedValues
+				values = sharedValues
 				// no value, no type => we are in a iota sequence,
 				if s.Type == nil {
 					s.Type = typeExpr

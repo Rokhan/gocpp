@@ -542,7 +542,7 @@ namespace golang::regexp
 
         auto instQueue = newQueue(len(p->Inst));
         auto visitQueue = newQueue(len(p->Inst));
-        std::function<bool (uint32_t _1, gocpp::slice<bool> _2)> check = newQueue(len(p->Inst));
+        std::function<bool (uint32_t _1, gocpp::slice<bool> _2)> check = {};
         auto onePassRunes = gocpp::make(gocpp::Tag<gocpp::slice<gocpp::slice<gocpp::rune>>>(), len(p->Inst));
 
         // check that paths from Alt instructions are unambiguous, and rebuild the new

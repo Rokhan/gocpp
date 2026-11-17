@@ -4563,10 +4563,10 @@ namespace golang::reflect
         try
         {
             auto hash = fnv1(0, gocpp::slice<unsigned char>("struct {"_s));
-            uintptr_t size = fnv1(0, gocpp::slice<unsigned char>("struct {"_s));
-            uint8_t typalign = fnv1(0, gocpp::slice<unsigned char>("struct {"_s));
+            uintptr_t size = {};
+            uint8_t typalign = {};
             auto comparable = true;
-            gocpp::slice<abi::Method> methods = true;
+            gocpp::slice<abi::Method> methods = {};
             auto fs = gocpp::make(gocpp::Tag<gocpp::slice<structField>>(), len(fields));
             auto repr = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 0, 64);
             auto fset = gocpp::map<gocpp::string, gocpp::empty_struct> {gocpp::non_nil};

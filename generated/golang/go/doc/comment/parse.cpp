@@ -1252,12 +1252,8 @@ namespace golang::go::doc::comment
         List* list = gocpp::InitPtr<List>([=](auto& x) {
             x.ForceBlankBefore = forceBlankBefore;
         });
-        ListItem* item = gocpp::InitPtr<List>([=](auto& x) {
-            x.ForceBlankBefore = forceBlankBefore;
-        });
-        gocpp::slice<gocpp::string> text = gocpp::InitPtr<List>([=](auto& x) {
-            x.ForceBlankBefore = forceBlankBefore;
-        });
+        ListItem* item = {};
+        gocpp::slice<gocpp::string> text = {};
         auto flush = [=]() mutable -> void
         {
             if(item != nullptr)

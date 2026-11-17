@@ -8296,9 +8296,7 @@ namespace golang::runtime
     });
     // Synchronization and state between updateMaxProcsGoroutine and
     // sysmon.
-    updateMaxProcsGState updateMaxProcsG = gocpp::InitPtr<godebugInc>([](auto& x) {
-        x.name = "updatemaxprocs"_s;
-    });
+    updateMaxProcsGState updateMaxProcsG;
     // Synchronization between GOMAXPROCS and sysmon.
     //
     // Setting GOMAXPROCS via a call to GOMAXPROCS disables automatic
@@ -8346,9 +8344,7 @@ namespace golang::runtime
     // N.B. computeMaxProcsLock could simply be sched.lock, but we want to
     // avoid holding that lock during the potentially slow
     // defaultGOMAXPROCS.
-    mutex computeMaxProcsLock = gocpp::InitPtr<godebugInc>([](auto& x) {
-        x.name = "updatemaxprocs"_s;
-    });
+    mutex computeMaxProcsLock;
     // Start GOMAXPROCS update helper goroutine.
     //
     // This is based on forcegchelper.

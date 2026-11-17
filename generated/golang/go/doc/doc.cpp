@@ -496,7 +496,7 @@ namespace golang::go::doc
         // Collect .go and _test.go files.
         gocpp::string pkgName = {};
         auto goFiles = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, ast::File*>>());
-        gocpp::slice<ast::File*> testGoFiles = gocpp::make(gocpp::Tag<gocpp::map<gocpp::string, ast::File*>>());
+        gocpp::slice<ast::File*> testGoFiles = {};
         for(auto [i, file] : files)
         {
             auto f = rec::File(gocpp::recv(fset), rec::Pos(gocpp::recv(file)));

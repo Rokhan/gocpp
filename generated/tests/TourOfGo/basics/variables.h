@@ -46,6 +46,11 @@ namespace golang::main
     extern std::function<int64_t (int64_t)> funcVar2;
     extern std::function<std::tuple<int64_t, gocpp::string> (int64_t)> funcVar3;
     void main();
+    extern int64_t gA;
+    extern int64_t gB;
+    extern gocpp::string gC;
+    extern int64_t* gD;
+    void declare();
     std::tuple<int64_t, gocpp::string> withNamedResults();
     void inlineAssign(int64_t i);
     void dummy_vars();

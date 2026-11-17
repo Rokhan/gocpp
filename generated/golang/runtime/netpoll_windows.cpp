@@ -167,7 +167,7 @@ namespace golang::runtime
     }
 
     uintptr_t iocphandle = windows::INVALID_HANDLE_VALUE;
-    atomic::Uint32 netpollWakeSig = windows::INVALID_HANDLE_VALUE;
+    atomic::Uint32 netpollWakeSig;
     void netpollinit()
     {
         iocphandle = stdcall(_CreateIoCompletionPort, windows::INVALID_HANDLE_VALUE, 0, 0, windows::DWORD_MAX);

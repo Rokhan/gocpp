@@ -676,12 +676,12 @@ namespace golang::time
         auto days = rec::days(gocpp::recv(abs));
 
         int64_t year = - 1;
-        golang::time::Month month = - 1;
-        int64_t day = - 1;
+        golang::time::Month month = {};
+        int64_t day = {};
         int64_t yday = - 1;
         int64_t hour = - 1;
-        int64_t min = - 1;
-        int64_t sec = - 1;
+        int64_t min = {};
+        int64_t sec = {};
 
         // Each iteration generates one std value.
         for(; layout != ""_s; )
@@ -1252,13 +1252,13 @@ namespace golang::time
         int64_t month = - 1;
         int64_t day = - 1;
         int64_t yday = - 1;
-        int64_t hour = - 1;
-        int64_t min = - 1;
-        int64_t sec = - 1;
-        int64_t nsec = - 1;
-        golang::time::Location* z = - 1;
+        int64_t hour = {};
+        int64_t min = {};
+        int64_t sec = {};
+        int64_t nsec = {};
+        golang::time::Location* z = {};
         int64_t zoneOffset = - 1;
-        gocpp::string zoneName = - 1;
+        gocpp::string zoneName = {};
 
         // Each iteration processes one std value.
         for(; ; )

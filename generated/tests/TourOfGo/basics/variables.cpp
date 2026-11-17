@@ -123,6 +123,21 @@ namespace golang::main
         mocklib::Println(debug);
         mocklib::Println(v1, v2, v3, v4);
         mocklib::Println(u1, u2, u3);
+
+        declare();
+    }
+
+    int64_t gA = - 1;
+    int64_t gB;
+    gocpp::string gC;
+    int64_t* gD;
+    void declare()
+    {
+        int64_t a = - 1;
+        int64_t b = {};
+        gocpp::string c = {};
+        int64_t* d = {};
+        mocklib::Println(gA, gB, gC == ""_s, gD == nullptr, a, b, c == ""_s, d == nullptr);
     }
 
     std::tuple<int64_t, gocpp::string> withNamedResults()

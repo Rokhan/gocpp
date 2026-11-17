@@ -55,10 +55,10 @@ namespace golang::runtime
     // These fields are protected by metricsSema which should be
     // locked/unlocked with metricsLock() / metricsUnlock().
     uint32_t metricsSema = 1;
-    bool metricsInit = 1;
-    gocpp::map<gocpp::string, metricData> metrics = 1;
-    gocpp::slice<double> sizeClassBuckets = 1;
-    gocpp::slice<double> timeHistBuckets = 1;
+    bool metricsInit;
+    gocpp::map<gocpp::string, metricData> metrics;
+    gocpp::slice<double> sizeClassBuckets;
+    gocpp::slice<double> timeHistBuckets;
     
     template<typename T> requires gocpp::GoStruct<T>
     metricData::operator T()

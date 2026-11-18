@@ -75,7 +75,7 @@ type cppConverter struct {
 	// Parsing and codegen parameters
 	constWidth      constWidth
 	currentSwitchId *list.List
-	idCount         int
+	idCounts        map[string]int
 	iota_value      int
 	labelSwitchId   map[string]int
 	recNames        set[string]
@@ -108,8 +108,14 @@ func (cv *cppConverter) UpdateIota() {
 }
 
 func (cv *cppConverter) GenerateId() (id string) {
-	id = fmt.Sprintf("gocpp_id_%d", cv.idCount)
-	cv.idCount++
+	prefix := "gocpp_id_"
+	return cv.GenerateCustomId(prefix)
+}
+
+// TODO: add a way to avoid automatically collisions with user defined names.
+func (cv *cppConverter) GenerateCustomId(prefix string) string {
+	id := fmt.Sprintf("%s%d", prefix, cv.idCounts[prefix])
+	cv.idCounts[prefix]++
 	return id
 }
 
@@ -221,6 +227,7 @@ func (cv *cppConverter) ParseFile(inputName string) *ast.File {
 
 func (cv *cppConverter) Init() {
 	cv.currentSwitchId = new(list.List)
+	cv.idCounts = map[string]int{}
 	cv.labelSwitchId = map[string]int{}
 	cv.scopes = new(list.List)
 	cv.typedefs = make(set[types.Type])
@@ -2797,6 +2804,21 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 				} else {
 					for i, nameId := range s.Names {
 						name := GetCppName(nameId.Name)
+						if name == "_" {
+							exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader})
+							exprType.comments = append(exprType.comments, comments...)
+							if len(values) != 0 {
+								expr := cv.convertInitExpr(values[i], tok, exprType)
+								cstPrefix := ""
+								if tok == token.CONST {
+									cstPrefix = cv.localConstQualifier(cv.typeInfo.Defs[nameId], values[i]) + " "
+								}
+								result = append(result, inlineStrf(s, "%s%s %s = %s%s", cstPrefix, exprType, cv.GenerateCustomId("_ignored_"), expr, end)...)
+							}
+							// no value, no name => we complely ignore the declaration.
+							continue
+						}
+
 						exprType := cv.convertTypeExpr(s.Type, ctContext{usagePosition: UsageInHeader, targetVarName: name})
 						exprType.comments = append(exprType.comments, comments...)
 

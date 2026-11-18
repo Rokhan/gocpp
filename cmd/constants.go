@@ -101,11 +101,9 @@ var cppKeyWordsMapping = map[string]string{
 	// as they are also go keyword and won't appears anywhere.
 	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
 	"auto":      "go_auto",      // keyword
-	"bool":      "go_bool",      // keyword
 	"break":     "go_break",     // keyword
 	"case":      "go_case",      // keyword
 	"catch":     "go_catch",     // keyword
-	"char":      "go_char",      // keyword
 	"class":     "go_class",     // keyword
 	"const":     "go_const",     // keyword
 	"concept":   "go_concept",   // C++20 keyword
@@ -124,7 +122,6 @@ var cppKeyWordsMapping = map[string]string{
 	"protected": "go_protected", // keyword
 	"public":    "go_public",    // keyword
 	"register":  "go_register",  // keyword
-	"signed":    "go_signed",    // keyword
 	"sizeof":    "go_sizeof",    // keyword
 	"static":    "go_static",    // keyword
 	"template":  "go_template",  // keyword
@@ -133,10 +130,59 @@ var cppKeyWordsMapping = map[string]string{
 	"try":       "go_try",       // keyword
 	"typeid":    "go_typeid",    // keyword
 	"union":     "go_union",     // keyword
-	"unsigned":  "go_unsigned",  // keyword
 	"virtual":   "go_virtual",   // keyword
-	"void":      "go_void",      // keyword
 	"while":     "go_while",     // keyword
+
+	// types that are keywords in C++ but not in Go
+	"bool":     "go_bool",     // cpp_base_type
+	"char":     "go_char",     // cpp_base_type
+	"char8_t":  "go_char8_t",  // cpp_base_type
+	"char16_t": "go_char16_t", // cpp_base_type
+	"char32_t": "go_char32_t", // cpp_base_type
+	"long":     "go_long",     // cpp_base_type
+	"short":    "go_short",    // cpp_base_type
+	"signed":   "go_signed",   // cpp_base_type
+	"unsigned": "go_unsigned", // cpp_base_type
+	"void":     "go_void",     // cpp_base_type
+	"wchar_t":  "go_wchar_t",  // cpp_base_type
+
+	// More keywords
+	"asm":              "go_asm",
+	"alignas":          "go_alignas",
+	"co_await":         "go_co_await",
+	"co_return":        "go_co_return",
+	"co_yield":         "go_co_yield",
+	"const_cast":       "go_const_cast",
+	"decltype":         "go_decltype",
+	"dynamic_cast":     "go_dynamic_cast",
+	"explicit":         "go_explicit",
+	"export":           "go_export",
+	"namespace":        "go_namespace",
+	"noexcept":         "go_noexcept",
+	"nullptr":          "go_nullptr",
+	"operator":         "go_operator",
+	"reinterpret_cast": "go_reinterpret_cast",
+	"requires":         "go_requires",
+	"static_assert":    "go_static_assert",
+	"static_cast":      "go_static_cast",
+	"thread_local":     "go_thread_local",
+	"typedef":          "go_typedef",
+	"typename":         "go_typename",
+	"using":            "go_using",
+	"volatile":         "go_volatile",
+
+	// C++ alternative operator tokens (and, or, not, xor are likely Go names)
+	"and":    "go_and",
+	"and_eq": "go_and_eq",
+	"bitand": "go_bitand",
+	"bitor":  "go_bitor",
+	"compl":  "go_compl",
+	"not":    "go_not",
+	"not_eq": "go_not_eq",
+	"or":     "go_or",
+	"or_eq":  "go_or_eq",
+	"xor":    "go_xor",
+	"xor_eq": "go_xor_eq",
 
 	"alignof":  "go_alignof",  // Macro of <cstddef>
 	"offsetof": "go_offsetof", // Macro of <cstddef>
@@ -158,6 +204,7 @@ var cppKeyWordsMapping = map[string]string{
 	"_P": "go_P", // Misc
 	"_S": "go_S", // Misc
 
+	// <csignal>
 	"SIGHUP":  "go_SIGHUP",  // Unix Macro
 	"SIGINT":  "go_SIGINT",  // Unix Macro
 	"SIGQUIT": "go_SIGQUIT", // Unix Macro
@@ -171,6 +218,65 @@ var cppKeyWordsMapping = map[string]string{
 	"SIGPIPE": "go_SIGPIPE", // Unix Macro
 	"SIGALRM": "go_SIGALRM", // Unix Macro
 	"SIGTERM": "go_SIGTERM", // Unix Macro
+
+	// More signals
+	"SIG_DFL":   "go_SIG_DFL",
+	"SIG_IGN":   "go_SIG_IGN",
+	"SIG_ERR":   "go_SIG_ERR",
+	"SIGUSR1":   "go_SIGUSR1",
+	"SIGUSR2":   "go_SIGUSR2",
+	"SIGCHLD":   "go_SIGCHLD",
+	"SIGCONT":   "go_SIGCONT",
+	"SIGSTOP":   "go_SIGSTOP",
+	"SIGTSTP":   "go_SIGTSTP",
+	"SIGTTIN":   "go_SIGTTIN",
+	"SIGTTOU":   "go_SIGTTOU",
+	"SIGURG":    "go_SIGURG",
+	"SIGXCPU":   "go_SIGXCPU",
+	"SIGXFSZ":   "go_SIGXFSZ",
+	"SIGVTALRM": "go_SIGVTALRM",
+	"SIGPROF":   "go_SIGPROF",
+	"SIGWINCH":  "go_SIGWINCH",
+	"SIGIO":     "go_SIGIO",
+	"SIGPWR":    "go_SIGPWR",
+	"SIGSYS":    "go_SIGSYS",
+	"SIGSTKFLT": "go_SIGSTKFLT",
+	"SIGPOLL":   "go_SIGPOLL",
+	"SIGRTMIN":  "go_SIGRTMIN",
+	"SIGRTMAX":  "go_SIGRTMAX",
+
+	// <cstdio>, <cstdlib>
+	"NULL":         "go_NULL",
+	"BUFSIZ":       "go_BUFSIZ",
+	"EXIT_SUCCESS": "go_EXIT_SUCCESS",
+	"EXIT_FAILURE": "go_EXIT_FAILURE",
+	"RAND_MAX":     "go_RAND_MAX",
+	"FILENAME_MAX": "go_FILENAME_MAX",
+	"FOPEN_MAX":    "go_FOPEN_MAX",
+	"TMP_MAX":      "go_TMP_MAX",
+	"L_tmpnam":     "go_L_tmpnam",
+
+	// <climits>, <cfloat>
+	"CHAR_BIT":    "go_CHAR_BIT",
+	"INT_MAX":     "go_INT_MAX",
+	"INT_MIN":     "go_INT_MIN",
+	"UINT_MAX":    "go_UINT_MAX",
+	"LONG_MAX":    "go_LONG_MAX",
+	"LONG_MIN":    "go_LONG_MIN",
+	"FLT_MAX":     "go_FLT_MAX",
+	"FLT_MIN":     "go_FLT_MIN",
+	"FLT_EPSILON": "go_FLT_EPSILON",
+	"DBL_MAX":     "go_DBL_MAX",
+	"DBL_MIN":     "go_DBL_MIN",
+	"DBL_EPSILON": "go_DBL_EPSILON",
+
+	// <cmath>, <cerrno>
+	"HUGE_VAL": "go_HUGE_VAL",
+	"INFINITY": "go_INFINITY",
+	"NAN":      "go_NAN",
+	"M_PI":     "go_M_PI",
+	"M_E":      "go_M_E",
+	"errno":    "go_errno",
 
 	// Windows & Unix header Macros
 	"E2BIG":           "go_E2BIG",
@@ -307,6 +413,30 @@ var cppKeyWordsMapping = map[string]string{
 
 	"ENOENT":  "go_ENOENT",
 	"ENOTDIR": "go_ENOTDIR",
+
+	// <windows.h> (even with WIN32_LEAN_AND_MEAN)
+	"TRUE":                 "go_TRUE",
+	"FALSE":                "go_FALSE",
+	"IN":                   "go_IN",
+	"OUT":                  "go_OUT",
+	"OPTIONAL":             "go_OPTIONAL",
+	"CONST":                "go_CONST",
+	"VOID":                 "go_VOID",
+	"FAR":                  "go_FAR",
+	"NEAR":                 "go_NEAR",
+	"far":                  "go_far",
+	"near":                 "go_near",
+	"PASCAL":               "go_PASCAL",
+	"CALLBACK":             "go_CALLBACK",
+	"WINAPI":               "go_WINAPI",
+	"APIENTRY":             "go_APIENTRY",
+	"MAX_PATH":             "go_MAX_PATH",
+	"ERROR":                "go_ERROR",
+	"DELETE":               "go_DELETE",
+	"NO_ERROR":             "go_NO_ERROR",
+	"INFINITE":             "go_INFINITE",
+	"INVALID_HANDLE_VALUE": "go_INVALID_HANDLE_VALUE",
+	"STILL_ACTIVE":         "go_STILL_ACTIVE",
 }
 
 var stdFuncMapping = map[string]string{

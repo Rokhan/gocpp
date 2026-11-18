@@ -203,9 +203,9 @@
 | $(ImportDir)/go/ast/walk.go | ✔️ ([cpp](generated/golang/go/ast/walk.cpp), [h](generated/golang/go/ast/walk.h))| ✔️ | ❌ |
 | $(ImportDir)/go/build/build.go | ✔️ ([cpp](generated/golang/go/build/build.cpp), [h](generated/golang/go/build/build.h))| ❌ | ❌ |
 | $(ImportDir)/go/build/constraint/expr.go | ✔️ ([cpp](generated/golang/go/build/constraint/expr.cpp), [h](generated/golang/go/build/constraint/expr.h))| ❌ | ❌ |
-| $(ImportDir)/go/build/constraint/vers.go | ✔️ ([cpp](generated/golang/go/build/constraint/vers.cpp), [h](generated/golang/go/build/constraint/vers.h))| ❌ | ❌ |
+| $(ImportDir)/go/build/constraint/vers.go | ✔️ ([cpp](generated/golang/go/build/constraint/vers.cpp), [h](generated/golang/go/build/constraint/vers.h))| ✔️ | ❌ |
 | $(ImportDir)/go/build/gc.go | ✔️ ([cpp](generated/golang/go/build/gc.cpp), [h](generated/golang/go/build/gc.h))| ✔️ | ❌ |
-| $(ImportDir)/go/build/read.go | ✔️ ([cpp](generated/golang/go/build/read.cpp), [h](generated/golang/go/build/read.h))| ❌ | ❌ |
+| $(ImportDir)/go/build/read.go | ✔️ ([cpp](generated/golang/go/build/read.cpp), [h](generated/golang/go/build/read.h))| ✔️ | ❌ |
 | $(ImportDir)/go/constant/value.go | ✔️ ([cpp](generated/golang/go/constant/value.cpp), [h](generated/golang/go/constant/value.h))| ❌ | ❌ |
 | $(ImportDir)/go/doc/comment/html.go | ✔️ ([cpp](generated/golang/go/doc/comment/html.cpp), [h](generated/golang/go/doc/comment/html.h))| ❌ | ❌ |
 | $(ImportDir)/go/doc/comment/markdown.go | ✔️ ([cpp](generated/golang/go/doc/comment/markdown.cpp), [h](generated/golang/go/doc/comment/markdown.h))| ❌ | ❌ |
@@ -213,12 +213,12 @@
 | $(ImportDir)/go/doc/comment/print.go | ✔️ ([cpp](generated/golang/go/doc/comment/print.cpp), [h](generated/golang/go/doc/comment/print.h))| ❌ | ❌ |
 | $(ImportDir)/go/doc/comment/std.go | ✔️ ([cpp](generated/golang/go/doc/comment/std.cpp), [h](generated/golang/go/doc/comment/std.h))| ✔️ | ✔️ |
 | $(ImportDir)/go/doc/comment/text.go | ✔️ ([cpp](generated/golang/go/doc/comment/text.cpp), [h](generated/golang/go/doc/comment/text.h))| ❌ | ❌ |
-| $(ImportDir)/go/doc/doc.go | ✔️ ([cpp](generated/golang/go/doc/doc.cpp), [h](generated/golang/go/doc/doc.h))| ❌ | ❌ |
+| $(ImportDir)/go/doc/doc.go | ✔️ ([cpp](generated/golang/go/doc/doc.cpp), [h](generated/golang/go/doc/doc.h))| ✔️ | ❌ |
 | $(ImportDir)/go/doc/example.go | ✔️ ([cpp](generated/golang/go/doc/example.cpp), [h](generated/golang/go/doc/example.h))| ❌ | ❌ |
 | $(ImportDir)/go/doc/exports.go | ✔️ ([cpp](generated/golang/go/doc/exports.cpp), [h](generated/golang/go/doc/exports.h))| ❌ | ❌ |
 | $(ImportDir)/go/doc/filter.go | ✔️ ([cpp](generated/golang/go/doc/filter.cpp), [h](generated/golang/go/doc/filter.h))| ✔️ | ✔️ |
 | $(ImportDir)/go/doc/reader.go | ✔️ ([cpp](generated/golang/go/doc/reader.cpp), [h](generated/golang/go/doc/reader.h))| ❌ | ❌ |
-| $(ImportDir)/go/doc/synopsis.go | ✔️ ([cpp](generated/golang/go/doc/synopsis.cpp), [h](generated/golang/go/doc/synopsis.h))| ❌ | ❌ |
+| $(ImportDir)/go/doc/synopsis.go | ✔️ ([cpp](generated/golang/go/doc/synopsis.cpp), [h](generated/golang/go/doc/synopsis.h))| ✔️ | ❌ |
 | $(ImportDir)/go/parser/interface.go | ✔️ ([cpp](generated/golang/go/parser/interface.cpp), [h](generated/golang/go/parser/interface.h))| ❌ | ❌ |
 | $(ImportDir)/go/parser/parser.go | ✔️ ([cpp](generated/golang/go/parser/parser.cpp), [h](generated/golang/go/parser/parser.h))| ❌ | ❌ |
 | $(ImportDir)/go/parser/resolver.go | ✔️ ([cpp](generated/golang/go/parser/resolver.cpp), [h](generated/golang/go/parser/resolver.h))| ❌ | ❌ |
@@ -298,7 +298,7 @@
 | $(ImportDir)/go/types/validtype.go | ✔️ ([cpp](generated/golang/go/types/validtype.cpp), [h](generated/golang/go/types/validtype.h))| ❌ | ❌ |
 | $(ImportDir)/go/types/version.go | ✔️ ([cpp](generated/golang/go/types/version.cpp), [h](generated/golang/go/types/version.h))| ❌ | ❌ |
 | $(ImportDir)/go/version/version.go | ✔️ ([cpp](generated/golang/go/version/version.cpp), [h](generated/golang/go/version/version.h))| ✔️ | ❌ |
-| $(ImportDir)/golang.org/x/mod/semver/semver.go | ✔️ ([cpp](generated/golang/golang.org/x/mod/semver/semver.cpp), [h](generated/golang/golang.org/x/mod/semver/semver.h))| ❌ | ❌ |
+| $(ImportDir)/golang.org/x/mod/semver/semver.go | ✔️ ([cpp](generated/golang/golang.org/x/mod/semver/semver.cpp), [h](generated/golang/golang.org/x/mod/semver/semver.h))| ✔️ | ❌ |
 | $(ImportDir)/golang.org/x/sync/errgroup/errgroup.go | ✔️ ([cpp](generated/golang/golang.org/x/sync/errgroup/errgroup.cpp), [h](generated/golang/golang.org/x/sync/errgroup/errgroup.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/go/ast/edge/edge.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/edge/edge.cpp), [h](generated/golang/golang.org/x/tools/go/ast/edge/edge.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/go/ast/inspector/cursor.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/ast/inspector/cursor.cpp), [h](generated/golang/golang.org/x/tools/go/ast/inspector/cursor.h))| ❌ | ❌ |
@@ -609,7 +609,7 @@
 | $(ImportDir)/regexp/syntax/compile.go | ✔️ ([cpp](generated/golang/regexp/syntax/compile.cpp), [h](generated/golang/regexp/syntax/compile.h))| ✔️ | ❌ |
 | $(ImportDir)/regexp/syntax/parse.go | ✔️ ([cpp](generated/golang/regexp/syntax/parse.cpp), [h](generated/golang/regexp/syntax/parse.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/syntax/perl_groups.go | ✔️ ([cpp](generated/golang/regexp/syntax/perl_groups.cpp), [h](generated/golang/regexp/syntax/perl_groups.h))| ✔️ | ✔️ |
-| $(ImportDir)/regexp/syntax/prog.go | ✔️ ([cpp](generated/golang/regexp/syntax/prog.cpp), [h](generated/golang/regexp/syntax/prog.h))| ❌ | ❌ |
+| $(ImportDir)/regexp/syntax/prog.go | ✔️ ([cpp](generated/golang/regexp/syntax/prog.cpp), [h](generated/golang/regexp/syntax/prog.h))| ✔️ | ❌ |
 | $(ImportDir)/regexp/syntax/regexp.go | ✔️ ([cpp](generated/golang/regexp/syntax/regexp.cpp), [h](generated/golang/regexp/syntax/regexp.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/syntax/simplify.go | ✔️ ([cpp](generated/golang/regexp/syntax/simplify.cpp), [h](generated/golang/regexp/syntax/simplify.h))| ✔️ | ✔️ |
 | $(ImportDir)/runtime/alg.go | ✔️ ([cpp](generated/golang/runtime/alg.cpp), [h](generated/golang/runtime/alg.h))| ❌ | ❌ |
@@ -816,7 +816,7 @@
 | $(ImportDir)/time/zoneinfo_abbrs_windows.go | ✔️ ([cpp](generated/golang/time/zoneinfo_abbrs_windows.cpp), [h](generated/golang/time/zoneinfo_abbrs_windows.h))| ✔️ | ✔️ |
 | $(ImportDir)/time/zoneinfo_goroot.go | ✔️ ([cpp](generated/golang/time/zoneinfo_goroot.cpp), [h](generated/golang/time/zoneinfo_goroot.h))| ✔️ | ✔️ |
 | $(ImportDir)/time/zoneinfo_read.go | ✔️ ([cpp](generated/golang/time/zoneinfo_read.cpp), [h](generated/golang/time/zoneinfo_read.h))| ✔️ | ❌ |
-| $(ImportDir)/time/zoneinfo_windows.go | ✔️ ([cpp](generated/golang/time/zoneinfo_windows.cpp), [h](generated/golang/time/zoneinfo_windows.h))| ❌ | ❌ |
+| $(ImportDir)/time/zoneinfo_windows.go | ✔️ ([cpp](generated/golang/time/zoneinfo_windows.cpp), [h](generated/golang/time/zoneinfo_windows.h))| ✔️ | ❌ |
 | $(ImportDir)/unicode/digit.go | ✔️ ([cpp](generated/golang/unicode/digit.cpp), [h](generated/golang/unicode/digit.h))| ✔️ | ❌ |
 | $(ImportDir)/unicode/graphic.go | ✔️ ([cpp](generated/golang/unicode/graphic.cpp), [h](generated/golang/unicode/graphic.h))| ✔️ | ❌ |
 | $(ImportDir)/unicode/letter.go | ✔️ ([cpp](generated/golang/unicode/letter.cpp), [h](generated/golang/unicode/letter.h))| ✔️ | ❌ |

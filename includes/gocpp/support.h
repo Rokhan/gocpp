@@ -857,6 +857,21 @@ namespace gocpp
             return std::string(this->mArray->begin() + mStart, this->mArray->begin() + mEnd);
         }
 
+        // Go: string([]rune). Each rune is encoded as UTF-8.
+        operator std::string() const requires std::is_same<T, gocpp::rune>::value
+        {
+            std::string result;
+            if(!this->mArray)
+            {
+                return result;
+            }
+            for(int i = mStart; i < mEnd; ++i)
+            {
+                result += mocklib::RuneToString((*this->mArray)[i]);
+            }
+            return result;
+        }
+
         typename store_type::const_reference operator[](size_t i) const
         {
             return array_base<T>::operator[](i + mStart);
@@ -1349,8 +1364,8 @@ namespace mocklib
     // TODO : call the method generated in utf8 translation "EncodeRune"
     inline std::string RuneToString(gocpp::rune r)
     {
-        const char RuneError = '\uFFFD';
-        const char MaxRune = '\U0010FFFF';
+        const int RuneError = '\uFFFD';
+        const int MaxRune = '\U0010FFFF';
         const long UTFMax = 4;
         const long surrogateMin = 0xD800;
         const long surrogateMax = 0xDFFF;
@@ -1400,8 +1415,8 @@ namespace mocklib
                     p[3] = tx | (unsigned char)(r) & maskx;
                     break;
             }
+            return p;
         }
-        
     }
 
     // internals: operators for tupples/ostream/slices

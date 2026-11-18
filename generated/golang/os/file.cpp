@@ -1891,10 +1891,10 @@ namespace golang::os
         return dirFS(dir);
     }
 
-    fs::StatFS _ = dirFS(""_s);
-    fs::ReadFileFS _ = dirFS(""_s);
-    fs::ReadDirFS _ = dirFS(""_s);
-    fs::ReadLinkFS _ = dirFS(""_s);
+    fs::StatFS _ignored_0 = dirFS(""_s);
+    fs::ReadFileFS _ignored_1 = dirFS(""_s);
+    fs::ReadDirFS _ignored_2 = dirFS(""_s);
+    fs::ReadLinkFS _ignored_3 = dirFS(""_s);
     std::tuple<fs::File, gocpp::error> rec::Open(dirFS dir, gocpp::string name)
     {
         auto [fullname, err] = rec::join(gocpp::recv(dir), name);

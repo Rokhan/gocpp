@@ -26,45 +26,6 @@ namespace golang::encoding::json
     Options StringifyWithLegacySemantics(bool v);
     Options UnmarshalArrayFromAnyLength(bool v);
     Options unmarshalAnyWithRawNumber(bool v);
-}
-#include "golang/encoding/json/v2/options.fwd.h"
-
-namespace golang::encoding::json
-{
-    namespace jsonv2 = golang::encoding::json::v2;
-}
-#include "golang/encoding/json/v2/options.h"
-
-namespace golang::encoding::json
-{
-    extern jsonv2::Options _;
-}
-#include "golang/encoding/json/jsontext/options.fwd.h"
-
-namespace golang::encoding::json
-{
-    namespace jsontext = golang::encoding::json::jsontext;
-}
-#include "golang/encoding/json/jsontext/options.h"
-
-namespace golang::encoding::json
-{
-    extern jsontext::Options _;
-}
-#include "golang/encoding/encoding.fwd.h"
-
-namespace golang::encoding::json
-{
-    namespace encoding = golang::encoding;
-}
-#include "golang/encoding/encoding.h"
-
-namespace golang::encoding::json
-{
-    // Reference encoding, jsonv2, and jsontext packages to assist pkgsite
-    // in being able to hotlink references to those packages.
-    extern encoding::TextMarshaler _;
-    extern encoding::TextUnmarshaler _;
 
     namespace rec
     {

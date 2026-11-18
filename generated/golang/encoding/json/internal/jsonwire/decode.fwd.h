@@ -8,7 +8,6 @@ namespace golang::encoding::json::internal::jsonwire
 {
     struct GoTag_ValueFlags;
     using ValueFlags = gocpp::defined<uint64_t, GoTag_ValueFlags>;
-    inline constexpr ValueFlags _ = (1 << 0) / 2;
     inline constexpr ValueFlags stringNonVerbatim = (1 << 1) / 2;
     inline constexpr ValueFlags stringNonCanonical = (1 << 2) / 2;
     struct GoTag_ConsumeNumberState;

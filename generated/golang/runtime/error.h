@@ -100,9 +100,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct errorAddressString& value);
-    extern gocpp::error _;
-    extern gocpp::error _;
-    extern gocpp::error _;
     // boundsErrorFmts provide error text for various out-of-bounds panics.
     // Note: if you change these strings, you should adjust the size of the buffer
     // in boundsError.Error below as well.

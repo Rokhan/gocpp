@@ -151,30 +151,6 @@ namespace golang::os
     namespace fs = golang::io::fs;
     fs::FS DirFS(gocpp::string dir);
 }
-#include "golang/io/fs/stat.h"
-
-namespace golang::os
-{
-    extern fs::StatFS _;
-}
-#include "golang/io/fs/readfile.h"
-
-namespace golang::os
-{
-    extern fs::ReadFileFS _;
-}
-#include "golang/io/fs/readdir.h"
-
-namespace golang::os
-{
-    extern fs::ReadDirFS _;
-}
-#include "golang/io/fs/readlink.h"
-
-namespace golang::os
-{
-    extern fs::ReadLinkFS _;
-}
 #include "golang/io/io.fwd.h"
 
 namespace golang::os

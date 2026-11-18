@@ -48,7 +48,7 @@ namespace golang::math::big
     }
 
     golang::math::big::Rat ratZero;
-    fmt::Scanner _ = & ratZero;
+    fmt::Scanner _ignored_0 = & ratZero;
     // Scan is a support routine for fmt.Scanner. It accepts the formats
     // 'e', 'E', 'f', 'F', 'g', 'G', and 'v'. All formats are equivalent.
     gocpp::error rec::Scan(golang::math::big::Rat* z, fmt::ScanState s, gocpp::rune ch)

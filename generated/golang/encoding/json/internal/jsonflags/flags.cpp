@@ -33,6 +33,10 @@ namespace golang::encoding::json::internal::jsonflags
     {
     }
 
+    // Marshal and Unmarshal flags (for v2).
+    constexpr Bools _ignored_0 = (maxCoderFlag >> 1) << 0;
+    // Marshal and Unmarshal flags (for v1).
+    constexpr Bools _ignored_1 = (int64_t(maxArshalV2Flag) >> 1) << 0;
     // Static compile check that bitsUsed and maxArshalV1Flag are in sync.
     uint64_t gocpp_id_0 = uint64_t((1LL << bitsUsed) - int64_t(maxArshalV1Flag)) + uint64_t(int64_t(maxArshalV1Flag) - (1LL << bitsUsed));
     // Flags is a set of boolean flags.

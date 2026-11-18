@@ -34,7 +34,6 @@ namespace golang::math::big
 namespace golang::math::big
 {
     void writeMultiple(fmt::State s, gocpp::string text, int64_t count);
-    extern fmt::Formatter _;
 }
 #include "golang/fmt/scan.h"
 
@@ -56,7 +55,6 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct byteReader& value);
-    extern fmt::Scanner _;
 }
 
 #include "golang/fmt/print.h"

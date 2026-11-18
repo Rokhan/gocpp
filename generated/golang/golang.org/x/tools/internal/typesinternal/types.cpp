@@ -352,8 +352,8 @@ namespace golang::golang_org::x::tools::internal::typesinternal
         return value.PrintTo(os);
     }
 
-    NamedOrAlias _ = (types::Alias*)(nullptr);
-    NamedOrAlias _ = (types::Named*)(nullptr);
+    NamedOrAlias _ignored_0 = (types::Alias*)(nullptr);
+    NamedOrAlias _ignored_1 = (types::Named*)(nullptr);
     // Origin returns the generic type of the Named or Alias type t if it
     // is instantiated, otherwise it returns t.
     NamedOrAlias Origin(NamedOrAlias t)

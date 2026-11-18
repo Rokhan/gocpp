@@ -1151,6 +1151,7 @@ namespace golang::go::types
     }
 
     // A VarKind discriminates the various kinds of variables.
+    constexpr VarKind _ignored_0 = 0;
     gocpp::array<gocpp::string, 7> varKindNames = gocpp::Init<gocpp::array<gocpp::string, 7>>([](auto& x) {
         x[0] = "VarKind(0)"_s;
         x[PackageVar] = "PackageVar"_s;

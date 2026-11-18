@@ -29,7 +29,6 @@ namespace golang::internal::syscall::windows::registry
         using syscall::rec::NewProc;
     }
 
-    gocpp::unsafe_pointer _;
     gocpp::error errERROR_IO_PENDING = syscall::Errno(errnoERROR_IO_PENDING);
     gocpp::error errERROR_EINVAL = syscall::go_EINVAL;
     // errnoErr returns common boxed Errno values, to prevent

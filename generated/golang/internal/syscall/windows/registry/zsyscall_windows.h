@@ -15,8 +15,6 @@ namespace golang::internal::syscall::windows::registry
     extern gocpp::error errERROR_IO_PENDING;
     extern gocpp::error errERROR_EINVAL;
     std::tuple<uint32_t, gocpp::error> expandEnvironmentStrings(uint16_t* src, uint16_t* dst, uint32_t size);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    extern gocpp::unsafe_pointer _;
 }
 #include "golang/syscall/syscall_windows.fwd.h"
 

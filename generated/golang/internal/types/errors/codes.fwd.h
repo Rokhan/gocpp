@@ -11,8 +11,6 @@ namespace golang::internal::types::errors
     // InvalidSyntaxTree occurs if an invalid syntax tree is provided
     // to the type checker. It should never happen.
     inline constexpr Code InvalidSyntaxTree = - 1;
-    // The zero Code value indicates an unset (invalid) error code.
-    inline constexpr Code _ = 0;
     // Test is reserved for errors that only apply while in self-test mode.
     inline constexpr Code Test = 1;
     // BlankPkgName occurs when a package name is the blank identifier "_".
@@ -231,9 +229,6 @@ namespace golang::internal::types::errors
     //
     //  type T []int
     inline constexpr Code IncomparableMapKey = 28;
-    // InvalidIfaceEmbed occurs when a non-interface type is embedded in an
-    // interface (for go 1.17 or earlier).
-    inline constexpr Code _ = 29;
     // InvalidPtrEmbed occurs when an embedded field is of the pointer form *T,
     // and T itself is itself a pointer, an unsafe.Pointer, or an interface.
     //
@@ -609,10 +604,6 @@ namespace golang::internal::types::errors
     //  	printArgs(s...)
     //  }
     inline constexpr Code NonVariadicDotDotDot = 78;
-    // MisplacedDotDotDot occurs when a "..." is used somewhere other than the
-    // final argument in a function declaration.
-    inline constexpr Code _ = 79;
-    inline constexpr Code _ = 80;
     // InvalidDotDotDot occurs when a "..." is used in a non-variadic built-in
     // function.
     //
@@ -854,7 +845,6 @@ namespace golang::internal::types::errors
     //  	for i := 0; i < 10; j := 0 {}
     //  }
     inline constexpr Code InvalidPostDecl = 106;
-    inline constexpr Code _ = 107;
     // InvalidIterVar occurs when two iteration variables are used while ranging
     // over a channel.
     //
@@ -1248,9 +1238,6 @@ namespace golang::internal::types::errors
     //  var b [10]byte
     //  var _ = unsafe.String(&b[0], -1)
     inline constexpr Code InvalidUnsafeString = 146;
-    // InvalidUnsafeStringData occurs if it is used in a package
-    // compiled for a language version before go1.20.
-    inline constexpr Code _ = 147;
     // InvalidClear occurs when clear is called with an argument
     // that is not of map or slice type.
     //

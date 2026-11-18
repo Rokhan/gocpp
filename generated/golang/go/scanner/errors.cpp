@@ -65,7 +65,7 @@ namespace golang::go::scanner
         return value.PrintTo(os);
     }
 
-    gocpp::error _ = (golang::go::scanner::Error*)(nullptr);
+    gocpp::error _ignored_0 = (golang::go::scanner::Error*)(nullptr);
     // Error implements the error interface.
     gocpp::string rec::Error(golang::go::scanner::Error e)
     {

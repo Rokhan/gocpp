@@ -23,19 +23,13 @@ namespace golang::math::big
     gocpp::slice<unsigned char> fmtE(gocpp::slice<unsigned char> buf, unsigned char fmt, int64_t prec, decimal d);
     gocpp::slice<unsigned char> fmtF(gocpp::slice<unsigned char> buf, int64_t prec, decimal d);
 }
-#include "golang/fmt/print.h"
-
-namespace golang::math::big
-{
-    namespace fmt = golang::fmt;
-    extern fmt::Formatter _;
-}
 
 #include "golang/fmt/print.h"
 #include "golang/math/big/float.h"
 
 namespace golang::math::big
 {
+    namespace fmt = golang::fmt;
 
     namespace rec
     {

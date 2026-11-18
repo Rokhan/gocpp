@@ -32,6 +32,7 @@ namespace golang::encoding::json::internal::jsonwire
     {
     }
 
+    constexpr ValueFlags _ignored_0 = (1 << 0) / 2;
     void rec::Join(ValueFlags* f, ValueFlags f2)
     {
         *f |= f2;

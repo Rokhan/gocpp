@@ -28,7 +28,6 @@ namespace golang::math::big
     };
 
     std::ostream& operator<<(std::ostream& os, const struct ErrNaN& value);
-    extern gocpp::error _;
     struct GoTag_form { };
     using form = gocpp::defined<unsigned char, GoTag_form>;
     struct GoTag_RoundingMode { };

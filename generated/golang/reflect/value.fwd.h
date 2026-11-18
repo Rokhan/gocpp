@@ -26,7 +26,6 @@ namespace golang::reflect
     struct runtimeSelect;
     struct GoTag_SelectDir;
     using SelectDir = gocpp::defined<int64_t, GoTag_SelectDir>;
-    inline constexpr SelectDir _ = 0;
     inline constexpr SelectDir SelectSend = 1;
     inline constexpr SelectDir SelectRecv = 2;
     inline constexpr SelectDir SelectDefault = 3;

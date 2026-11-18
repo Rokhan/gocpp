@@ -52,13 +52,12 @@ namespace golang::internal::syscall::windows
 namespace golang::internal::syscall::windows
 {
     void rtlGetVersion(_OSVERSIONINFOEXW* info);
-    /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    extern gocpp::unsafe_pointer _;
 }
 #include "golang/internal/syscall/windows/syscall_windows.fwd.h"
 
 namespace golang::internal::syscall::windows
 {
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
     gocpp::error GetAdaptersAddresses(uint32_t family, uint32_t flags, gocpp::unsafe_pointer reserved, IpAdapterAddresses* adapterAddresses, uint32_t* sizePointer);
     RUNTIME_FUNCTION* RtlLookupFunctionEntry(uintptr_t pc, uintptr_t* baseAddress, gocpp::unsafe_pointer table);
     uintptr_t RtlVirtualUnwind(uint32_t handlerType, uintptr_t baseAddress, uintptr_t pc, RUNTIME_FUNCTION* entry, gocpp::unsafe_pointer ctxt, gocpp::unsafe_pointer data, uintptr_t* frame, gocpp::unsafe_pointer ctxptrs);

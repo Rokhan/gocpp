@@ -26,6 +26,7 @@ namespace golang::internal::strconv
         return c | ('x' - 'X');
     }
 
+    constexpr golang::internal::strconv::Error _ignored_0 = 0;
     gocpp::string rec::Error(golang::internal::strconv::Error e)
     {
         //Go switch emulation

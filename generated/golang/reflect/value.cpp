@@ -4341,6 +4341,7 @@ namespace golang::reflect
     /* convertBlockStmt, nil block */;
 
     // A SelectDir describes the communication direction of a select case.
+    constexpr SelectDir _ignored_0 = 0;
     // A SelectCase describes a single case in a select operation.
     // The kind of case depends on Dir, the communication direction.
     //

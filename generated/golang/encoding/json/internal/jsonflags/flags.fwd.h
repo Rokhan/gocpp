@@ -40,8 +40,6 @@ namespace golang::encoding::json::internal::jsonflags
     inline constexpr Bools maxCoderFlag = 1 << 18;
     // AllCoderFlags is the set of all encoder/decoder flags.
     inline constexpr jsonflags::Bools AllCoderFlags = (maxCoderFlag - 1) - initFlag;
-    // Marshal and Unmarshal flags (for v2).
-    inline constexpr Bools _ = (maxCoderFlag >> 1) << 0;
     inline constexpr Bools StringifyNumbers = (maxCoderFlag >> 1) << 1;
     inline constexpr Bools Deterministic = (maxCoderFlag >> 1) << 2;
     inline constexpr Bools FormatNilMapAsNull = (maxCoderFlag >> 1) << 3;
@@ -73,8 +71,6 @@ namespace golang::encoding::json::internal::jsonflags
     inline constexpr Bools maxArshalV2Flag = (maxCoderFlag >> 1) << 13;
     // AllArshalV2Flags is the set of all v2 marshal/unmarshal flags.
     inline constexpr jsonflags::Bools AllArshalV2Flags = (maxArshalV2Flag - 1) - (maxCoderFlag - 1);
-    // Marshal and Unmarshal flags (for v1).
-    inline constexpr Bools _ = (int64_t(maxArshalV2Flag) >> 1) << 0;
     inline constexpr Bools CallMethodsWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 1;
     inline constexpr Bools FormatByteArrayAsArray = (int64_t(maxArshalV2Flag) >> 1) << 2;
     inline constexpr Bools FormatBytesWithLegacySemantics = (int64_t(maxArshalV2Flag) >> 1) << 3;

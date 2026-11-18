@@ -216,10 +216,6 @@ namespace golang::runtime
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
     extern stdFunction _WriteFile;
-    // Following syscalls are available on every Windows PC.
-    // All these variables are set by the Windows executable
-    // loader before the Go program starts.
-    extern stdFunction _;
     // Use ProcessPrng to generate cryptographically random data.
     extern stdFunction _ProcessPrng;
     // Load ntdll.dll manually during startup, otherwise Mingw
@@ -234,8 +230,6 @@ namespace golang::runtime
     extern stdFunction _timeBeginPeriod;
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
     extern stdFunction _timeEndPeriod;
-    // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    extern stdFunction _;
     extern gocpp::array<uint16_t, 21> bcryptprimitivesdll;
     extern gocpp::array<uint16_t, 10> ntdlldll;
     extern gocpp::array<uint16_t, 13> powrprofdll;

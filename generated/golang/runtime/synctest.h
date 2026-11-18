@@ -29,7 +29,6 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct synctestDeadlockError& value);
-    extern gocpp::error _;
     void synctestWait();
     void synctestRun(std::function<void ()> f);
     bool synctest_isInBubble();

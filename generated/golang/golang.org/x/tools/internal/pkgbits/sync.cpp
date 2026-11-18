@@ -64,5 +64,6 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     // SyncMarker is an enum type that represents markers that may be
     // written to export data to ensure the reader and writer stay
     // synchronized.
+    constexpr SyncMarker _ignored_0 = 0;
 }
 

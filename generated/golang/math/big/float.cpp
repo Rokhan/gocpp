@@ -157,7 +157,7 @@ namespace golang::math::big
         return value.PrintTo(os);
     }
 
-    gocpp::error _ = ErrNaN {};
+    gocpp::error _ignored_0 = ErrNaN {};
     gocpp::string rec::Error(ErrNaN err)
     {
         return err.msg;

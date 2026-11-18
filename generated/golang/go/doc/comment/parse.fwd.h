@@ -24,7 +24,6 @@ namespace golang::go::doc::comment
     struct span;
     struct GoTag_spanKind;
     using spanKind = gocpp::defined<int64_t, GoTag_spanKind>;
-    inline constexpr spanKind _ = 0;
     inline constexpr spanKind spanCode = 1;
     inline constexpr spanKind spanHeading = 2;
     inline constexpr spanKind spanList = 3;

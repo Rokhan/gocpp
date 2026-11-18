@@ -106,7 +106,7 @@ namespace golang::math::big
         }
     }
 
-    fmt::Formatter _ = intOne;
+    fmt::Formatter _ignored_0 = intOne;
     // Format implements [fmt.Formatter]. It accepts the formats
     // 'b' (binary), 'o' (octal with 0 prefix), 'O' (octal with 0o prefix),
     // 'd' (decimal), 'x' (lowercase hexadecimal), and
@@ -476,7 +476,7 @@ namespace golang::math::big
         return rec::UnreadRune(gocpp::recv(r));
     }
 
-    fmt::Scanner _ = intOne;
+    fmt::Scanner _ignored_1 = intOne;
     // Scan is a support routine for [fmt.Scanner]; it sets z to the value of
     // the scanned number. It accepts the formats 'b' (binary), 'o' (octal),
     // 'd' (decimal), 'x' (lowercase hexadecimal), and 'X' (uppercase hexadecimal).

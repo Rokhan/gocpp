@@ -134,8 +134,6 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     }
 
     std::ostream& operator<<(std::ostream& os, const struct NamedOrAlias& value);
-    extern NamedOrAlias _;
-    extern NamedOrAlias _;
     NamedOrAlias Origin(NamedOrAlias t);
     types::Tuple* TupleOf(gocpp::slice<types::Type> elems);
 

@@ -2080,7 +2080,7 @@ namespace golang::io
 
     // discard implements ReaderFrom as an optimization so Copy to
     // io.Discard can avoid doing unnecessary work.
-    ReaderFrom _ = discard {};
+    ReaderFrom _ignored_0 = discard {};
     std::tuple<int64_t, gocpp::error> rec::Write(discard, gocpp::slice<unsigned char> p)
     {
         return {len(p), nullptr};

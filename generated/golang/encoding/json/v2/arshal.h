@@ -81,9 +81,9 @@ namespace golang::encoding::json::v2
 {
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
 }
+#include "golang/encoding/json/jsontext/token.fwd.h"
 #include "golang/encoding/json/jsontext/decode.fwd.h"
 #include "golang/encoding/json/jsontext/errors.fwd.h"
-#include "golang/encoding/json/jsontext/token.fwd.h"
 
 namespace golang::encoding::json::v2
 {
@@ -159,35 +159,6 @@ namespace golang::encoding::json::v2
 namespace golang::encoding::json::v2
 {
     extern sync::Map lookupArshalerCache;
-}
-#include "golang/time/time.fwd.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace time = golang::time;
-}
-#include "golang/time/time.h"
-
-namespace golang::encoding::json::v2
-{
-    extern mocklib::Date _;
-    extern time::Duration _;
-}
-#include "golang/encoding/encoding.fwd.h"
-
-namespace golang::encoding::json::v2
-{
-    namespace encoding = golang::encoding;
-}
-#include "golang/encoding/encoding.h"
-
-namespace golang::encoding::json::v2
-{
-    // Reference encoding and time packages to assist pkgsite
-    // in being able to hotlink references to those packages.
-    extern encoding::TextMarshaler _;
-    extern encoding::TextAppender _;
-    extern encoding::TextUnmarshaler _;
 }
 #include "golang/io/io.fwd.h"
 

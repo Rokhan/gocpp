@@ -758,6 +758,7 @@ namespace golang::runtime
     }
 
     // These values must match ../reflect/value.go:/SelectDir.
+    constexpr selectDir _ignored_0 = 0;
     //go:linkname reflect_rselect reflect.rselect
     std::tuple<int64_t, bool> reflect_rselect(gocpp::slice<runtimeSelect> cases)
     {

@@ -644,7 +644,7 @@ namespace golang::math::big
         return strconv::AppendInt(buf, int64_t(x->exp), 10);
     }
 
-    fmt::Formatter _ = & floatZero;
+    fmt::Formatter _ignored_0 = & floatZero;
     // Format implements [fmt.Formatter]. It accepts all the regular
     // formats for floating-point numbers ('b', 'e', 'E', 'f', 'F',
     // 'g', 'G', 'x') as well as 'p' and 'v'. See (*Float).Text for the

@@ -819,6 +819,7 @@ namespace golang::go::doc::comment
     }
 
     // A spanKind describes the kind of span.
+    constexpr spanKind _ignored_0 = 0;
     gocpp::slice<span> parseSpans(gocpp::slice<gocpp::string> lines)
     {
         gocpp::slice<span> spans = {};

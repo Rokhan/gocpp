@@ -13,7 +13,6 @@ namespace golang::go::types
     struct Var;
     struct GoTag_VarKind;
     using VarKind = gocpp::defined<uint8_t, GoTag_VarKind>;
-    inline constexpr VarKind _ = 0;
     inline constexpr VarKind PackageVar = 1;
     inline constexpr VarKind LocalVar = 2;
     inline constexpr VarKind RecvVar = 3;

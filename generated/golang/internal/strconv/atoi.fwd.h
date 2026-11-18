@@ -8,7 +8,6 @@ namespace golang::internal::strconv
 {
     struct GoTag_Error;
     using Error = gocpp::defined<int64_t, GoTag_Error>;
-    inline constexpr golang::internal::strconv::Error _ = 0;
     inline constexpr golang::internal::strconv::Error ErrRange = 1;
     inline constexpr golang::internal::strconv::Error ErrSyntax = 2;
     inline constexpr golang::internal::strconv::Error ErrBase = 3;

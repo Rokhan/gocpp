@@ -9,7 +9,6 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     using frameVisitor = std::function<void (gocpp::string file, int64_t line, gocpp::string name, uintptr_t offset)>;
     struct GoTag_SyncMarker;
     using SyncMarker = gocpp::defined<int64_t, GoTag_SyncMarker>;
-    inline constexpr SyncMarker _ = 0;
     // Low-level coding markers.
     inline constexpr SyncMarker SyncEOF = 1;
     inline constexpr SyncMarker SyncBool = 2;

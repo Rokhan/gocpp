@@ -12,7 +12,6 @@
 
 namespace golang::go::scanner
 {
-    extern gocpp::error _;
     struct GoTag_ErrorList { };
     using ErrorList = gocpp::defined<gocpp::slice<golang::go::scanner::Error*>, GoTag_ErrorList>;
 }

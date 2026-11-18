@@ -180,23 +180,14 @@
 // [encoding/json/v2 Migration Guide]: https://go.dev/doc/jsonv2-migration
 namespace golang::encoding::json
 {
-    namespace encoding = golang::encoding;
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
-    namespace jsontext = golang::encoding::json::jsontext;
-    namespace jsonv2 = golang::encoding::json::v2;
     namespace rec
     {
         using jsonflags::rec::JSONOptions;
         using jsonopts::rec::JSONOptions;
     }
 
-    // Reference encoding, jsonv2, and jsontext packages to assist pkgsite
-    // in being able to hotlink references to those packages.
-    encoding::TextMarshaler _;
-    encoding::TextUnmarshaler _;
-    jsonv2::Options _;
-    jsontext::Options _;
     // Options are a set of options to configure the v2 "json" package
     // to operate with v1 semantics for particular features.
     // Values of this type can be passed to v2 functions like

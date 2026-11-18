@@ -17,5 +17,18 @@ namespace golang::internal::types::errors
     {
     }
 
+    // The zero Code value indicates an unset (invalid) error code.
+    constexpr Code _ignored_0 = 0;
+    // InvalidIfaceEmbed occurs when a non-interface type is embedded in an
+    // interface (for go 1.17 or earlier).
+    constexpr Code _ignored_1 = 29;
+    // MisplacedDotDotDot occurs when a "..." is used somewhere other than the
+    // final argument in a function declaration.
+    constexpr Code _ignored_2 = 79;
+    constexpr Code _ignored_3 = 80;
+    constexpr Code _ignored_4 = 107;
+    // InvalidUnsafeStringData occurs if it is used in a package
+    // compiled for a language version before go1.20.
+    constexpr Code _ignored_5 = 147;
 }
 

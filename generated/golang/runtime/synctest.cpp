@@ -419,7 +419,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::error _ = synctestDeadlockError {};
+    gocpp::error _ignored_0 = synctestDeadlockError {};
     gocpp::string rec::Error(synctestDeadlockError e)
     {
         return e.reason;

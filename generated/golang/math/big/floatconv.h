@@ -26,18 +26,6 @@ namespace golang::math::big
     extern Float floatZero;
     std::tuple<Float*, int64_t, gocpp::error> ParseFloat(gocpp::string s, int64_t base, uint64_t prec, RoundingMode mode);
 }
-#include "golang/fmt/errors.fwd.h"
-
-namespace golang::math::big
-{
-    namespace fmt = golang::fmt;
-}
-#include "golang/fmt/scan.h"
-
-namespace golang::math::big
-{
-    extern fmt::Scanner _;
-}
 
 #include "golang/fmt/scan.h"
 #include "golang/io/io.h"
@@ -45,6 +33,7 @@ namespace golang::math::big
 
 namespace golang::math::big
 {
+    namespace fmt = golang::fmt;
     namespace io = golang::io;
 
     namespace rec

@@ -1538,9 +1538,6 @@ namespace golang::io
     };
 
     std::ostream& operator<<(std::ostream& os, const struct discard& value);
-    // discard implements ReaderFrom as an optimization so Copy to
-    // io.Discard can avoid doing unnecessary work.
-    extern ReaderFrom _;
     ReadCloser NopCloser(Reader r);
     struct nopCloser
     {

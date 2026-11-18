@@ -377,7 +377,7 @@ namespace golang::math::big
         return rec::Parse(gocpp::recv(rec::SetMode(gocpp::recv(rec::SetPrec(gocpp::recv(new big::Float{}), prec)), mode)), s, base);
     }
 
-    fmt::Scanner _ = (Float*)(nullptr);
+    fmt::Scanner _ignored_0 = (Float*)(nullptr);
     // Scan is a support routine for [fmt.Scanner]; it sets z to the value of
     // the scanned number. It accepts formats whose verbs are supported by
     // [fmt.Scan] for floating point values, which are:

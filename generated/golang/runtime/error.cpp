@@ -252,7 +252,7 @@ namespace golang::runtime
         return "runtime error: "_s + e.msg;
     }
 
-    gocpp::error _ = errorAddressString {};
+    gocpp::error _ignored_0 = errorAddressString {};
     // Addr returns the memory address where a fault occurred.
     // The address provided is best-effort.
     // The veracity of the result may depend on the platform.
@@ -275,7 +275,7 @@ namespace golang::runtime
         return gocpp::string(e);
     }
 
-    gocpp::error _ = plainError(""_s);
+    gocpp::error _ignored_1 = plainError(""_s);
     // A boundsError represents an indexing or slicing operation gone wrong.
     
     template<typename T> requires gocpp::GoStruct<T>
@@ -315,7 +315,7 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    gocpp::error _ = boundsError {};
+    gocpp::error _ignored_2 = boundsError {};
     // boundsErrorFmts provide error text for various out-of-bounds panics.
     // Note: if you change these strings, you should adjust the size of the buffer
     // in boundsError.Error below as well.

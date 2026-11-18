@@ -17,5 +17,9 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     {
     }
 
+    constexpr ErrorCode _ignored_0 = 0;
+    // InvalidUnsafeStringData occurs if it is used in a package
+    // compiled for a language version before go1.20.
+    constexpr ErrorCode _ignored_1 = 147;
 }
 

@@ -259,10 +259,6 @@ namespace golang::runtime
     // All these variables are set by the Windows executable
     // loader before the Go program starts.
     stdFunction _WriteFile;
-    // Following syscalls are available on every Windows PC.
-    // All these variables are set by the Windows executable
-    // loader before the Go program starts.
-    stdFunction _;
     // Use ProcessPrng to generate cryptographically random data.
     stdFunction _ProcessPrng;
     // Load ntdll.dll manually during startup, otherwise Mingw
@@ -277,8 +273,6 @@ namespace golang::runtime
     stdFunction _timeBeginPeriod;
     // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
     stdFunction _timeEndPeriod;
-    // These are from non-kernel32.dll, so we prefer to LoadLibraryEx them.
-    stdFunction _;
     gocpp::array<uint16_t, 21> bcryptprimitivesdll = gocpp::array<uint16_t, 21> {'b', 'c', 'r', 'y', 'p', 't', 'p', 'r', 'i', 'm', 'i', 't', 'i', 'v', 'e', 's', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 10> ntdlldll = gocpp::array<uint16_t, 10> {'n', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0};
     gocpp::array<uint16_t, 13> powrprofdll = gocpp::array<uint16_t, 13> {'p', 'o', 'w', 'r', 'p', 'r', 'o', 'f', '.', 'd', 'l', 'l', 0};

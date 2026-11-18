@@ -41,7 +41,6 @@ namespace golang::encoding::json::v2
 {
     namespace abi = golang::internal::abi;
     namespace bytes = golang::bytes;
-    namespace encoding = golang::encoding;
     namespace errors = golang::errors;
     namespace internal = golang::encoding::json::internal;
     namespace io = golang::io;
@@ -51,7 +50,6 @@ namespace golang::encoding::json::v2
     namespace jsontext = golang::encoding::json::jsontext;
     namespace reflect = golang::reflect;
     namespace sync = golang::sync;
-    namespace time = golang::time;
     namespace rec
     {
         using jsonflags::rec::Get;
@@ -90,13 +88,6 @@ namespace golang::encoding::json::v2
         using sync::rec::Put;
     }
 
-    // Reference encoding and time packages to assist pkgsite
-    // in being able to hotlink references to those packages.
-    encoding::TextMarshaler _;
-    encoding::TextAppender _;
-    encoding::TextUnmarshaler _;
-    mocklib::Date _;
-    time::Duration _;
     // Once a JSON object has begun processing without duplicate name verification,
     // it does not track the history of names that have been seen so far.
     // Reject changing the setting for the current JSON object namespace,

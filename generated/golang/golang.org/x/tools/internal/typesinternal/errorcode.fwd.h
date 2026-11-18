@@ -11,7 +11,6 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     // InvalidSyntaxTree occurs if an invalid syntax tree is provided
     // to the type checker. It should never happen.
     inline constexpr ErrorCode InvalidSyntaxTree = - 1;
-    inline constexpr ErrorCode _ = 0;
     // Test is reserved for errors that only apply while in self-test mode.
     inline constexpr ErrorCode Test = 1;
     // BlankPkgName occurs when a package name is the blank identifier "_".
@@ -1304,7 +1303,4 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     //  var b [10]byte
     //  var _ = unsafe.String(&b[0], -1)
     inline constexpr ErrorCode InvalidUnsafeString = 146;
-    // InvalidUnsafeStringData occurs if it is used in a package
-    // compiled for a language version before go1.20.
-    inline constexpr ErrorCode _ = 147;
 }

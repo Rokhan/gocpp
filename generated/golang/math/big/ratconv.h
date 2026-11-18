@@ -20,18 +20,6 @@ namespace golang::math::big
 {
     extern golang::math::big::Rat ratZero;
 }
-#include "golang/fmt/scan.fwd.h"
-
-namespace golang::math::big
-{
-    namespace fmt = golang::fmt;
-}
-#include "golang/fmt/scan.h"
-
-namespace golang::math::big
-{
-    extern fmt::Scanner _;
-}
 #include "golang/io/io.h"
 
 namespace golang::math::big
@@ -45,6 +33,7 @@ namespace golang::math::big
 
 namespace golang::math::big
 {
+    namespace fmt = golang::fmt;
 
     namespace rec
     {

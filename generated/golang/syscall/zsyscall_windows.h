@@ -274,7 +274,6 @@ namespace golang::syscall
     std::tuple<Servent*, gocpp::error> GetServByName(gocpp::string name, gocpp::string proto);
     std::tuple<Servent*, gocpp::error> _GetServByName(unsigned char* name, unsigned char* proto);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    extern gocpp::unsafe_pointer _;
     gocpp::error updateProcThreadAttribute(_PROC_THREAD_ATTRIBUTE_LIST* attrlist, uint32_t flags, uintptr_t attr, gocpp::unsafe_pointer value, uintptr_t size, gocpp::unsafe_pointer prevvalue, uintptr_t* returnedsize);
 }
 #include "golang/syscall/syscall_windows.h"

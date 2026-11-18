@@ -1637,14 +1637,14 @@ namespace golang::math::big
                 // (-x) & (-y) == ^(x-1) & ^(y-1) == ^((x-1) | (y-1)) == -(((x-1) | (y-1)) + 1)
                 auto x1 = rec::sub(gocpp::recv(big::nat(nullptr)), x->abs, natOne);
                 auto y1 = rec::sub(gocpp::recv(big::nat(nullptr)), y->abs, natOne);
-                z->abs = rec::add(gocpp::recv(z->abs), rec::or(gocpp::recv(z->abs), x1, y1), natOne);
+                z->abs = rec::add(gocpp::recv(z->abs), rec::go_or(gocpp::recv(z->abs), x1, y1), natOne);
                 // z cannot be zero if x and y are negative
                 z->neg = true;
                 return z;
             }
 
             // x & y == x & y
-            z->abs = rec::and(gocpp::recv(z->abs), x->abs, y->abs);
+            z->abs = rec::go_and(gocpp::recv(z->abs), x->abs, y->abs);
             z->neg = false;
             return z;
         }
@@ -1688,7 +1688,7 @@ namespace golang::math::big
         {
             // (-x) &^ y == ^(x-1) &^ y == ^(x-1) & ^y == ^((x-1) | y) == -(((x-1) | y) + 1)
             auto x1 = rec::sub(gocpp::recv(big::nat(nullptr)), x->abs, natOne);
-            z->abs = rec::add(gocpp::recv(z->abs), rec::or(gocpp::recv(z->abs), x1, y->abs), natOne);
+            z->abs = rec::add(gocpp::recv(z->abs), rec::go_or(gocpp::recv(z->abs), x1, y->abs), natOne);
             // z cannot be zero if x is negative and y is positive
             z->neg = true;
             return z;
@@ -1696,7 +1696,7 @@ namespace golang::math::big
 
         // x &^ (-y) == x &^ ^(y-1) == x & (y-1)
         auto y1 = rec::sub(gocpp::recv(big::nat(nullptr)), y->abs, natOne);
-        z->abs = rec::and(gocpp::recv(z->abs), x->abs, y1);
+        z->abs = rec::go_and(gocpp::recv(z->abs), x->abs, y1);
         z->neg = false;
         return z;
     }
@@ -1711,14 +1711,14 @@ namespace golang::math::big
                 // (-x) | (-y) == ^(x-1) | ^(y-1) == ^((x-1) & (y-1)) == -(((x-1) & (y-1)) + 1)
                 auto x1 = rec::sub(gocpp::recv(big::nat(nullptr)), x->abs, natOne);
                 auto y1 = rec::sub(gocpp::recv(big::nat(nullptr)), y->abs, natOne);
-                z->abs = rec::add(gocpp::recv(z->abs), rec::and(gocpp::recv(z->abs), x1, y1), natOne);
+                z->abs = rec::add(gocpp::recv(z->abs), rec::go_and(gocpp::recv(z->abs), x1, y1), natOne);
                 // z cannot be zero if x and y are negative
                 z->neg = true;
                 return z;
             }
 
             // x | y == x | y
-            z->abs = rec::or(gocpp::recv(z->abs), x->abs, y->abs);
+            z->abs = rec::go_or(gocpp::recv(z->abs), x->abs, y->abs);
             z->neg = false;
             return z;
         }
@@ -1748,13 +1748,13 @@ namespace golang::math::big
                 // (-x) ^ (-y) == ^(x-1) ^ ^(y-1) == (x-1) ^ (y-1)
                 auto x1 = rec::sub(gocpp::recv(big::nat(nullptr)), x->abs, natOne);
                 auto y1 = rec::sub(gocpp::recv(big::nat(nullptr)), y->abs, natOne);
-                z->abs = rec::xor(gocpp::recv(z->abs), x1, y1);
+                z->abs = rec::go_xor(gocpp::recv(z->abs), x1, y1);
                 z->neg = false;
                 return z;
             }
 
             // x ^ y == x ^ y
-            z->abs = rec::xor(gocpp::recv(z->abs), x->abs, y->abs);
+            z->abs = rec::go_xor(gocpp::recv(z->abs), x->abs, y->abs);
             z->neg = false;
             return z;
         }
@@ -1768,7 +1768,7 @@ namespace golang::math::big
 
         // x ^ (-y) == x ^ ^(y-1) == ^(x ^ (y-1)) == -((x ^ (y-1)) + 1)
         auto y1 = rec::sub(gocpp::recv(big::nat(nullptr)), y->abs, natOne);
-        z->abs = rec::add(gocpp::recv(z->abs), rec::xor(gocpp::recv(z->abs), x->abs, y1), natOne);
+        z->abs = rec::add(gocpp::recv(z->abs), rec::go_xor(gocpp::recv(z->abs), x->abs, y1), natOne);
         // z cannot be zero if only one of x or y is negative
         z->neg = true;
         return z;

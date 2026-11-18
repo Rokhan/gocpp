@@ -343,14 +343,14 @@ namespace golang::go::types
             gocpp::slice<Func*> allMethods = {};
             // method specification or method embedding position, for good error messages
             auto mpos = gocpp::make(gocpp::Tag<gocpp::map<Func*, token::Pos>>());
-            auto addMethod = [=](token::Pos pos, Func* m, bool explicit) mutable -> void
+            auto addMethod = [=](token::Pos pos, Func* m, bool go_explicit) mutable -> void
             {
                 //Go switch emulation
                 {
                     auto other = rec::insert(gocpp::recv(seen), m);
                     int conditionId = -1;
                     if(other == nullptr) { conditionId = 0; }
-                    else if(explicit) { conditionId = 1; }
+                    else if(go_explicit) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:

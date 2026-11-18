@@ -355,7 +355,7 @@ namespace golang::encoding::json::v2
             x.typ = t;
             x.fnc = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
             {
-                auto xe = rec::Encoder(gocpp::recv(export), enc);
+                auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                 auto [prevDepth, prevLength] = rec::DepthLength(gocpp::recv(xe->state.Tokens));
                 rec::Set(gocpp::recv(xe->Struct.Flags), jsonflags::WithinArshalCall | 1);
                 auto [v, gocpp_id_2] = reflect::TypeAssert<T>(rec::castTo(gocpp::recv(va), t));
@@ -382,7 +382,7 @@ namespace golang::encoding::json::v2
                         // unlike unmarshal, always wrapped
                         return internal::NewMarshalerError(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))), err, "MarshalToFunc"_s);
                     }
-                    if(! rec::IsIOError(gocpp::recv(export), err))
+                    if(! rec::IsIOError(gocpp::recv(go_export), err))
                     {
                         err = newSemanticErrorWithPosition(enc, t, prevDepth, prevLength, err);
                     }
@@ -461,7 +461,7 @@ namespace golang::encoding::json::v2
             x.typ = t;
             x.fnc = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
             {
-                auto xd = rec::Decoder(gocpp::recv(export), dec);
+                auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                 auto [prevDepth, prevLength] = rec::DepthLength(gocpp::recv(xd->state.Tokens));
                 if(prevDepth == 1 && rec::AtEOF(gocpp::recv(xd)))
                 {
@@ -497,7 +497,7 @@ namespace golang::encoding::json::v2
                         // unlike marshal, never wrapped
                         return err;
                     }
-                    if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                    if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                     {
                         err = newSemanticErrorWithPosition(dec, t, prevDepth, prevLength, err);
                     }

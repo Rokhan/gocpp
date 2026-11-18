@@ -662,7 +662,7 @@ namespace golang::go::parser
 
     gocpp::map<token::Token, bool> stmtStart = gocpp::map<token::Token, bool> {
         { token::BREAK, true },
-        { token::CONST, true },
+        { token::go_CONST, true },
         { token::CONTINUE, true },
         { token::DEFER, true },
         { token::FALLTHROUGH, true },
@@ -678,7 +678,7 @@ namespace golang::go::parser
     };
     gocpp::map<token::Token, bool> declStart = gocpp::map<token::Token, bool> {
         { token::IMPORT, true },
-        { token::CONST, true },
+        { token::go_CONST, true },
         { token::TYPE, true },
         { token::VAR, true }
     };
@@ -4222,7 +4222,7 @@ namespace golang::go::parser
             {
                 auto condition = p->tok;
                 int conditionId = -1;
-                if(condition == token::CONST) { conditionId = 0; }
+                if(condition == token::go_CONST) { conditionId = 0; }
                 else if(condition == token::TYPE) { conditionId = 1; }
                 else if(condition == token::VAR) { conditionId = 2; }
                 else if(condition == token::IDENT) { conditionId = 3; }
@@ -4462,7 +4462,7 @@ namespace golang::go::parser
             {
                 auto condition = keyword;
                 int conditionId = -1;
-                if(condition == token::CONST) { conditionId = 0; }
+                if(condition == token::go_CONST) { conditionId = 0; }
                 else if(condition == token::VAR) { conditionId = 1; }
                 switch(conditionId)
                 {
@@ -4929,7 +4929,7 @@ namespace golang::go::parser
                 auto condition = p->tok;
                 int conditionId = -1;
                 if(condition == token::IMPORT) { conditionId = 0; }
-                else if(condition == token::CONST) { conditionId = 1; }
+                else if(condition == token::go_CONST) { conditionId = 1; }
                 else if(condition == token::VAR) { conditionId = 2; }
                 else if(condition == token::TYPE) { conditionId = 3; }
                 else if(condition == token::FUNC) { conditionId = 4; }

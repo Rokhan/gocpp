@@ -776,7 +776,7 @@ namespace golang::go::parser
                         {
                             auto condition = n->Tok;
                             int conditionId = -1;
-                            if(condition == token::CONST) { conditionId = 0; }
+                            if(condition == token::go_CONST) { conditionId = 0; }
                             else if(condition == token::VAR) { conditionId = 1; }
                             else if(condition == token::TYPE) { conditionId = 2; }
                             switch(conditionId)

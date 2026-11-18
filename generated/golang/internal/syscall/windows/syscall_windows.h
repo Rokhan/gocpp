@@ -374,7 +374,7 @@ namespace golang::internal::syscall::windows
         uint32_t ModBaseSize{};
         syscall::Handle ModuleHandle{};
         gocpp::array<uint16_t, MAX_MODULE_NAME32 + 1> Module{};
-        gocpp::array<uint16_t, syscall::MAX_PATH> ExePath{};
+        gocpp::array<uint16_t, syscall::go_MAX_PATH> ExePath{};
 
         using isGoStruct = void;
 

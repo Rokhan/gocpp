@@ -95,7 +95,7 @@ namespace golang::encoding::json::v2
 namespace golang::encoding::json::v2
 {
     // export exposes internal functionality of the "jsontext" package.
-    extern jsontext::export export;
+    extern jsontext::export go_export;
 }
 #include "golang/encoding/json/v2/options.h"
 

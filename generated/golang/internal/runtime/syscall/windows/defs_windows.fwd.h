@@ -9,7 +9,7 @@ namespace golang::internal::runtime::syscall::windows
     // Pseudo handles.
     inline constexpr uintptr_t CurrentProcess = ~ uintptr_t(0);
     inline constexpr uintptr_t CurrentThread = ~ uintptr_t(1);
-    inline constexpr uintptr_t INVALID_HANDLE_VALUE = ~ uintptr_t(0);
+    inline constexpr uintptr_t go_INVALID_HANDLE_VALUE = ~ uintptr_t(0);
     inline constexpr long DWORD_MAX = 0xffffffffLL;
     inline constexpr long PROT_NONE = 0;
     inline constexpr long PROT_READ = 1;
@@ -42,7 +42,7 @@ namespace golang::internal::runtime::syscall::windows
     inline constexpr long SEM_NOGPFAULTERRORBOX = 0x0002;
     inline constexpr long SEM_NOOPENFILEERRORBOX = 0x8000;
     inline constexpr long WER_FAULT_REPORTING_NO_UI = 0x0020;
-    inline constexpr long INFINITE = 0xffffffffLL;
+    inline constexpr long go_INFINITE = 0xffffffffLL;
     inline constexpr long WAIT_TIMEOUT = 258;
     inline constexpr long FAIL_FAST_GENERATE_EXCEPTION_ADDRESS = 0x1;
     inline constexpr long EXCEPTION_CONTINUE_EXECUTION = - 0x1;

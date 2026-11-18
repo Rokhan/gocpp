@@ -307,14 +307,14 @@ namespace golang::encoding::json
                 return enc->err;
             }
 
-            auto e = rec::GetBufferedEncoder(gocpp::recv(export), enc->opts);
-            defer.push_back([=]{ rec::PutBufferedEncoder(gocpp::recv(export), e); });
+            auto e = rec::GetBufferedEncoder(gocpp::recv(go_export), enc->opts);
+            defer.push_back([=]{ rec::PutBufferedEncoder(gocpp::recv(go_export), e); });
             if(auto err = jsonv2::MarshalEncode(e, v); err != nullptr)
             {
                 return err;
             }
             // b must not leak current scope
-            auto b = rec::Encoder(gocpp::recv(export), e)->encodeBuffer.Buf;
+            auto b = rec::Encoder(gocpp::recv(go_export), e)->encodeBuffer.Buf;
             if(len(enc->indentPrefix) + len(enc->indentValue) > 0)
             {
                 rec::Reset(gocpp::recv(enc->indentBuf));
@@ -409,7 +409,7 @@ namespace golang::encoding::json
             // truncated within a JSON token such as a literal, number, or string.
             // If the underlying [io.Reader] produced the [io.ErrUnexpectedEOF],
             // then return the error as-is (including any wrapping).
-            if(errors::Is(err, io::ErrUnexpectedEOF) && ! rec::IsIOError(gocpp::recv(export), err))
+            if(errors::Is(err, io::ErrUnexpectedEOF) && ! rec::IsIOError(gocpp::recv(go_export), err))
             {
                 if(len(bytes::Trim(rec::UnreadBuffer(gocpp::recv(dec->dec)), " \r\n\t,:"_s)) == 0)
                 {

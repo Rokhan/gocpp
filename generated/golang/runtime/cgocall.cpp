@@ -172,7 +172,7 @@ namespace golang::runtime
         // trace event in entersyscall above.
         mp->ncgo++;
 
-        auto errno = asmcgocall(fn, arg);
+        auto go_errno = asmcgocall(fn, arg);
 
         // Update accounting before exitsyscall because exitsyscall may
         // reschedule us on to a different M.
@@ -227,7 +227,7 @@ namespace golang::runtime
         KeepAlive(arg);
         KeepAlive(mp);
 
-        return errno;
+        return go_errno;
     }
 
     // Set or reset the system stack bounds for a callback on sp.

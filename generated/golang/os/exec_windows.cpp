@@ -64,7 +64,7 @@ namespace golang::os
             }
             defer.push_back([=]{ rec::handleTransientRelease(gocpp::recv(p)); });
 
-            auto [s, e] = syscall::WaitForSingleObject(syscall::Handle(handle), syscall::INFINITE);
+            auto [s, e] = syscall::WaitForSingleObject(syscall::Handle(handle), syscall::go_INFINITE);
             //Go switch emulation
             {
                 auto condition = s;

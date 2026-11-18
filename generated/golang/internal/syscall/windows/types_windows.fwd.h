@@ -46,7 +46,7 @@ namespace golang::internal::syscall::windows
     struct GoTag_ACCESS_MASK;
     using ACCESS_MASK = gocpp::defined<uint32_t, GoTag_ACCESS_MASK>;
     // Constants for type ACCESS_MASK
-    inline constexpr long DELETE = 0x00010000;
+    inline constexpr long go_DELETE = 0x00010000;
     inline constexpr long READ_CONTROL = 0x00020000;
     inline constexpr long WRITE_DAC = 0x00040000;
     inline constexpr long WRITE_OWNER = 0x00080000;

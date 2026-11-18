@@ -204,7 +204,7 @@ namespace golang::internal::syscall::windows
         unsigned char ReplaceIfExists{};
         syscall::Handle RootDirectory{};
         uint32_t FileNameLength{};
-        gocpp::array<uint16_t, syscall::MAX_PATH> FileName{};
+        gocpp::array<uint16_t, syscall::go_MAX_PATH> FileName{};
 
         using isGoStruct = void;
 
@@ -223,7 +223,7 @@ namespace golang::internal::syscall::windows
         uint32_t Flags{};
         syscall::Handle RootDirectory{};
         uint32_t FileNameLength{};
-        gocpp::array<uint16_t, syscall::MAX_PATH> FileName{};
+        gocpp::array<uint16_t, syscall::go_MAX_PATH> FileName{};
 
         using isGoStruct = void;
 
@@ -242,7 +242,7 @@ namespace golang::internal::syscall::windows
         unsigned char ReplaceIfExists{};
         syscall::Handle RootDirectory{};
         uint32_t FileNameLength{};
-        gocpp::array<uint16_t, syscall::MAX_PATH> FileName{};
+        gocpp::array<uint16_t, syscall::go_MAX_PATH> FileName{};
 
         using isGoStruct = void;
 

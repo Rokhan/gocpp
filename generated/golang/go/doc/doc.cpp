@@ -311,7 +311,7 @@ namespace golang::go::doc
             x.Filenames = r.filenames;
             x.Notes = r.notes;
             x.Bugs = noteBodies(r.notes.get("BUG"_s));
-            x.Consts = sortedValues(r.values, token::CONST);
+            x.Consts = sortedValues(r.values, token::go_CONST);
             x.Types = sortedTypes(r.types, mode & AllMethods != 0);
             x.Vars = sortedValues(r.values, token::VAR);
             x.Funcs = sortedFuncs(r.funcs, true);

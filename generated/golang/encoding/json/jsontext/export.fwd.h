@@ -7,5 +7,5 @@
 namespace golang::encoding::json::jsontext
 {
     struct exporter;
-    struct export;
+    struct go_export;
 }

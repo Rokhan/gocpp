@@ -212,7 +212,7 @@ namespace golang::runtime
     namespace rec
     {
         spanScanOwnership load(spanScanOwnership* o);
-        spanScanOwnership or(spanScanOwnership* o, spanScanOwnership v);
+        spanScanOwnership go_or(spanScanOwnership* o, spanScanOwnership v);
         void init(spanInlineMarkBits* imb, spanClass go_class, bool needzero);
         bool tryAcquire(spanInlineMarkBits* imb);
         spanScanOwnership release(spanInlineMarkBits* imb);

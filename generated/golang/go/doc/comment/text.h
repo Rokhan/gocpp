@@ -37,7 +37,7 @@ namespace golang::go::doc::comment
     struct textPrinter
     {
         Printer* Printer{};
-        strings::Builder long{};
+        strings::Builder go_long{};
         gocpp::string prefix{};
         gocpp::string codePrefix{};
         int64_t width{};

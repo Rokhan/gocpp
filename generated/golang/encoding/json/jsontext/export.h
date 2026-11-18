@@ -30,7 +30,7 @@ namespace golang::encoding::json::jsontext
     // Internal is for internal use only.
     // This is exempt from the Go compatibility agreement.
     extern exporter Internal;
-    struct export
+    struct go_export
     {
 
         using isGoStruct = void;
@@ -44,7 +44,7 @@ namespace golang::encoding::json::jsontext
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct export& value);
+    std::ostream& operator<<(std::ostream& os, const struct go_export& value);
 }
 
 #include "golang/encoding/json/internal/internal.h"
@@ -60,66 +60,66 @@ namespace golang::encoding::json::jsontext
 
     namespace rec
     {
-        export Export(exporter, internal::NotForPublicUse* p);
-        encoderState* Encoder(export, golang::encoding::json::jsontext::Encoder* e);
-        decoderState* Decoder(export, golang::encoding::json::jsontext::Decoder* d);
-        golang::encoding::json::jsontext::Encoder* GetBufferedEncoder(export, gocpp::slice<golang::encoding::json::jsontext::Options> o);
+        go_export Export(exporter, internal::NotForPublicUse* p);
+        encoderState* Encoder(go_export, golang::encoding::json::jsontext::Encoder* e);
+        decoderState* Decoder(go_export, golang::encoding::json::jsontext::Decoder* d);
+        golang::encoding::json::jsontext::Encoder* GetBufferedEncoder(go_export, gocpp::slice<golang::encoding::json::jsontext::Options> o);
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Encoder* GetBufferedEncoder(export, Args... o)
+        golang::encoding::json::jsontext::Encoder* GetBufferedEncoder(go_export, Args... o)
         {
             return GetBufferedEncoder(gocpp::ToSlice<golang::encoding::json::jsontext::Options>(o...));
         }
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Encoder* GetBufferedEncoder(export, golang::encoding::json::jsontext::Options value, Args... o)
+        golang::encoding::json::jsontext::Encoder* GetBufferedEncoder(go_export, golang::encoding::json::jsontext::Options value, Args... o)
         {
             return GetBufferedEncoder(gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, o...));
         }
-        void PutBufferedEncoder(export, golang::encoding::json::jsontext::Encoder* e);
-        golang::encoding::json::jsontext::Encoder* GetStreamingEncoder(export, io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> o);
+        void PutBufferedEncoder(go_export, golang::encoding::json::jsontext::Encoder* e);
+        golang::encoding::json::jsontext::Encoder* GetStreamingEncoder(go_export, io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> o);
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Encoder* GetStreamingEncoder(export, io::Writer w, Args... o)
+        golang::encoding::json::jsontext::Encoder* GetStreamingEncoder(go_export, io::Writer w, Args... o)
         {
             return GetStreamingEncoder(w, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(o...));
         }
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Encoder* GetStreamingEncoder(export, io::Writer w, golang::encoding::json::jsontext::Options value, Args... o)
+        golang::encoding::json::jsontext::Encoder* GetStreamingEncoder(go_export, io::Writer w, golang::encoding::json::jsontext::Options value, Args... o)
         {
             return GetStreamingEncoder(w, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, o...));
         }
-        void PutStreamingEncoder(export, golang::encoding::json::jsontext::Encoder* e);
-        golang::encoding::json::jsontext::Decoder* GetBufferedDecoder(export, gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> o);
+        void PutStreamingEncoder(go_export, golang::encoding::json::jsontext::Encoder* e);
+        golang::encoding::json::jsontext::Decoder* GetBufferedDecoder(go_export, gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> o);
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Decoder* GetBufferedDecoder(export, gocpp::slice<unsigned char> b, Args... o)
+        golang::encoding::json::jsontext::Decoder* GetBufferedDecoder(go_export, gocpp::slice<unsigned char> b, Args... o)
         {
             return GetBufferedDecoder(b, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(o...));
         }
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Decoder* GetBufferedDecoder(export, gocpp::slice<unsigned char> b, golang::encoding::json::jsontext::Options value, Args... o)
+        golang::encoding::json::jsontext::Decoder* GetBufferedDecoder(go_export, gocpp::slice<unsigned char> b, golang::encoding::json::jsontext::Options value, Args... o)
         {
             return GetBufferedDecoder(b, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, o...));
         }
-        void PutBufferedDecoder(export, golang::encoding::json::jsontext::Decoder* d);
-        golang::encoding::json::jsontext::Decoder* GetStreamingDecoder(export, io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> o);
+        void PutBufferedDecoder(go_export, golang::encoding::json::jsontext::Decoder* d);
+        golang::encoding::json::jsontext::Decoder* GetStreamingDecoder(go_export, io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> o);
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Decoder* GetStreamingDecoder(export, io::Reader r, Args... o)
+        golang::encoding::json::jsontext::Decoder* GetStreamingDecoder(go_export, io::Reader r, Args... o)
         {
             return GetStreamingDecoder(r, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(o...));
         }
         
         template<typename... Args>
-        golang::encoding::json::jsontext::Decoder* GetStreamingDecoder(export, io::Reader r, golang::encoding::json::jsontext::Options value, Args... o)
+        golang::encoding::json::jsontext::Decoder* GetStreamingDecoder(go_export, io::Reader r, golang::encoding::json::jsontext::Options value, Args... o)
         {
             return GetStreamingDecoder(r, gocpp::ToSlice<golang::encoding::json::jsontext::Options>(value, o...));
         }
-        void PutStreamingDecoder(export, golang::encoding::json::jsontext::Decoder* d);
-        bool IsIOError(export, gocpp::error err);
+        void PutStreamingDecoder(go_export, golang::encoding::json::jsontext::Decoder* d);
+        bool IsIOError(go_export, gocpp::error err);
     }
 }
 

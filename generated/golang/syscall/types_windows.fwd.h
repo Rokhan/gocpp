@@ -91,14 +91,14 @@ namespace golang::syscall
     inline constexpr long FORMAT_MESSAGE_FROM_SYSTEM = 4096;
     inline constexpr long FORMAT_MESSAGE_ARGUMENT_ARRAY = 8192;
     inline constexpr long FORMAT_MESSAGE_MAX_WIDTH_MASK = 255;
-    inline constexpr long MAX_PATH = 260;
+    inline constexpr long go_MAX_PATH = 260;
     inline constexpr long MAX_LONG_PATH = 32768;
     inline constexpr long MAX_COMPUTERNAME_LENGTH = 15;
     inline constexpr long TIME_ZONE_ID_UNKNOWN = 0;
     inline constexpr long TIME_ZONE_ID_STANDARD = 1;
     inline constexpr long TIME_ZONE_ID_DAYLIGHT = 2;
     inline constexpr long IGNORE = 0;
-    inline constexpr long INFINITE = 0xffffffffLL;
+    inline constexpr long go_INFINITE = 0xffffffffLL;
     inline constexpr long WAIT_TIMEOUT = 258;
     inline constexpr long WAIT_ABANDONED = 0x00000080;
     inline constexpr long WAIT_OBJECT_0 = 0x00000000;

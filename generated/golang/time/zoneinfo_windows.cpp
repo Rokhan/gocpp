@@ -129,15 +129,15 @@ namespace golang::time
     // extractCAPS extracts capital letters from description desc.
     gocpp::string extractCAPS(gocpp::string desc)
     {
-        gocpp::slice<gocpp::rune> short = {};
+        gocpp::slice<gocpp::rune> go_short = {};
         for(auto [gocpp_ignored, c] : desc)
         {
             if('A' <= c && c <= 'Z')
             {
-                short = append(short, c);
+                go_short = append(go_short, c);
             }
         }
-        return gocpp::string(short);
+        return gocpp::string(go_short);
     }
 
     // abbrev returns the abbreviations to use for the given zone z.

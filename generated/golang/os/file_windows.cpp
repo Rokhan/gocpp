@@ -442,7 +442,7 @@ namespace golang::os
         {
             getTempPath = windows::GetTempPath2;
         }
-        uint32_t n = uint32_t(syscall::MAX_PATH);
+        uint32_t n = uint32_t(syscall::go_MAX_PATH);
         for(; ; )
         {
             auto b = gocpp::make(gocpp::Tag<gocpp::slice<uint16_t>>(), n);

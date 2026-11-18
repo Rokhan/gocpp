@@ -17,7 +17,7 @@ namespace golang::golang_org::x::mod::semver
         gocpp::string major{};
         gocpp::string minor{};
         gocpp::string patch{};
-        gocpp::string short{};
+        gocpp::string go_short{};
         gocpp::string prerelease{};
         gocpp::string build{};
 

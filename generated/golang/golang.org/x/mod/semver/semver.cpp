@@ -49,7 +49,7 @@ namespace golang::golang_org::x::mod::semver
         result.major = this->major;
         result.minor = this->minor;
         result.patch = this->patch;
-        result.short = this->short;
+        result.go_short = this->go_short;
         result.prerelease = this->prerelease;
         result.build = this->build;
         return result;
@@ -61,7 +61,7 @@ namespace golang::golang_org::x::mod::semver
         if (major != ref.major) return false;
         if (minor != ref.minor) return false;
         if (patch != ref.patch) return false;
-        if (short != ref.short) return false;
+        if (go_short != ref.go_short) return false;
         if (prerelease != ref.prerelease) return false;
         if (build != ref.build) return false;
         return true;
@@ -73,7 +73,7 @@ namespace golang::golang_org::x::mod::semver
         os << "" << major;
         os << " " << minor;
         os << " " << patch;
-        os << " " << short;
+        os << " " << go_short;
         os << " " << prerelease;
         os << " " << build;
         os << '}';
@@ -108,9 +108,9 @@ namespace golang::golang_org::x::mod::semver
         {
             return v.make_slice(0, len(v) - len(p.build));
         }
-        if(p.short != ""_s)
+        if(p.go_short != ""_s)
         {
-            return v + p.short;
+            return v + p.go_short;
         }
         return v;
     }
@@ -275,7 +275,7 @@ namespace golang::golang_org::x::mod::semver
         {
             p.minor = "0"_s;
             p.patch = "0"_s;
-            p.short = ".0.0"_s;
+            p.go_short = ".0.0"_s;
             return {p, ok};
         }
         if(v[0] != '.')
@@ -291,7 +291,7 @@ namespace golang::golang_org::x::mod::semver
         if(v == ""_s)
         {
             p.patch = "0"_s;
-            p.short = ".0"_s;
+            p.go_short = ".0"_s;
             return {p, ok};
         }
         if(v[0] != '.')

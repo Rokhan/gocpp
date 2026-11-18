@@ -111,11 +111,11 @@ namespace golang::math::big
         golang::math::big::nat setBit(golang::math::big::nat z, golang::math::big::nat x, uint64_t i, uint64_t b);
         uint64_t bit(golang::math::big::nat x, uint64_t i);
         uint64_t sticky(golang::math::big::nat x, uint64_t i);
-        golang::math::big::nat and(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat go_and(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
         golang::math::big::nat trunc(golang::math::big::nat z, golang::math::big::nat x, uint64_t n);
         golang::math::big::nat andNot(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
-        golang::math::big::nat or(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
-        golang::math::big::nat xor(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat go_or(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
+        golang::math::big::nat go_xor(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y);
         golang::math::big::nat random(golang::math::big::nat z, rand::Rand* rand, golang::math::big::nat limit, int64_t n);
         golang::math::big::nat expNN(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m, bool slow);
         golang::math::big::nat expNNMontgomeryEven(golang::math::big::nat z, stack* stk, golang::math::big::nat x, golang::math::big::nat y, golang::math::big::nat m);

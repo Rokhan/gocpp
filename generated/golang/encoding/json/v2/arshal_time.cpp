@@ -107,7 +107,7 @@ namespace golang::encoding::json::v2
                     auto marshalNano = fncs->marshal;
                     fncs->marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
                     {
-                        auto xe = rec::Encoder(gocpp::recv(export), enc);
+                        auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                         durationArshaler m = {};
                         if(rec::Has(gocpp::recv(mo->Flags), jsonflags::FormatTag))
                         {
@@ -140,7 +140,7 @@ namespace golang::encoding::json::v2
                         auto k = stringOrNumberKind(! rec::isNumeric(gocpp::recv(m)) || rec::NeedObjectName(gocpp::recv(xe->state.Tokens.Last)) || rec::Get(gocpp::recv(mo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag));
                         if(auto err = rec::AppendRaw(gocpp::recv(xe), k, true, [&](auto x){ return rec::appendMarshal(m, x); }); err != nullptr)
                         {
-                            if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                            if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                             {
                                 err = newMarshalErrorBefore(enc, t, err);
                             }
@@ -151,7 +151,7 @@ namespace golang::encoding::json::v2
                     auto unmarshalNano = fncs->unmarshal;
                     fncs->unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
                     {
-                        auto xd = rec::Decoder(gocpp::recv(export), dec);
+                        auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                         durationArshaler u = {};
                         if(rec::Has(gocpp::recv(uo->Flags), jsonflags::FormatTag))
                         {
@@ -241,7 +241,7 @@ namespace golang::encoding::json::v2
                     fncs->marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
                     {
                         gocpp::error err;
-                        auto xe = rec::Encoder(gocpp::recv(export), enc);
+                        auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                         timeArshaler m = {};
                         if(rec::Has(gocpp::recv(mo->Flags), jsonflags::FormatTag))
                         {
@@ -264,7 +264,7 @@ namespace golang::encoding::json::v2
                                 // unlike unmarshal, always wrapped
                                 return internal::NewMarshalerError(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))), err, "MarshalJSON"_s);
                             }
-                            if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                            if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                             {
                                 err = newMarshalErrorBefore(enc, t, err);
                             }
@@ -275,7 +275,7 @@ namespace golang::encoding::json::v2
                     fncs->unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
                     {
                         gocpp::error err;
-                        auto xd = rec::Decoder(gocpp::recv(export), dec);
+                        auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                         timeArshaler u = {};
                         if(rec::Has(gocpp::recv(uo->Flags), jsonflags::FormatTag))
                         {

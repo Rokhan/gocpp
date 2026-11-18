@@ -120,9 +120,9 @@ namespace golang::encoding::json::v2
                     return nullptr;
                 }
 
-                auto dec = rec::GetBufferedDecoder(gocpp::recv(export), b);
-                defer.push_back([=]{ rec::PutBufferedDecoder(gocpp::recv(export), dec); });
-                auto xd = rec::Decoder(gocpp::recv(export), dec);
+                auto dec = rec::GetBufferedDecoder(gocpp::recv(go_export), b);
+                defer.push_back([=]{ rec::PutBufferedDecoder(gocpp::recv(go_export), dec); });
+                auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                 rec::Set(gocpp::recv(xd->Struct.Flags), jsonflags::AllowDuplicateNames | jsonflags::AllowInvalidUTF8 | 1);
 
                 auto [tok, err] = rec::ReadToken(gocpp::recv(dec));

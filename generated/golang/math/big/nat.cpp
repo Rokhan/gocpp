@@ -786,7 +786,7 @@ namespace golang::math::big
         return 0;
     }
 
-    golang::math::big::nat rec::and(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
+    golang::math::big::nat rec::go_and(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -844,7 +844,7 @@ namespace golang::math::big
         return rec::norm(gocpp::recv(z));
     }
 
-    golang::math::big::nat rec::or(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
+    golang::math::big::nat rec::go_or(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);
@@ -867,7 +867,7 @@ namespace golang::math::big
         return rec::norm(gocpp::recv(z));
     }
 
-    golang::math::big::nat rec::xor(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
+    golang::math::big::nat rec::go_xor(golang::math::big::nat z, golang::math::big::nat x, golang::math::big::nat y)
     {
         auto m = len(x);
         auto n = len(y);

@@ -320,11 +320,11 @@ namespace golang::runtime
         rec::publishInfo(gocpp::recv(pd));
         unlock(& pd->lock);
 
-        auto errno = netpollopen(fd, pd);
-        if(errno != 0)
+        auto go_errno = netpollopen(fd, pd);
+        if(go_errno != 0)
         {
             rec::free(gocpp::recv(pollcache), pd);
-            return {nullptr, int64_t(errno)};
+            return {nullptr, int64_t(go_errno)};
         }
         return {pd, 0};
     }

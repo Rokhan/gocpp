@@ -51,7 +51,7 @@ namespace golang::encoding::json
     }
 
     // export exposes internal functionality of the "jsontext" package.
-    jsontext::export export = rec::Export(gocpp::recv(jsontext::Internal), & internal::AllowInternalUse);
+    jsontext::export go_export = rec::Export(gocpp::recv(jsontext::Internal), & internal::AllowInternalUse);
     // Valid reports whether data is a valid JSON encoding.
     bool Valid(gocpp::slice<unsigned char> data)
     {
@@ -63,9 +63,9 @@ namespace golang::encoding::json
         gocpp::Defer defer;
         try
         {
-            auto d = rec::GetBufferedDecoder(gocpp::recv(export), data);
-            defer.push_back([=]{ rec::PutBufferedDecoder(gocpp::recv(export), d); });
-            auto xd = rec::Decoder(gocpp::recv(export), d);
+            auto d = rec::GetBufferedDecoder(gocpp::recv(go_export), data);
+            defer.push_back([=]{ rec::PutBufferedDecoder(gocpp::recv(go_export), d); });
+            auto xd = rec::Decoder(gocpp::recv(go_export), d);
             rec::Set(gocpp::recv(xd->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics | jsonflags::AllowDuplicateNames | jsonflags::AllowInvalidUTF8 | 1);
             if(auto [gocpp_id_0, err] = rec::ReadValue(gocpp::recv(d)); err != nullptr)
             {
@@ -139,14 +139,14 @@ namespace golang::encoding::json
             int conditionId = -1;
             if(serr != nullptr) { conditionId = 0; }
             else if(ok) { conditionId = 1; }
-            else if(rec::IsIOError(gocpp::recv(export), err)) { conditionId = 2; }
+            else if(rec::IsIOError(gocpp::recv(go_export), err)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
                 {
                     // If the SyntacticError wraps an IO error, unwrap it
                     // to match v1 behavior which returned IO errors directly.
-                    if(rec::IsIOError(gocpp::recv(export), serr->Err))
+                    if(rec::IsIOError(gocpp::recv(go_export), serr->Err))
                     {
                         return errors::Unwrap(serr->Err);
                     }

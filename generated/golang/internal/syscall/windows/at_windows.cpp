@@ -61,7 +61,7 @@ namespace golang::internal::syscall::windows
         }
         if(fileFlags & O_FILE_FLAG_DELETE_ON_CLOSE != 0)
         {
-            access |= DELETE;
+            access |= go_DELETE;
         }
         auto setOptionFlag = [=](uint32_t ntFlag, uint32_t win32Flag) mutable -> void
         {
@@ -302,7 +302,7 @@ namespace golang::internal::syscall::windows
                 return err;
             }
             syscall::Handle h = {};
-            auto err = NtOpenFile(& h, FILE_READ_ATTRIBUTES | DELETE, objAttrs, new IO_STATUS_BLOCK {}, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | options);
+            auto err = NtOpenFile(& h, FILE_READ_ATTRIBUTES | go_DELETE, objAttrs, new IO_STATUS_BLOCK {}, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | options);
             if(err != nullptr)
             {
                 if(auto [ntStatus, ok] = gocpp::getValue<NTStatus>(err); ! ok || ntStatus != STATUS_ACCESS_DENIED)
@@ -313,7 +313,7 @@ namespace golang::internal::syscall::windows
                 // Access denied, try opening with DELETE only.
                 // This may succeed if the file has restrictive permissions
                 // but the caller has delete child permission on the parent directory.
-                err = NtOpenFile(& h, DELETE, objAttrs, new IO_STATUS_BLOCK {}, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | options);
+                err = NtOpenFile(& h, go_DELETE, objAttrs, new IO_STATUS_BLOCK {}, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | options);
                 if(err != nullptr)
                 {
                     return ntCreateFileError(err, 0);
@@ -415,7 +415,7 @@ namespace golang::internal::syscall::windows
                 return err;
             }
             syscall::Handle h = {};
-            auto err = NtOpenFile(& h, SYNCHRONIZE | DELETE, objAttrs, new IO_STATUS_BLOCK {}, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT);
+            auto err = NtOpenFile(& h, SYNCHRONIZE | go_DELETE, objAttrs, new IO_STATUS_BLOCK {}, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT);
             if(err != nullptr)
             {
                 return ntCreateFileError(err, 0);
@@ -571,7 +571,7 @@ namespace golang::internal::syscall::windows
                 return err;
             }
             syscall::Handle h = {};
-            err = NtCreateFile(& h, SYNCHRONIZE | FILE_WRITE_ATTRIBUTES | DELETE, objAttrs, new IO_STATUS_BLOCK {}, nullptr, syscall::FILE_ATTRIBUTE_NORMAL, 0, FILE_CREATE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT | options, nullptr, 0);
+            err = NtCreateFile(& h, SYNCHRONIZE | FILE_WRITE_ATTRIBUTES | go_DELETE, objAttrs, new IO_STATUS_BLOCK {}, nullptr, syscall::FILE_ATTRIBUTE_NORMAL, 0, FILE_CREATE, FILE_OPEN_REPARSE_POINT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT | options, nullptr, 0);
             if(err != nullptr)
             {
                 return ntCreateFileError(err, 0);

@@ -350,7 +350,7 @@ namespace golang::internal::poll
             // The overlapped handle is not added to the runtime poller,
             // the only way to wait for the IO to complete is block until
             // the overlapped event is signaled.
-            auto [gocpp_id_0, err] = syscall::WaitForSingleObject(o->o.HEvent, syscall::INFINITE);
+            auto [gocpp_id_0, err] = syscall::WaitForSingleObject(o->o.HEvent, syscall::go_INFINITE);
             return err;
         }
         // Wait for our request to complete.
@@ -1710,14 +1710,14 @@ namespace golang::internal::poll
                 // before AcceptEx could complete. These errors relate to new
                 // connection, not to AcceptEx, so ignore broken connection and
                 // try AcceptEx again for more connections.
-                auto [errno, ok] = gocpp::getValue<syscall::Errno>(err);
+                auto [go_errno, ok] = gocpp::getValue<syscall::Errno>(err);
                 if(! ok)
                 {
                     return {syscall::InvalidHandle, nullptr, 0, errcall, err};
                 }
                 //Go switch emulation
                 {
-                    auto condition = errno;
+                    auto condition = go_errno;
                     int conditionId = -1;
                     if(condition == syscall::ERROR_NETNAME_DELETED) { conditionId = 0; }
                     else if(condition == syscall::WSAECONNRESET) { conditionId = 1; }

@@ -89,7 +89,7 @@ namespace golang::go::token
         x[BREAK] = "break"_s;
         x[CASE] = "case"_s;
         x[CHAN] = "chan"_s;
-        x[CONST] = "const"_s;
+        x[go_CONST] = "const"_s;
         x[CONTINUE] = "continue"_s;
         x[DEFAULT] = "default"_s;
         x[DEFER] = "defer"_s;

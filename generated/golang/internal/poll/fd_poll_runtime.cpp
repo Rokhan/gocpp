@@ -98,10 +98,10 @@ namespace golang::internal::poll
     gocpp::error rec::init(pollDesc* pd, FD* fd)
     {
         rec::Do(gocpp::recv(serverInit), runtime_pollServerInit);
-        auto [ctx, errno] = runtime_pollOpen(uintptr_t(fd->Sysfd));
-        if(errno != 0)
+        auto [ctx, go_errno] = runtime_pollOpen(uintptr_t(fd->Sysfd));
+        if(go_errno != 0)
         {
-            return errnoErr(syscall::Errno(errno));
+            return errnoErr(syscall::Errno(go_errno));
         }
         pd->runtimeCtx = ctx;
         return nullptr;

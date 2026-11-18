@@ -59,13 +59,13 @@ namespace golang::encoding::json::jsontext
     // Export exposes internal functionality from "jsontext" to "json".
     // This cannot be dynamically called by other packages since
     // they cannot obtain a reference to the internal.AllowInternalUse value.
-    export rec::Export(exporter, internal::NotForPublicUse* p)
+    go_export rec::Export(exporter, internal::NotForPublicUse* p)
     {
         if(p != & internal::AllowInternalUse)
         {
             gocpp::panic("unauthorized call to Export"_s);
         }
-        return export {};
+        return go_export {};
     }
 
     // The export type exposes functionality to packages with visibility to
@@ -77,83 +77,83 @@ namespace golang::encoding::json::jsontext
     // guarantees that it emits valid JSON by the structure of the code itself.
     
     template<typename T> requires gocpp::GoStruct<T>
-    export::operator T()
+    go_export::operator T()
     {
         T result;
         return result;
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool export::operator==(const T& ref) const
+    bool go_export::operator==(const T& ref) const
     {
         return true;
     }
 
-    std::ostream& export::PrintTo(std::ostream& os) const
+    std::ostream& go_export::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << '}';
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct export& value)
+    std::ostream& operator<<(std::ostream& os, const struct go_export& value)
     {
         return value.PrintTo(os);
     }
 
     // Encoder returns a pointer to the underlying encoderState.
-    encoderState* rec::Encoder(export, golang::encoding::json::jsontext::Encoder* e)
+    encoderState* rec::Encoder(go_export, golang::encoding::json::jsontext::Encoder* e)
     {
         return & e->s;
     }
 
     // Decoder returns a pointer to the underlying decoderState.
-    decoderState* rec::Decoder(export, golang::encoding::json::jsontext::Decoder* d)
+    decoderState* rec::Decoder(go_export, golang::encoding::json::jsontext::Decoder* d)
     {
         return & d->s;
     }
 
-    golang::encoding::json::jsontext::Encoder* rec::GetBufferedEncoder(export, gocpp::slice<golang::encoding::json::jsontext::Options> o)
+    golang::encoding::json::jsontext::Encoder* rec::GetBufferedEncoder(go_export, gocpp::slice<golang::encoding::json::jsontext::Options> o)
     {
         return getBufferedEncoder(o);
     }
 
-    void rec::PutBufferedEncoder(export, golang::encoding::json::jsontext::Encoder* e)
+    void rec::PutBufferedEncoder(go_export, golang::encoding::json::jsontext::Encoder* e)
     {
         putBufferedEncoder(e);
     }
 
-    golang::encoding::json::jsontext::Encoder* rec::GetStreamingEncoder(export, io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> o)
+    golang::encoding::json::jsontext::Encoder* rec::GetStreamingEncoder(go_export, io::Writer w, gocpp::slice<golang::encoding::json::jsontext::Options> o)
     {
         return getStreamingEncoder(w, o);
     }
 
-    void rec::PutStreamingEncoder(export, golang::encoding::json::jsontext::Encoder* e)
+    void rec::PutStreamingEncoder(go_export, golang::encoding::json::jsontext::Encoder* e)
     {
         putStreamingEncoder(e);
     }
 
-    golang::encoding::json::jsontext::Decoder* rec::GetBufferedDecoder(export, gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> o)
+    golang::encoding::json::jsontext::Decoder* rec::GetBufferedDecoder(go_export, gocpp::slice<unsigned char> b, gocpp::slice<golang::encoding::json::jsontext::Options> o)
     {
         return getBufferedDecoder(b, o);
     }
 
-    void rec::PutBufferedDecoder(export, golang::encoding::json::jsontext::Decoder* d)
+    void rec::PutBufferedDecoder(go_export, golang::encoding::json::jsontext::Decoder* d)
     {
         putBufferedDecoder(d);
     }
 
-    golang::encoding::json::jsontext::Decoder* rec::GetStreamingDecoder(export, io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> o)
+    golang::encoding::json::jsontext::Decoder* rec::GetStreamingDecoder(go_export, io::Reader r, gocpp::slice<golang::encoding::json::jsontext::Options> o)
     {
         return getStreamingDecoder(r, o);
     }
 
-    void rec::PutStreamingDecoder(export, golang::encoding::json::jsontext::Decoder* d)
+    void rec::PutStreamingDecoder(go_export, golang::encoding::json::jsontext::Decoder* d)
     {
         putStreamingDecoder(d);
     }
 
-    bool rec::IsIOError(export, gocpp::error err)
+    bool rec::IsIOError(go_export, gocpp::error err)
     {
         auto [gocpp_id_0, ok] = gocpp::getValue<ioError*>(err);
         return ok;

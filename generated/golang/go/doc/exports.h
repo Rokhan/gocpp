@@ -24,13 +24,13 @@ namespace golang::go::doc
 
 namespace golang::go::doc
 {
-    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool export);
+    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool go_export);
 }
 #include "golang/go/ast/ast.h"
 
 namespace golang::go::doc
 {
-    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool export);
+    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool go_export);
 }
 #include "golang/go/token/token.fwd.h"
 

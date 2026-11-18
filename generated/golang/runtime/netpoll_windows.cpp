@@ -166,11 +166,11 @@ namespace golang::runtime
         return value.PrintTo(os);
     }
 
-    uintptr_t iocphandle = windows::INVALID_HANDLE_VALUE;
+    uintptr_t iocphandle = windows::go_INVALID_HANDLE_VALUE;
     atomic::Uint32 netpollWakeSig;
     void netpollinit()
     {
-        iocphandle = stdcall(_CreateIoCompletionPort, windows::INVALID_HANDLE_VALUE, 0, 0, windows::DWORD_MAX);
+        iocphandle = stdcall(_CreateIoCompletionPort, windows::go_INVALID_HANDLE_VALUE, 0, 0, windows::DWORD_MAX);
         if(iocphandle == 0)
         {
             println("runtime: CreateIoCompletionPort failed (errno="_s, getlasterror(), ")"_s);
@@ -230,7 +230,7 @@ namespace golang::runtime
     // delay > 0: block for up to that many nanoseconds
     std::tuple<gList, int32_t> netpoll(int64_t delay)
     {
-        if(iocphandle == windows::INVALID_HANDLE_VALUE)
+        if(iocphandle == windows::go_INVALID_HANDLE_VALUE)
         {
             return {gList {}, 0};
         }
@@ -265,7 +265,7 @@ namespace golang::runtime
         }
         if(delay < 0)
         {
-            wait = windows::INFINITE;
+            wait = windows::go_INFINITE;
         }
         else
         if(delay == 0)
@@ -293,12 +293,12 @@ namespace golang::runtime
         if(stdcall(_GetQueuedCompletionStatusEx, iocphandle, uintptr_t(gocpp::unsafe_pointer(& entries[0])), uintptr_t(n), uintptr_t(gocpp::unsafe_pointer(& n)), uintptr_t(wait), 0) == 0)
         {
             mp->blocked = false;
-            auto errno = getlasterror();
-            if(errno == windows::WAIT_TIMEOUT)
+            auto go_errno = getlasterror();
+            if(go_errno == windows::WAIT_TIMEOUT)
             {
                 return {gList {}, 0};
             }
-            println("runtime: GetQueuedCompletionStatusEx failed (errno="_s, errno, ")"_s);
+            println("runtime: GetQueuedCompletionStatusEx failed (errno="_s, go_errno, ")"_s);
             go_throw("runtime: netpoll failed"_s);
         }
         mp->blocked = false;
@@ -367,10 +367,10 @@ namespace golang::runtime
         // such as a netpollBreak, so we can get to this point with a timer that hasn't
         // expired yet. In this case, the completion packet can still be picked up by
         // another thread, so defer the cancellation until it is really necessary.
-        auto errno = stdcall(_NtCancelWaitCompletionPacket, mp->mOS.waitIocpHandle, 1);
+        auto go_errno = stdcall(_NtCancelWaitCompletionPacket, mp->mOS.waitIocpHandle, 1);
         //Go switch emulation
         {
-            auto condition = errno;
+            auto condition = go_errno;
             int conditionId = -1;
             if(condition == windows::STATUS_CANCELLED) { conditionId = 0; }
             else if(condition == windows::STATUS_SUCCESS) { conditionId = 1; }
@@ -390,9 +390,9 @@ namespace golang::runtime
                         go_throw("runtime: netpoll failed"_s);
                     }
                     auto key = packNetpollKey(netpollSourceTimer, nullptr);
-                    if(auto errno = stdcall(_NtAssociateWaitCompletionPacket, mp->mOS.waitIocpHandle, iocphandle, mp->mOS.waitIocpTimer, key, 0, 0, 0, uintptr_t(gocpp::unsafe_pointer(& signaled))); errno != 0)
+                    if(auto go_errno = stdcall(_NtAssociateWaitCompletionPacket, mp->mOS.waitIocpHandle, iocphandle, mp->mOS.waitIocpTimer, key, 0, 0, 0, uintptr_t(gocpp::unsafe_pointer(& signaled))); go_errno != 0)
                     {
-                        println("runtime: NtAssociateWaitCompletionPacket failed; errno="_s, errno);
+                        println("runtime: NtAssociateWaitCompletionPacket failed; errno="_s, go_errno);
                         go_throw("runtime: netpoll failed"_s);
                     }
                     break;
@@ -405,7 +405,7 @@ namespace golang::runtime
                 // this call fails to cancel the association to avoid a race condition.
                 // This is a rare case, so we can just avoid using the high resolution timer this time.
                 default:
-                    println("runtime: NtCancelWaitCompletionPacket failed; errno="_s, errno);
+                    println("runtime: NtCancelWaitCompletionPacket failed; errno="_s, go_errno);
                     go_throw("runtime: netpoll failed"_s);
                     break;
             }

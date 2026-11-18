@@ -822,7 +822,7 @@ namespace golang::go::types
                                     {
                                         auto condition = d->Tok;
                                         int conditionId = -1;
-                                        if(condition == token::CONST) { conditionId = 0; }
+                                        if(condition == token::go_CONST) { conditionId = 0; }
                                         else if(condition == token::VAR) { conditionId = 1; }
                                         switch(conditionId)
                                         {

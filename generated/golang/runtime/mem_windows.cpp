@@ -88,10 +88,10 @@ namespace golang::runtime
             }
             if(small < 4096)
             {
-                auto errno = getlasterror();
+                auto go_errno = getlasterror();
                 //Go switch emulation
                 {
-                    auto condition = errno;
+                    auto condition = go_errno;
                     int conditionId = -1;
                     if(condition == _ERROR_NOT_ENOUGH_MEMORY) { conditionId = 0; }
                     else if(condition == _ERROR_COMMITMENT_LIMIT) { conditionId = 1; }
@@ -99,11 +99,11 @@ namespace golang::runtime
                     {
                         case 0:
                         case 1:
-                            print("runtime: VirtualAlloc of "_s, n, " bytes failed with errno="_s, errno, "\n"_s);
+                            print("runtime: VirtualAlloc of "_s, n, " bytes failed with errno="_s, go_errno, "\n"_s);
                             go_throw("out of memory"_s);
                             break;
                         default:
-                            print("runtime: VirtualAlloc of "_s, small, " bytes failed with errno="_s, errno, "\n"_s);
+                            print("runtime: VirtualAlloc of "_s, small, " bytes failed with errno="_s, go_errno, "\n"_s);
                             go_throw("runtime: failed to commit pages"_s);
                             break;
                     }

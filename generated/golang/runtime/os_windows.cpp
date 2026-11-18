@@ -901,7 +901,7 @@ namespace golang::runtime
         uintptr_t result = {};
         if(ns < 0)
         {
-            result = stdcall(_WaitForSingleObject, getg()->m->mOS.waitsema, uintptr_t(windows::INFINITE));
+            result = stdcall(_WaitForSingleObject, getg()->m->mOS.waitsema, uintptr_t(windows::go_INFINITE));
         }
         else
         {
@@ -1160,10 +1160,10 @@ namespace golang::runtime
                 go_throw("CreateWaitableTimerEx when creating timer failed"_s);
             }
             constexpr int64_t GENERIC_ALL = 0x10000000;
-            auto errno = stdcall(_NtCreateWaitCompletionPacket, uintptr_t(gocpp::unsafe_pointer(& mp->mOS.waitIocpHandle)), GENERIC_ALL, 0);
+            auto go_errno = stdcall(_NtCreateWaitCompletionPacket, uintptr_t(gocpp::unsafe_pointer(& mp->mOS.waitIocpHandle)), GENERIC_ALL, 0);
             if(mp->mOS.waitIocpHandle == 0)
             {
-                print("runtime: NtCreateWaitCompletionPacket failed; errno="_s, errno, "\n"_s);
+                print("runtime: NtCreateWaitCompletionPacket failed; errno="_s, go_errno, "\n"_s);
                 go_throw("NtCreateWaitCompletionPacket failed"_s);
             }
         }
@@ -1328,7 +1328,7 @@ namespace golang::runtime
     {
         // ms units
         auto timeout = uintptr_t(us) / 1000;
-        stdcall_no_g(_WaitForSingleObject, windows::INVALID_HANDLE_VALUE, timeout);
+        stdcall_no_g(_WaitForSingleObject, windows::go_INVALID_HANDLE_VALUE, timeout);
     }
 
     //go:nosplit
@@ -1346,11 +1346,11 @@ namespace golang::runtime
                 // relative sleep (negative), 100ns units
                 auto dt = - 10 * int64_t(us);
                 stdcall(_SetWaitableTimer, h, uintptr_t(gocpp::unsafe_pointer(& dt)), 0, 0, 0, 0);
-                timeout = windows::INFINITE;
+                timeout = windows::go_INFINITE;
             }
             else
             {
-                h = windows::INVALID_HANDLE_VALUE;
+                h = windows::go_INVALID_HANDLE_VALUE;
                 // ms units
                 timeout = uintptr_t(us) / 1000;
             }
@@ -1446,7 +1446,7 @@ namespace golang::runtime
 
         for(; ; )
         {
-            stdcall(_WaitForSingleObject, profiletimer, windows::INFINITE);
+            stdcall(_WaitForSingleObject, profiletimer, windows::go_INFINITE);
             auto first = (m*)(atomic::Loadp(gocpp::unsafe_pointer(& allm)));
             for(auto mp = first; mp != nullptr; mp = mp->alllink)
             {

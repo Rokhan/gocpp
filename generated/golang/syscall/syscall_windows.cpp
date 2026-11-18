@@ -2138,7 +2138,7 @@ namespace golang::syscall
     gocpp::error Fchdir(golang::syscall::Handle fd)
     {
         gocpp::error err;
-        gocpp::array<uint16_t, MAX_PATH + 1> buf = {};
+        gocpp::array<uint16_t, go_MAX_PATH + 1> buf = {};
         gocpp::slice<uint16_t> path;
         std::tie(path, err) = fdpath(fd, buf.make_slice(0));
         if(err != nullptr)

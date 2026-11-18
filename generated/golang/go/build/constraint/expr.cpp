@@ -233,7 +233,7 @@ namespace golang::go::build::constraint
         return "!"_s + s;
     }
 
-    Expr not(Expr x)
+    Expr go_not(Expr x)
     {
         return new NotExpr {x};
     }
@@ -298,7 +298,7 @@ namespace golang::go::build::constraint
         return s;
     }
 
-    Expr and(Expr x, Expr y)
+    Expr go_and(Expr x, Expr y)
     {
         return new AndExpr {x, y};
     }
@@ -363,7 +363,7 @@ namespace golang::go::build::constraint
         return s;
     }
 
-    Expr or(Expr x, Expr y)
+    Expr go_or(Expr x, Expr y)
     {
         return new OrExpr {x, y};
     }
@@ -540,7 +540,7 @@ namespace golang::go::build::constraint
             auto p = gocpp::InitPtr<exprParser>([=](auto& x) {
                 x.s = text;
             });
-            x = rec::or(gocpp::recv(p));
+            x = rec::go_or(gocpp::recv(p));
             if(p->tok != ""_s)
             {
                 gocpp::panic(gocpp::InitPtr<SyntaxError>([=](auto& x) {
@@ -560,12 +560,12 @@ namespace golang::go::build::constraint
     // or parses a sequence of || expressions.
     // On entry, the next input token has not yet been lexed.
     // On exit, the next input token has been lexed and is in p.tok.
-    Expr rec::or(exprParser* p)
+    Expr rec::go_or(exprParser* p)
     {
-        auto x = rec::and(gocpp::recv(p));
+        auto x = rec::go_and(gocpp::recv(p));
         for(; p->tok == "||"_s; )
         {
-            x = constraint::or(x, rec::and(gocpp::recv(p)));
+            x = constraint::go_or(x, rec::go_and(gocpp::recv(p)));
         }
         return x;
     }
@@ -573,12 +573,12 @@ namespace golang::go::build::constraint
     // and parses a sequence of && expressions.
     // On entry, the next input token has not yet been lexed.
     // On exit, the next input token has been lexed and is in p.tok.
-    Expr rec::and(exprParser* p)
+    Expr rec::go_and(exprParser* p)
     {
-        auto x = rec::not(gocpp::recv(p));
+        auto x = rec::go_not(gocpp::recv(p));
         for(; p->tok == "&&"_s; )
         {
-            x = constraint::and(x, rec::not(gocpp::recv(p)));
+            x = constraint::go_and(x, rec::go_not(gocpp::recv(p)));
         }
         return x;
     }
@@ -586,7 +586,7 @@ namespace golang::go::build::constraint
     // not parses a ! expression.
     // On entry, the next input token has not yet been lexed.
     // On exit, the next input token has been lexed and is in p.tok.
-    Expr rec::not(exprParser* p)
+    Expr rec::go_not(exprParser* p)
     {
         p->size++;
         if(p->size > maxSize)
@@ -607,7 +607,7 @@ namespace golang::go::build::constraint
                     x.Err = "double negation not allowed"_s;
                 }));
             }
-            return constraint::not(rec::atom(gocpp::recv(p)));
+            return constraint::go_not(rec::atom(gocpp::recv(p)));
         }
         return rec::atom(gocpp::recv(p));
     }
@@ -638,7 +638,7 @@ namespace golang::go::build::constraint
                         gocpp::panic(e);
                     }
                 }(); });
-                auto x = rec::or(gocpp::recv(p));
+                auto x = rec::go_or(gocpp::recv(p));
                 if(p->tok != ")"_s)
                 {
                     gocpp::panic(gocpp::InitPtr<SyntaxError>([=](auto& y) {
@@ -843,7 +843,7 @@ namespace golang::go::build::constraint
                     }
                     if(neg)
                     {
-                        z = not(z);
+                        z = go_not(z);
                     }
                 }
                 if(y == nullptr)
@@ -856,7 +856,7 @@ namespace golang::go::build::constraint
                     {
                         return {nullptr, errComplex};
                     }
-                    y = and(y, z);
+                    y = go_and(y, z);
                 }
             }
             if(x == nullptr)
@@ -869,7 +869,7 @@ namespace golang::go::build::constraint
                 {
                     return {nullptr, errComplex};
                 }
-                x = or(x, y);
+                x = go_or(x, y);
             }
         }
         if(x == nullptr)
@@ -910,13 +910,13 @@ namespace golang::go::build::constraint
 
         // Split into AND of ORs of ANDs of literals (tag or NOT tag).
         gocpp::slice<gocpp::slice<gocpp::slice<Expr>>> split = {};
-        for(auto [gocpp_ignored, or] : appendSplitAnd(nullptr, x))
+        for(auto [gocpp_ignored, go_or] : appendSplitAnd(nullptr, x))
         {
             gocpp::slice<gocpp::slice<Expr>> ands = {};
-            for(auto [gocpp_ignored, and] : appendSplitOr(nullptr, or))
+            for(auto [gocpp_ignored, go_and] : appendSplitOr(nullptr, go_or))
             {
                 gocpp::slice<Expr> lits = {};
-                for(auto [gocpp_ignored, lit] : appendSplitAnd(nullptr, and))
+                for(auto [gocpp_ignored, lit] : appendSplitAnd(nullptr, go_and))
                 {
                     //Go type switch emulation
                     {
@@ -949,33 +949,33 @@ namespace golang::go::build::constraint
         // push the top-level ANDs to the bottom level, so that we get
         // one // +build line instead of many.
         int64_t maxOr = 0;
-        for(auto [gocpp_ignored, or] : split)
+        for(auto [gocpp_ignored, go_or] : split)
         {
-            if(maxOr < len(or))
+            if(maxOr < len(go_or))
             {
-                maxOr = len(or);
+                maxOr = len(go_or);
             }
         }
         if(maxOr == 1)
         {
             gocpp::slice<Expr> lits = {};
-            for(auto [gocpp_ignored, or] : split)
+            for(auto [gocpp_ignored, go_or] : split)
             {
-                lits = append(lits, or[0]);
+                lits = append(lits, go_or[0]);
             }
             split = gocpp::slice<gocpp::slice<gocpp::slice<Expr>>> {{lits}};
         }
 
         // Prepare the +build lines.
         gocpp::slice<gocpp::string> lines = {};
-        for(auto [gocpp_ignored, or] : split)
+        for(auto [gocpp_ignored, go_or] : split)
         {
             strings::Builder line = {};
             rec::WriteString(gocpp::recv(line), "// +build"_s);
-            for(auto [gocpp_ignored, and] : or)
+            for(auto [gocpp_ignored, go_and] : go_or)
             {
                 rec::WriteString(gocpp::recv(line), " "_s);
-                for(auto [i, lit] : and)
+                for(auto [i, lit] : go_and)
                 {
                     if(i > 0)
                     {
@@ -993,7 +993,7 @@ namespace golang::go::build::constraint
     // pushNot applies DeMorgan's law to push negations down the expression,
     // so that only tags are negated in the result.
     // (It applies the rewrites !(X && Y) => (!X || !Y) and !(X || Y) => (!X && !Y).)
-    Expr pushNot(Expr x, bool not)
+    Expr pushNot(Expr x, bool go_not)
     {
         //Go type switch emulation
         {
@@ -1016,17 +1016,17 @@ namespace golang::go::build::constraint
                 case 0:
                 {
                     constraint::NotExpr* x = gocpp::any_cast<constraint::NotExpr*>(x_ref);
-                    if(auto [gocpp_id_8, ok] = gocpp::getValue<TagExpr*>(x->X); ok && ! not)
+                    if(auto [gocpp_id_8, ok] = gocpp::getValue<TagExpr*>(x->X); ok && ! go_not)
                     {
                         return x;
                     }
-                    return pushNot(x->X, ! not);
+                    return pushNot(x->X, ! go_not);
                     break;
                 }
                 case 1:
                 {
                     constraint::TagExpr* x = gocpp::any_cast<constraint::TagExpr*>(x_ref);
-                    if(not)
+                    if(go_not)
                     {
                         return gocpp::InitPtr<NotExpr>([=](auto& y) {
                             y.X = x;
@@ -1038,33 +1038,33 @@ namespace golang::go::build::constraint
                 case 2:
                 {
                     constraint::AndExpr* x = gocpp::any_cast<constraint::AndExpr*>(x_ref);
-                    auto x1 = pushNot(x->X, not);
-                    auto y1 = pushNot(x->Y, not);
-                    if(not)
+                    auto x1 = pushNot(x->X, go_not);
+                    auto y1 = pushNot(x->Y, go_not);
+                    if(go_not)
                     {
-                        return or(x1, y1);
+                        return go_or(x1, y1);
                     }
                     if(x1 == x->X && y1 == x->Y)
                     {
                         return x;
                     }
-                    return and(x1, y1);
+                    return go_and(x1, y1);
                     break;
                 }
                 case 3:
                 {
                     constraint::OrExpr* x = gocpp::any_cast<constraint::OrExpr*>(x_ref);
-                    auto x1 = pushNot(x->X, not);
-                    auto y1 = pushNot(x->Y, not);
-                    if(not)
+                    auto x1 = pushNot(x->X, go_not);
+                    auto y1 = pushNot(x->Y, go_not);
+                    if(go_not)
                     {
-                        return and(x1, y1);
+                        return go_and(x1, y1);
                     }
                     if(x1 == x->X && y1 == x->Y)
                     {
                         return x;
                     }
-                    return or(x1, y1);
+                    return go_or(x1, y1);
                     break;
                 }
             }

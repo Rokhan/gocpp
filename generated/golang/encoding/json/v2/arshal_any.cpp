@@ -168,7 +168,7 @@ namespace golang::encoding::json::v2
                     break;
                 default:
                 {
-                    auto xd = rec::Decoder(gocpp::recv(export), dec);
+                    auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                     jsonwire::ValueFlags flags = {};
                     auto [val, err] = rec::ReadValue(gocpp::recv(xd), & flags);
                     if(err != nullptr)
@@ -236,7 +236,7 @@ namespace golang::encoding::json::v2
         try
         {
             // Check for cycles.
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             if(rec::Depth(gocpp::recv(xe->state.Tokens)) > startDetectingCyclesAfter)
             {
                 auto v = reflect::ValueOf(obj);
@@ -351,7 +351,7 @@ namespace golang::encoding::json::v2
         // The only possibility of duplicates is due to invalid UTF-8.
         if(! rec::Get(gocpp::recv(uo->Flags), jsonflags::AllowInvalidUTF8))
         {
-            rec::DisableNamespace(gocpp::recv(rec::Decoder(gocpp::recv(export), dec)->state.Tokens.Last));
+            rec::DisableNamespace(gocpp::recv(rec::Decoder(gocpp::recv(go_export), dec)->state.Tokens.Last));
         }
         gocpp::error errUnmarshal = {};
         for(; rec::PeekKind(gocpp::recv(dec)) != '}'; )
@@ -367,7 +367,7 @@ namespace golang::encoding::json::v2
             if(auto [gocpp_id_1, ok] = obj.lookup(name); ok)
             {
                 // TODO: Unread the object name.
-                auto name = rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(export), dec)));
+                auto name = rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(go_export), dec)));
                 auto err = newDuplicateNameError(rec::StackPointer(gocpp::recv(dec)), nullptr, rec::InputOffset(gocpp::recv(dec)) - len64(name));
                 return {obj, err};
             }
@@ -399,7 +399,7 @@ namespace golang::encoding::json::v2
         try
         {
             // Check for cycles.
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             if(rec::Depth(gocpp::recv(xe->state.Tokens)) > startDetectingCyclesAfter)
             {
                 auto v = reflect::ValueOf(arr);

@@ -737,12 +737,12 @@ namespace golang::runtime
         {
             c->Args = uintptr_t(noescape(gocpp::unsafe_pointer(& args[0])));
         }
-        auto errno = cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
+        auto go_errno = cgocall(asmstdcallAddr, gocpp::unsafe_pointer(c));
         // cgocall may reschedule us on to a different M,
         // but it copies the return values into the new M's
         // so we can read them from there.
         c = & getg()->m->winsyscall;
-        return {c->R1, c->R2, uintptr_t(uint32_t(errno))};
+        return {c->R1, c->R2, uintptr_t(uint32_t(go_errno))};
     }
 
 }

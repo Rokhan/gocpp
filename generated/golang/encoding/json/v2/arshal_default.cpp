@@ -336,7 +336,7 @@ namespace golang::encoding::json::v2
         arshaler fncs = {};
         fncs.marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
         {
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             // always false except `string` tag with StringifyWithLegacySemantics
             bool stringify = {};
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::TagFlags))
@@ -469,7 +469,7 @@ namespace golang::encoding::json::v2
         arshaler fncs = {};
         fncs.marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
         {
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             // always false except `string` tag with StringifyWithLegacySemantics
             bool stringify = {};
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::TagFlags))
@@ -528,7 +528,7 @@ namespace golang::encoding::json::v2
         };
         fncs.unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
         {
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             // always false except `string` tag with StringifyWithLegacySemantics
             bool stringify = {};
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::TagFlags))
@@ -633,7 +633,7 @@ namespace golang::encoding::json::v2
                 // treat as []T or [N]T
                 return marshalArray(enc, va, mo);
             }
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             auto appendEncode = appendEncodeBase64;
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::TagFlags | jsonflags::FormatByteArrayAsArray | jsonflags::FormatBytesWithLegacySemantics | jsonflags::FormatNilSliceAsNull))
             {
@@ -716,7 +716,7 @@ namespace golang::encoding::json::v2
                 // treat as []T or [N]T
                 return unmarshalArray(dec, va, uo);
             }
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             auto [appendDecode, encodedLen] = std::tuple{appendDecodeBase64, encodedLenBase64};
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::TagFlags | jsonflags::FormatByteArrayAsArray | jsonflags::FormatBytesWithLegacySemantics))
             {
@@ -863,7 +863,7 @@ namespace golang::encoding::json::v2
         auto bits = rec::Bits(gocpp::recv(t));
         fncs.marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
         {
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             auto stringify = rec::NeedObjectName(gocpp::recv(xe->state.Tokens.Last)) || rec::Get(gocpp::recv(mo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag);
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::FormatTag))
             {
@@ -890,7 +890,7 @@ namespace golang::encoding::json::v2
         };
         fncs.unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
         {
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             auto stringify = rec::NeedObjectName(gocpp::recv(xd->state.Tokens.Last)) || rec::Get(gocpp::recv(uo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag);
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::FormatTag))
             {
@@ -997,7 +997,7 @@ namespace golang::encoding::json::v2
         auto bits = rec::Bits(gocpp::recv(t));
         fncs.marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
         {
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             auto stringify = rec::NeedObjectName(gocpp::recv(xe->state.Tokens.Last)) || rec::Get(gocpp::recv(mo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag);
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::FormatTag))
             {
@@ -1024,7 +1024,7 @@ namespace golang::encoding::json::v2
         };
         fncs.unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
         {
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             auto stringify = rec::NeedObjectName(gocpp::recv(xd->state.Tokens.Last)) || rec::Get(gocpp::recv(uo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag);
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::FormatTag))
             {
@@ -1118,7 +1118,7 @@ namespace golang::encoding::json::v2
         auto bits = rec::Bits(gocpp::recv(t));
         fncs.marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
         {
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             auto stringify = rec::NeedObjectName(gocpp::recv(xe->state.Tokens.Last)) || rec::Get(gocpp::recv(mo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag);
             bool allowNonFinite = {};
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::FormatTag))
@@ -1164,7 +1164,7 @@ namespace golang::encoding::json::v2
         };
         fncs.unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
         {
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             auto stringify = rec::NeedObjectName(gocpp::recv(xd->state.Tokens.Last)) || rec::Get(gocpp::recv(uo->Flags), jsonflags::StringifyNumbers | jsonflags::StringTag);
             bool allowNonFinite = {};
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::FormatTag))
@@ -1305,7 +1305,7 @@ namespace golang::encoding::json::v2
             try
             {
                 // Check for cycles.
-                auto xe = rec::Encoder(gocpp::recv(export), enc);
+                auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                 if(rec::Depth(gocpp::recv(xe->state.Tokens)) > startDetectingCyclesAfter)
                 {
                     if(auto err = visitPointer(& xe->SeenPointers, va.Value); err != nullptr)
@@ -1544,7 +1544,7 @@ namespace golang::encoding::json::v2
         };
         fncs.unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
         {
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::TagFlags))
             {
                 if(rec::Get(gocpp::recv(uo->Flags), jsonflags::StringTag) && ! rec::Get(gocpp::recv(uo->Flags), jsonflags::ReportErrorsWithLegacySemantics))
@@ -1784,7 +1784,7 @@ namespace golang::encoding::json::v2
         };
         fncs.marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
         {
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             if(rec::Has(gocpp::recv(mo->Flags), jsonflags::TagFlags))
             {
                 if(rec::Get(gocpp::recv(mo->Flags), jsonflags::StringTag) && ! rec::Get(gocpp::recv(mo->Flags), jsonflags::ReportErrorsWithLegacySemantics))
@@ -1996,7 +1996,7 @@ namespace golang::encoding::json::v2
         };
         fncs.unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
         {
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             if(rec::Has(gocpp::recv(uo->Flags), jsonflags::TagFlags))
             {
                 if(rec::Get(gocpp::recv(uo->Flags), jsonflags::StringTag) && ! rec::Get(gocpp::recv(uo->Flags), jsonflags::ReportErrorsWithLegacySemantics))
@@ -2296,7 +2296,7 @@ namespace golang::encoding::json::v2
             try
             {
                 // Check for cycles.
-                auto xe = rec::Encoder(gocpp::recv(export), enc);
+                auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                 if(rec::Depth(gocpp::recv(xe->state.Tokens)) > startDetectingCyclesAfter)
                 {
                     if(auto err = visitPointer(& xe->SeenPointers, va.Value); err != nullptr)
@@ -2661,7 +2661,7 @@ namespace golang::encoding::json::v2
             try
             {
                 // Check for cycles.
-                auto xe = rec::Encoder(gocpp::recv(export), enc);
+                auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                 if(rec::Depth(gocpp::recv(xe->state.Tokens)) > startDetectingCyclesAfter)
                 {
                     if(auto err = visitPointer(& xe->SeenPointers, va.Value); err != nullptr)
@@ -2744,7 +2744,7 @@ namespace golang::encoding::json::v2
                 // TODO: This does not correctly handle escaped nulls
                 // (e.g., "\u006e\u0075\u006c\u006c"), but is good enough
                 // for such an esoteric use case of the `string` option.
-                if(gocpp::string(rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(export), dec)))) == "\"null\""_s)
+                if(gocpp::string(rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(go_export), dec)))) == "\"null\""_s)
                 {
                     rec::SetZero(gocpp::recv(va));
                 }

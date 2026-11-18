@@ -62,7 +62,7 @@ namespace golang::encoding::json
 namespace golang::encoding::json
 {
     // export exposes internal functionality of the "jsontext" package.
-    extern jsontext::export export;
+    extern jsontext::export go_export;
 
     namespace rec
     {

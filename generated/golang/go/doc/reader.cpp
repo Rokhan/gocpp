@@ -496,7 +496,7 @@ namespace golang::go::doc
             {
                 int conditionId = -1;
                 if(s->Type != nullptr) { conditionId = 0; }
-                else if(decl->Tok == token::CONST && len(s->Values) == 0) { conditionId = 1; }
+                else if(decl->Tok == token::go_CONST && len(s->Values) == 0) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
@@ -878,7 +878,7 @@ namespace golang::go::doc
                             auto condition = d->Tok;
                             int conditionId = -1;
                             if(condition == token::IMPORT) { conditionId = 0; }
-                            else if(condition == token::CONST) { conditionId = 1; }
+                            else if(condition == token::go_CONST) { conditionId = 1; }
                             else if(condition == token::VAR) { conditionId = 2; }
                             else if(condition == token::TYPE) { conditionId = 3; }
                             switch(conditionId)
@@ -1245,7 +1245,7 @@ namespace golang::go::doc
                 x.Doc = t->doc;
                 x.Name = t->name;
                 x.Decl = t->decl;
-                x.Consts = sortedValues(t->values, token::CONST);
+                x.Consts = sortedValues(t->values, token::go_CONST);
                 x.Vars = sortedValues(t->values, token::VAR);
                 x.Funcs = sortedFuncs(t->funcs, true);
                 x.Methods = sortedFuncs(t->methods, allMethods);

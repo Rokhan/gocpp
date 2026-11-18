@@ -127,7 +127,7 @@ namespace golang::go::build::constraint
     };
 
     std::ostream& operator<<(std::ostream& os, const struct NotExpr& value);
-    Expr not(Expr x);
+    Expr go_not(Expr x);
     struct AndExpr
     {
         Expr X{};
@@ -146,7 +146,7 @@ namespace golang::go::build::constraint
 
     std::ostream& operator<<(std::ostream& os, const struct AndExpr& value);
     gocpp::string andArg(Expr x);
-    Expr and(Expr x, Expr y);
+    Expr go_and(Expr x, Expr y);
     struct OrExpr
     {
         Expr X{};
@@ -165,7 +165,7 @@ namespace golang::go::build::constraint
 
     std::ostream& operator<<(std::ostream& os, const struct OrExpr& value);
     gocpp::string orArg(Expr x);
-    Expr or(Expr x, Expr y);
+    Expr go_or(Expr x, Expr y);
     struct SyntaxError
     {
         int64_t Offset{}; // byte offset in input where error was detected
@@ -215,7 +215,7 @@ namespace golang::go::build::constraint
     bool isValidTag(gocpp::string word);
     extern gocpp::error errComplex;
     std::tuple<gocpp::slice<gocpp::string>, gocpp::error> PlusBuildLines(Expr x);
-    Expr pushNot(Expr x, bool not);
+    Expr pushNot(Expr x, bool go_not);
     gocpp::slice<Expr> appendSplitAnd(gocpp::slice<Expr> list, Expr x);
     gocpp::slice<Expr> appendSplitOr(gocpp::slice<Expr> list, Expr x);
 
@@ -234,9 +234,9 @@ namespace golang::go::build::constraint
         bool Eval(OrExpr* x, std::function<bool (gocpp::string tag)> ok);
         gocpp::string String(OrExpr* x);
         gocpp::string Error(SyntaxError* e);
-        Expr or(exprParser* p);
-        Expr and(exprParser* p);
-        Expr not(exprParser* p);
+        Expr go_or(exprParser* p);
+        Expr go_and(exprParser* p);
+        Expr go_not(exprParser* p);
         Expr atom(exprParser* p);
         void lex(exprParser* p);
     }

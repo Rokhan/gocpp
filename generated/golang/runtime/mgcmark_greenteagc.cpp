@@ -126,7 +126,7 @@ namespace golang::runtime
         return spanScanOwnership(atomic::Load8((uint8_t*)(gocpp::unsafe_pointer(o))));
     }
 
-    spanScanOwnership rec::or(spanScanOwnership* o, spanScanOwnership v)
+    spanScanOwnership rec::go_or(spanScanOwnership* o, spanScanOwnership v)
     {
         // N.B. We round down the address and use Or32 because Or8 doesn't
         // return a result, and it's strictly necessary for this protocol.
@@ -190,7 +190,7 @@ namespace golang::runtime
             {
                 case 0:
                     // Try to mark the span as having only one object marked.
-                    if(rec::or(gocpp::recv(imb->owned), spanScanOneMark) == spanScanUnowned)
+                    if(rec::go_or(gocpp::recv(imb->owned), spanScanOneMark) == spanScanUnowned)
                     {
                         return true;
                     }
@@ -200,7 +200,7 @@ namespace golang::runtime
                 case 1:
                     // We may be the first to set *any* bit on owned. In such a case,
                     // we still need to make sure the span is queued.
-                    return rec::or(gocpp::recv(imb->owned), spanScanManyMark) == spanScanUnowned;
+                    return rec::go_or(gocpp::recv(imb->owned), spanScanManyMark) == spanScanUnowned;
                     break;
             }
         }

@@ -123,7 +123,7 @@ namespace golang::encoding::json::v2
     bool isFatalError(gocpp::error err, jsonflags::Flags flags)
     {
         return ! rec::Get(gocpp::recv(flags), jsonflags::ReportErrorsWithLegacySemantics) ||
-                isSyntacticError(err) || rec::IsIOError(gocpp::recv(export), err);
+                isSyntacticError(err) || rec::IsIOError(gocpp::recv(go_export), err);
     }
 
     // SemanticError describes an error determining the meaning
@@ -302,8 +302,8 @@ namespace golang::encoding::json::v2
             x.action = "marshal"_s;
             x.GoType = t;
             x.Err = toUnexpectedEOF(err);
-            x.ByteOffset = rec::OutputOffset(gocpp::recv(e)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Encoder(gocpp::recv(export), e))));
-            x.JSONPointer = jsontext::Pointer(rec::AppendStackPointer(gocpp::recv(rec::Encoder(gocpp::recv(export), e)), nullptr, + 1));
+            x.ByteOffset = rec::OutputOffset(gocpp::recv(e)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Encoder(gocpp::recv(go_export), e))));
+            x.JSONPointer = jsontext::Pointer(rec::AppendStackPointer(gocpp::recv(rec::Encoder(gocpp::recv(go_export), e)), nullptr, + 1));
         }));
     }
 
@@ -316,7 +316,7 @@ namespace golang::encoding::json::v2
     gocpp::error newUnmarshalErrorBefore(jsontext::Decoder* d, reflect::Type t, gocpp::error err)
     {
         jsontext::Kind k = {};
-        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
+        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
         {
             k = rec::PeekKind(gocpp::recv(d));
         }
@@ -324,8 +324,8 @@ namespace golang::encoding::json::v2
             x.action = "unmarshal"_s;
             x.GoType = t;
             x.Err = toUnexpectedEOF(err);
-            x.ByteOffset = rec::InputOffset(gocpp::recv(d)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Decoder(gocpp::recv(export), d))));
-            x.JSONPointer = jsontext::Pointer(rec::AppendStackPointer(gocpp::recv(rec::Decoder(gocpp::recv(export), d)), nullptr, + 1));
+            x.ByteOffset = rec::InputOffset(gocpp::recv(d)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d))));
+            x.JSONPointer = jsontext::Pointer(rec::AppendStackPointer(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)), nullptr, + 1));
             x.JSONKind = k;
         }));
     }
@@ -336,9 +336,9 @@ namespace golang::encoding::json::v2
     gocpp::error newUnmarshalErrorBeforeWithSkipping(jsontext::Decoder* d, reflect::Type t, gocpp::error err)
     {
         err = newUnmarshalErrorBefore(d, t, err);
-        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
+        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
         {
-            if(auto err2 = rec::SkipValue(gocpp::recv(rec::Decoder(gocpp::recv(export), d))); err2 != nullptr)
+            if(auto err2 = rec::SkipValue(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d))); err2 != nullptr)
             {
                 return err2;
             }
@@ -350,9 +350,9 @@ namespace golang::encoding::json::v2
     // is positioned right after the previous token or value, which caused an error.
     gocpp::error newUnmarshalErrorAfter(jsontext::Decoder* d, reflect::Type t, gocpp::error err)
     {
-        auto tokOrVal = rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(export), d)));
+        auto tokOrVal = rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)));
         auto byteOffset = rec::InputOffset(gocpp::recv(d)) - int64_t(len(tokOrVal));
-        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
+        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
         {
             // NOTE: In v1, the offset pointed to the end of the bad token or value.
             if(auto k = rec::Kind(gocpp::recv(jsontext::Value(tokOrVal))); k == '[' || k == '{')
@@ -370,7 +370,7 @@ namespace golang::encoding::json::v2
             x.GoType = t;
             x.Err = toUnexpectedEOF(err);
             x.ByteOffset = byteOffset;
-            x.JSONPointer = jsontext::Pointer(rec::AppendStackPointer(gocpp::recv(rec::Decoder(gocpp::recv(export), d)), nullptr, - 1));
+            x.JSONPointer = jsontext::Pointer(rec::AppendStackPointer(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)), nullptr, - 1));
             x.JSONKind = rec::Kind(gocpp::recv(jsontext::Value(tokOrVal)));
         }));
     }
@@ -383,7 +383,7 @@ namespace golang::encoding::json::v2
         auto serr = gocpp::assertValue<SemanticError*>(newUnmarshalErrorAfter(d, t, err));
         if(serr->JSONKind == '"' || serr->JSONKind == '0')
         {
-            serr->JSONValue = rec::Clone(gocpp::recv(jsontext::Value(rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(export), d))))));
+            serr->JSONValue = rec::Clone(gocpp::recv(jsontext::Value(rec::PreviousTokenOrValue(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d))))));
         }
         return gocpp::error(serr);
     }
@@ -394,9 +394,9 @@ namespace golang::encoding::json::v2
     gocpp::error newUnmarshalErrorAfterWithSkipping(jsontext::Decoder* d, reflect::Type t, gocpp::error err)
     {
         err = newUnmarshalErrorAfter(d, t, err);
-        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
+        if(rec::Get(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d)->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
         {
-            if(auto err2 = rec::SkipValueRemainder(gocpp::recv(rec::Decoder(gocpp::recv(export), d))); err2 != nullptr)
+            if(auto err2 = rec::SkipValueRemainder(gocpp::recv(rec::Decoder(gocpp::recv(go_export), d))); err2 != nullptr)
             {
                 return err2;
             }
@@ -499,17 +499,17 @@ namespace golang::encoding::json::v2
                 case 0:
                 {
                     jsontext::Encoder* c = gocpp::any_cast<jsontext::Encoder*>(c_ref);
-                    auto e = rec::Encoder(gocpp::recv(export), c);
+                    auto e = rec::Encoder(gocpp::recv(go_export), c);
                     serr->action = cmp::Or(serr->action, "marshal"_s);
                     std::tie(currDepth, currLength) = rec::DepthLength(gocpp::recv(e->state.Tokens));
-                    offset = rec::OutputOffset(gocpp::recv(c)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Encoder(gocpp::recv(export), c))));
+                    offset = rec::OutputOffset(gocpp::recv(c)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Encoder(gocpp::recv(go_export), c))));
                     coderState = e;
                     break;
                 }
                 case 1:
                 {
                     jsontext::Decoder* c = gocpp::any_cast<jsontext::Decoder*>(c_ref);
-                    auto d = rec::Decoder(gocpp::recv(export), c);
+                    auto d = rec::Decoder(gocpp::recv(go_export), c);
                     serr->action = cmp::Or(serr->action, "unmarshal"_s);
                     std::tie(currDepth, currLength) = rec::DepthLength(gocpp::recv(d->state.Tokens));
                     auto tokOrVal = rec::PreviousTokenOrValue(gocpp::recv(d));
@@ -518,7 +518,7 @@ namespace golang::encoding::json::v2
                     {
                         // If no Read method was called in the user-defined method or
                         // if the Peek method was called, then use the offset of the next value.
-                        offset = rec::InputOffset(gocpp::recv(c)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Decoder(gocpp::recv(export), c))));
+                        offset = rec::InputOffset(gocpp::recv(c)) + int64_t(rec::CountNextDelimWhitespace(gocpp::recv(rec::Decoder(gocpp::recv(go_export), c))));
                     }
                     coderState = d;
                     break;

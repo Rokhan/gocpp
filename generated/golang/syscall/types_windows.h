@@ -99,7 +99,7 @@ namespace golang::syscall
         uint32_t FileSizeLow{};
         uint32_t Reserved0{};
         uint32_t Reserved1{};
-        gocpp::array<uint16_t, MAX_PATH - 1> FileName{};
+        gocpp::array<uint16_t, go_MAX_PATH - 1> FileName{};
         gocpp::array<uint16_t, 13> AlternateFileName{};
 
         using isGoStruct = void;
@@ -124,7 +124,7 @@ namespace golang::syscall
         uint32_t FileSizeLow{};
         uint32_t Reserved0{};
         uint32_t Reserved1{};
-        gocpp::array<uint16_t, MAX_PATH> FileName{};
+        gocpp::array<uint16_t, go_MAX_PATH> FileName{};
         gocpp::array<uint16_t, 14> AlternateFileName{};
 
         using isGoStruct = void;
@@ -212,7 +212,7 @@ namespace golang::syscall
         uint32_t ParentProcessID{};
         int32_t PriClassBase{};
         uint32_t Flags{};
-        gocpp::array<uint16_t, MAX_PATH> ExeFile{};
+        gocpp::array<uint16_t, go_MAX_PATH> ExeFile{};
 
         using isGoStruct = void;
 

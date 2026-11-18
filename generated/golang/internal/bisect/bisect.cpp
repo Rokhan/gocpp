@@ -794,7 +794,7 @@ namespace golang::internal::bisect
     // If there is no marker, CutMarker returns line, 0, false.
     std::tuple<gocpp::string, uint64_t, bool> CutMarker(gocpp::string line)
     {
-        gocpp::string short;
+        gocpp::string go_short;
         uint64_t id;
         bool ok;
         // Find first instance of prefix.
@@ -904,8 +904,8 @@ namespace golang::internal::bisect
         {
             j++;
         }
-        short = line.make_slice(0, i) + line.make_slice(j);
-        return {short, id, true};
+        go_short = line.make_slice(0, i) + line.make_slice(j);
+        return {go_short, id, true};
     }
 
     // Hash computes a hash of the data arguments,

@@ -46,17 +46,17 @@ namespace golang::go::doc
     }
 
     ast::Ident* underscore = ast::NewIdent("_"_s);
-    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool export)
+    void filterCompositeLit(ast::CompositeLit* lit, golang::go::doc::Filter filter, bool go_export)
     {
         auto n = len(lit->Elts);
-        lit->Elts = filterExprList(lit->Elts, filter, export);
+        lit->Elts = filterExprList(lit->Elts, filter, go_export);
         if(len(lit->Elts) < n)
         {
             lit->Incomplete = true;
         }
     }
 
-    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool export)
+    gocpp::slice<ast::Expr> filterExprList(gocpp::slice<ast::Expr> list, golang::go::doc::Filter filter, bool go_export)
     {
         int64_t j = 0;
         for(auto [gocpp_ignored, exp] : list)
@@ -72,7 +72,7 @@ namespace golang::go::doc
                     case 0:
                     {
                         ast::CompositeLit* x = gocpp::any_cast<ast::CompositeLit*>(exp);
-                        filterCompositeLit(x, filter, export);
+                        filterCompositeLit(x, filter, go_export);
                         break;
                     }
                     case 1:
@@ -89,7 +89,7 @@ namespace golang::go::doc
                             auto [x_tmp, ok] = gocpp::getValue<ast::CompositeLit*>(x->Value);
                             if(auto& x = x_tmp; ok)
                             {
-                                filterCompositeLit(x, filter, export);
+                                filterCompositeLit(x, filter, go_export);
                             }
                         }
                         break;
@@ -477,7 +477,7 @@ namespace golang::go::doc
 
     gocpp::slice<ast::Spec> rec::filterSpecList(reader* r, gocpp::slice<ast::Spec> list, token::Token tok)
     {
-        if(tok == token::CONST)
+        if(tok == token::go_CONST)
         {
             // Propagate any type information that would get lost otherwise
             // when unexported constants are filtered.

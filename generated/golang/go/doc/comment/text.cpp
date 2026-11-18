@@ -47,7 +47,7 @@ namespace golang::go::doc::comment
     {
         T result;
         result.Printer = this->Printer;
-        result.long = this->long;
+        result.go_long = this->go_long;
         result.prefix = this->prefix;
         result.codePrefix = this->codePrefix;
         result.width = this->width;
@@ -58,7 +58,7 @@ namespace golang::go::doc::comment
     bool textPrinter::operator==(const T& ref) const
     {
         if (Printer != ref.Printer) return false;
-        if (long != ref.long) return false;
+        if (go_long != ref.go_long) return false;
         if (prefix != ref.prefix) return false;
         if (codePrefix != ref.codePrefix) return false;
         if (width != ref.width) return false;
@@ -69,7 +69,7 @@ namespace golang::go::doc::comment
     {
         os << '{';
         os << "" << Printer;
-        os << " " << long;
+        os << " " << go_long;
         os << " " << prefix;
         os << " " << codePrefix;
         os << " " << width;
@@ -324,9 +324,9 @@ namespace golang::go::doc::comment
     // text prints the text sequence x to out.
     void rec::text(textPrinter* p, bytes::Buffer* out, gocpp::string indent, gocpp::slice<golang::go::doc::comment::Text> x)
     {
-        rec::oneLongLine(gocpp::recv(p), & p->long, x);
-        auto words = mocklib::StringsFields(rec::String(gocpp::recv(p->long)));
-        rec::Reset(gocpp::recv(p->long));
+        rec::oneLongLine(gocpp::recv(p), & p->go_long, x);
+        auto words = mocklib::StringsFields(rec::String(gocpp::recv(p->go_long)));
+        rec::Reset(gocpp::recv(p->go_long));
 
         gocpp::slice<int64_t> seq = {};
         if(p->width < 0 || len(words) == 0)

@@ -777,7 +777,7 @@ namespace golang::go::doc
                         if(len(specs) > 0)
                         {
                             // Constant with iota? Keep it all.
-                            if(d->Tok == token::CONST && containsIota)
+                            if(d->Tok == token::go_CONST && containsIota)
                             {
                                 ds = append(ds, d);
                             }

@@ -78,7 +78,7 @@ namespace golang::go::token
     inline constexpr Token BREAK = 61;
     inline constexpr Token CASE = 62;
     inline constexpr Token CHAN = 63;
-    inline constexpr Token CONST = 64;
+    inline constexpr Token go_CONST = 64;
     inline constexpr Token CONTINUE = 65;
     inline constexpr Token DEFAULT = 66;
     inline constexpr Token DEFER = 67;

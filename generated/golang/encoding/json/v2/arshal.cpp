@@ -123,7 +123,7 @@ namespace golang::encoding::json::v2
     // For now, we just report an error.
     gocpp::error errChangingWhitespace = errors::New("cannot change whitespace formatting within a MarshalEncode call"_s);
     // export exposes internal functionality of the "jsontext" package.
-    jsontext::export export = rec::Export(gocpp::recv(jsontext::Internal), & internal::AllowInternalUse);
+    jsontext::export go_export = rec::Export(gocpp::recv(jsontext::Internal), & internal::AllowInternalUse);
     // Marshal serializes a Go value as a []byte according to the provided
     // marshal and encode options (while ignoring unmarshal or decode options).
     // It does not terminate the output with a newline.
@@ -227,9 +227,9 @@ namespace golang::encoding::json::v2
         gocpp::Defer defer;
         try
         {
-            auto enc = rec::GetBufferedEncoder(gocpp::recv(export), opts);
-            defer.push_back([=]{ rec::PutBufferedEncoder(gocpp::recv(export), enc); });
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto enc = rec::GetBufferedEncoder(gocpp::recv(go_export), opts);
+            defer.push_back([=]{ rec::PutBufferedEncoder(gocpp::recv(go_export), enc); });
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             rec::Set(gocpp::recv(xe->Struct.Flags), jsonflags::OmitTopLevelNewline | 1);
             err = marshalEncode(enc, in, & xe->Struct);
             if(err != nullptr && rec::Get(gocpp::recv(xe->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
@@ -255,9 +255,9 @@ namespace golang::encoding::json::v2
         gocpp::Defer defer;
         try
         {
-            auto enc = rec::GetStreamingEncoder(gocpp::recv(export), out, opts);
-            defer.push_back([=]{ rec::PutStreamingEncoder(gocpp::recv(export), enc); });
-            auto xe = rec::Encoder(gocpp::recv(export), enc);
+            auto enc = rec::GetStreamingEncoder(gocpp::recv(go_export), out, opts);
+            defer.push_back([=]{ rec::PutStreamingEncoder(gocpp::recv(go_export), enc); });
+            auto xe = rec::Encoder(gocpp::recv(go_export), enc);
             rec::Set(gocpp::recv(xe->Struct.Flags), jsonflags::OmitTopLevelNewline | 1);
             err = marshalEncode(enc, in, & xe->Struct);
             if(err != nullptr && rec::Get(gocpp::recv(xe->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
@@ -285,7 +285,7 @@ namespace golang::encoding::json::v2
         gocpp::Defer defer;
         try
         {
-            auto xe = rec::Encoder(gocpp::recv(export), out);
+            auto xe = rec::Encoder(gocpp::recv(go_export), out);
             if(len(opts) > 0)
             {
                 auto optsOriginal = xe->Struct;
@@ -362,7 +362,7 @@ namespace golang::encoding::json::v2
         {
             if(! rec::Get(gocpp::recv(mo->Flags), jsonflags::AllowDuplicateNames))
             {
-                rec::InvalidateDisabledNamespaces(gocpp::recv(rec::Encoder(gocpp::recv(export), out)->state.Tokens));
+                rec::InvalidateDisabledNamespaces(gocpp::recv(rec::Encoder(gocpp::recv(go_export), out)->state.Tokens));
             }
             return err;
         }
@@ -504,9 +504,9 @@ namespace golang::encoding::json::v2
         gocpp::Defer defer;
         try
         {
-            auto dec = rec::GetBufferedDecoder(gocpp::recv(export), in, opts);
-            defer.push_back([=]{ rec::PutBufferedDecoder(gocpp::recv(export), dec); });
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto dec = rec::GetBufferedDecoder(gocpp::recv(go_export), in, opts);
+            defer.push_back([=]{ rec::PutBufferedDecoder(gocpp::recv(go_export), dec); });
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             err = unmarshalDecode(dec, out, & xd->Struct, true);
             if(err != nullptr && rec::Get(gocpp::recv(xd->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
             {
@@ -533,9 +533,9 @@ namespace golang::encoding::json::v2
         gocpp::Defer defer;
         try
         {
-            auto dec = rec::GetStreamingDecoder(gocpp::recv(export), in, opts);
-            defer.push_back([=]{ rec::PutStreamingDecoder(gocpp::recv(export), dec); });
-            auto xd = rec::Decoder(gocpp::recv(export), dec);
+            auto dec = rec::GetStreamingDecoder(gocpp::recv(go_export), in, opts);
+            defer.push_back([=]{ rec::PutStreamingDecoder(gocpp::recv(go_export), dec); });
+            auto xd = rec::Decoder(gocpp::recv(go_export), dec);
             err = unmarshalDecode(dec, out, & xd->Struct, true);
             if(err != nullptr && rec::Get(gocpp::recv(xd->Struct.Flags), jsonflags::ReportErrorsWithLegacySemantics))
             {
@@ -566,7 +566,7 @@ namespace golang::encoding::json::v2
         gocpp::Defer defer;
         try
         {
-            auto xd = rec::Decoder(gocpp::recv(export), in);
+            auto xd = rec::Decoder(gocpp::recv(go_export), in);
             if(len(opts) > 0)
             {
                 auto optsOriginal = xd->Struct;
@@ -621,7 +621,7 @@ namespace golang::encoding::json::v2
         // was validated before attempting to unmarshal it.
         if(rec::Get(gocpp::recv(uo->Flags), jsonflags::ReportErrorsWithLegacySemantics))
         {
-            if(auto err = rec::CheckNextValue(gocpp::recv(rec::Decoder(gocpp::recv(export), in)), last); err != nullptr)
+            if(auto err = rec::CheckNextValue(gocpp::recv(rec::Decoder(gocpp::recv(go_export), in)), last); err != nullptr)
             {
                 if(err == io::go_EOF && last)
                 {
@@ -645,7 +645,7 @@ namespace golang::encoding::json::v2
         {
             if(! rec::Get(gocpp::recv(uo->Flags), jsonflags::AllowDuplicateNames))
             {
-                rec::InvalidateDisabledNamespaces(gocpp::recv(rec::Decoder(gocpp::recv(export), in)->state.Tokens));
+                rec::InvalidateDisabledNamespaces(gocpp::recv(rec::Decoder(gocpp::recv(go_export), in)->state.Tokens));
             }
             if(err == io::go_EOF && last)
             {
@@ -659,7 +659,7 @@ namespace golang::encoding::json::v2
         }
         if(last)
         {
-            return rec::CheckEOF(gocpp::recv(rec::Decoder(gocpp::recv(export), in)));
+            return rec::CheckEOF(gocpp::recv(rec::Decoder(gocpp::recv(go_export), in)));
         }
         return nullptr;
     }

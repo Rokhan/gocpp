@@ -433,7 +433,7 @@ namespace golang::encoding::json::v2
                 }
                 auto [marshaler, gocpp_id_0] = reflect::TypeAssert<encoding::TextMarshaler>(rec::Addr(gocpp::recv(va)));
                 {
-                    auto err_tmp = rec::AppendRaw(gocpp::recv(rec::Encoder(gocpp::recv(export), enc)), '"', false, [=](gocpp::slice<unsigned char> b) mutable -> std::tuple<gocpp::slice<unsigned char>, gocpp::error>
+                    auto err_tmp = rec::AppendRaw(gocpp::recv(rec::Encoder(gocpp::recv(go_export), enc)), '"', false, [=](gocpp::slice<unsigned char> b) mutable -> std::tuple<gocpp::slice<unsigned char>, gocpp::error>
                 {
                     auto [b2, err] = rec::MarshalText(gocpp::recv(marshaler));
                     return {append(b, b2), err};
@@ -446,7 +446,7 @@ namespace golang::encoding::json::v2
                             // unlike unmarshal, always wrapped
                             return internal::NewMarshalerError(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))), err, "MarshalText"_s);
                         }
-                        if(! isSemanticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                        if(! isSemanticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                         {
                             err = newMarshalErrorBefore(enc, t, err);
                         }
@@ -470,7 +470,7 @@ namespace golang::encoding::json::v2
                     return prevMarshal(enc, va, mo);
                 }
                 auto [appender, gocpp_id_1] = reflect::TypeAssert<encoding::TextAppender>(rec::Addr(gocpp::recv(va)));
-                if(auto err = rec::AppendRaw(gocpp::recv(rec::Encoder(gocpp::recv(export), enc)), '"', false, [&](auto x){ return encoding::rec::AppendText(appender, x); }); err != nullptr)
+                if(auto err = rec::AppendRaw(gocpp::recv(rec::Encoder(gocpp::recv(go_export), enc)), '"', false, [&](auto x){ return encoding::rec::AppendText(appender, x); }); err != nullptr)
                 {
                     err = wrapErrUnsupported(err, "AppendText method"_s);
                     if(rec::Get(gocpp::recv(mo->Flags), jsonflags::ReportErrorsWithLegacySemantics))
@@ -478,7 +478,7 @@ namespace golang::encoding::json::v2
                         // unlike unmarshal, always wrapped
                         return internal::NewMarshalerError(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))), err, "AppendText"_s);
                     }
-                    if(! isSemanticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                    if(! isSemanticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                     {
                         err = newMarshalErrorBefore(enc, t, err);
                     }
@@ -495,7 +495,7 @@ namespace golang::encoding::json::v2
             fncs->marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
             {
                 if(rec::Get(gocpp::recv(mo->Flags), jsonflags::CallMethodsWithLegacySemantics) &&
-                                ((needAddr && va.forcedAddr) || rec::NeedObjectName(gocpp::recv(rec::Encoder(gocpp::recv(export), enc)->state.Tokens.Last))))
+                                ((needAddr && va.forcedAddr) || rec::NeedObjectName(gocpp::recv(rec::Encoder(gocpp::recv(go_export), enc)->state.Tokens.Last))))
                 {
                     return prevMarshal(enc, va, mo);
                 }
@@ -536,11 +536,11 @@ namespace golang::encoding::json::v2
             fncs->marshal = [=](jsontext::Encoder* enc, addressableValue va, jsonopts::Struct* mo) mutable -> gocpp::error
             {
                 if(rec::Get(gocpp::recv(mo->Flags), jsonflags::CallMethodsWithLegacySemantics) &&
-                                ((needAddr && va.forcedAddr) || rec::NeedObjectName(gocpp::recv(rec::Encoder(gocpp::recv(export), enc)->state.Tokens.Last))))
+                                ((needAddr && va.forcedAddr) || rec::NeedObjectName(gocpp::recv(rec::Encoder(gocpp::recv(go_export), enc)->state.Tokens.Last))))
                 {
                     return prevMarshal(enc, va, mo);
                 }
-                auto xe = rec::Encoder(gocpp::recv(export), enc);
+                auto xe = rec::Encoder(gocpp::recv(go_export), enc);
                 auto [prevDepth, prevLength] = rec::DepthLength(gocpp::recv(xe->state.Tokens));
                 rec::Set(gocpp::recv(xe->Struct.Flags), jsonflags::WithinArshalCall | 1);
                 auto [marshaler, gocpp_id_3] = reflect::TypeAssert<v2::MarshalerTo>(rec::Addr(gocpp::recv(va)));
@@ -566,7 +566,7 @@ namespace golang::encoding::json::v2
                         // unlike unmarshal, always wrapped
                         return internal::NewMarshalerError(rec::Interface(gocpp::recv(rec::Addr(gocpp::recv(va)))), err, "MarshalJSONTo"_s);
                     }
-                    if(! rec::IsIOError(gocpp::recv(export), err))
+                    if(! rec::IsIOError(gocpp::recv(go_export), err))
                     {
                         err = newSemanticErrorWithPosition(enc, t, prevDepth, prevLength, err);
                     }
@@ -581,7 +581,7 @@ namespace golang::encoding::json::v2
             fncs->nonDefault = true;
             fncs->unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
             {
-                auto xd = rec::Decoder(gocpp::recv(export), dec);
+                auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                 jsonwire::ValueFlags flags = {};
                 auto [val, err] = rec::ReadValue(gocpp::recv(xd), & flags);
                 if(err != nullptr)
@@ -611,7 +611,7 @@ namespace golang::encoding::json::v2
                         // unlike marshal, never wrapped
                         return err;
                     }
-                    if(! isSemanticError(err) && ! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                    if(! isSemanticError(err) && ! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                     {
                         err = newUnmarshalErrorAfter(dec, t, err);
                     }
@@ -628,7 +628,7 @@ namespace golang::encoding::json::v2
             fncs->unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
             {
                 if(rec::Get(gocpp::recv(uo->Flags), jsonflags::CallMethodsWithLegacySemantics) &&
-                                rec::NeedObjectName(gocpp::recv(rec::Decoder(gocpp::recv(export), dec)->state.Tokens.Last)))
+                                rec::NeedObjectName(gocpp::recv(rec::Decoder(gocpp::recv(go_export), dec)->state.Tokens.Last)))
                 {
                     return prevUnmarshal(dec, va, uo);
                 }
@@ -661,11 +661,11 @@ namespace golang::encoding::json::v2
             fncs->unmarshal = [=](jsontext::Decoder* dec, addressableValue va, jsonopts::Struct* uo) mutable -> gocpp::error
             {
                 if(rec::Get(gocpp::recv(uo->Flags), jsonflags::CallMethodsWithLegacySemantics) &&
-                                rec::NeedObjectName(gocpp::recv(rec::Decoder(gocpp::recv(export), dec)->state.Tokens.Last)))
+                                rec::NeedObjectName(gocpp::recv(rec::Decoder(gocpp::recv(go_export), dec)->state.Tokens.Last)))
                 {
                     return prevUnmarshal(dec, va, uo);
                 }
-                auto xd = rec::Decoder(gocpp::recv(export), dec);
+                auto xd = rec::Decoder(gocpp::recv(go_export), dec);
                 auto [prevDepth, prevLength] = rec::DepthLength(gocpp::recv(xd->state.Tokens));
                 if(prevDepth == 1 && rec::AtEOF(gocpp::recv(xd)))
                 {
@@ -700,7 +700,7 @@ namespace golang::encoding::json::v2
                         // unlike marshal, never wrapped
                         return err;
                     }
-                    if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(export), err))
+                    if(! isSyntacticError(err) && ! rec::IsIOError(gocpp::recv(go_export), err))
                     {
                         err = newSemanticErrorWithPosition(dec, t, prevDepth, prevLength, err);
                     }

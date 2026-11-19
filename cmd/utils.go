@@ -1131,6 +1131,11 @@ func promotedSigTypes(t types.Type) (out []types.Type) {
 	return
 }
 
+// Name of the 'rec::' function for 'method' declared in namespace 'ns', relative to 'golang::'
+func recQualifiedName(ns, method string) string {
+	return fmt.Sprintf("%s::%s::%s", ns, recNs, GetCppName(method))
+}
+
 // lookupMockReceiver tells whether method, declared in pkg (nil for the universe), is mocked.
 func lookupMockReceiver(pkg *types.Package, method string) (string, bool) {
 	path := ""

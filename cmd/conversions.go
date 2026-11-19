@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -242,7 +241,7 @@ func ReceiverFullNames(convs []Conversion, cv *cppConverter) set[string] {
 			if mocked, ok := lookupMockReceiver(pkg, m); ok {
 				names[mocked] = true
 			} else {
-				names[fmt.Sprintf("%s::%s::%s::%s", goNs, ns, recNs, GetCppName(m))] = true
+				names[recQualifiedName(ns, m)] = true
 			}
 		}
 	}

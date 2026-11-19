@@ -723,7 +723,7 @@ func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 	if pkgNs == cv.fullNamespace {
 		return nil // same package: the enclosing rec:: is already right
 	}
-	return Ptr(fmt.Sprintf("%s::%s::%s::%s", goNs, pkgNs, recNs, GetCppName(rec.Sel.Name)))
+	return Ptr(recQualifiedName(pkgNs, rec.Sel.Name))
 }
 
 // func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {

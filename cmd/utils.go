@@ -1131,6 +1131,16 @@ func promotedSigTypes(t types.Type) (out []types.Type) {
 	return
 }
 
+// lookupMockReceiver tells whether method, declared in pkg (nil for the universe), is mocked.
+func lookupMockReceiver(pkg *types.Package, method string) (string, bool) {
+	path := ""
+	if pkg != nil {
+		path = pkg.Path()
+	}
+	mocked, ok := mockedReceivers[recvKey{path, method}]
+	return mocked, ok
+}
+
 type receiverDesc interface {
 	getFullReceiverName(cv *cppConverter) *string
 }

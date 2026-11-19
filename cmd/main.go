@@ -515,7 +515,7 @@ func (cv *cppConverter) ConvertFile() (toBeConverted []*cppConverter) {
 	}
 
 	convs := FindInterfaceConversions(&cv.parsingInfos)
-	receiversElts.append(ReceiverFullNames(convs, cv.namespace))
+	receiversElts.append(ReceiverFullNames(convs, cv))
 
 	printFwdIntro(cv)
 	printHppIntro(cv)
@@ -719,11 +719,11 @@ func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
 		}
 	}
 
-	pkgName := pkg.Name()
-	if pkgName != cv.namespace {
-		return Ptr(GetCppFunc(fmt.Sprintf("%s::%s::%s", pkgName, recNs, rec.Sel.Name)))
+	pkgNs := cv.NamespaceFromTypePkg(pkg)
+	if pkgNs == cv.fullNamespace {
+		return nil // same package: the enclosing rec:: is already right
 	}
-	return nil
+	return Ptr(fmt.Sprintf("%s::%s::%s::%s", goNs, pkgNs, recNs, GetCppName(rec.Sel.Name)))
 }
 
 // func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
@@ -1335,6 +1335,7 @@ func (cv *cppConverter) recRefName(recvType types.Type, method string) (string, 
 	if p, ok := recvType.(*types.Pointer); ok {
 		recvType = p.Elem()
 	}
+	goMethod := method
 	method = GetCppName(method)
 
 	var pkg *types.Package
@@ -1349,11 +1350,11 @@ func (cv *cppConverter) recRefName(recvType types.Type, method string) (string, 
 	pkgNs := cv.NamespaceFromTypePkg(pkg)
 
 	// Mocked receivers (sync::rec::Lock -> mocklib::rec::Lock, ...)
-	raw := fmt.Sprintf("%s::%s::%s", pkgName, recNs, method)
-	if mapped := GetCppFunc(raw); mapped != raw {
-		return mapped, nil
+	if mocked, ok := lookupMockReceiver(pkg, goMethod); ok {
+		return mocked, nil
 	}
 
+	raw := fmt.Sprintf("%s::%s::%s", pkgName, recNs, method)
 	// Same namespace: the enclosing `rec` is already the right one.
 	if pkgNs == cv.fullNamespace {
 		return fmt.Sprintf("%s::%s", recNs, method), nil
@@ -5075,9 +5076,12 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				} else {
 					cv.BuffExprPrintf(buf, "%s::%v(gocpp::recv(%v)", recNs, cv.convertExpr(fun.Sel), cv.convertExpr(fun.X))
 				}
-				mockReceiv, hasMock := mocklibReceiverElts[fun.Sel.Name]
-				if hasMock {
-					*buf.defs = append(*buf.defs, mockReceiver(mockReceiv))
+				var declPkg *types.Package
+				if obj := cv.typeInfo.Uses[fun.Sel]; obj != nil {
+					declPkg = obj.Pkg()
+				}
+				if mocked, ok := lookupMockReceiver(declPkg, fun.Sel.Name); ok {
+					*buf.defs = append(*buf.defs, mockReceiver(mocked))
 				} else {
 					*buf.defs = append(*buf.defs, goReceiver(*fun))
 				}

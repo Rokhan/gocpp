@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -226,15 +227,23 @@ func missingMethods(have, want *types.Interface) []string {
 // ReceiverFullNames returns the set of "<pkgName>::rec::<MethodName>" full
 // names referenced by convs, one per (source package, method) pair found
 // in each Conversion's NewMethods. Uses the project's existing set[T].
-func ReceiverFullNames(convs []Conversion, currentPkg string) set[string] {
+func ReceiverFullNames(convs []Conversion, cv *cppConverter) set[string] {
 	names := make(set[string])
 	for _, c := range convs {
-		pkg := srcPackageName(c.Src)
-		if pkg == "" || pkg == currentPkg {
+		pkg := srcPackage(c.Src)
+		if pkg == nil {
+			continue
+		}
+		ns := cv.NamespaceFromTypePkg(pkg)
+		if ns == cv.fullNamespace {
 			continue
 		}
 		for _, m := range c.NewMethods {
-			names[pkg+"::"+recNs+"::"+m] = true
+			if mocked, ok := lookupMockReceiver(pkg, m); ok {
+				names[mocked] = true
+			} else {
+				names[fmt.Sprintf("%s::%s::%s::%s", goNs, ns, recNs, GetCppName(m))] = true
+			}
 		}
 	}
 	return names
@@ -243,13 +252,13 @@ func ReceiverFullNames(convs []Conversion, currentPkg string) set[string] {
 // srcPackageName returns the package name of t's underlying named type,
 // unwrapping a single pointer indirection if present. Returns "" for
 // unnamed types (basic types, unnamed struct/interface literals, etc.).
-func srcPackageName(t types.Type) string {
+func srcPackage(t types.Type) *types.Package {
 	if p, ok := t.(*types.Pointer); ok {
 		t = p.Elem()
 	}
 	named, ok := t.(*types.Named)
-	if !ok || named.Obj().Pkg() == nil {
-		return ""
+	if !ok {
+		return nil
 	}
-	return named.Obj().Pkg().Name()
+	return named.Obj().Pkg()
 }

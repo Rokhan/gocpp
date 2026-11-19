@@ -19,13 +19,18 @@ var int64Min = constant.MakeInt64(math.MinInt64)
 var int64Max = constant.MakeInt64(math.MaxInt64)
 var uint64Max = constant.MakeUint64(math.MaxUint64)
 
-var mocklibReceiverElts = map[string]string{
-	"Error":              "mocklib::rec::Error",
-	"rec::Error":         "mocklib::rec::Error",
-	"time::rec::Weekday": "mocklib::rec::Weekday",
-	"time::rec::Hour":    "mocklib::rec::Hour",
-	"sync::rec::Lock":    "mocklib::rec::Lock",
-	"sync::rec::Unlock":  "mocklib::rec::Unlock",
+type recvKey struct {
+	pkgPath string // import path of the package declaring the method, "" for the universe (error)
+	method  string
+}
+
+// Receivers implemented by hand in mocklib.
+var mockedReceivers = map[recvKey]string{
+	{"", "Error"}:       "mocklib::rec::Error",
+	{"time", "Weekday"}: "mocklib::rec::Weekday",
+	{"time", "Hour"}:    "mocklib::rec::Hour",
+	{"sync", "Lock"}:    "mocklib::rec::Lock",
+	{"sync", "Unlock"}:  "mocklib::rec::Unlock",
 }
 
 const cpp_str_lit = "_s"
@@ -463,24 +468,21 @@ var stdFuncMapping = map[string]string{
 	"pic::Show":      "mocklib::picShow",
 	"pic::ShowImage": "mocklib::picShowImage",
 	// time
-	"time::Time":         "mocklib::Date",
-	"time::After":        "mocklib::After",
-	"time::Tick":         "mocklib::Tick",
-	"time::Now":          "mocklib::Date::Now",
-	"time::Saturday":     "mocklib::Date::Saturday",
-	"time::Sleep":        "mocklib::Sleep",
-	"time::Second":       "mocklib::Second",
-	"time::Millisecond":  "mocklib::Millisecond",
-	"time::rec::Weekday": "mocklib::rec::Weekday",
-	"time::rec::Hour":    "mocklib::rec::Hour",
+	"time::Time":        "mocklib::Date",
+	"time::After":       "mocklib::After",
+	"time::Tick":        "mocklib::Tick",
+	"time::Now":         "mocklib::Date::Now",
+	"time::Saturday":    "mocklib::Date::Saturday",
+	"time::Sleep":       "mocklib::Sleep",
+	"time::Second":      "mocklib::Second",
+	"time::Millisecond": "mocklib::Millisecond",
+
 	// strings
 	"strings::Join":   "mocklib::StringsJoin",
 	"strings::Fields": "mocklib::StringsFields",
 
 	// sync
-	"sync::Mutex":       "mocklib::Mutex",
-	"sync::rec::Lock":   "mocklib::rec::Lock",
-	"sync::rec::Unlock": "mocklib::rec::Unlock",
+	"sync::Mutex": "mocklib::Mutex",
 
 	// wc
 	"wc::Test": "mocklib::wcTest",

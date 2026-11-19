@@ -33,7 +33,7 @@ namespace golang::encoding::json::jsontext
     namespace strconv = golang::strconv;
     namespace rec
     {
-        using jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
         using mocklib::rec::Error;
     }
 

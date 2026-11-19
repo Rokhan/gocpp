@@ -31,11 +31,11 @@ namespace golang::runtime
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using chacha8rand::rec::Init;
-        using chacha8rand::rec::Init64;
-        using chacha8rand::rec::Next;
-        using chacha8rand::rec::Refill;
-        using chacha8rand::rec::Reseed;
+        using internal::chacha8rand::rec::Init;
+        using internal::chacha8rand::rec::Init64;
+        using internal::chacha8rand::rec::Next;
+        using internal::chacha8rand::rec::Refill;
+        using internal::chacha8rand::rec::Reseed;
     }
 
     // OS-specific startup can set startupRand if the OS passes

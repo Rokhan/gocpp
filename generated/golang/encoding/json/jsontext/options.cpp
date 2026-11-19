@@ -24,8 +24,8 @@ namespace golang::encoding::json::jsontext
     namespace strings = golang::strings;
     namespace rec
     {
-        using jsonflags::rec::JSONOptions;
-        using jsonopts::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonflags::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonopts::rec::JSONOptions;
     }
 
     // Options configures [NewEncoder], [Encoder.Reset], [NewDecoder],

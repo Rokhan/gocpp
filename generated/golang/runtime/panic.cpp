@@ -56,9 +56,9 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Load;
         using mocklib::rec::Error;
     }
 

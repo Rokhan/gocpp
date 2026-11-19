@@ -51,16 +51,16 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::InSlice;
-        using abi::rec::IsVariadic;
-        using abi::rec::Kind;
-        using abi::rec::OutSlice;
-        using abi::rec::Pointers;
-        using abi::rec::Uncommon;
-        using atomic::rec::And;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Or;
+        using internal::abi::rec::InSlice;
+        using internal::abi::rec::IsVariadic;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::OutSlice;
+        using internal::abi::rec::Pointers;
+        using internal::abi::rec::Uncommon;
+        using internal::runtime::atomic::rec::And;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Or;
     }
 
     // finBlock is an block of finalizers to be executed. finBlocks

@@ -32,7 +32,7 @@ namespace golang::math::big
     namespace sync = golang::sync;
     namespace rec
     {
-        using rand::rec::Uint32;
+        using golang::math::rand::rec::Uint32;
         using sync::rec::Get;
         using sync::rec::Put;
     }

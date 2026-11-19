@@ -67,12 +67,12 @@ namespace golang::internal::godebug
     namespace sync = golang::sync;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
-        using bisect::rec::Stack;
+        using golang::internal::bisect::rec::Stack;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using sync::atomic::rec::Add;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
         using sync::rec::Do;
         using sync::rec::Load;
         using sync::rec::LoadOrStore;

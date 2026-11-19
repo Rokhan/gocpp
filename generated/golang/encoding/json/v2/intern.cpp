@@ -20,9 +20,9 @@ namespace golang::encoding::json::v2
     namespace bits = golang::math::bits;
     namespace rec
     {
-        using binary::rec::Uint16;
-        using binary::rec::Uint32;
-        using binary::rec::Uint64;
+        using golang::encoding::binary::rec::Uint16;
+        using golang::encoding::binary::rec::Uint32;
+        using golang::encoding::binary::rec::Uint64;
     }
 
     // stringCache is a cache for strings converted from a []byte.

@@ -26,7 +26,6 @@ namespace golang::syscall
     namespace sysdll = golang::internal::syscall::windows::sysdll;
     namespace rec
     {
-        using mocklib::rec::Error;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
     }

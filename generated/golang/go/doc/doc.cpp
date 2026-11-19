@@ -34,13 +34,13 @@ namespace golang::go::doc
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::Pos;
-        using comment::rec::HTML;
-        using comment::rec::Markdown;
-        using comment::rec::Parse;
-        using comment::rec::Text;
-        using token::rec::File;
-        using token::rec::Name;
+        using golang::go::ast::rec::Pos;
+        using golang::go::doc::comment::rec::HTML;
+        using golang::go::doc::comment::rec::Markdown;
+        using golang::go::doc::comment::rec::Parse;
+        using golang::go::doc::comment::rec::Text;
+        using golang::go::token::rec::File;
+        using golang::go::token::rec::Name;
     }
 
     // Package is the documentation for an entire package.

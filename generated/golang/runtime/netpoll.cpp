@@ -39,11 +39,11 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
-        using atomic::rec::Swap;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
+        using internal::runtime::atomic::rec::Swap;
     }
 
     // Network poller descriptor.

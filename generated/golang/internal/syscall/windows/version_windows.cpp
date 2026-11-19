@@ -28,7 +28,7 @@ namespace golang::internal::syscall::windows
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using syscall::rec::Error;
+        using golang::syscall::rec::Error;
     }
 
     // https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_osversioninfoexw

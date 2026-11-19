@@ -24,9 +24,9 @@ namespace golang::internal::syscall::windows::registry
     namespace sysdll = golang::internal::syscall::windows::sysdll;
     namespace rec
     {
-        using syscall::rec::Addr;
-        using syscall::rec::Error;
-        using syscall::rec::NewProc;
+        using golang::syscall::rec::Addr;
+        using golang::syscall::rec::Error;
+        using golang::syscall::rec::NewProc;
     }
 
     gocpp::error errERROR_IO_PENDING = syscall::Errno(errnoERROR_IO_PENDING);

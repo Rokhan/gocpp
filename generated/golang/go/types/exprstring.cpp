@@ -26,15 +26,15 @@ namespace golang::go::types
     namespace fmt = golang::fmt;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::NumFields;
-        using ast::rec::Pos;
-        using ast::rec::exprNode;
         using bytes::rec::String;
         using bytes::rec::Write;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
-        using token::rec::String;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::NumFields;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::exprNode;
+        using golang::go::token::rec::String;
     }
 
     // ExprString returns the (possibly shortened) string representation for x.

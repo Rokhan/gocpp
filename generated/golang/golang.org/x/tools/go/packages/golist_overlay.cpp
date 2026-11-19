@@ -27,8 +27,8 @@ namespace golang::golang_org::x::tools::go::packages
     namespace rec
     {
         using bytes::rec::Read;
-        using json::rec::Decode;
-        using json::rec::More;
+        using encoding::json::rec::Decode;
+        using encoding::json::rec::More;
         using sync::rec::Do;
     }
 

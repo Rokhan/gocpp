@@ -41,9 +41,9 @@ namespace golang::runtime
     namespace tracev2 = golang::internal::trace::tracev2;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // gTraceState is per-G state for the tracer.

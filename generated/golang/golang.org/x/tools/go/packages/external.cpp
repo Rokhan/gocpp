@@ -43,7 +43,7 @@ namespace golang::golang_org::x::tools::go::packages
         using bytes::rec::Bytes;
         using bytes::rec::Read;
         using bytes::rec::Write;
-        using exec::rec::Run;
+        using os::exec::rec::Run;
         using os::rec::Write;
     }
 

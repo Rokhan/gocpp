@@ -39,13 +39,13 @@ namespace golang::go::types
         using bytes::rec::String;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
+        using golang::go::token::rec::Position;
+        using golang::go::token::rec::String;
         using strings::rec::Len;
         using strings::rec::String;
         using strings::rec::WriteByte;
         using strings::rec::WriteRune;
         using strings::rec::WriteString;
-        using token::rec::Position;
-        using token::rec::String;
     }
 
     gocpp::string sprintf(token::FileSet* fset, Qualifier qf, bool tpSubscripts, gocpp::string format, gocpp::slice<go_any> args)

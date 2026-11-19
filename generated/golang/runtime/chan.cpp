@@ -47,9 +47,9 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Pointers;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Store;
+        using internal::abi::rec::Pointers;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Store;
     }
 
     

@@ -36,14 +36,14 @@ namespace golang::go::scanner
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using token::rec::AddLine;
-        using token::rec::AddLineColumnInfo;
-        using token::rec::IsValid;
-        using token::rec::Name;
-        using token::rec::Offset;
-        using token::rec::Pos;
-        using token::rec::Position;
-        using token::rec::Size;
+        using golang::go::token::rec::AddLine;
+        using golang::go::token::rec::AddLineColumnInfo;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::Name;
+        using golang::go::token::rec::Offset;
+        using golang::go::token::rec::Pos;
+        using golang::go::token::rec::Position;
+        using golang::go::token::rec::Size;
     }
 
     // An ErrorHandler may be provided to [Scanner.Init]. If a syntax error is

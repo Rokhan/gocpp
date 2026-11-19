@@ -58,11 +58,11 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::NumFields;
-        using ast::rec::Pos;
-        using ast::rec::exprNode;
-        using token::rec::IsValid;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::NumFields;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::exprNode;
+        using golang::go::token::rec::IsValid;
     }
 
     void rec::declare(Checker* check, golang::go::types::Scope* scope, ast::Ident* id, Object obj, token::Pos pos)

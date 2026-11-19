@@ -57,12 +57,12 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::Pos;
         using bytes::rec::String;
         using bytes::rec::WriteByte;
         using bytes::rec::WriteString;
-        using constant::rec::Kind;
-        using constant::rec::String;
+        using golang::go::ast::rec::Pos;
+        using golang::go::constant::rec::Kind;
+        using golang::go::constant::rec::String;
     }
 
     // An operandMode specifies the (addressing) mode of an operand.

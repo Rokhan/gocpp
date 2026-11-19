@@ -36,8 +36,8 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Get;
-        using abi::rec::Pointers;
+        using internal::abi::rec::Get;
+        using internal::abi::rec::Pointers;
     }
 
     // typedmemmove copies a value of type typ to dst from src.

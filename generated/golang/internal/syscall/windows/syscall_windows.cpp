@@ -26,10 +26,9 @@ namespace golang::internal::syscall::windows
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using mocklib::rec::Error;
+        using golang::syscall::rec::Error;
+        using golang::syscall::rec::Find;
         using sync::rec::Do;
-        using syscall::rec::Error;
-        using syscall::rec::Find;
     }
 
     // CanUseLongPaths is true when the OS supports opting into

@@ -39,7 +39,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Pointers;
+        using internal::abi::rec::Pointers;
     }
 
     

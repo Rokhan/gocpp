@@ -37,15 +37,15 @@ namespace golang::runtime
     namespace windows = golang::internal::runtime::syscall::windows;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
-        using windows::rec::Ctx;
-        using windows::rec::LR;
-        using windows::rec::PC;
-        using windows::rec::PushCall;
-        using windows::rec::SP;
-        using windows::rec::SetPC;
-        using windows::rec::SetSP;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
+        using internal::runtime::syscall::windows::rec::Ctx;
+        using internal::runtime::syscall::windows::rec::LR;
+        using internal::runtime::syscall::windows::rec::PC;
+        using internal::runtime::syscall::windows::rec::PushCall;
+        using internal::runtime::syscall::windows::rec::SP;
+        using internal::runtime::syscall::windows::rec::SetPC;
+        using internal::runtime::syscall::windows::rec::SetSP;
     }
 
     void preventErrorDialogs()

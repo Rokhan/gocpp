@@ -28,6 +28,8 @@ namespace golang::sync
     namespace runtime = golang::runtime;
     namespace rec
     {
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     // A Pool is a set of temporary objects that may be individually saved and

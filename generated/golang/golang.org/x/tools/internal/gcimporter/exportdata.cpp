@@ -48,8 +48,8 @@ namespace golang::golang_org::x::tools::internal::gcimporter
         using bufio::rec::Read;
         using bufio::rec::ReadByte;
         using bufio::rec::ReadSlice;
-        using exec::rec::Output;
-        using fs::rec::IsDir;
+        using io::fs::rec::IsDir;
+        using os::exec::rec::Output;
         using sync::rec::Do;
         using sync::rec::Load;
         using sync::rec::LoadOrStore;

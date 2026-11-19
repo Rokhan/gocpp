@@ -41,7 +41,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // Select case descriptor.

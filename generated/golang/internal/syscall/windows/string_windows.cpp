@@ -19,7 +19,7 @@ namespace golang::internal::syscall::windows
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using syscall::rec::Error;
+        using golang::syscall::rec::Error;
     }
 
     // NTUnicodeString is a UTF-16 string for NT native APIs, corresponding to UNICODE_STRING.

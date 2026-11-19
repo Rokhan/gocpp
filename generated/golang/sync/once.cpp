@@ -20,8 +20,10 @@ namespace golang::sync
     namespace atomic = golang::sync::atomic;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using golang::sync::atomic::rec::Load;
+        using golang::sync::atomic::rec::Store;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     // Once is an object that will perform exactly one action.

@@ -23,9 +23,9 @@ namespace golang::os
     namespace runtime = golang::runtime;
     namespace rec
     {
-        using poll::rec::RawControl;
-        using poll::rec::RawRead;
-        using poll::rec::RawWrite;
+        using internal::poll::rec::RawControl;
+        using internal::poll::rec::RawRead;
+        using internal::poll::rec::RawWrite;
     }
 
     // rawConn implements syscall.RawConn.

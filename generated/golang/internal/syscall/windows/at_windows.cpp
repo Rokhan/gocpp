@@ -35,7 +35,7 @@ namespace golang::internal::syscall::windows
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using syscall::rec::Error;
+        using golang::syscall::rec::Error;
     }
 
     std::tuple<syscall::Handle, gocpp::error> Openat(syscall::Handle dirfd, gocpp::string name, uint64_t flag, uint32_t perm)

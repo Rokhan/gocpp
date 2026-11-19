@@ -31,8 +31,8 @@ namespace golang::runtime
     namespace windows = golang::internal::runtime::syscall::windows;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // packNetpollKey creates a key from a source and a tag.

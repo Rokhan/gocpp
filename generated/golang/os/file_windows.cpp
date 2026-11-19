@@ -54,16 +54,16 @@ namespace golang::os
     namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using atomic::rec::Swap;
-        using fs::rec::IsDir;
-        using godebug::rec::IncNonDefault;
-        using godebug::rec::Value;
-        using poll::rec::Close;
-        using poll::rec::DisassociateIOCP;
-        using poll::rec::Init;
-        using poll::rec::Seek;
+        using internal::godebug::rec::IncNonDefault;
+        using internal::godebug::rec::Value;
+        using internal::poll::rec::Close;
+        using internal::poll::rec::DisassociateIOCP;
+        using internal::poll::rec::Init;
+        using internal::poll::rec::Seek;
+        using internal::syscall::windows::rec::Path;
+        using io::fs::rec::IsDir;
+        using sync::atomic::rec::Swap;
         using syscall::rec::Error;
-        using windows::rec::Path;
     }
 
     // file is the real representation of *File.

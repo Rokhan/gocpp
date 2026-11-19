@@ -49,12 +49,12 @@ namespace golang::compress::zlib
     namespace io = golang::io;
     namespace rec
     {
-        using binary::rec::Uint16;
-        using binary::rec::Uint32;
         using bufio::rec::Read;
         using bufio::rec::ReadByte;
-        using flate::rec::Read;
-        using flate::rec::Reset;
+        using encoding::binary::rec::Uint16;
+        using encoding::binary::rec::Uint32;
+        using golang::compress::flate::rec::Read;
+        using golang::compress::flate::rec::Reset;
         using hash::rec::Sum32;
         using hash::rec::Write;
         using io::rec::Close;

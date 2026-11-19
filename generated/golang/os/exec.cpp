@@ -36,10 +36,10 @@ namespace golang::os
     namespace time = golang::time;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
         using runtime::rec::Stop;
+        using sync::atomic::rec::CompareAndSwap;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
         using syscall::rec::Error;
     }
 

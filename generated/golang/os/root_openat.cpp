@@ -38,9 +38,9 @@ namespace golang::os
     namespace time = golang::time;
     namespace rec
     {
-        using fs::rec::IsDir;
-        using fs::rec::Mode;
-        using fs::rec::Type;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Mode;
+        using io::fs::rec::Type;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using syscall::rec::Error;

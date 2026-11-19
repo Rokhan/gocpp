@@ -28,9 +28,9 @@ namespace golang::runtime
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // addrRange represents a region of address space.

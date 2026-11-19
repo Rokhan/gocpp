@@ -35,9 +35,9 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::IsBlank;
-        using abi::rec::IsDirectIface;
-        using abi::rec::Kind;
+        using internal::abi::rec::IsBlank;
+        using internal::abi::rec::IsDirectIface;
+        using internal::abi::rec::Kind;
     }
 
     uintptr_t trimHash(uintptr_t h)

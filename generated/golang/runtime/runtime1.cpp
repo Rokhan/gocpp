@@ -45,7 +45,7 @@ namespace golang::runtime
     namespace strconv = golang::internal::strconv;
     namespace rec
     {
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Store;
     }
 
     uint32_t traceback_cache = 2 << tracebackShift;

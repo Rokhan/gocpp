@@ -43,12 +43,12 @@ namespace golang::os
     namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using fs::rec::IsDir;
-        using fs::rec::Type;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Type;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using sync::atomic::rec::CompareAndSwap;
+        using sync::atomic::rec::Load;
         using sync::rec::Get;
         using sync::rec::Put;
     }

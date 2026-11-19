@@ -32,7 +32,7 @@ namespace golang::encoding::json::internal::jsonwire
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
     }
 
     // escapeASCII reports whether the ASCII character needs to be escaped.

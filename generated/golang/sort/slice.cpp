@@ -23,7 +23,7 @@ namespace golang::sort
     namespace reflectlite = golang::internal::reflectlite;
     namespace rec
     {
-        using reflectlite::rec::Len;
+        using internal::reflectlite::rec::Len;
     }
 
     // Slice sorts the slice x given the provided less function.

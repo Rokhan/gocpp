@@ -30,8 +30,8 @@ namespace golang::runtime
     namespace tracev2 = golang::internal::trace::tracev2;
     namespace rec
     {
-        using abi::rec::Size;
-        using atomic::rec::Load;
+        using internal::abi::rec::Size;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // traceTypeTable maps types to unique uint32 ids.

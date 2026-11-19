@@ -22,6 +22,8 @@ namespace golang::sync
     namespace atomic = golang::sync::atomic;
     namespace rec
     {
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     // Cond implements a condition variable, a rendezvous point

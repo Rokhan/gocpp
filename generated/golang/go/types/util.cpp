@@ -24,9 +24,9 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using token::rec::IsValid;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::token::rec::IsValid;
     }
 
     // cmpPos compares the positions p and q and returns a result r as follows:

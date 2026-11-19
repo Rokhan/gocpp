@@ -55,9 +55,9 @@ namespace golang::image
     namespace color = golang::image::color;
     namespace rec
     {
-        using color::rec::Convert;
-        using color::rec::Index;
-        using color::rec::RGBA;
+        using golang::image::color::rec::Convert;
+        using golang::image::color::rec::Index;
+        using golang::image::color::rec::RGBA;
     }
 
     // Config holds an image's color model and dimensions.

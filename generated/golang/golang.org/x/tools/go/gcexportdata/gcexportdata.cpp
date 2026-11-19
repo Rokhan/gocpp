@@ -94,8 +94,8 @@ namespace golang::golang_org::x::tools::go::gcexportdata
     namespace types = golang::go::types;
     namespace rec
     {
-        using exec::rec::Output;
         using io::rec::Read;
+        using os::exec::rec::Output;
     }
 
     struct gocpp_id_0

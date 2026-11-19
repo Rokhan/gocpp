@@ -38,21 +38,21 @@ namespace golang::image::png
     namespace zlib = golang::compress::zlib;
     namespace rec
     {
-        using binary::rec::Uint32;
-        using color::rec::Convert;
-        using color::rec::RGBA;
+        using encoding::binary::rec::Uint32;
+        using golang::image::color::rec::Convert;
+        using golang::image::color::rec::RGBA;
+        using golang::image::rec::At;
+        using golang::image::rec::Bounds;
+        using golang::image::rec::ColorModel;
+        using golang::image::rec::SetColorIndex;
+        using golang::image::rec::SetGray;
+        using golang::image::rec::SetGray16;
+        using golang::image::rec::SetNRGBA;
+        using golang::image::rec::SetNRGBA64;
+        using golang::image::rec::SetRGBA64;
         using hash::rec::Reset;
         using hash::rec::Sum32;
         using hash::rec::Write;
-        using image::rec::At;
-        using image::rec::Bounds;
-        using image::rec::ColorModel;
-        using image::rec::SetColorIndex;
-        using image::rec::SetGray;
-        using image::rec::SetGray16;
-        using image::rec::SetNRGBA;
-        using image::rec::SetNRGBA64;
-        using image::rec::SetRGBA64;
         using io::rec::Close;
         using io::rec::Read;
         using mocklib::rec::Error;

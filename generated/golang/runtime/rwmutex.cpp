@@ -26,7 +26,7 @@ namespace golang::runtime
     namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
-        using atomic::rec::Add;
+        using internal::runtime::atomic::rec::Add;
     }
 
     // A rwmutex is a reader/writer mutual exclusion lock.

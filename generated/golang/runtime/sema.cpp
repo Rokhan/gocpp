@@ -36,8 +36,8 @@ namespace golang::runtime
     namespace cpu = golang::internal::cpu;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // A semaRoot holds a balanced tree of sudog with distinct addresses (s.elem).

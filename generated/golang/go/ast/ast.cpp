@@ -30,8 +30,8 @@ namespace golang::go::ast
     namespace token = golang::go::token;
     namespace rec
     {
-        using token::rec::IsValid;
-        using token::rec::String;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::String;
     }
 
     // All node types implement the Node interface.

@@ -41,19 +41,19 @@ namespace golang::runtime
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using abi::rec::ArrayType;
-        using abi::rec::Data;
-        using abi::rec::DescriptorSize;
-        using abi::rec::InSlice;
-        using abi::rec::IsEmbedded;
-        using abi::rec::Kind;
-        using abi::rec::Name;
-        using abi::rec::OutSlice;
-        using abi::rec::Pointers;
-        using abi::rec::ReadVarint;
-        using abi::rec::StructType;
-        using abi::rec::Tag;
-        using abi::rec::Uncommon;
+        using internal::abi::rec::ArrayType;
+        using internal::abi::rec::Data;
+        using internal::abi::rec::DescriptorSize;
+        using internal::abi::rec::InSlice;
+        using internal::abi::rec::IsEmbedded;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::Name;
+        using internal::abi::rec::OutSlice;
+        using internal::abi::rec::Pointers;
+        using internal::abi::rec::ReadVarint;
+        using internal::abi::rec::StructType;
+        using internal::abi::rec::Tag;
+        using internal::abi::rec::Uncommon;
     }
 
     //go:linkname maps_typeString internal/runtime/maps.typeString

@@ -44,18 +44,18 @@ namespace golang::encoding::json::v2
     namespace sync = golang::sync;
     namespace rec
     {
-        using jsonflags::rec::Get;
-        using jsonflags::rec::Set;
-        using jsontext::rec::AtEOF;
-        using jsontext::rec::Decoder;
-        using jsontext::rec::DepthLength;
-        using jsontext::rec::Encoder;
-        using jsontext::rec::IsIOError;
-        using jsontext::rec::Options;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::SkipUntil;
-        using jsontext::rec::StackPointer;
-        using jsontext::rec::WriteValue;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Set;
+        using golang::encoding::json::jsontext::rec::AtEOF;
+        using golang::encoding::json::jsontext::rec::Decoder;
+        using golang::encoding::json::jsontext::rec::DepthLength;
+        using golang::encoding::json::jsontext::rec::Encoder;
+        using golang::encoding::json::jsontext::rec::IsIOError;
+        using golang::encoding::json::jsontext::rec::Options;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::SkipUntil;
+        using golang::encoding::json::jsontext::rec::StackPointer;
+        using golang::encoding::json::jsontext::rec::WriteValue;
         using reflect::rec::Addr;
         using reflect::rec::Convert;
         using reflect::rec::Implements;

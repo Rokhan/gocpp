@@ -28,7 +28,7 @@ namespace golang::os
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using fs::rec::IsDir;
+        using io::fs::rec::IsDir;
     }
 
     // MkdirAll creates a directory named path,

@@ -20,10 +20,10 @@ namespace golang::sync
     namespace atomic = golang::sync::atomic;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using golang::sync::atomic::rec::Add;
+        using golang::sync::atomic::rec::CompareAndSwap;
+        using golang::sync::atomic::rec::Load;
+        using golang::sync::atomic::rec::Store;
     }
 
     // poolDequeue is a lock-free fixed-size single-producer,

@@ -43,9 +43,9 @@ namespace golang::runtime
     namespace gc = golang::internal::runtime::gc;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::Load;
-        using atomic::rec::Swap;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Swap;
     }
 
     

@@ -28,10 +28,11 @@ namespace golang::time
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using registry::rec::Close;
-        using registry::rec::GetMUIStringValue;
-        using registry::rec::GetStringValue;
-        using registry::rec::ReadSubKeyNames;
+        using internal::syscall::windows::registry::rec::Close;
+        using internal::syscall::windows::registry::rec::GetMUIStringValue;
+        using internal::syscall::windows::registry::rec::GetStringValue;
+        using internal::syscall::windows::registry::rec::ReadSubKeyNames;
+        using mocklib::rec::Weekday;
     }
 
     gocpp::slice<gocpp::string> platformZoneSources;

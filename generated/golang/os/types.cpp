@@ -22,7 +22,7 @@ namespace golang::os
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using fs::rec::IsDir;
+        using io::fs::rec::IsDir;
     }
 
     // Getpagesize returns the underlying system's memory page size.

@@ -31,15 +31,15 @@ namespace golang::main
     namespace types = golang::go::types;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using token::rec::Position;
-        using types::rec::Method;
-        using types::rec::Name;
-        using types::rec::NumMethods;
-        using types::rec::Type;
-        using types::rec::TypeOf;
-        using types::rec::Underlying;
+        using go::ast::rec::End;
+        using go::ast::rec::Pos;
+        using go::token::rec::Position;
+        using go::types::rec::Method;
+        using go::types::rec::Name;
+        using go::types::rec::NumMethods;
+        using go::types::rec::Type;
+        using go::types::rec::TypeOf;
+        using go::types::rec::Underlying;
     }
 
     void main()

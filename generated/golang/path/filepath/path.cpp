@@ -47,8 +47,8 @@ namespace golang::path::filepath
     namespace slices = golang::slices;
     namespace rec
     {
-        using fs::rec::IsDir;
-        using fs::rec::Name;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Name;
         using os::rec::Close;
         using os::rec::Readdirnames;
     }

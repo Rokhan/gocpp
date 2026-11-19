@@ -52,7 +52,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Kind;
+        using internal::abi::rec::Kind;
     }
 
     // heapBitsInSpan returns true if the size of an object implies its ptr/scalar

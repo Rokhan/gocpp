@@ -44,7 +44,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Pointers;
+        using internal::abi::rec::Pointers;
     }
 
     gocpp::unsafe_pointer malloc0(uintptr_t size, _type* typ, bool needzero)

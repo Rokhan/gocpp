@@ -35,17 +35,17 @@ namespace golang::encoding::json
     namespace strings = golang::strings;
     namespace rec
     {
-        using jsonflags::rec::Set;
-        using jsontext::rec::CheckEOF;
-        using jsontext::rec::Decoder;
-        using jsontext::rec::Error;
-        using jsontext::rec::Export;
-        using jsontext::rec::GetBufferedDecoder;
-        using jsontext::rec::InputOffset;
-        using jsontext::rec::IsIOError;
-        using jsontext::rec::PutBufferedDecoder;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::UnreadBuffer;
+        using golang::encoding::json::internal::jsonflags::rec::Set;
+        using golang::encoding::json::jsontext::rec::CheckEOF;
+        using golang::encoding::json::jsontext::rec::Decoder;
+        using golang::encoding::json::jsontext::rec::Error;
+        using golang::encoding::json::jsontext::rec::Export;
+        using golang::encoding::json::jsontext::rec::GetBufferedDecoder;
+        using golang::encoding::json::jsontext::rec::InputOffset;
+        using golang::encoding::json::jsontext::rec::IsIOError;
+        using golang::encoding::json::jsontext::rec::PutBufferedDecoder;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::UnreadBuffer;
         using mocklib::rec::Error;
         using strings::rec::Replace;
     }

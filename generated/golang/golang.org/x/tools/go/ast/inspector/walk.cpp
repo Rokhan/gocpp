@@ -23,8 +23,8 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     namespace fmt = golang::fmt;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
     }
 
     template<typename N>

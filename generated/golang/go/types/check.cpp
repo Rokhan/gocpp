@@ -51,10 +51,10 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::Pos;
+        using golang::go::ast::rec::Pos;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::Position;
         using os::rec::Write;
-        using token::rec::IsValid;
-        using token::rec::Position;
     }
 
     // nopos, noposn indicate an unknown position

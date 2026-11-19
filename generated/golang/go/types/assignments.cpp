@@ -44,8 +44,8 @@ namespace golang::go::types
     namespace strings = golang::strings;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
     }
 
     // assignment reports whether x can be assigned to a variable of type T,

@@ -27,9 +27,9 @@ namespace golang::internal::runtime::exithook
     namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using golang::internal::runtime::atomic::rec::CompareAndSwap;
+        using golang::internal::runtime::atomic::rec::Load;
+        using golang::internal::runtime::atomic::rec::Store;
     }
 
     // A Hook is a function to be run at program termination

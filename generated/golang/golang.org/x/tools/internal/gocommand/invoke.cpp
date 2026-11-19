@@ -72,11 +72,11 @@ namespace golang::golang_org::x::tools::internal::gocommand
         using bytes::rec::Write;
         using context::rec::Done;
         using context::rec::Err;
-        using exec::rec::Run;
-        using exec::rec::Start;
-        using exec::rec::Wait;
-        using keys::rec::Of;
+        using golang::golang_org::x::tools::internal::event::keys::rec::Of;
         using mocklib::rec::Error;
+        using os::exec::rec::Run;
+        using os::exec::rec::Start;
+        using os::exec::rec::Wait;
         using os::rec::Close;
         using os::rec::Kill;
         using os::rec::Read;

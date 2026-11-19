@@ -26,7 +26,7 @@ namespace golang::runtime
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
-        using atomic::rec::Add;
+        using internal::runtime::atomic::rec::Add;
     }
 
     // sysAlloc transitions an OS-chosen region of memory from None to Ready.

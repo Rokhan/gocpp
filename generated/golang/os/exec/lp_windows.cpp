@@ -33,9 +33,9 @@ namespace golang::os::exec
     namespace strings = golang::strings;
     namespace rec
     {
-        using fs::rec::IsDir;
-        using godebug::rec::IncNonDefault;
-        using godebug::rec::Value;
+        using internal::godebug::rec::IncNonDefault;
+        using internal::godebug::rec::Value;
+        using io::fs::rec::IsDir;
     }
 
     // ErrNotFound is the error resulting if a path search failed to find an executable file.

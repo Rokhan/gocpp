@@ -36,9 +36,9 @@ namespace golang::internal::runtime::maps
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::IndirectElem;
-        using abi::rec::IndirectKey;
-        using abi::rec::NeedKeyUpdate;
+        using golang::internal::abi::rec::IndirectElem;
+        using golang::internal::abi::rec::IndirectKey;
+        using golang::internal::abi::rec::NeedKeyUpdate;
     }
 
     // Functions below pushed from runtime.

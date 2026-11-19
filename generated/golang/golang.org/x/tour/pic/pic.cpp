@@ -34,13 +34,13 @@ namespace golang::golang_org::x::tour::pic
     {
         using bufio::rec::Flush;
         using bufio::rec::Write;
+        using image::png::rec::Encode;
         using image::rec::At;
         using image::rec::Bounds;
         using image::rec::ColorModel;
         using io::rec::Close;
         using io::rec::Write;
         using os::rec::Write;
-        using png::rec::Encode;
     }
 
     // Show displays a picture defined by the function f

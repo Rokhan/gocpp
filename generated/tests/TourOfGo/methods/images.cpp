@@ -23,7 +23,7 @@ namespace golang::main
     namespace image = golang::image;
     namespace rec
     {
-        using color::rec::RGBA;
+        using image::color::rec::RGBA;
         using image::rec::At;
         using image::rec::Bounds;
     }

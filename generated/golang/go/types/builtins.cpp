@@ -67,8 +67,8 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::Pos;
-        using constant::rec::Kind;
+        using golang::go::ast::rec::Pos;
+        using golang::go::constant::rec::Kind;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
     }

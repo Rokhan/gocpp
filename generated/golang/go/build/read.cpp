@@ -46,17 +46,17 @@ namespace golang::go::build
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using ast::rec::ParseArgs;
-        using ast::rec::Pos;
         using bufio::rec::Discard;
         using bufio::rec::Peek;
         using bufio::rec::Read;
         using bufio::rec::ReadByte;
-        using scanner::rec::Error;
-        using scanner::rec::Init;
-        using scanner::rec::Scan;
-        using token::rec::AddFile;
-        using token::rec::Position;
+        using golang::go::ast::rec::ParseArgs;
+        using golang::go::ast::rec::Pos;
+        using golang::go::scanner::rec::Error;
+        using golang::go::scanner::rec::Init;
+        using golang::go::scanner::rec::Scan;
+        using golang::go::token::rec::AddFile;
+        using golang::go::token::rec::Position;
     }
 
     

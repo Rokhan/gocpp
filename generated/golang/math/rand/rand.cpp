@@ -38,12 +38,12 @@ namespace golang::math::rand
     namespace sync = golang::sync;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using godebug::rec::IncNonDefault;
-        using godebug::rec::Value;
+        using internal::godebug::rec::IncNonDefault;
+        using internal::godebug::rec::Value;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using sync::atomic::rec::CompareAndSwap;
+        using sync::atomic::rec::Load;
     }
 
     // A Source represents a source of uniformly-distributed

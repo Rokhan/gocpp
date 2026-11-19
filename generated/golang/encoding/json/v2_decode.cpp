@@ -41,14 +41,15 @@ namespace golang::encoding::json
     namespace strings = golang::strings;
     namespace rec
     {
-        using jsontext::rec::AvailableBuffer;
-        using jsontext::rec::Clone;
-        using jsontext::rec::Kind;
-        using jsontext::rec::Options;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::StackDepth;
-        using jsontext::rec::StackIndex;
-        using jsontext::rec::WriteValue;
+        using golang::encoding::json::jsontext::rec::AvailableBuffer;
+        using golang::encoding::json::jsontext::rec::Clone;
+        using golang::encoding::json::jsontext::rec::Kind;
+        using golang::encoding::json::jsontext::rec::Options;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::StackDepth;
+        using golang::encoding::json::jsontext::rec::StackIndex;
+        using golang::encoding::json::jsontext::rec::WriteValue;
+        using golang::encoding::json::v2::rec::Error;
         using mocklib::rec::Error;
         using reflect::rec::Kind;
         using reflect::rec::String;

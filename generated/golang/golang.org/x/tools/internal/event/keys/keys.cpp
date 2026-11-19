@@ -25,11 +25,11 @@ namespace golang::golang_org::x::tools::internal::event::keys
     namespace strconv = golang::strconv;
     namespace rec
     {
-        using label::rec::Find;
-        using label::rec::Unpack64;
-        using label::rec::UnpackString;
-        using label::rec::UnpackValue;
-        using label::rec::Valid;
+        using golang::golang_org::x::tools::internal::event::label::rec::Find;
+        using golang::golang_org::x::tools::internal::event::label::rec::Unpack64;
+        using golang::golang_org::x::tools::internal::event::label::rec::UnpackString;
+        using golang::golang_org::x::tools::internal::event::label::rec::UnpackValue;
+        using golang::golang_org::x::tools::internal::event::label::rec::Valid;
         using mocklib::rec::Error;
     }
 

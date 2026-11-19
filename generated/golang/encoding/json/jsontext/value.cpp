@@ -38,9 +38,9 @@ namespace golang::encoding::json::jsontext
     namespace sync = golang::sync;
     namespace rec
     {
-        using jsonflags::rec::Set;
-        using jsonopts::rec::Join;
-        using jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::internal::jsonflags::rec::Set;
+        using golang::encoding::json::internal::jsonopts::rec::Join;
+        using golang::encoding::json::internal::jsonwire::rec::IsVerbatim;
         using mocklib::rec::Error;
         using sync::rec::Get;
         using sync::rec::Put;

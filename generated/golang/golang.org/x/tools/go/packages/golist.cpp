@@ -65,10 +65,10 @@ namespace golang::golang_org::x::tools::go::packages
     {
         using bytes::rec::Read;
         using bytes::rec::String;
-        using gocommand::rec::Run;
-        using gocommand::rec::RunRaw;
-        using json::rec::Decode;
-        using json::rec::More;
+        using encoding::json::rec::Decode;
+        using encoding::json::rec::More;
+        using golang::golang_org::x::tools::internal::gocommand::rec::Run;
+        using golang::golang_org::x::tools::internal::gocommand::rec::RunRaw;
         using mocklib::rec::Error;
         using strings::rec::String;
         using strings::rec::Write;

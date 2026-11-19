@@ -19,6 +19,16 @@ namespace golang::sync
     namespace isync = golang::internal::sync;
     namespace rec
     {
+        using internal::sync::rec::Clear;
+        using internal::sync::rec::CompareAndDelete;
+        using internal::sync::rec::CompareAndSwap;
+        using internal::sync::rec::Delete;
+        using internal::sync::rec::Load;
+        using internal::sync::rec::LoadAndDelete;
+        using internal::sync::rec::LoadOrStore;
+        using internal::sync::rec::Range;
+        using internal::sync::rec::Store;
+        using internal::sync::rec::Swap;
     }
 
     // Map is like a Go map[any]any but is safe for concurrent use

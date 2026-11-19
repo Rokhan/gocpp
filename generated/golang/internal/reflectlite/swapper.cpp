@@ -24,9 +24,9 @@ namespace golang::internal::reflectlite
     namespace unsafeheader = golang::internal::unsafeheader;
     namespace rec
     {
-        using abi::rec::Kind;
-        using abi::rec::Pointers;
-        using abi::rec::Size;
+        using golang::internal::abi::rec::Kind;
+        using golang::internal::abi::rec::Pointers;
+        using golang::internal::abi::rec::Size;
     }
 
     // Swapper returns a function that swaps the elements in the provided

@@ -43,7 +43,7 @@ namespace golang::runtime
     namespace tracev2 = golang::internal::trace::tracev2;
     namespace rec
     {
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // traceStack captures a stack trace from a goroutine and registers it in the trace

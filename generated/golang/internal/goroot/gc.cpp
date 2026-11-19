@@ -31,9 +31,9 @@ namespace golang::internal::goroot
     namespace sync = golang::sync;
     namespace rec
     {
-        using exec::rec::Output;
-        using fs::rec::IsDir;
-        using fs::rec::Name;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Name;
+        using os::exec::rec::Output;
         using sync::rec::Do;
     }
 

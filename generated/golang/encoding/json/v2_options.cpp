@@ -184,8 +184,8 @@ namespace golang::encoding::json
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
     namespace rec
     {
-        using jsonflags::rec::JSONOptions;
-        using jsonopts::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonflags::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonopts::rec::JSONOptions;
     }
 
     // Options are a set of options to configure the v2 "json" package

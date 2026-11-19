@@ -38,13 +38,13 @@ namespace golang::encoding::json::jsontext
     {
         using bytes::rec::Len;
         using bytes::rec::Next;
+        using golang::encoding::json::internal::jsonflags::rec::Clear;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonopts::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonopts::rec::Join;
+        using golang::encoding::json::internal::jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::internal::jsonwire::rec::Join;
         using io::rec::Read;
-        using jsonflags::rec::Clear;
-        using jsonflags::rec::Get;
-        using jsonopts::rec::JSONOptions;
-        using jsonopts::rec::Join;
-        using jsonwire::rec::IsVerbatim;
-        using jsonwire::rec::Join;
         using mocklib::rec::Error;
     }
 

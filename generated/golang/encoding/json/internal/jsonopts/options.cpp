@@ -20,10 +20,10 @@ namespace golang::encoding::json::internal::jsonopts
     namespace jsonflags = golang::encoding::json::internal::jsonflags;
     namespace rec
     {
-        using jsonflags::rec::Get;
-        using jsonflags::rec::Has;
-        using jsonflags::rec::Join;
-        using jsonflags::rec::Set;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Has;
+        using golang::encoding::json::internal::jsonflags::rec::Join;
+        using golang::encoding::json::internal::jsonflags::rec::Set;
     }
 
     // Options is the common options type shared across json packages.

@@ -50,22 +50,22 @@ namespace golang::encoding::json::v2
     namespace slices = golang::slices;
     namespace rec
     {
-        using jsonflags::rec::Get;
-        using jsonflags::rec::Set;
-        using jsontext::rec::AvailableBuffer;
-        using jsontext::rec::CheckEOF;
-        using jsontext::rec::Decoder;
-        using jsontext::rec::GetBufferedDecoder;
-        using jsontext::rec::Kind;
-        using jsontext::rec::OutputOffset;
-        using jsontext::rec::Parent;
-        using jsontext::rec::PeekKind;
-        using jsontext::rec::PutBufferedDecoder;
-        using jsontext::rec::ReadToken;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::StackPointer;
-        using jsontext::rec::WriteValue;
-        using jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Set;
+        using golang::encoding::json::internal::jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::jsontext::rec::AvailableBuffer;
+        using golang::encoding::json::jsontext::rec::CheckEOF;
+        using golang::encoding::json::jsontext::rec::Decoder;
+        using golang::encoding::json::jsontext::rec::GetBufferedDecoder;
+        using golang::encoding::json::jsontext::rec::Kind;
+        using golang::encoding::json::jsontext::rec::OutputOffset;
+        using golang::encoding::json::jsontext::rec::Parent;
+        using golang::encoding::json::jsontext::rec::PeekKind;
+        using golang::encoding::json::jsontext::rec::PutBufferedDecoder;
+        using golang::encoding::json::jsontext::rec::ReadToken;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::StackPointer;
+        using golang::encoding::json::jsontext::rec::WriteValue;
         using reflect::rec::Addr;
         using reflect::rec::Convert;
         using reflect::rec::Elem;

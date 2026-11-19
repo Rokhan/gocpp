@@ -23,10 +23,10 @@ namespace golang::go::doc
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::IsExported;
-        using ast::rec::Pos;
-        using ast::rec::exprNode;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::IsExported;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::exprNode;
     }
 
     // filterIdentList removes unexported names from list in place

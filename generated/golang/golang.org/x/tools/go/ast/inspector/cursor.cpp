@@ -33,10 +33,10 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using edge::rec::FieldName;
-        using edge::rec::FieldType;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::golang_org::x::tools::go::ast::edge::rec::FieldName;
+        using golang::golang_org::x::tools::go::ast::edge::rec::FieldType;
         using reflect::rec::Elem;
         using reflect::rec::Kind;
         using reflect::rec::String;

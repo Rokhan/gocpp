@@ -44,7 +44,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // Frames may be used to get function/file/line information for a

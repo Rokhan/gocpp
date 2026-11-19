@@ -73,8 +73,8 @@ namespace golang::go::types
     {
         using bytes::rec::String;
         using bytes::rec::WriteString;
+        using golang::go::token::rec::Position;
         using mocklib::rec::Error;
-        using token::rec::Position;
     }
 
     // An Error describes a type-checking error; it implements the error interface.

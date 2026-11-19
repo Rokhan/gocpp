@@ -31,11 +31,11 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::stmtNode;
-        using token::rec::IsValid;
-        using token::rec::Position;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::stmtNode;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::Position;
     }
 
     // labels checks correct label use in body.

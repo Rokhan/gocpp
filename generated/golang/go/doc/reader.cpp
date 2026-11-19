@@ -45,17 +45,17 @@ namespace golang::go::doc
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::NumFields;
-        using ast::rec::Pos;
-        using ast::rec::Text;
-        using ast::rec::exprNode;
-        using lazyregexp::rec::FindStringSubmatchIndex;
-        using lazyregexp::rec::MatchString;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::NumFields;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::Text;
+        using golang::go::ast::rec::exprNode;
+        using golang::go::token::rec::IsValid;
+        using internal::lazyregexp::rec::FindStringSubmatchIndex;
+        using internal::lazyregexp::rec::MatchString;
         using strings::rec::String;
         using strings::rec::WriteByte;
         using strings::rec::WriteString;
-        using token::rec::IsValid;
     }
 
     // A methodSet describes a set of methods. Entries where Decl == nil are conflict

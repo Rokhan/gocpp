@@ -35,9 +35,9 @@ namespace golang::runtime
     namespace tracev2 = golang::internal::trace::tracev2;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // traceInitReadCPU initializes CPU profile -> tracer state for tracing.

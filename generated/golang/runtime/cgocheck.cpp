@@ -30,7 +30,7 @@ namespace golang::runtime
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using abi::rec::Pointers;
+        using internal::abi::rec::Pointers;
     }
 
     // cgoCheckPtrWrite is called whenever a pointer is stored into memory.

@@ -36,8 +36,8 @@ namespace golang::hash::crc32
     namespace sync = golang::sync;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
     }
 
     // Table is a 256-word table representing the polynomial for efficient processing.

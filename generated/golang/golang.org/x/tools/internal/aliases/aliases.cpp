@@ -24,7 +24,7 @@ namespace golang::golang_org::x::tools::internal::aliases
     namespace types = golang::go::types;
     namespace rec
     {
-        using types::rec::SetTypeParams;
+        using go::types::rec::SetTypeParams;
     }
 
     // New creates a new TypeName in Package pkg that

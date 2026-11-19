@@ -25,8 +25,8 @@ namespace golang::golang_org::x::tools::internal::event::core
     namespace time = golang::time;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
     }
 
     // Exporter is a function that handles events.

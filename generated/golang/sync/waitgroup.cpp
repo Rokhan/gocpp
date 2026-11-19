@@ -25,11 +25,11 @@ namespace golang::sync
     namespace synctest = golang::internal::synctest;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Or;
-        using atomic::rec::Store;
+        using golang::sync::atomic::rec::Add;
+        using golang::sync::atomic::rec::CompareAndSwap;
+        using golang::sync::atomic::rec::Load;
+        using golang::sync::atomic::rec::Or;
+        using golang::sync::atomic::rec::Store;
     }
 
     // A WaitGroup is a counting semaphore typically used to wait

@@ -101,14 +101,14 @@ namespace golang::os
     namespace time = golang::time;
     namespace rec
     {
-        using atomic::rec::Load;
-        using fs::rec::Mode;
-        using fs::rec::Size;
+        using internal::testlog::rec::Chdir;
+        using io::fs::rec::Mode;
+        using io::fs::rec::Size;
         using mocklib::rec::Error;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using sync::atomic::rec::Load;
         using syscall::rec::Error;
-        using testlog::rec::Chdir;
     }
 
     // Name returns the name of the file as presented to Open.

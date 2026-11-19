@@ -59,18 +59,18 @@ namespace golang::encoding::json::v2
     namespace time = golang::time;
     namespace rec
     {
-        using jsonflags::rec::Get;
-        using jsonflags::rec::Has;
-        using jsontext::rec::AppendRaw;
-        using jsontext::rec::Decoder;
-        using jsontext::rec::Encoder;
-        using jsontext::rec::IsIOError;
-        using jsontext::rec::Kind;
-        using jsontext::rec::NeedObjectName;
-        using jsontext::rec::Options;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::StackPointer;
-        using jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Has;
+        using golang::encoding::json::internal::jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::jsontext::rec::AppendRaw;
+        using golang::encoding::json::jsontext::rec::Decoder;
+        using golang::encoding::json::jsontext::rec::Encoder;
+        using golang::encoding::json::jsontext::rec::IsIOError;
+        using golang::encoding::json::jsontext::rec::Kind;
+        using golang::encoding::json::jsontext::rec::NeedObjectName;
+        using golang::encoding::json::jsontext::rec::Options;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::StackPointer;
         using reflect::rec::Addr;
         using reflect::rec::Interface;
         using time::rec::AppendFormat;

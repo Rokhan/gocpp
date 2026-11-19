@@ -60,10 +60,10 @@ namespace golang::go::types
     namespace strings = golang::strings;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::exprNode;
-        using constant::rec::Kind;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::exprNode;
+        using golang::go::constant::rec::Kind;
     }
 
     // ident type-checks identifier e and initializes x with the value or type of e.

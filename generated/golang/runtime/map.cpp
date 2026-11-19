@@ -36,13 +36,13 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using maps::rec::Clear;
-        using maps::rec::Clone;
-        using maps::rec::Delete;
-        using maps::rec::Init;
-        using maps::rec::Map;
-        using maps::rec::Next;
-        using maps::rec::Used;
+        using internal::runtime::maps::rec::Clear;
+        using internal::runtime::maps::rec::Clone;
+        using internal::runtime::maps::rec::Delete;
+        using internal::runtime::maps::rec::Init;
+        using internal::runtime::maps::rec::Map;
+        using internal::runtime::maps::rec::Next;
+        using internal::runtime::maps::rec::Used;
     }
 
     //go:linkname maps_errNilAssign internal/runtime/maps.errNilAssign

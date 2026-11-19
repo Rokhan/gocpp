@@ -33,14 +33,14 @@ namespace golang::internal::runtime::maps
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::HashMightPanic;
-        using abi::rec::IndirectElem;
-        using abi::rec::IndirectKey;
-        using abi::rec::IsBlank;
-        using abi::rec::IsDirectIface;
-        using abi::rec::Kind;
-        using abi::rec::NeedKeyUpdate;
-        using abi::rec::Pointers;
+        using golang::internal::abi::rec::HashMightPanic;
+        using golang::internal::abi::rec::IndirectElem;
+        using golang::internal::abi::rec::IndirectKey;
+        using golang::internal::abi::rec::IsBlank;
+        using golang::internal::abi::rec::IsDirectIface;
+        using golang::internal::abi::rec::Kind;
+        using golang::internal::abi::rec::NeedKeyUpdate;
+        using golang::internal::abi::rec::Pointers;
     }
 
     // Extracts the H1 portion of a hash: the 57 upper bits.

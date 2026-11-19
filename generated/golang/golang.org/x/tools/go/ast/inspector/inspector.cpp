@@ -47,8 +47,8 @@ namespace golang::golang_org::x::tools::go::ast::inspector
     namespace edge = golang::golang_org::x::tools::go::ast::edge;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
     }
 
     // An Inspector provides methods for inspecting

@@ -23,7 +23,7 @@ namespace golang::reflect
     namespace bytealg = golang::internal::bytealg;
     namespace rec
     {
-        using abi::rec::Pointers;
+        using internal::abi::rec::Pointers;
     }
 
     // During deepValueEqual, must keep track of checks that are

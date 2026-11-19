@@ -40,7 +40,7 @@ namespace golang::golang_org::x::tools::internal::gocommand
     {
         using bytes::rec::Bytes;
         using bytes::rec::String;
-        using fs::rec::IsDir;
+        using io::fs::rec::IsDir;
         using regexp::rec::FindStringSubmatch;
     }
 

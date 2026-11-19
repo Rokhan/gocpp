@@ -27,9 +27,9 @@ namespace golang::reflect
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using abi::rec::Common;
-        using abi::rec::Get;
-        using abi::rec::Kind;
+        using internal::abi::rec::Common;
+        using internal::abi::rec::Get;
+        using internal::abi::rec::Kind;
     }
 
     // makeFuncImpl is the closure value implementing the function

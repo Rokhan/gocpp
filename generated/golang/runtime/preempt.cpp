@@ -38,7 +38,7 @@ namespace golang::runtime
     namespace stringslite = golang::internal::stringslite;
     namespace rec
     {
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Load;
     }
 
     

@@ -48,11 +48,11 @@ namespace golang::runtime
     namespace windows = golang::internal::runtime::syscall::windows;
     namespace rec
     {
-        using atomic::rec::Add;
-        using windows::rec::LR;
-        using windows::rec::PC;
-        using windows::rec::PushCall;
-        using windows::rec::SP;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::syscall::windows::rec::LR;
+        using internal::runtime::syscall::windows::rec::PC;
+        using internal::runtime::syscall::windows::rec::PushCall;
+        using internal::runtime::syscall::windows::rec::SP;
     }
 
     // Following syscalls are available on every Windows PC.

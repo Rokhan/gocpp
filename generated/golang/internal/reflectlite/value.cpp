@@ -29,12 +29,12 @@ namespace golang::internal::reflectlite
     namespace unsafeheader = golang::internal::unsafeheader;
     namespace rec
     {
-        using abi::rec::IsDirectIface;
-        using abi::rec::Kind;
-        using abi::rec::NumMethod;
-        using abi::rec::Pointers;
-        using abi::rec::Size;
-        using abi::rec::String;
+        using golang::internal::abi::rec::IsDirectIface;
+        using golang::internal::abi::rec::Kind;
+        using golang::internal::abi::rec::NumMethod;
+        using golang::internal::abi::rec::Pointers;
+        using golang::internal::abi::rec::Size;
+        using golang::internal::abi::rec::String;
         using runtime::rec::Name;
     }
 

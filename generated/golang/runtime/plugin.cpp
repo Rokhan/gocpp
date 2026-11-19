@@ -27,8 +27,8 @@ namespace golang::runtime
     namespace abi = golang::internal::abi;
     namespace rec
     {
-        using abi::rec::Kind;
-        using abi::rec::Name;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::Name;
     }
 
     //go:linkname plugin_lastmoduleinit plugin.lastmoduleinit

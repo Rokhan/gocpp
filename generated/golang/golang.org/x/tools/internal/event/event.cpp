@@ -26,10 +26,10 @@ namespace golang::golang_org::x::tools::internal::event
     namespace label = golang::golang_org::x::tools::internal::event::label;
     namespace rec
     {
-        using core::rec::Label;
-        using keys::rec::New;
-        using keys::rec::Of;
-        using label::rec::Key;
+        using golang::golang_org::x::tools::internal::event::core::rec::Label;
+        using golang::golang_org::x::tools::internal::event::keys::rec::New;
+        using golang::golang_org::x::tools::internal::event::keys::rec::Of;
+        using golang::golang_org::x::tools::internal::event::label::rec::Key;
     }
 
     // Exporter is a function that handles events.

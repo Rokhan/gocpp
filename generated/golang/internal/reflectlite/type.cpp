@@ -22,34 +22,34 @@ namespace golang::internal::reflectlite
     namespace abi = golang::internal::abi;
     namespace rec
     {
-        using abi::rec::ArrayType;
-        using abi::rec::ChanDir;
-        using abi::rec::DataChecked;
-        using abi::rec::Elem;
-        using abi::rec::Embedded;
-        using abi::rec::ExportedMethods;
-        using abi::rec::FuncType;
-        using abi::rec::HasName;
-        using abi::rec::HasTag;
-        using abi::rec::In;
-        using abi::rec::InSlice;
-        using abi::rec::InterfaceType;
-        using abi::rec::IsExported;
-        using abi::rec::Key;
-        using abi::rec::Kind;
-        using abi::rec::Len;
-        using abi::rec::MapType;
-        using abi::rec::Methods;
-        using abi::rec::Name;
-        using abi::rec::NumIn;
-        using abi::rec::NumMethod;
-        using abi::rec::NumOut;
-        using abi::rec::Out;
-        using abi::rec::OutSlice;
-        using abi::rec::ReadVarint;
-        using abi::rec::StructType;
-        using abi::rec::Tag;
-        using abi::rec::Uncommon;
+        using golang::internal::abi::rec::ArrayType;
+        using golang::internal::abi::rec::ChanDir;
+        using golang::internal::abi::rec::DataChecked;
+        using golang::internal::abi::rec::Elem;
+        using golang::internal::abi::rec::Embedded;
+        using golang::internal::abi::rec::ExportedMethods;
+        using golang::internal::abi::rec::FuncType;
+        using golang::internal::abi::rec::HasName;
+        using golang::internal::abi::rec::HasTag;
+        using golang::internal::abi::rec::In;
+        using golang::internal::abi::rec::InSlice;
+        using golang::internal::abi::rec::InterfaceType;
+        using golang::internal::abi::rec::IsExported;
+        using golang::internal::abi::rec::Key;
+        using golang::internal::abi::rec::Kind;
+        using golang::internal::abi::rec::Len;
+        using golang::internal::abi::rec::MapType;
+        using golang::internal::abi::rec::Methods;
+        using golang::internal::abi::rec::Name;
+        using golang::internal::abi::rec::NumIn;
+        using golang::internal::abi::rec::NumMethod;
+        using golang::internal::abi::rec::NumOut;
+        using golang::internal::abi::rec::Out;
+        using golang::internal::abi::rec::OutSlice;
+        using golang::internal::abi::rec::ReadVarint;
+        using golang::internal::abi::rec::StructType;
+        using golang::internal::abi::rec::Tag;
+        using golang::internal::abi::rec::Uncommon;
     }
 
     // Type is the representation of a Go type.

@@ -21,8 +21,8 @@ namespace golang::internal::testlog
     namespace atomic = golang::sync::atomic;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
+        using sync::atomic::rec::CompareAndSwap;
+        using sync::atomic::rec::Load;
     }
 
     // Interface is the interface required of test loggers.

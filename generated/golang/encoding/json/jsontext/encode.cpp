@@ -43,12 +43,12 @@ namespace golang::encoding::json::jsontext
         using bytes::rec::Grow;
         using bytes::rec::Len;
         using bytes::rec::Write;
+        using golang::encoding::json::internal::jsonflags::rec::Clear;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonopts::rec::InitializeMultiline;
+        using golang::encoding::json::internal::jsonopts::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonopts::rec::Join;
         using io::rec::Write;
-        using jsonflags::rec::Clear;
-        using jsonflags::rec::Get;
-        using jsonopts::rec::InitializeMultiline;
-        using jsonopts::rec::JSONOptions;
-        using jsonopts::rec::Join;
         using mocklib::rec::Error;
     }
 

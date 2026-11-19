@@ -39,16 +39,16 @@ namespace golang::go::parser
     namespace rec
     {
         using bytes::rec::Bytes;
-        using fs::rec::Info;
-        using fs::rec::IsDir;
-        using fs::rec::Name;
-        using scanner::rec::Add;
-        using scanner::rec::Err;
-        using scanner::rec::Sort;
-        using token::rec::AddFile;
-        using token::rec::Base;
-        using token::rec::End;
-        using token::rec::Position;
+        using golang::go::scanner::rec::Add;
+        using golang::go::scanner::rec::Err;
+        using golang::go::scanner::rec::Sort;
+        using golang::go::token::rec::AddFile;
+        using golang::go::token::rec::Base;
+        using golang::go::token::rec::End;
+        using golang::go::token::rec::Position;
+        using io::fs::rec::Info;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Name;
     }
 
     // If src != nil, readSource converts src to a []byte if possible;

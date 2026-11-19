@@ -47,10 +47,10 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::IsExported;
-        using abi::rec::Name;
-        using abi::rec::Size;
-        using abi::rec::Uncommon;
+        using internal::abi::rec::IsExported;
+        using internal::abi::rec::Name;
+        using internal::abi::rec::Size;
+        using internal::abi::rec::Uncommon;
     }
 
     mutex itabLock;

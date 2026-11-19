@@ -26,16 +26,16 @@ namespace golang::reflect
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using abi::rec::Align;
-        using abi::rec::Get;
-        using abi::rec::InSlice;
-        using abi::rec::IntRegArgAddr;
-        using abi::rec::IsDirectIface;
-        using abi::rec::Kind;
-        using abi::rec::OutSlice;
-        using abi::rec::Pointers;
-        using abi::rec::Set;
-        using abi::rec::Size;
+        using internal::abi::rec::Align;
+        using internal::abi::rec::Get;
+        using internal::abi::rec::InSlice;
+        using internal::abi::rec::IntRegArgAddr;
+        using internal::abi::rec::IsDirectIface;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::OutSlice;
+        using internal::abi::rec::Pointers;
+        using internal::abi::rec::Set;
+        using internal::abi::rec::Size;
     }
 
     // These variables are used by the register assignment

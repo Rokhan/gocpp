@@ -65,9 +65,9 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::exprNode;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::exprNode;
     }
 
     // funcInst type-checks a function instantiation.

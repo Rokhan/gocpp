@@ -28,12 +28,12 @@ namespace golang::go::parser
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Insert;
-        using ast::rec::Lookup;
-        using ast::rec::Pos;
-        using token::rec::IsValid;
-        using token::rec::Position;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Insert;
+        using golang::go::ast::rec::Lookup;
+        using golang::go::ast::rec::Pos;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::Position;
     }
 
     

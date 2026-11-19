@@ -24,9 +24,8 @@ namespace golang::go::scanner
     namespace token = golang::go::token;
     namespace rec
     {
-        using mocklib::rec::Error;
-        using token::rec::IsValid;
-        using token::rec::String;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::String;
     }
 
     // In an [ErrorList], an error is represented by an *Error.

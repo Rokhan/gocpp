@@ -83,13 +83,13 @@ namespace golang::context
     namespace time = golang::time;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::reflectlite::rec::Comparable;
+        using internal::reflectlite::rec::String;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
-        using reflectlite::rec::Comparable;
-        using reflectlite::rec::String;
+        using sync::atomic::rec::Add;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
         using sync::rec::Do;
         using time::rec::Add;
         using time::rec::Before;

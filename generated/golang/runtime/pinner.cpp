@@ -35,7 +35,7 @@ namespace golang::runtime
     namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
-        using abi::rec::Kind;
+        using internal::abi::rec::Kind;
     }
 
     // A Pinner is a set of Go objects each pinned to a fixed location in memory. The

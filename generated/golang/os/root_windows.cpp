@@ -53,7 +53,7 @@ namespace golang::os
     namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using fs::rec::IsDir;
+        using io::fs::rec::IsDir;
         using syscall::rec::Error;
         using time::rec::IsZero;
         using time::rec::UnixNano;

@@ -47,10 +47,10 @@ namespace golang::runtime
     namespace strconv = golang::internal::strconv;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // gcController implements the GC pacing controller that determines

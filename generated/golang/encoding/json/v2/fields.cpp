@@ -48,7 +48,7 @@ namespace golang::encoding::json::v2
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
         using reflect::rec::Addr;
         using reflect::rec::Elem;
         using reflect::rec::Field;

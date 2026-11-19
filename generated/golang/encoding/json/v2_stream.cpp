@@ -44,19 +44,19 @@ namespace golang::encoding::json
         using bytes::rec::Bytes;
         using bytes::rec::Read;
         using bytes::rec::Reset;
+        using golang::encoding::json::jsontext::rec::Encoder;
+        using golang::encoding::json::jsontext::rec::Float;
+        using golang::encoding::json::jsontext::rec::GetBufferedEncoder;
+        using golang::encoding::json::jsontext::rec::InputOffset;
+        using golang::encoding::json::jsontext::rec::IsIOError;
+        using golang::encoding::json::jsontext::rec::Kind;
+        using golang::encoding::json::jsontext::rec::PeekKind;
+        using golang::encoding::json::jsontext::rec::PutBufferedEncoder;
+        using golang::encoding::json::jsontext::rec::ReadToken;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::String;
+        using golang::encoding::json::jsontext::rec::UnreadBuffer;
         using io::rec::Write;
-        using jsontext::rec::Encoder;
-        using jsontext::rec::Float;
-        using jsontext::rec::GetBufferedEncoder;
-        using jsontext::rec::InputOffset;
-        using jsontext::rec::IsIOError;
-        using jsontext::rec::Kind;
-        using jsontext::rec::PeekKind;
-        using jsontext::rec::PutBufferedEncoder;
-        using jsontext::rec::ReadToken;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::String;
-        using jsontext::rec::UnreadBuffer;
         using mocklib::rec::Error;
     }
 

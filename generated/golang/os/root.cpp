@@ -43,9 +43,9 @@ namespace golang::os
     namespace time = golang::time;
     namespace rec
     {
-        using fs::rec::Name;
-        using testlog::rec::Open;
-        using testlog::rec::Stat;
+        using internal::testlog::rec::Open;
+        using internal::testlog::rec::Stat;
+        using io::fs::rec::Name;
     }
 
     // OpenInRoot opens the file name in the directory dir.

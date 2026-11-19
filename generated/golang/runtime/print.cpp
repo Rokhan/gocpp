@@ -31,7 +31,7 @@ namespace golang::runtime
     namespace strconv = golang::internal::strconv;
     namespace rec
     {
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // The compiler knows that a print of a value of this type

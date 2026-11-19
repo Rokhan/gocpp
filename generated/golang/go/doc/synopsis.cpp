@@ -25,8 +25,8 @@ namespace golang::go::doc
     namespace unicode = golang::unicode;
     namespace rec
     {
-        using comment::rec::Parse;
-        using comment::rec::Text;
+        using golang::go::doc::comment::rec::Parse;
+        using golang::go::doc::comment::rec::Text;
     }
 
     // firstSentence returns the first sentence in s.

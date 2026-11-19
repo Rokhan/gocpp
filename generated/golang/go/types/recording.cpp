@@ -37,7 +37,7 @@ namespace golang::go::types
     namespace constant = golang::go::constant;
     namespace rec
     {
-        using ast::rec::Pos;
+        using golang::go::ast::rec::Pos;
     }
 
     void rec::record(Checker* check, operand* x)

@@ -36,7 +36,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::Add;
+        using internal::runtime::atomic::rec::Add;
     }
 
     // A synctestBubble is a set of goroutines started by synctest.Run.

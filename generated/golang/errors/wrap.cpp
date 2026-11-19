@@ -20,14 +20,14 @@ namespace golang::errors
     namespace reflectlite = golang::internal::reflectlite;
     namespace rec
     {
-        using reflectlite::rec::AssignableTo;
-        using reflectlite::rec::Comparable;
-        using reflectlite::rec::Elem;
-        using reflectlite::rec::Implements;
-        using reflectlite::rec::IsNil;
-        using reflectlite::rec::Kind;
-        using reflectlite::rec::Set;
-        using reflectlite::rec::Type;
+        using internal::reflectlite::rec::AssignableTo;
+        using internal::reflectlite::rec::Comparable;
+        using internal::reflectlite::rec::Elem;
+        using internal::reflectlite::rec::Implements;
+        using internal::reflectlite::rec::IsNil;
+        using internal::reflectlite::rec::Kind;
+        using internal::reflectlite::rec::Set;
+        using internal::reflectlite::rec::Type;
     }
 
     

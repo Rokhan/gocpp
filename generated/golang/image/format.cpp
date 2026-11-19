@@ -27,11 +27,11 @@ namespace golang::image
     namespace sync = golang::sync;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
         using bufio::rec::Peek;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
     }
 
     // ErrFormat indicates that decoding encountered an unknown format.

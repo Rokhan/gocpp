@@ -36,13 +36,13 @@ namespace golang::os
     namespace slices = golang::slices;
     namespace rec
     {
-        using fs::rec::Close;
-        using fs::rec::Mode;
-        using fs::rec::Name;
-        using fs::rec::Open;
-        using fs::rec::Read;
-        using fs::rec::Stat;
-        using fs::rec::Type;
+        using io::fs::rec::Close;
+        using io::fs::rec::Mode;
+        using io::fs::rec::Name;
+        using io::fs::rec::Open;
+        using io::fs::rec::Read;
+        using io::fs::rec::Stat;
+        using io::fs::rec::Type;
     }
 
     // Readdir reads the contents of the directory associated with file and

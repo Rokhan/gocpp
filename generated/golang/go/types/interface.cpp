@@ -36,7 +36,7 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::Pos;
+        using golang::go::ast::rec::Pos;
     }
 
     // An Interface represents an interface type.

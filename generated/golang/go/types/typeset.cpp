@@ -42,10 +42,10 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
+        using golang::go::token::rec::IsValid;
         using strings::rec::String;
         using strings::rec::WriteByte;
         using strings::rec::WriteString;
-        using token::rec::IsValid;
     }
 
     // A _TypeSet represents the type set of an interface.

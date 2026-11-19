@@ -31,11 +31,11 @@ namespace golang::go::token
     namespace sync = golang::sync;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
+        using sync::atomic::rec::CompareAndSwap;
+        using sync::atomic::rec::Load;
+        using sync::atomic::rec::Store;
         using sync::rec::RLock;
         using sync::rec::RUnlock;
     }

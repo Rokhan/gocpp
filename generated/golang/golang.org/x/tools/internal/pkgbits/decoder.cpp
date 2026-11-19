@@ -47,18 +47,18 @@ namespace golang::golang_org::x::tools::internal::pkgbits
     namespace token = golang::go::token;
     namespace rec
     {
-        using big::rec::Neg;
-        using big::rec::SetBytes;
-        using big::rec::SetFrac;
-        using big::rec::SetPrec;
-        using big::rec::UnmarshalText;
-        using binary::rec::PutUint16;
-        using binary::rec::PutUint32;
-        using binary::rec::PutUint64;
-        using binary::rec::String;
-        using binary::rec::Uint16;
-        using binary::rec::Uint32;
-        using binary::rec::Uint64;
+        using encoding::binary::rec::PutUint16;
+        using encoding::binary::rec::PutUint32;
+        using encoding::binary::rec::PutUint64;
+        using encoding::binary::rec::String;
+        using encoding::binary::rec::Uint16;
+        using encoding::binary::rec::Uint32;
+        using encoding::binary::rec::Uint64;
+        using math::big::rec::Neg;
+        using math::big::rec::SetBytes;
+        using math::big::rec::SetFrac;
+        using math::big::rec::SetPrec;
+        using math::big::rec::UnmarshalText;
         using strings::rec::Read;
         using strings::rec::ReadByte;
         using strings::rec::Reset;

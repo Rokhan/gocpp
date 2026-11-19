@@ -85,8 +85,8 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Pointers;
-        using atomic::rec::Store;
+        using internal::abi::rec::Pointers;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // physPageSize is the size in bytes of the OS's physical pages.

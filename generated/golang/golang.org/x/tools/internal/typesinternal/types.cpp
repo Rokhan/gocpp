@@ -60,38 +60,38 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     namespace types = golang::go::types;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using inspector::rec::Enclosing;
-        using inspector::rec::Node;
+        using go::ast::rec::End;
+        using go::ast::rec::Pos;
+        using go::types::rec::Elem;
+        using go::types::rec::Field;
+        using go::types::rec::Imports;
+        using go::types::rec::Index;
+        using go::types::rec::IsAlias;
+        using go::types::rec::Kind;
+        using go::types::rec::Lookup;
+        using go::types::rec::Name;
+        using go::types::rec::Obj;
+        using go::types::rec::Origin;
+        using go::types::rec::Parent;
+        using go::types::rec::Path;
+        using go::types::rec::Pkg;
+        using go::types::rec::Recv;
+        using go::types::rec::Scope;
+        using go::types::rec::SetTypeParams;
+        using go::types::rec::Signature;
+        using go::types::rec::String;
+        using go::types::rec::Type;
+        using go::types::rec::TypeArgs;
+        using go::types::rec::TypeParams;
+        using go::types::rec::Underlying;
+        using golang::golang_org::x::tools::go::ast::inspector::rec::Enclosing;
+        using golang::golang_org::x::tools::go::ast::inspector::rec::Node;
         using reflect::rec::Addr;
         using reflect::rec::Elem;
         using reflect::rec::FieldByName;
         using reflect::rec::Int;
         using reflect::rec::IsValid;
         using reflect::rec::UnsafePointer;
-        using types::rec::Elem;
-        using types::rec::Field;
-        using types::rec::Imports;
-        using types::rec::Index;
-        using types::rec::IsAlias;
-        using types::rec::Kind;
-        using types::rec::Lookup;
-        using types::rec::Name;
-        using types::rec::Obj;
-        using types::rec::Origin;
-        using types::rec::Parent;
-        using types::rec::Path;
-        using types::rec::Pkg;
-        using types::rec::Recv;
-        using types::rec::Scope;
-        using types::rec::SetTypeParams;
-        using types::rec::Signature;
-        using types::rec::String;
-        using types::rec::Type;
-        using types::rec::TypeArgs;
-        using types::rec::TypeParams;
-        using types::rec::Underlying;
     }
 
     bool SetUsesCgo(types::Config* conf)

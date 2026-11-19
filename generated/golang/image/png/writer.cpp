@@ -36,25 +36,25 @@ namespace golang::image::png
     namespace zlib = golang::compress::zlib;
     namespace rec
     {
-        using binary::rec::PutUint32;
         using bufio::rec::Flush;
         using bufio::rec::Reset;
         using bufio::rec::Write;
-        using color::rec::Convert;
-        using color::rec::RGBA;
+        using compress::zlib::rec::Close;
+        using compress::zlib::rec::Reset;
+        using compress::zlib::rec::Write;
+        using encoding::binary::rec::PutUint32;
+        using golang::image::color::rec::Convert;
+        using golang::image::color::rec::RGBA;
+        using golang::image::rec::At;
+        using golang::image::rec::Bounds;
+        using golang::image::rec::ColorIndexAt;
+        using golang::image::rec::ColorModel;
+        using golang::image::rec::Dx;
+        using golang::image::rec::Dy;
+        using golang::image::rec::PixOffset;
         using hash::rec::Sum32;
         using hash::rec::Write;
-        using image::rec::At;
-        using image::rec::Bounds;
-        using image::rec::ColorIndexAt;
-        using image::rec::ColorModel;
-        using image::rec::Dx;
-        using image::rec::Dy;
-        using image::rec::PixOffset;
         using io::rec::Write;
-        using zlib::rec::Close;
-        using zlib::rec::Reset;
-        using zlib::rec::Write;
     }
 
     // Encoder configures encoding PNG images.

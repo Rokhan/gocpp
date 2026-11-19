@@ -23,9 +23,11 @@ namespace golang::sync
     namespace race = golang::internal::race;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
+        using golang::sync::atomic::rec::Add;
+        using golang::sync::atomic::rec::CompareAndSwap;
+        using golang::sync::atomic::rec::Load;
+        using mocklib::rec::Lock;
+        using mocklib::rec::Unlock;
     }
 
     // A RWMutex is a reader/writer mutual exclusion lock.

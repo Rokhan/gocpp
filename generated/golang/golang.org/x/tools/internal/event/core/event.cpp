@@ -28,8 +28,8 @@ namespace golang::golang_org::x::tools::internal::event::core
     namespace rec
     {
         using fmt::rec::Write;
-        using label::rec::Key;
-        using label::rec::Valid;
+        using golang::golang_org::x::tools::internal::event::label::rec::Key;
+        using golang::golang_org::x::tools::internal::event::label::rec::Valid;
         using time::rec::Format;
         using time::rec::IsZero;
     }

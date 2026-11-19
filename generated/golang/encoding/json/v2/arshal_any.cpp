@@ -49,26 +49,26 @@ namespace golang::encoding::json::v2
     namespace strconv = golang::strconv;
     namespace rec
     {
-        using jsonflags::rec::Get;
-        using jsontext::rec::Decoder;
-        using jsontext::rec::Depth;
-        using jsontext::rec::DisableNamespace;
-        using jsontext::rec::Encoder;
-        using jsontext::rec::Flush;
-        using jsontext::rec::Increment;
-        using jsontext::rec::InputOffset;
-        using jsontext::rec::Kind;
-        using jsontext::rec::MayAppendDelim;
-        using jsontext::rec::NeedFlush;
-        using jsontext::rec::NeedObjectName;
-        using jsontext::rec::PeekKind;
-        using jsontext::rec::PreviousTokenOrValue;
-        using jsontext::rec::ReadToken;
-        using jsontext::rec::ReadValue;
-        using jsontext::rec::StackPointer;
-        using jsontext::rec::String;
-        using jsontext::rec::WriteToken;
-        using jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::internal::jsonflags::rec::Get;
+        using golang::encoding::json::internal::jsonwire::rec::IsVerbatim;
+        using golang::encoding::json::jsontext::rec::Decoder;
+        using golang::encoding::json::jsontext::rec::Depth;
+        using golang::encoding::json::jsontext::rec::DisableNamespace;
+        using golang::encoding::json::jsontext::rec::Encoder;
+        using golang::encoding::json::jsontext::rec::Flush;
+        using golang::encoding::json::jsontext::rec::Increment;
+        using golang::encoding::json::jsontext::rec::InputOffset;
+        using golang::encoding::json::jsontext::rec::Kind;
+        using golang::encoding::json::jsontext::rec::MayAppendDelim;
+        using golang::encoding::json::jsontext::rec::NeedFlush;
+        using golang::encoding::json::jsontext::rec::NeedObjectName;
+        using golang::encoding::json::jsontext::rec::PeekKind;
+        using golang::encoding::json::jsontext::rec::PreviousTokenOrValue;
+        using golang::encoding::json::jsontext::rec::ReadToken;
+        using golang::encoding::json::jsontext::rec::ReadValue;
+        using golang::encoding::json::jsontext::rec::StackPointer;
+        using golang::encoding::json::jsontext::rec::String;
+        using golang::encoding::json::jsontext::rec::WriteToken;
         using reflect::rec::Set;
         using reflect::rec::Type;
     }

@@ -40,9 +40,9 @@ namespace golang::os
     namespace windows = golang::internal::syscall::windows;
     namespace rec
     {
-        using fs::rec::Sys;
-        using godebug::rec::IncNonDefault;
-        using godebug::rec::Value;
+        using internal::godebug::rec::IncNonDefault;
+        using internal::godebug::rec::Value;
+        using io::fs::rec::Sys;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using syscall::rec::Nanoseconds;

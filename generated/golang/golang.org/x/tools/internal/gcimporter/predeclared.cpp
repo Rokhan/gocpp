@@ -24,10 +24,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     namespace types = golang::go::types;
     namespace rec
     {
+        using go::types::rec::Lookup;
+        using go::types::rec::Type;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
-        using types::rec::Lookup;
-        using types::rec::Type;
     }
 
     // predecl is a cache for the predeclared types in types.Universe.

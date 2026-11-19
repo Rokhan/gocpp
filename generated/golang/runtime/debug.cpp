@@ -30,7 +30,7 @@ namespace golang::runtime
     namespace atomic = golang::internal::runtime::atomic;
     namespace rec
     {
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // GOMAXPROCS sets the maximum number of CPUs that can be executing

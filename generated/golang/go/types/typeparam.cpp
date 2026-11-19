@@ -30,7 +30,7 @@ namespace golang::go::types
     namespace atomic = golang::sync::atomic;
     namespace rec
     {
-        using atomic::rec::Add;
+        using sync::atomic::rec::Add;
     }
 
     // Note: This is a uint32 rather than a uint64 because the

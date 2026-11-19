@@ -28,10 +28,10 @@ namespace golang::golang_org::x::sync::errgroup
     namespace sync = golang::sync;
     namespace rec
     {
-        using sync::rec::Add;
-        using sync::rec::Do;
-        using sync::rec::Done;
-        using sync::rec::Wait;
+        using golang::sync::rec::Add;
+        using golang::sync::rec::Do;
+        using golang::sync::rec::Done;
+        using golang::sync::rec::Wait;
     }
 
     

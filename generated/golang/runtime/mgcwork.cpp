@@ -41,7 +41,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::Add;
+        using internal::runtime::atomic::rec::Add;
     }
 
     void init()

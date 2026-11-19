@@ -45,7 +45,7 @@ namespace golang::runtime
     namespace godebugs = golang::internal::godebugs;
     namespace rec
     {
-        using atomic::rec::Load;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // metrics is a map of runtime/metrics keys to data used by the runtime

@@ -61,11 +61,11 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Kind;
-        using abi::rec::Pointers;
-        using atomic::rec::Add;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::Pointers;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // arena_newArena is a wrapper around newUserArena.

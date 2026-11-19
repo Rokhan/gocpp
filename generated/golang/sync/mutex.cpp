@@ -25,6 +25,9 @@ namespace golang::sync
     namespace isync = golang::internal::sync;
     namespace rec
     {
+        using internal::sync::rec::Lock;
+        using internal::sync::rec::TryLock;
+        using internal::sync::rec::Unlock;
     }
 
     // A Mutex is a mutual exclusion lock.

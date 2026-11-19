@@ -25,11 +25,11 @@ namespace golang::encoding::json::v2
     namespace jsonopts = golang::encoding::json::internal::jsonopts;
     namespace rec
     {
-        using jsonflags::rec::Has;
-        using jsonflags::rec::JSONOptions;
-        using jsonflags::rec::Set;
-        using jsonopts::rec::JSONOptions;
-        using jsonopts::rec::Join;
+        using golang::encoding::json::internal::jsonflags::rec::Has;
+        using golang::encoding::json::internal::jsonflags::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonflags::rec::Set;
+        using golang::encoding::json::internal::jsonopts::rec::JSONOptions;
+        using golang::encoding::json::internal::jsonopts::rec::Join;
     }
 
     // Options configure [Marshal], [MarshalWrite], [MarshalEncode],

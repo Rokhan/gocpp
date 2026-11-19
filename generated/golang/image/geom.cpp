@@ -22,7 +22,7 @@ namespace golang::image
     namespace strconv = golang::strconv;
     namespace rec
     {
-        using color::rec::RGBA;
+        using golang::image::color::rec::RGBA;
     }
 
     // A Point is an X, Y coordinate pair. The axes increase right and down.

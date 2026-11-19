@@ -25,9 +25,9 @@ namespace golang::regexp
     namespace syntax = golang::regexp::syntax;
     namespace rec
     {
+        using golang::regexp::syntax::rec::MatchRune;
         using sync::rec::Get;
         using sync::rec::Put;
-        using syntax::rec::MatchRune;
     }
 
     // A queue is a 'sparse array' holding pending threads of execution.

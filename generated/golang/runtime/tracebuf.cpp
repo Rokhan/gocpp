@@ -39,8 +39,8 @@ namespace golang::runtime
     namespace tracev2 = golang::internal::trace::tracev2;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // traceWriter is the interface for writing all trace data.

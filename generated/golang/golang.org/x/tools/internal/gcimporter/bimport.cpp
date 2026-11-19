@@ -24,10 +24,10 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     namespace types = golang::go::types;
     namespace rec
     {
+        using go::token::rec::AddFile;
+        using go::token::rec::Base;
+        using go::token::rec::SetLines;
         using sync::rec::Do;
-        using token::rec::AddFile;
-        using token::rec::Base;
-        using token::rec::SetLines;
     }
 
     void errorf(gocpp::string format, gocpp::slice<go_any> args)

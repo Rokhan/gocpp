@@ -26,9 +26,9 @@ namespace golang::internal::sync
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using abi::rec::MapType;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using golang::internal::abi::rec::MapType;
+        using golang::sync::atomic::rec::Load;
+        using golang::sync::atomic::rec::Store;
     }
 
     // HashTrieMap is an implementation of a concurrent hash-trie. The implementation

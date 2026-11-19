@@ -23,9 +23,9 @@ namespace golang::regexp
     namespace syntax = golang::regexp::syntax;
     namespace rec
     {
+        using golang::regexp::syntax::rec::MatchRune;
         using sync::rec::Get;
         using sync::rec::Put;
-        using syntax::rec::MatchRune;
     }
 
     // A job is an entry on the backtracker's job stack. It holds

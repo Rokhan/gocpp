@@ -40,14 +40,14 @@ namespace golang::go::doc
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::Text;
-        using ast::rec::declNode;
-        using ast::rec::specNode;
-        using lazyregexp::rec::FindStringSubmatchIndex;
-        using lazyregexp::rec::MatchString;
-        using token::rec::IsValid;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::Text;
+        using golang::go::ast::rec::declNode;
+        using golang::go::ast::rec::specNode;
+        using golang::go::token::rec::IsValid;
+        using internal::lazyregexp::rec::FindStringSubmatchIndex;
+        using internal::lazyregexp::rec::MatchString;
     }
 
     // An Example represents an example function found in a test source file.

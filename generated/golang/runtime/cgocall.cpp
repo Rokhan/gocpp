@@ -47,10 +47,10 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::IsDirectIface;
-        using abi::rec::Kind;
-        using abi::rec::Pointers;
-        using atomic::rec::Load;
+        using internal::abi::rec::IsDirectIface;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::Pointers;
+        using internal::runtime::atomic::rec::Load;
     }
 
     // Addresses collected in a cgo backtrace when crashing.

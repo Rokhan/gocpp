@@ -28,7 +28,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Kind;
+        using internal::abi::rec::Kind;
     }
 
     // Error identifies a runtime error used in panic.

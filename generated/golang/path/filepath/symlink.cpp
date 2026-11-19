@@ -33,8 +33,8 @@ namespace golang::path::filepath
     namespace syscall = golang::syscall;
     namespace rec
     {
-        using fs::rec::IsDir;
-        using fs::rec::Mode;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Mode;
         using syscall::rec::Error;
     }
 

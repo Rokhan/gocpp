@@ -47,11 +47,11 @@ namespace golang::golang_org::x::tools::internal::gcimporter
     namespace types = golang::go::types;
     namespace rec
     {
+        using go::types::rec::Complete;
         using io::rec::Close;
         using io::rec::Read;
         using os::rec::Close;
         using os::rec::Read;
-        using types::rec::Complete;
     }
 
     // Import imports a gc-generated package given its import path and srcDir, adds

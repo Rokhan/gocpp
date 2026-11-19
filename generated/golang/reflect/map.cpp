@@ -34,14 +34,14 @@ namespace golang::reflect
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using abi::rec::Kind;
-        using abi::rec::Size;
-        using maps::rec::Elem;
-        using maps::rec::Init;
-        using maps::rec::Initialized;
-        using maps::rec::Key;
-        using maps::rec::Map;
-        using maps::rec::Next;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::Size;
+        using internal::runtime::maps::rec::Elem;
+        using internal::runtime::maps::rec::Init;
+        using internal::runtime::maps::rec::Initialized;
+        using internal::runtime::maps::rec::Key;
+        using internal::runtime::maps::rec::Map;
+        using internal::runtime::maps::rec::Next;
         using sync::rec::Load;
         using sync::rec::LoadOrStore;
     }

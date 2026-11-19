@@ -37,20 +37,20 @@ namespace golang::os
     namespace time = golang::time;
     namespace rec
     {
-        using fs::rec::Perm;
-        using poll::rec::Fchdir;
-        using poll::rec::Fchmod;
-        using poll::rec::Fchown;
-        using poll::rec::Fsync;
-        using poll::rec::Ftruncate;
-        using poll::rec::Pread;
-        using poll::rec::Pwrite;
-        using poll::rec::Read;
-        using poll::rec::SetDeadline;
-        using poll::rec::SetReadDeadline;
-        using poll::rec::SetWriteDeadline;
-        using poll::rec::Write;
-        using testlog::rec::Chdir;
+        using internal::poll::rec::Fchdir;
+        using internal::poll::rec::Fchmod;
+        using internal::poll::rec::Fchown;
+        using internal::poll::rec::Fsync;
+        using internal::poll::rec::Ftruncate;
+        using internal::poll::rec::Pread;
+        using internal::poll::rec::Pwrite;
+        using internal::poll::rec::Read;
+        using internal::poll::rec::SetDeadline;
+        using internal::poll::rec::SetReadDeadline;
+        using internal::poll::rec::SetWriteDeadline;
+        using internal::poll::rec::Write;
+        using internal::testlog::rec::Chdir;
+        using io::fs::rec::Perm;
         using time::rec::IsZero;
         using time::rec::UnixNano;
     }

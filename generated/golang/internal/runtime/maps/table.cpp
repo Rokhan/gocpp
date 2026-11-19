@@ -28,10 +28,10 @@ namespace golang::internal::runtime::maps
     namespace math = golang::internal::runtime::math;
     namespace rec
     {
-        using abi::rec::IndirectElem;
-        using abi::rec::IndirectKey;
-        using abi::rec::NeedKeyUpdate;
-        using abi::rec::Pointers;
+        using golang::internal::abi::rec::IndirectElem;
+        using golang::internal::abi::rec::IndirectKey;
+        using golang::internal::abi::rec::NeedKeyUpdate;
+        using golang::internal::abi::rec::Pointers;
     }
 
     // Ensure the max capacity fits in uint16, used for capacity and growthLeft

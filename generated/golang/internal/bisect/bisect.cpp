@@ -196,11 +196,11 @@ namespace golang::internal::bisect
     namespace sync = golang::sync;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
-        using atomic::rec::Load;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using runtime::rec::Next;
+        using sync::atomic::rec::CompareAndSwap;
+        using sync::atomic::rec::Load;
     }
 
     // New creates and returns a new Matcher implementing the given pattern.

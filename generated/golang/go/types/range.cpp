@@ -49,9 +49,9 @@ namespace golang::go::types
     namespace constant = golang::go::constant;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::stmtNode;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::stmtNode;
     }
 
     // rangeStmt type-checks a range statement of form

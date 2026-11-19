@@ -28,8 +28,8 @@ namespace golang::runtime
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     namespace rec
     {
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // levelBits is the number of bits in the radix for a given level in the super summary

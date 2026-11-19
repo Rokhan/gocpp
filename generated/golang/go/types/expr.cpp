@@ -61,11 +61,11 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::exprNode;
-        using constant::rec::Kind;
-        using token::rec::Position;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::exprNode;
+        using golang::go::constant::rec::Kind;
+        using golang::go::token::rec::Position;
     }
 
     opPredicates unaryOpPredicates;

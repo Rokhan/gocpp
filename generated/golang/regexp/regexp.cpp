@@ -101,15 +101,15 @@ namespace golang::regexp
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
+        using golang::regexp::syntax::rec::CapNames;
+        using golang::regexp::syntax::rec::MaxCap;
+        using golang::regexp::syntax::rec::Prefix;
+        using golang::regexp::syntax::rec::Simplify;
+        using golang::regexp::syntax::rec::StartCond;
         using io::rec::ReadRune;
         using mocklib::rec::Error;
         using sync::rec::Get;
         using sync::rec::Put;
-        using syntax::rec::CapNames;
-        using syntax::rec::MaxCap;
-        using syntax::rec::Prefix;
-        using syntax::rec::Simplify;
-        using syntax::rec::StartCond;
     }
 
     // Regexp is the representation of a compiled regular expression.

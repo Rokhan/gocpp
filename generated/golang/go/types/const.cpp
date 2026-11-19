@@ -36,7 +36,7 @@ namespace golang::go::types
     namespace token = golang::go::token;
     namespace rec
     {
-        using constant::rec::Kind;
+        using golang::go::constant::rec::Kind;
     }
 
     // overflow checks that the constant x is representable by its type.

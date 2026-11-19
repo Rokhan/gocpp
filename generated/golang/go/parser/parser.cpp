@@ -53,25 +53,25 @@ namespace golang::go::parser
     namespace token = golang::go::token;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::Pos;
-        using ast::rec::declNode;
-        using ast::rec::exprNode;
-        using ast::rec::specNode;
-        using ast::rec::stmtNode;
-        using scanner::rec::Add;
-        using scanner::rec::End;
-        using scanner::rec::Init;
-        using scanner::rec::Len;
-        using scanner::rec::Scan;
-        using token::rec::IsKeyword;
-        using token::rec::IsLiteral;
-        using token::rec::IsOperator;
-        using token::rec::IsValid;
-        using token::rec::Position;
-        using token::rec::PositionFor;
-        using token::rec::Precedence;
-        using token::rec::String;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::Pos;
+        using golang::go::ast::rec::declNode;
+        using golang::go::ast::rec::exprNode;
+        using golang::go::ast::rec::specNode;
+        using golang::go::ast::rec::stmtNode;
+        using golang::go::scanner::rec::Add;
+        using golang::go::scanner::rec::End;
+        using golang::go::scanner::rec::Init;
+        using golang::go::scanner::rec::Len;
+        using golang::go::scanner::rec::Scan;
+        using golang::go::token::rec::IsKeyword;
+        using golang::go::token::rec::IsLiteral;
+        using golang::go::token::rec::IsOperator;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::Position;
+        using golang::go::token::rec::PositionFor;
+        using golang::go::token::rec::Precedence;
+        using golang::go::token::rec::String;
     }
 
     // The parser structure holds the parser's internal state.

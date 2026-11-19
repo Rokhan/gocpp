@@ -50,15 +50,15 @@ namespace golang::go::types
     namespace unicode = golang::unicode;
     namespace rec
     {
-        using ast::rec::End;
-        using ast::rec::NumFields;
-        using ast::rec::Pos;
-        using token::rec::Base;
-        using token::rec::End;
-        using token::rec::File;
-        using token::rec::IsValid;
-        using token::rec::Name;
-        using token::rec::Position;
+        using golang::go::ast::rec::End;
+        using golang::go::ast::rec::NumFields;
+        using golang::go::ast::rec::Pos;
+        using golang::go::token::rec::Base;
+        using golang::go::token::rec::End;
+        using golang::go::token::rec::File;
+        using golang::go::token::rec::IsValid;
+        using golang::go::token::rec::Name;
+        using golang::go::token::rec::Position;
     }
 
     // A declInfo describes a package-level const, type, var, or func declaration.

@@ -35,9 +35,9 @@ namespace golang::runtime
     namespace goarch = golang::internal::goarch;
     namespace rec
     {
-        using abi::rec::InSlice;
-        using abi::rec::Kind;
-        using abi::rec::OutSlice;
+        using internal::abi::rec::InSlice;
+        using internal::abi::rec::Kind;
+        using internal::abi::rec::OutSlice;
     }
 
     

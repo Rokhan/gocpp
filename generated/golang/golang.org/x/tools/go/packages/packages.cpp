@@ -81,21 +81,21 @@ namespace golang::golang_org::x::tools::go::packages
     namespace typesinternal = golang::golang_org::x::tools::internal::typesinternal;
     namespace rec
     {
-        using ast::rec::Pos;
-        using atomic::rec::Add;
         using context::rec::Err;
-        using errgroup::rec::Go;
-        using errgroup::rec::Wait;
+        using golang::go::ast::rec::Pos;
+        using golang::go::token::rec::Position;
+        using golang::go::token::rec::String;
+        using golang::go::types::rec::Complete;
+        using golang::go::types::rec::Error;
+        using golang::go::types::rec::Files;
+        using golang::golang_org::x::sync::errgroup::rec::Go;
+        using golang::golang_org::x::sync::errgroup::rec::Wait;
         using mocklib::rec::Error;
         using mocklib::rec::Lock;
         using mocklib::rec::Unlock;
         using os::rec::Close;
         using os::rec::Read;
-        using token::rec::Position;
-        using token::rec::String;
-        using types::rec::Complete;
-        using types::rec::Error;
-        using types::rec::Files;
+        using sync::atomic::rec::Add;
     }
 
     // A LoadMode controls the amount of detail to return when loading.

@@ -23,7 +23,7 @@ namespace golang::internal::runtime::maps
     namespace abi = golang::internal::abi;
     namespace rec
     {
-        using abi::rec::IndirectKey;
+        using golang::internal::abi::rec::IndirectKey;
     }
 
     void rec::checkInvariants(table* t, abi::MapType* typ, golang::internal::runtime::maps::Map* m)

@@ -29,7 +29,7 @@ namespace golang::runtime
     namespace sys = golang::internal::runtime::sys;
     namespace rec
     {
-        using atomic::rec::CompareAndSwap;
+        using internal::runtime::atomic::rec::CompareAndSwap;
     }
 
     // A coro represents extra concurrency without extra parallelism,

@@ -18,8 +18,8 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     namespace types = golang::go::types;
     namespace rec
     {
-        using types::rec::Kind;
-        using types::rec::SetKind;
+        using go::types::rec::Kind;
+        using go::types::rec::SetKind;
     }
 
     VarKind GetVarKind(types::Var* v)

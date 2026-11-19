@@ -74,9 +74,9 @@ namespace golang::runtime
     namespace goexperiment = golang::internal::goexperiment;
     namespace rec
     {
-        using atomic::rec::Add;
-        using atomic::rec::Load;
-        using atomic::rec::Store;
+        using internal::runtime::atomic::rec::Add;
+        using internal::runtime::atomic::rec::Load;
+        using internal::runtime::atomic::rec::Store;
     }
 
     // heapObjectsCanMove always returns false in the current garbage collector.

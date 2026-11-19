@@ -83,22 +83,22 @@ namespace golang::go::build
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
-        using ast::rec::Text;
-        using constraint::rec::Eval;
-        using exec::rec::Environ;
-        using exec::rec::Run;
-        using fs::rec::IsDir;
-        using fs::rec::Name;
-        using fs::rec::Type;
-        using godebug::rec::IncNonDefault;
-        using godebug::rec::Value;
+        using golang::go::ast::rec::Text;
+        using golang::go::build::constraint::rec::Eval;
+        using golang::go::token::rec::Position;
+        using internal::godebug::rec::IncNonDefault;
+        using internal::godebug::rec::Value;
+        using io::fs::rec::IsDir;
+        using io::fs::rec::Name;
+        using io::fs::rec::Type;
         using io::rec::Close;
         using io::rec::Read;
+        using os::exec::rec::Environ;
+        using os::exec::rec::Run;
         using os::rec::Close;
         using os::rec::Read;
         using strings::rec::String;
         using strings::rec::Write;
-        using token::rec::Position;
     }
 
     // A Context specifies the supporting context for a build.

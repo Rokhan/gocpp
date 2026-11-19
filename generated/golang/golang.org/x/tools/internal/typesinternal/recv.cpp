@@ -22,8 +22,8 @@ namespace golang::golang_org::x::tools::internal::typesinternal
     namespace types = golang::go::types;
     namespace rec
     {
-        using types::rec::Elem;
-        using types::rec::Type;
+        using go::types::rec::Elem;
+        using go::types::rec::Type;
     }
 
     // ReceiverNamed returns the named type (if any) associated with the

@@ -28,9 +28,9 @@ namespace golang::regexp
     namespace utf8 = golang::unicode::utf8;
     namespace rec
     {
+        using golang::regexp::syntax::rec::MatchRunePos;
         using strings::rec::String;
         using strings::rec::WriteRune;
-        using syntax::rec::MatchRunePos;
     }
 
     // A onePassProg is a compiled one-pass regular expression program.

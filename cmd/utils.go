@@ -1131,9 +1131,34 @@ func promotedSigTypes(t types.Type) (out []types.Type) {
 	return
 }
 
-// Name of the 'rec::' function for 'method' declared in namespace 'ns', relative to 'golang::'
-func recQualifiedName(ns, method string) string {
-	return fmt.Sprintf("%s::%s::%s", ns, recNs, GetCppName(method))
+// Name of the 'rec::' function for 'method' declared in namespace 'ns'
+//   - 'from' is the namespace of the file being generated.
+//   - the 'golang::' prefix is dropped only when no enclosing namespace
+//     could capture the first segment.
+//
+// NB: if it's not sufficient to disambiguate all cases, change this method
+// to always return the fully qualified name with the 'golang::' prefix.
+// The current behaviour is mainly esthetic: it makes the generated code
+// shorter, and the 'golang::' prefix is redundant in most cases.
+func recQualifiedName(from, ns, method string) string {
+	name := fmt.Sprintf("%s::%s::%s", ns, recNs, GetCppName(method))
+	first, _, _ := strings.Cut(ns, cppNsSep)
+	if nsCanCapture(from, first) {
+		return goNs + cppNsSep + name
+	}
+	return name
+}
+
+// nsCanCapture reports whether `first` may resolve to something other than
+// golang::first when looked up from namespace `from` (relative to golang::).
+func nsCanCapture(from, first string) bool {
+	segs := strings.Split(from, cppNsSep)
+	// Lookup walks golang::s0::...::sn, golang::s0::...::sn-1, ..., golang.
+	// A name `first` declared inside any of these would win. Declaring a child
+	// named `first` is only certain for the segments we can see, so be
+	// conservative: any occurrence of `first` as a path segment of `from`
+	// (e.g. golang_org::x::tools::go) means a sibling/child could exist.
+	return slices.Contains(segs[:len(segs)-1], first) || segs[len(segs)-1] == first
 }
 
 // lookupMockReceiver tells whether method, declared in pkg (nil for the universe), is mocked.

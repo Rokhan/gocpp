@@ -241,7 +241,7 @@ func ReceiverFullNames(convs []Conversion, cv *cppConverter) set[string] {
 			if mocked, ok := lookupMockReceiver(pkg, m); ok {
 				names[mocked] = true
 			} else {
-				names[recQualifiedName(ns, m)] = true
+				names[recQualifiedName(cv.fullNamespace, ns, m)] = true
 			}
 		}
 	}

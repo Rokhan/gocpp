@@ -3709,34 +3709,47 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 			return mkCppType("gocpp::empty_struct", nil)
 		}
 		name, first := cv.GetOrCreateExprId(node, ctx, "Struct")
+
+		tps := cv.structTypeParams(n)
+		tmplDec, tmplArgs := "", ""
+		if len(tps) != 0 {
+			tmplDec = mkTemplateDec(tps)
+			tmplArgs = "<" + strings.Join(tps.OrderedNames(), ", ") + ">"
+		}
+		fullName := name + tmplArgs
+
 		if first {
 			structFwdDecl := fmt.Sprintf("struct %s;\n", name)
+			if tmplDec != "" {
+				structFwdDecl = fmt.Sprintf("%s struct %s;\n", tmplDec, name)
+			}
 
-			// if we want to use "inlineStr" we have to know if we are inside function or not to disable
-			// stream operator generation.
 			switch ctx.usagePosition {
 			case UsageInDeclaration, UsageInHeader:
-				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, decl, with, false})
+				structDef, defs := cv.convertStructTypeExpr(n, tps, genStructParam{name, decl, with, false})
+				if tmplDec != "" {
+					structDef = fmt.Sprintf("%s\n%s%s", tmplDec, cv.hpp.Indent(), structDef)
+				}
 				defs = append(defs, headerStr(structDef, node))
 
-				structImpl, _ := cv.convertStructTypeExpr(n, nil, genStructParam{name, implem, with, false})
+				structImpl, _ := cv.convertStructTypeExpr(n, tps, genStructParam{name, implem, with, false})
 				defs = append(defs, outlineStr(structImpl, node))
 				if ctx.usagePosition == UsageInHeader {
 					defs = append(defs, fwdHeaderStr(structFwdDecl, nil, depInfo{}))
 				}
-				return mkCppType(name, defs)
+				return mkCppType(fullName, defs)
 			case UsageDefaut:
-				structDef, defs := cv.convertStructTypeExpr(n, nil, genStructParam{name, all, with, false})
-				//defs = append(defs, inlineStr(structDef, node), fwdHeaderStr(structFwdDecl, node, depInfo{}))
-
+				structDef, defs := cv.convertStructTypeExpr(n, tps, genStructParam{name, all, with, false})
+				if tmplDec != "" {
+					structDef = fmt.Sprintf("%s\n%s%s", tmplDec, cv.hpp.Indent(), structDef)
+				}
 				defs = append(defs, outlineStr(structDef, node), fwdHeaderStr(structFwdDecl, nil, depInfo{}))
-				return mkCppType(name, defs)
+				return mkCppType(fullName, defs)
 			default:
 				cv.Panicf("convertTypeExpr, unknown usage mode, type %v, expr '%v', position %v", reflect.TypeOf(n), types.ExprString(n), cv.Position(n))
 			}
-
 		}
-		return mkCppType(name, nil)
+		return mkCppType(fullName, nil)
 
 	case *ast.InterfaceType:
 		if n.Methods == nil || len(n.Methods.List) == 0 {
@@ -3767,6 +3780,29 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
+}
+
+// Returns the type parameters referenced by the fields of an anonymous struct.
+func (cv *cppConverter) structTypeParams(st *ast.StructType) typeParams {
+	tps := typeParams{}
+	ast.Inspect(st, func(n ast.Node) bool {
+		id, ok := n.(*ast.Ident)
+		if !ok {
+			return true
+		}
+		tn, ok := cv.typeInfo.Uses[id].(*types.TypeName)
+		if !ok {
+			return true
+		}
+		if _, isParam := tn.Type().(*types.TypeParam); isParam {
+			name := GetCppName(id.Name)
+			if _, dup := tps[name]; !dup {
+				tps[name] = &typeParam{name: name, order: len(tps)}
+			}
+		}
+		return true
+	})
+	return tps
 }
 
 func (cv *cppConverter) isParam(n *ast.Ident) (bool, string) {

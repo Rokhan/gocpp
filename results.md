@@ -787,7 +787,7 @@
 | $(ImportDir)/sync/map.go | ✔️ ([cpp](generated/golang/sync/map.cpp), [h](generated/golang/sync/map.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/mutex.go | ✔️ ([cpp](generated/golang/sync/mutex.cpp), [h](generated/golang/sync/mutex.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/once.go | ✔️ ([cpp](generated/golang/sync/once.cpp), [h](generated/golang/sync/once.h))| ✔️ | ❌ |
-| $(ImportDir)/sync/oncefunc.go | ✔️ ([cpp](generated/golang/sync/oncefunc.cpp), [h](generated/golang/sync/oncefunc.h))| ❌ | ❌ |
+| $(ImportDir)/sync/oncefunc.go | ✔️ ([cpp](generated/golang/sync/oncefunc.cpp), [h](generated/golang/sync/oncefunc.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/pool.go | ✔️ ([cpp](generated/golang/sync/pool.cpp), [h](generated/golang/sync/pool.h))| ❌ | ❌ |
 | $(ImportDir)/sync/poolqueue.go | ✔️ ([cpp](generated/golang/sync/poolqueue.cpp), [h](generated/golang/sync/poolqueue.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/runtime.go | ✔️ ([cpp](generated/golang/sync/runtime.cpp), [h](generated/golang/sync/runtime.h))| ✔️ | ❌ |

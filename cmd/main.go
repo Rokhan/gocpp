@@ -5294,7 +5294,16 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		name := cv.convertExprCtx(n.X, exprCtx{parent: n})
 
 		if cv.isNameSpace(n.X) {
-			return GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertTypeExpr(n.Sel, ctContext{ignoreNameSpace: true})))
+			expr := GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertTypeExpr(n.Sel, ctContext{ignoreNameSpace: true})))
+			if _, isConst := cv.typeInfo.Uses[n.Sel].(*types.Const); isConst && cv.isConstLeaf(n) {
+				switch cv.constWidth {
+				case fitsInt64:
+					return ExprPrintf("int64_t(%s)", expr)
+				case needsBig:
+					return ExprPrintf("gocpp::bigint(%s)", expr)
+				}
+			}
+			return expr
 		} else if isFunc, hasReceiv, nbParams := cv.IsSelectorExprSignature(n); isFunc && !ctx.isTarget {
 			_, pkg, pkgNs, nsDeps := cv.isTypedef(n.Sel)
 			ns := cppExpr{}

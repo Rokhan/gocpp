@@ -5124,9 +5124,9 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				sep = ", "
 			} else {
 				if cv.IsExprPtr(fun.X) {
-					cv.BuffExprPrintf(buf, "%v->%v(", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
+					cv.BuffExprPrintf(buf, "%v->%v(", cv.convertSubExpr(fun.X), cv.convertExpr(fun.Sel))
 				} else {
-					cv.BuffExprPrintf(buf, "%v.%v(", cv.convertExpr(fun.X), cv.convertExpr(fun.Sel))
+					cv.BuffExprPrintf(buf, "%v.%v(", cv.convertSubExpr(fun.X), cv.convertExpr(fun.Sel))
 				}
 			}
 
@@ -5218,7 +5218,15 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		}
 
 		cv.BuffExprPrintf(buf, "%s", closeStr)
-		return buf.Expr()
+		expr := buf.Expr()
+
+		// needs parentheses when it is an operand: "(T)(a)[1]" would index "a".
+		if ctx.isSubExpr {
+			if _, isCast := n.Fun.(*ast.ParenExpr); isCast {
+				expr.str = "(" + expr.str + ")"
+			}
+		}
+		return expr
 
 	case *ast.Ident:
 		if n.Name == "iota" {
@@ -5277,7 +5285,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				return ExprPrintf("%s.get(%s)", cv.convertExpr(n.X), cv.convertExpr(n.Index))
 			}
 		} else {
-			return ExprPrintf("%s[%s]", cv.convertExpr(n.X), cv.convertExpr(n.Index))
+			return ExprPrintf("%s[%s]", cv.convertSubExpr(n.X), cv.convertExpr(n.Index))
 		}
 
 	case *ast.IndexListExpr:
@@ -5291,7 +5299,7 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 		return ExprPrintf("%s<%s>", cv.convertExpr(n.X), JoinExpr(indexStrs, ", "))
 
 	case *ast.SelectorExpr:
-		name := cv.convertExprCtx(n.X, exprCtx{parent: n})
+		name := cv.convertExprCtx(n.X, exprCtx{parent: n, isSubExpr: true})
 
 		if cv.isNameSpace(n.X) {
 			expr := GetCppExprFunc(ExprPrintf("%s::%s", name, cv.convertTypeExpr(n.Sel, ctContext{ignoreNameSpace: true})))
@@ -5378,18 +5386,18 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 	case *ast.SliceExpr:
 		if n.Slice3 {
 			if n.Low == nil {
-				return ExprPrintf("%s.make_slice(0, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High), cv.convertExpr(n.Max))
+				return ExprPrintf("%s.make_slice(0, %s, %s)", cv.convertSubExpr(n.X), cv.convertExpr(n.High), cv.convertExpr(n.Max))
 			} else {
-				return ExprPrintf("%s.make_slice(%s, %s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High), cv.convertExpr(n.Max))
+				return ExprPrintf("%s.make_slice(%s, %s, %s)", cv.convertSubExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High), cv.convertExpr(n.Max))
 			}
 		} else if n.Low == nil && n.High == nil {
-			return ExprPrintf("%s.make_slice(0)", cv.convertExpr(n.X))
+			return ExprPrintf("%s.make_slice(0)", cv.convertSubExpr(n.X))
 		} else if n.Low == nil {
-			return ExprPrintf("%s.make_slice(0, %s)", cv.convertExpr(n.X), cv.convertExpr(n.High))
+			return ExprPrintf("%s.make_slice(0, %s)", cv.convertSubExpr(n.X), cv.convertExpr(n.High))
 		} else if n.High == nil {
-			return ExprPrintf("%s.make_slice(%s)", cv.convertExpr(n.X), cv.convertExpr(n.Low))
+			return ExprPrintf("%s.make_slice(%s)", cv.convertSubExpr(n.X), cv.convertExpr(n.Low))
 		} else {
-			return ExprPrintf("%s.make_slice(%s, %s)", cv.convertExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High))
+			return ExprPrintf("%s.make_slice(%s, %s)", cv.convertSubExpr(n.X), cv.convertExpr(n.Low), cv.convertExpr(n.High))
 		}
 
 	case *ast.StarExpr:

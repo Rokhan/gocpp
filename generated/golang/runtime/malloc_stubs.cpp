@@ -519,8 +519,8 @@ namespace golang::runtime
         }
         auto x = gocpp::unsafe_pointer(v);
         // Always zero
-        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[0] = 0;
-        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[1] = 0;
+        ((gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x))[0] = 0;
+        ((gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x))[1] = 0;
         // See if we need to replace the existing tiny block with the new one
         // based on amount of remaining free space.
         if(! raceenabled && (size < c->tinyoffset || c->tiny == 0))

@@ -591,7 +591,7 @@ namespace golang::runtime
     {
         gocpp::unsafe_pointer x;
         // Note: this must work for any element type, not just byte.
-        if((golang::runtime::slice*)(gocpp::unsafe_pointer(& val))->array == nullptr)
+        if(((golang::runtime::slice*)(gocpp::unsafe_pointer(& val)))->array == nullptr)
         {
             x = gocpp::unsafe_pointer(& zeroVal[0]);
         }

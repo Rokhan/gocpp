@@ -908,7 +908,7 @@ namespace golang::runtime
             off += i2 + l2;
         }
         nameOff nameOff = {};
-        copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::Data(gocpp::recv(n), off))).make_slice(0));
+        copy(((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff))).make_slice(0), ((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::Data(gocpp::recv(n), off)))).make_slice(0));
         auto pkgPathName = resolveNameOff(gocpp::unsafe_pointer(n.Bytes), nameOff);
         return rec::Name(gocpp::recv(pkgPathName));
     }

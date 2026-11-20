@@ -44,9 +44,9 @@ namespace golang::runtime
     {
         if(goarch::BigEndian)
         {
-            return & (gocpp::array_ptr<gocpp::array<uint8_t, 8>>)(gocpp::unsafe_pointer(p))[goarch::PtrSize / 1 - 1];
+            return & ((gocpp::array_ptr<gocpp::array<uint8_t, 8>>)(gocpp::unsafe_pointer(p)))[goarch::PtrSize / 1 - 1];
         }
-        return & (gocpp::array_ptr<gocpp::array<uint8_t, 8>>)(gocpp::unsafe_pointer(p))[0];
+        return & ((gocpp::array_ptr<gocpp::array<uint8_t, 8>>)(gocpp::unsafe_pointer(p)))[0];
     }
 
     // mWaitList is part of the M struct, and holds the list of Ms that are waiting

@@ -563,7 +563,7 @@ namespace golang::reflect
                         gocpp::panic("reflect.Value.Bytes of unaddressable byte array"_s);
                     }
                     auto p = (unsigned char*)(v.ptr);
-                    auto n = int64_t((arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v))))->Len);
+                    auto n = int64_t(((arrayType*)(gocpp::unsafe_pointer(rec::typ(gocpp::recv(v)))))->Len);
                     return unsafe::Slice(p, n);
                     break;
                 }
@@ -1674,7 +1674,7 @@ namespace golang::reflect
         // capNonSlice is split out to keep Cap inlineable for slice kinds.
         if(rec::kind(gocpp::recv(v)) == reflect::Slice)
         {
-            return (unsafeheader::Slice*)(v.ptr)->Cap;
+            return ((unsafeheader::Slice*)(v.ptr))->Cap;
         }
         return rec::capNonSlice(gocpp::recv(v));
     }
@@ -2274,7 +2274,7 @@ namespace golang::reflect
                 // Now populate the Data field properly, we update the Data ptr
                 // directly to avoid an additional type asertion. We can re-use the
                 // itab we already got from the runtime (through the previous type assertion).
-                (abi::CommonInterface*)(gocpp::unsafe_pointer(& out))->Data = packEfaceData(v);
+                ((abi::CommonInterface*)(gocpp::unsafe_pointer(& out)))->Data = packEfaceData(v);
                 return {out, true};
             }
             T zero = {};
@@ -2790,7 +2790,7 @@ namespace golang::reflect
         // lenNonSlice is split out to keep Len inlineable for slice kinds.
         if(rec::kind(gocpp::recv(v)) == reflect::Slice)
         {
-            return (unsafeheader::Slice*)(v.ptr)->Len;
+            return ((unsafeheader::Slice*)(v.ptr))->Len;
         }
         return rec::lenNonSlice(gocpp::recv(v));
     }
@@ -2823,7 +2823,7 @@ namespace golang::reflect
                     break;
                 case 3:
                     // String is bigger than a word; assume flagIndir.
-                    return (unsafeheader::String*)(v.ptr)->Len;
+                    return ((unsafeheader::String*)(v.ptr))->Len;
                     break;
                 case 4:
                     if(rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(rec::typ(gocpp::recv(v)))))) == abi::Array)
@@ -3134,10 +3134,10 @@ namespace golang::reflect
                     break;
                 }
                 case 5:
-                    return uintptr_t((unsafeheader::Slice*)(v.ptr)->Data);
+                    return uintptr_t(((unsafeheader::Slice*)(v.ptr))->Data);
                     break;
                 case 6:
-                    return uintptr_t((unsafeheader::String*)(v.ptr)->Data);
+                    return uintptr_t(((unsafeheader::String*)(v.ptr))->Data);
                     break;
             }
         }
@@ -3924,10 +3924,10 @@ namespace golang::reflect
                     break;
                 }
                 case 5:
-                    return (unsafeheader::Slice*)(v.ptr)->Data;
+                    return ((unsafeheader::Slice*)(v.ptr))->Data;
                     break;
                 case 6:
-                    return (unsafeheader::String*)(v.ptr)->Data;
+                    return ((unsafeheader::String*)(v.ptr))->Data;
                     break;
             }
         }
@@ -5714,7 +5714,7 @@ namespace golang::reflect
 
     void mapassign_faststr(abi::Type* t, gocpp::unsafe_pointer m, gocpp::string key, gocpp::unsafe_pointer val)
     {
-        contentEscapes((unsafeheader::String*)(gocpp::unsafe_pointer(& key))->Data);
+        contentEscapes(((unsafeheader::String*)(gocpp::unsafe_pointer(& key)))->Data);
         contentEscapes(val);
         mapassign_faststr0(t, m, key, val);
     }

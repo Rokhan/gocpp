@@ -1573,7 +1573,7 @@ namespace golang::runtime
         print("]"_s);
         if(gp->labels != nullptr && rec::Load(gocpp::recv(debug.tracebacklabels)) == 1)
         {
-            auto labels = (label::Set*)(gp->labels)->List;
+            auto labels = ((label::Set*)(gp->labels))->List;
             if(len(labels) > 0)
             {
                 print(" {"_s);

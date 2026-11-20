@@ -487,7 +487,7 @@ namespace golang::internal::syscall::windows
 
     gocpp::slice<SID_AND_ATTRIBUTES> rec::AllGroups(TOKEN_GROUPS* g)
     {
-        return (gocpp::array_ptr<gocpp::array<SID_AND_ATTRIBUTES, (1 << 28) - 1>>)(gocpp::unsafe_pointer(& g->Groups[0])).make_slice(0, g->GroupCount, g->GroupCount);
+        return ((gocpp::array_ptr<gocpp::array<SID_AND_ATTRIBUTES, (1 << 28) - 1>>)(gocpp::unsafe_pointer(& g->Groups[0]))).make_slice(0, g->GroupCount, g->GroupCount);
     }
 
     std::tuple<TOKEN_GROUPS*, gocpp::error> GetTokenGroups(syscall::Token t)

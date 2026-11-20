@@ -269,8 +269,8 @@ namespace golang::sync::atomic
             // has not changed since LoadPointer.
             auto data = LoadPointer(& vp->data);
             go_any i = {};
-            (efaceWords*)(gocpp::unsafe_pointer(& i))->typ = typ;
-            (efaceWords*)(gocpp::unsafe_pointer(& i))->data = data;
+            ((efaceWords*)(gocpp::unsafe_pointer(& i)))->typ = typ;
+            ((efaceWords*)(gocpp::unsafe_pointer(& i)))->data = data;
             if(i != old)
             {
                 return false;

@@ -2754,7 +2754,7 @@ namespace golang::runtime
                     break;
                 }
                 if(offset == s->offset && _KindSpecialCheckFinalizer == s->kind &&
-                                (specialCheckFinalizer*)(gocpp::unsafe_pointer(s))->cleanupID == cleanupID)
+                                ((specialCheckFinalizer*)(gocpp::unsafe_pointer(s)))->cleanupID == cleanupID)
                 {
                     // The special is a cleanup and contains a matching cleanup id.
                     *iter = s->next;
@@ -2812,7 +2812,7 @@ namespace golang::runtime
                     break;
                 }
                 if(offset == s->offset && _KindSpecialCheckFinalizer == s->kind &&
-                                (specialCheckFinalizer*)(gocpp::unsafe_pointer(s))->cleanupID == cleanupID)
+                                ((specialCheckFinalizer*)(gocpp::unsafe_pointer(s)))->cleanupID == cleanupID)
                 {
                     // The special is a cleanup and contains a matching cleanup id.
                     *iter = s->next;

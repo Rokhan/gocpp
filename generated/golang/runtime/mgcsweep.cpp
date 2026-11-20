@@ -1191,7 +1191,7 @@ namespace golang::runtime
                 if(siter.s->kind == _KindSpecialReachable)
                 {
                     auto special = rec::unlinkAndNext(gocpp::recv(siter));
-                    (specialReachable*)(gocpp::unsafe_pointer(special))->reachable = true;
+                    ((specialReachable*)(gocpp::unsafe_pointer(special)))->reachable = true;
                     freeSpecial(special, gocpp::unsafe_pointer(p), size);
                 }
                 else

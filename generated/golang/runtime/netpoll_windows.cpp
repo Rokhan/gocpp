@@ -117,7 +117,7 @@ namespace golang::runtime
         }
         else
         {
-            keyMatch = (pollDesc*)(rec::pointer(gocpp::recv(taggedPointer(e->key)))) == op->pd;
+            keyMatch = ((pollDesc*)(rec::pointer(gocpp::recv(taggedPointer(e->key))))) == op->pd;
         }
         if(! keyMatch)
         {

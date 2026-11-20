@@ -89,7 +89,7 @@ namespace golang::runtime
         {
             go_throw("arena_New: non-pointer type"_s);
         }
-        auto te = (ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
+        auto te = ((ptrtype*)(gocpp::unsafe_pointer(t)))->Elem;
         auto x = rec::go_new(gocpp::recv(((userArena*)(arena))), te);
         go_any result = {};
         auto e = efaceOf(& result);
@@ -136,7 +136,7 @@ namespace golang::runtime
                     v = stringStructOf((gocpp::string*)(e->data))->str;
                     break;
                 case 1:
-                    v = (golang::runtime::slice*)(e->data)->array;
+                    v = ((golang::runtime::slice*)(e->data))->array;
                     break;
                 case 2:
                     v = e->data;
@@ -173,10 +173,10 @@ namespace golang::runtime
                 }
                 case 1:
                 {
-                    auto len = (golang::runtime::slice*)(e->data)->len;
-                    auto et = (slicetype*)(gocpp::unsafe_pointer(t))->Elem;
+                    auto len = ((golang::runtime::slice*)(e->data))->len;
+                    auto et = ((slicetype*)(gocpp::unsafe_pointer(t)))->Elem;
                     auto sl = new slice{};
-                    *sl = golang::runtime::slice {makeslicecopy(et, len, len, (golang::runtime::slice*)(e->data)->array), len, len};
+                    *sl = golang::runtime::slice {makeslicecopy(et, len, len, ((golang::runtime::slice*)(e->data))->array), len, len};
                     auto xe = efaceOf(& x);
                     xe->_type = t;
                     xe->data = gocpp::unsafe_pointer(sl);
@@ -184,7 +184,7 @@ namespace golang::runtime
                 }
                 case 2:
                 {
-                    auto et = (ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
+                    auto et = ((ptrtype*)(gocpp::unsafe_pointer(t)))->Elem;
                     auto e2 = newobject(et);
                     typedmemmove(et, e2, e->data);
                     auto xe = efaceOf(& x);
@@ -317,13 +317,13 @@ namespace golang::runtime
         {
             gocpp::panic("slice result of non-ptr type"_s);
         }
-        typ = (ptrtype*)(gocpp::unsafe_pointer(typ))->Elem;
+        typ = ((ptrtype*)(gocpp::unsafe_pointer(typ)))->Elem;
         if(rec::Kind(gocpp::recv(typ)) != abi::Slice)
         {
             gocpp::panic("slice of non-ptr-to-slice type"_s);
         }
         // t is now the element type of the slice we want to allocate.
-        typ = (slicetype*)(gocpp::unsafe_pointer(typ))->Elem;
+        typ = ((slicetype*)(gocpp::unsafe_pointer(typ)))->Elem;
 
 
         *((golang::runtime::slice*)(i->data)) = golang::runtime::slice {rec::alloc(gocpp::recv(a), typ, cap), cap, cap};

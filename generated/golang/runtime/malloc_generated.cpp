@@ -1372,8 +1372,8 @@ namespace golang::runtime
             std::tie(v, span, checkGCTrigger) = rec::nextFree(gocpp::recv(c), tinySpanClass);
         }
         auto x = gocpp::unsafe_pointer(v);
-        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[0] = 0;
-        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[1] = 0;
+        ((gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x))[0] = 0;
+        ((gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x))[1] = 0;
 
         if(! raceenabled && (size < c->tinyoffset || c->tiny == 0))
         {
@@ -2186,8 +2186,8 @@ namespace golang::runtime
             std::tie(v, span, checkGCTrigger) = rec::nextFree(gocpp::recv(c), tinySpanClass);
         }
         auto x = gocpp::unsafe_pointer(v);
-        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[0] = 0;
-        (gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x)[1] = 0;
+        ((gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x))[0] = 0;
+        ((gocpp::array_ptr<gocpp::array<uint64_t, 2>>)(x))[1] = 0;
 
         if(! raceenabled && (size < c->tinyoffset || c->tiny == 0))
         {

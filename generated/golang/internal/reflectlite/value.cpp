@@ -641,11 +641,11 @@ namespace golang::internal::reflectlite
                     break;
                 case 3:
                     // Slice is bigger than a word; assume flagIndir.
-                    return (unsafeheader::Slice*)(v.ptr)->Len;
+                    return ((unsafeheader::Slice*)(v.ptr))->Len;
                     break;
                 case 4:
                     // String is bigger than a word; assume flagIndir.
-                    return (unsafeheader::String*)(v.ptr)->Len;
+                    return ((unsafeheader::String*)(v.ptr))->Len;
                     break;
             }
         }

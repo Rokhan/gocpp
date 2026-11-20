@@ -1649,7 +1649,7 @@ namespace golang::reflect
         int32_t nameOff = {};
         // Note that this field may not be aligned in memory,
         // so we cannot use a direct int32 assignment here.
-        copy((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff)).make_slice(0), (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s))).make_slice(0));
+        copy(((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& nameOff))).make_slice(0), ((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(rec::DataChecked(gocpp::recv(n), off, "name offset field"_s)))).make_slice(0));
         auto pkgPathName = gocpp::Init<abi::Name>([=](auto& x) {
             x.Bytes = (unsigned char*)(resolveTypeOff(gocpp::unsafe_pointer(n.Bytes), nameOff));
         });
@@ -3870,7 +3870,7 @@ namespace golang::reflect
             if(rec::IsVariadic(gocpp::recv(ft)) && i == int64_t(ft->InCount) - 1)
             {
                 repr = append(repr, "..."_s);
-                repr = append(repr, stringFor((sliceType*)(gocpp::unsafe_pointer(t))->SliceType.Elem));
+                repr = append(repr, stringFor(((sliceType*)(gocpp::unsafe_pointer(t)))->SliceType.Elem));
             }
             else
             {

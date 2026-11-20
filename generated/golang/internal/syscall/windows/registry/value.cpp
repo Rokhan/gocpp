@@ -138,7 +138,7 @@ namespace golang::internal::syscall::windows::registry
         {
             return {""_s, typ, nullptr};
         }
-        auto u = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 29>>)(gocpp::unsafe_pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
+        auto u = ((gocpp::array_ptr<gocpp::array<uint16_t, 1 << 29>>)(gocpp::unsafe_pointer(& data[0]))).make_slice(0, len(data) / 2, len(data) / 2);
         return {syscall::UTF16ToString(u), typ, nullptr};
     }
 
@@ -255,7 +255,7 @@ namespace golang::internal::syscall::windows::registry
         {
             return {nullptr, typ, nullptr};
         }
-        auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 29>>)(gocpp::unsafe_pointer(& data[0])).make_slice(0, len(data) / 2, len(data) / 2);
+        auto p = ((gocpp::array_ptr<gocpp::array<uint16_t, 1 << 29>>)(gocpp::unsafe_pointer(& data[0]))).make_slice(0, len(data) / 2, len(data) / 2);
         if(len(p) == 0)
         {
             return {nullptr, typ, nullptr};
@@ -362,14 +362,14 @@ namespace golang::internal::syscall::windows::registry
     // under key k to value and DWORD.
     gocpp::error rec::SetDWordValue(Key k, gocpp::string name, uint32_t value)
     {
-        return rec::setValue(gocpp::recv(k), name, DWORD, (gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& value)).make_slice(0));
+        return rec::setValue(gocpp::recv(k), name, DWORD, ((gocpp::array_ptr<gocpp::array<unsigned char, 4>>)(gocpp::unsafe_pointer(& value))).make_slice(0));
     }
 
     // SetQWordValue sets the data and type of a name value
     // under key k to value and QWORD.
     gocpp::error rec::SetQWordValue(Key k, gocpp::string name, uint64_t value)
     {
-        return rec::setValue(gocpp::recv(k), name, QWORD, (gocpp::array_ptr<gocpp::array<unsigned char, 8>>)(gocpp::unsafe_pointer(& value)).make_slice(0));
+        return rec::setValue(gocpp::recv(k), name, QWORD, ((gocpp::array_ptr<gocpp::array<unsigned char, 8>>)(gocpp::unsafe_pointer(& value))).make_slice(0));
     }
 
     gocpp::error rec::setStringValue(Key k, gocpp::string name, uint32_t valtype, gocpp::string value)
@@ -379,7 +379,7 @@ namespace golang::internal::syscall::windows::registry
         {
             return err;
         }
-        auto buf = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 29>>)(gocpp::unsafe_pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
+        auto buf = ((gocpp::array_ptr<gocpp::array<unsigned char, 1 << 29>>)(gocpp::unsafe_pointer(& v[0]))).make_slice(0, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, valtype, buf);
     }
 
@@ -415,7 +415,7 @@ namespace golang::internal::syscall::windows::registry
             ss += s + "\x00"_s;
         }
         auto v = utf16::Encode(gocpp::slice<gocpp::rune>(ss + "\x00"_s));
-        auto buf = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 29>>)(gocpp::unsafe_pointer(& v[0])).make_slice(0, len(v) * 2, len(v) * 2);
+        auto buf = ((gocpp::array_ptr<gocpp::array<unsigned char, 1 << 29>>)(gocpp::unsafe_pointer(& v[0]))).make_slice(0, len(v) * 2, len(v) * 2);
         return rec::setValue(gocpp::recv(k), name, MULTI_SZ, buf);
     }
 

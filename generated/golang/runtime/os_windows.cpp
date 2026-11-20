@@ -715,7 +715,7 @@ namespace golang::runtime
         // "envA=valA\x00envB=valB\x00\x00" (in UTF-16)
         // Two consecutive zero bytes end the list.
         auto strings = gocpp::unsafe_pointer(stdcall(_GetEnvironmentStringsW));
-        auto p = (gocpp::array_ptr<gocpp::array<uint16_t, 1 << 24>>)(strings).make_slice(0);
+        auto p = ((gocpp::array_ptr<gocpp::array<uint16_t, 1 << 24>>)(strings)).make_slice(0);
 
         int64_t n = 0;
         for(auto [from, i] = std::tuple{0, 0}; true; i++)
@@ -800,7 +800,7 @@ namespace golang::runtime
             }
         }
         bool isASCII = true;
-        auto b = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf).make_slice(0, n);
+        auto b = ((gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf)).make_slice(0, n);
         for(auto [gocpp_ignored, x] : b)
         {
             if(x >= 0x80)
@@ -837,7 +837,7 @@ namespace golang::runtime
         // Do not use defer for unlock. May cause issues when printing a panic.
         lock(& utf16ConsoleBackLock);
 
-        auto b = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf).make_slice(0, bufLen);
+        auto b = ((gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(buf)).make_slice(0, bufLen);
         auto s = *(gocpp::string*)(gocpp::unsafe_pointer(& b));
 
         auto utf16tmp = utf16ConsoleBack.make_slice(0);

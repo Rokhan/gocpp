@@ -154,7 +154,7 @@ namespace golang::internal::abi
     template<typename T>
     Type* TypeFor()
     {
-        return (PtrType*)(gocpp::unsafe_pointer(TypeOf((T*)(nullptr))))->Elem;
+        return ((PtrType*)(gocpp::unsafe_pointer(TypeOf((T*)(nullptr)))))->Elem;
     }
 
     golang::internal::abi::Kind rec::Kind(Type* t)
@@ -278,7 +278,7 @@ namespace golang::internal::abi
         {
             return nullptr;
         }
-        return (gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s)).make_slice(0, t->Mcount, t->Mcount);
+        return ((gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.mcount > 0"_s))).make_slice(0, t->Mcount, t->Mcount);
     }
 
     gocpp::slice<Method> rec::ExportedMethods(UncommonType* t)
@@ -287,7 +287,7 @@ namespace golang::internal::abi
         {
             return nullptr;
         }
-        return (gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s)).make_slice(0, t->Xcount, t->Xcount);
+        return ((gocpp::array_ptr<gocpp::array<Method, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uintptr_t(t->Moff), "t.xcount > 0"_s))).make_slice(0, t->Xcount, t->Xcount);
     }
 
     // addChecked returns p+x.
@@ -497,7 +497,7 @@ namespace golang::internal::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Array)
         {
-            return int64_t((golang::internal::abi::ArrayType*)(gocpp::unsafe_pointer(t))->Len);
+            return int64_t(((golang::internal::abi::ArrayType*)(gocpp::unsafe_pointer(t)))->Len);
         }
         return 0;
     }
@@ -859,7 +859,7 @@ namespace golang::internal::abi
             switch(conditionId)
             {
                 case 0:
-                    return & (structTypeUncommon*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((structTypeUncommon*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 1:
                     struct u
@@ -878,7 +878,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 2:
                     struct u
@@ -897,7 +897,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 3:
                     struct u
@@ -916,7 +916,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 4:
                     struct u
@@ -935,7 +935,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 5:
                     struct u
@@ -954,7 +954,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 6:
                     struct u
@@ -973,7 +973,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 case 7:
                     struct u
@@ -992,7 +992,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
                 default:
                     struct u
@@ -1011,7 +1011,7 @@ namespace golang::internal::abi
                             return os;
                         }
                     };
-                    return & (u*)(gocpp::unsafe_pointer(t))->u;
+                    return & ((u*)(gocpp::unsafe_pointer(t)))->u;
                     break;
             }
         }
@@ -1356,7 +1356,7 @@ namespace golang::internal::abi
     {
         if(rec::Kind(gocpp::recv(t)) == Map)
         {
-            return (golang::internal::abi::MapType*)(gocpp::unsafe_pointer(t))->Key;
+            return ((golang::internal::abi::MapType*)(gocpp::unsafe_pointer(t)))->Key;
         }
         return nullptr;
     }
@@ -1721,7 +1721,7 @@ namespace golang::internal::abi
         {
             return nullptr;
         }
-        return (gocpp::array_ptr<gocpp::array<Type*, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "t.inCount > 0"_s)).make_slice(0, t->InCount, t->InCount);
+        return ((gocpp::array_ptr<gocpp::array<Type*, 1 << 16>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "t.inCount > 0"_s))).make_slice(0, t->InCount, t->InCount);
     }
 
     gocpp::slice<Type*> rec::OutSlice(golang::internal::abi::FuncType* t)
@@ -1736,7 +1736,7 @@ namespace golang::internal::abi
         {
             uadd += gocpp::Sizeof<UncommonType>();
         }
-        return (gocpp::array_ptr<gocpp::array<Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s)).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
+        return ((gocpp::array_ptr<gocpp::array<Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s))).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
 
     bool rec::IsVariadic(golang::internal::abi::FuncType* t)

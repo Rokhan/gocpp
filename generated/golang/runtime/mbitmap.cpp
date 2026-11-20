@@ -1814,7 +1814,7 @@ namespace golang::runtime
     bitvector progToPointerMask(unsigned char* prog, uintptr_t size)
     {
         auto n = (size / goarch::PtrSize + 7) / 8;
-        auto x = (gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(persistentalloc(n + 1, 1, & memstats.buckhash_sys)).make_slice(0, n + 1);
+        auto x = ((gocpp::array_ptr<gocpp::array<unsigned char, 1 << 30>>)(persistentalloc(n + 1, 1, & memstats.buckhash_sys))).make_slice(0, n + 1);
         // overflow check sentinel
         x[len(x) - 1] = 0xa1;
         n = runGCProg(prog, & x[0]);
@@ -2139,7 +2139,7 @@ namespace golang::runtime
         {
             go_throw("bad argument to getgcmask: expected type to be a pointer to the value type whose mask is being queried"_s);
         }
-        et = (ptrtype*)(gocpp::unsafe_pointer(t))->Elem;
+        et = ((ptrtype*)(gocpp::unsafe_pointer(t)))->Elem;
 
         // data or bss
         for(auto [gocpp_ignored, datap] : activeModules())
@@ -2299,7 +2299,7 @@ namespace golang::runtime
                     return mask;
                 }
                 auto size = uintptr_t(locals.n) * goarch::PtrSize;
-                auto n = (ptrtype*)(gocpp::unsafe_pointer(t))->Elem->Size_;
+                auto n = ((ptrtype*)(gocpp::unsafe_pointer(t)))->Elem->Size_;
                 mask = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), n / goarch::PtrSize);
                 for(uintptr_t i = uintptr_t(0); i < n; i += goarch::PtrSize)
                 {

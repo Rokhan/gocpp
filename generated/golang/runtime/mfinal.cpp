@@ -392,13 +392,13 @@ namespace golang::runtime
                             {
                                 auto ityp = (interfacetype*)(gocpp::unsafe_pointer(f->fint));
                                 // set up with empty interface
-                                (eface*)(r)->_type = & f->ot->Type;
-                                (eface*)(r)->data = f->arg;
+                                ((eface*)(r))->_type = & f->ot->Type;
+                                ((eface*)(r))->data = f->arg;
                                 if(len(ityp->Methods) != 0)
                                 {
                                     // convert to interface with methods
                                     // this conversion is guaranteed to succeed - we checked in SetFinalizer
-                                    (iface*)(r)->tab = assertE2I(ityp, (eface*)(r)->_type);
+                                    ((iface*)(r))->tab = assertE2I(ityp, ((eface*)(r))->_type);
                                 }
                                 break;
                             }
@@ -677,7 +677,7 @@ namespace golang::runtime
                     goto okarg;
                     break;
                 case 1:
-                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && (ptrtype*)(gocpp::unsafe_pointer(fint))->Elem == ot->Elem)
+                    if((rec::Uncommon(gocpp::recv(fint)) == nullptr || rec::Uncommon(gocpp::recv(etyp)) == nullptr) && ((ptrtype*)(gocpp::unsafe_pointer(fint)))->Elem == ot->Elem)
                     {
                         // ok - not same type, but both pointers,
                         // one or the other is unnamed, and same element type, so assignable.
@@ -722,7 +722,7 @@ namespace golang::runtime
             }
             if(debug.checkfinalizers != 0)
             {
-                setFinalizerContext(e->data, ot->Elem, callerpc, (funcval*)(f->data)->fn);
+                setFinalizerContext(e->data, ot->Elem, callerpc, ((funcval*)(f->data))->fn);
             }
         });
     }

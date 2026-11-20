@@ -1211,7 +1211,7 @@ namespace golang::runtime
             printunlock();
             return;
         }
-        auto state = (gocpp::array_ptr<gocpp::array<readState, 1 << 20>>)(state1).make_slice(0, n);
+        auto state = ((gocpp::array_ptr<gocpp::array<readState, 1 << 20>>)(state1)).make_slice(0, n);
         {
             auto l = all;
             for(auto [i, gocpp_ignored] : state)

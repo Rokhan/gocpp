@@ -782,7 +782,7 @@
 | $(ImportDir)/sync/atomic/doc.go | ✔️ ([cpp](generated/golang/sync/atomic/doc.cpp), [h](generated/golang/sync/atomic/doc.h))| ✔️ | ✔️ |
 | $(ImportDir)/sync/atomic/doc_64.go | ✔️ ([cpp](generated/golang/sync/atomic/doc_64.cpp), [h](generated/golang/sync/atomic/doc_64.h))| ✔️ | ✔️ |
 | $(ImportDir)/sync/atomic/type.go | ✔️ ([cpp](generated/golang/sync/atomic/type.cpp), [h](generated/golang/sync/atomic/type.h))| ✔️ | ❌ |
-| $(ImportDir)/sync/atomic/value.go | ✔️ ([cpp](generated/golang/sync/atomic/value.cpp), [h](generated/golang/sync/atomic/value.h))| ❌ | ❌ |
+| $(ImportDir)/sync/atomic/value.go | ✔️ ([cpp](generated/golang/sync/atomic/value.cpp), [h](generated/golang/sync/atomic/value.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/cond.go | ✔️ ([cpp](generated/golang/sync/cond.cpp), [h](generated/golang/sync/cond.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/map.go | ✔️ ([cpp](generated/golang/sync/map.cpp), [h](generated/golang/sync/map.h))| ✔️ | ❌ |
 | $(ImportDir)/sync/mutex.go | ✔️ ([cpp](generated/golang/sync/mutex.cpp), [h](generated/golang/sync/mutex.h))| ✔️ | ❌ |

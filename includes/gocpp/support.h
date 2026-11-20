@@ -228,6 +228,16 @@ namespace gocpp
         operator T*() const { return reinterpret_cast<T*>(ptr); }
     };
 
+    inline bool operator==(const unsafe_pointer& lhs, const unsafe_pointer& rhs)
+    {
+        return lhs.ptr == rhs.ptr;
+    }
+
+    inline bool operator==(const unsafe_pointer& lhs, std::nullptr_t)
+    {
+        return lhs.ptr == nullptr;
+    }
+
     inline std::ostream& operator<<(std::ostream& os, const unsafe_pointer& ptr)
     {
         os << "unsafe_pointer(" << reinterpret_cast<uintptr_t>(ptr.ptr) << ")";

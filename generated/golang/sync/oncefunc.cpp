@@ -113,6 +113,7 @@ namespace golang::sync
         };
     }
 
+    template<typename T>
     struct gocpp_id_1
         {
             std::function<T ()> f{};
@@ -123,10 +124,10 @@ namespace golang::sync
 
             using isGoStruct = void;
 
-            template<typename T> requires gocpp::GoStruct<T>
-            operator T()
+            template<typename U> requires gocpp::GoStruct<U>
+            operator U()
             {
-                T result;
+                U result;
                 result.f = this->f;
                 result.once = this->once;
                 result.valid = this->valid;
@@ -135,8 +136,8 @@ namespace golang::sync
                 return result;
             }
 
-            template<typename T> requires gocpp::GoStruct<T>
-            bool operator==(const T& ref) const
+            template<typename U> requires gocpp::GoStruct<U>
+            bool operator==(const U& ref) const
             {
                 if (f != ref.f) return false;
                 if (once != ref.once) return false;
@@ -159,7 +160,8 @@ namespace golang::sync
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        template<typename T>
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1<T>& value)
         {
             return value.PrintTo(os);
         }
@@ -173,7 +175,7 @@ namespace golang::sync
     std::function<T ()> OnceValue(std::function<T ()> f)
     {
         // Use a struct so that there's a single heap allocation.
-        auto d = gocpp::Init<gocpp_id_1>([=](auto& x) {
+        auto d = gocpp::Init<gocpp_id_1<T>>([=](auto& x) {
             x.f = f;
         });
         return [=]() mutable -> T
@@ -208,6 +210,7 @@ namespace golang::sync
         };
     }
 
+    template<typename T1, typename T2>
     struct gocpp_id_2
         {
             std::function<std::tuple<T1, T2> ()> f{};
@@ -258,7 +261,8 @@ namespace golang::sync
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+        template<typename T1, typename T2>
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2<T1, T2>& value)
         {
             return value.PrintTo(os);
         }
@@ -272,7 +276,7 @@ namespace golang::sync
     std::function<std::tuple<T1, T2> ()> OnceValues(std::function<std::tuple<T1, T2> ()> f)
     {
         // Use a struct so that there's a single heap allocation.
-        auto d = gocpp::Init<gocpp_id_2>([=](auto& x) {
+        auto d = gocpp::Init<gocpp_id_2<T1, T2>>([=](auto& x) {
             x.f = f;
         });
         return [=]() mutable -> std::tuple<T1, T2>

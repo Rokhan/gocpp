@@ -271,6 +271,7 @@ namespace golang::iter
     void coroswitch(coro*)
     /* convertBlockStmt, nil block */;
 
+    template<typename V>
     struct gocpp_id_0
         {
             V v{};
@@ -325,7 +326,8 @@ namespace golang::iter
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        template<typename V>
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0<V>& value)
         {
             return value.PrintTo(os);
         }
@@ -358,7 +360,7 @@ namespace golang::iter
     {
         std::function<std::tuple<V, bool> ()> next;
         std::function<void ()> stop;
-        gocpp_id_0 pull = {};
+        gocpp_id_0<V> pull = {};
         auto c_tmp = newcoro([=](coro* c) mutable -> void
         {
             gocpp::Defer defer;
@@ -479,6 +481,7 @@ namespace golang::iter
         return {next, stop};
     }
 
+    template<typename K, typename V>
     struct gocpp_id_1
         {
             K k{};
@@ -537,7 +540,8 @@ namespace golang::iter
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        template<typename K, typename V>
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1<K, V>& value)
         {
             return value.PrintTo(os);
         }
@@ -570,7 +574,7 @@ namespace golang::iter
     {
         std::function<std::tuple<K, V, bool> ()> next;
         std::function<void ()> stop;
-        gocpp_id_1 pull = {};
+        gocpp_id_1<K, V> pull = {};
         auto c_tmp = newcoro([=](coro* c) mutable -> void
         {
             gocpp::Defer defer;

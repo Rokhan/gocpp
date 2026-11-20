@@ -47,5 +47,5 @@ namespace golang::math::big
     // Exponent and precision limits.
     inline constexpr int64_t MaxExp = math::MaxInt32;
     inline constexpr int64_t MinExp = math::MinInt32;
-    inline constexpr int64_t MaxPrec = math::MaxUint32;
+    inline constexpr int64_t MaxPrec = int64_t(math::MaxUint32);
 }

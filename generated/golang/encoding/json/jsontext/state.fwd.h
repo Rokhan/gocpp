@@ -40,5 +40,5 @@ namespace golang::encoding::json::jsontext
 {
     namespace math = golang::math;
     // invalidOffset indicates that the last JSON object currently has no name.
-    inline constexpr int64_t invalidOffset = math::MinInt;
+    inline constexpr int64_t invalidOffset = int64_t(math::MinInt);
 }

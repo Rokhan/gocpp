@@ -39,9 +39,9 @@ namespace golang::internal::syscall::windows::registry
     // An application can use these keys as entry points to the registry.
     // Normally these keys are used in OpenKey to open new keys,
     // but they can also be used anywhere a Key is required.
-    inline constexpr registry::Key CLASSES_ROOT = Key(syscall::HKEY_CLASSES_ROOT);
-    inline constexpr registry::Key CURRENT_USER = Key(syscall::HKEY_CURRENT_USER);
-    inline constexpr registry::Key LOCAL_MACHINE = Key(syscall::HKEY_LOCAL_MACHINE);
-    inline constexpr registry::Key USERS = Key(syscall::HKEY_USERS);
-    inline constexpr registry::Key CURRENT_CONFIG = Key(syscall::HKEY_CURRENT_CONFIG);
+    inline constexpr registry::Key CLASSES_ROOT = Key(int64_t(syscall::HKEY_CLASSES_ROOT));
+    inline constexpr registry::Key CURRENT_USER = Key(int64_t(syscall::HKEY_CURRENT_USER));
+    inline constexpr registry::Key LOCAL_MACHINE = Key(int64_t(syscall::HKEY_LOCAL_MACHINE));
+    inline constexpr registry::Key USERS = Key(int64_t(syscall::HKEY_USERS));
+    inline constexpr registry::Key CURRENT_CONFIG = Key(int64_t(syscall::HKEY_CURRENT_CONFIG));
 }

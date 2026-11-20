@@ -318,5 +318,5 @@ namespace golang::internal::syscall::windows
 
 namespace golang::internal::syscall::windows
 {
-    inline constexpr int64_t SIO_UDP_NETRESET = syscall::IOC_IN | syscall::IOC_VENDOR | 15LL;
+    inline constexpr int64_t SIO_UDP_NETRESET = int64_t(syscall::IOC_IN) | int64_t(syscall::IOC_VENDOR) | 15LL;
 }

@@ -258,7 +258,7 @@ namespace golang::runtime
     //
     // On other platforms, the user address space is contiguous
     // and starts at 0, so no offset is necessary.
-    inline constexpr uint64_t arenaBaseOffset = uint64_t(0xffff800000000000_bi * goarch::IsAmd64 + 0x0a00000000000000_bi * goos::IsAix);
+    inline constexpr uint64_t arenaBaseOffset = uint64_t(0xffff800000000000_bi * gocpp::bigint(goarch::IsAmd64) + 0x0a00000000000000_bi * gocpp::bigint(goos::IsAix));
     // A typed version of this constant that will make it into DWARF (for viewcore).
     inline constexpr uintptr_t arenaBaseOffsetUintptr = uintptr_t(arenaBaseOffset);
     // randHeapBasePrefixMask is used to extract the top byte of the randomized

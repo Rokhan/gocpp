@@ -22,7 +22,7 @@ namespace golang::os
     // changed, although new bits might be added.
     // The single letters are the abbreviations
     // used by the String method's formatting.
-    inline constexpr fs::FileMode ModeDir = fs::ModeDir;
+    inline constexpr fs::FileMode ModeDir = int64_t(fs::ModeDir);
     inline constexpr fs::FileMode ModeAppend = fs::ModeAppend;
     inline constexpr fs::FileMode ModeExclusive = fs::ModeExclusive;
     inline constexpr fs::FileMode ModeTemporary = fs::ModeTemporary;
@@ -36,6 +36,6 @@ namespace golang::os
     inline constexpr fs::FileMode ModeSticky = fs::ModeSticky;
     inline constexpr fs::FileMode ModeIrregular = fs::ModeIrregular;
     // Mask for the type bits. For regular files, none will be set.
-    inline constexpr fs::FileMode ModeType = fs::ModeType;
+    inline constexpr fs::FileMode ModeType = int64_t(fs::ModeType);
     inline constexpr fs::FileMode ModePerm = fs::ModePerm;
 }

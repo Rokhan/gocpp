@@ -22,5 +22,5 @@ namespace golang::internal::syscall::windows
 
 namespace golang::internal::syscall::windows
 {
-    inline constexpr int64_t SIO_TCP_INITIAL_RTO = syscall::IOC_IN | syscall::IOC_VENDOR | 17LL;
+    inline constexpr int64_t SIO_TCP_INITIAL_RTO = int64_t(syscall::IOC_IN) | int64_t(syscall::IOC_VENDOR) | 17LL;
 }

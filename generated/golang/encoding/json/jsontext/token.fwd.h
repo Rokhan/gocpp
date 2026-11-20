@@ -36,7 +36,7 @@ namespace golang::encoding::json::jsontext
 
 namespace golang::encoding::json::jsontext
 {
-    inline constexpr int64_t maxInt64 = math::MaxInt64;
-    inline constexpr int64_t minInt64 = math::MinInt64;
-    inline constexpr uint64_t maxUint64 = uint64_t(math::MaxUint64);
+    inline constexpr int64_t maxInt64 = int64_t(math::MaxInt64);
+    inline constexpr int64_t minInt64 = int64_t(math::MinInt64);
+    inline constexpr uint64_t maxUint64 = uint64_t(gocpp::bigint(math::MaxUint64));
 }

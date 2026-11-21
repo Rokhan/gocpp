@@ -30,7 +30,6 @@ namespace golang::runtime
     extern uint64_t test_x64;
     void testAtomic64();
     void check();
-    extern gocpp::slice<dbgVar*> dbgvars;
     void parseRuntimeDebugVars(gocpp::string godebug);
     void finishDebugVarsSetup();
     void reparsedebugvars(gocpp::string env);
@@ -106,6 +105,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct dbgVar& value);
+    extern gocpp::slice<dbgVar*> dbgvars;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     std::tuple<gocpp::slice<gocpp::unsafe_pointer>, gocpp::slice<gocpp::slice<int32_t>>> reflect_typelinks();
     gocpp::unsafe_pointer reflect_resolveNameOff(gocpp::unsafe_pointer ptrInModule, int32_t off);

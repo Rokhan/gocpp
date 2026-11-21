@@ -9,6 +9,11 @@
 #include "golang/runtime/malloc_tables_generated.fwd.h"
 #include "gocpp/support.h"
 
+
+namespace golang::runtime
+{
+    /* alias: "unsafe", namespace: 'golang::unsafe' */;
+}
 #include "golang/runtime/type.fwd.h"
 
 namespace golang::runtime

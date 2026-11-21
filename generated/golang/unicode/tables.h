@@ -14,8 +14,6 @@ namespace golang::unicode
 {
     // CategoryAliases maps category aliases to standard category names.
     extern gocpp::map<gocpp::string, gocpp::string> CategoryAliases;
-    extern gocpp::array<uint8_t, MaxLatin1 + 1> properties;
-    extern gocpp::array<uint16_t, MaxASCII + 1> asciiFold;
 }
 #include "golang/unicode/letter.fwd.h"
 
@@ -570,6 +568,8 @@ namespace golang::unicode
     // non-self mappings.
     extern gocpp::slice<CaseRange> CaseRanges;
     extern gocpp::slice<CaseRange> _CaseRanges;
+    extern gocpp::array<uint8_t, MaxLatin1 + 1> properties;
+    extern gocpp::array<uint16_t, MaxASCII + 1> asciiFold;
     extern gocpp::slice<foldPair> caseOrbit;
 
     namespace rec

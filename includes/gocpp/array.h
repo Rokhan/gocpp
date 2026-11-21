@@ -3,7 +3,6 @@
 #include "gocpp/support.fwd.h"
 
 #include "gocpp/common.h"
-#include "gocpp/mocklib.h"
 
 #include <concepts>
 #include <initializer_list>
@@ -358,10 +357,4 @@ namespace gocpp
             return N;
         }
     };
-
-    template<typename T, int N>
-    inline std::ostream& operator<<(std::ostream& os, const array<T, N>& arr)
-    {
-        return mocklib::operator<<(os, arr);
-    }
 }

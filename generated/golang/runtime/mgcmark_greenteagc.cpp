@@ -171,7 +171,7 @@ namespace golang::runtime
             // decision. We know that imb is both aligned and a nice power-of-two
             // size that works well for wider SIMD instructions. The compiler likely
             // has no idea that imb is aligned to 128 bytes.
-            memclrNoHeapPointers(gocpp::unsafe_pointer(imb), gocpp::Sizeof<spanInlineMarkBits>());
+            memclrNoHeapPointers(gocpp::unsafe_pointer(imb), gocpp::unsafe_sizeof<spanInlineMarkBits>());
         }
         imb->go_class = go_class;
     }
@@ -225,7 +225,7 @@ namespace golang::runtime
     // The span must be gcUsesSpanInlineMarkBits(span.elemsize).
     spanInlineMarkBits* spanInlineMarkBitsFromBase(uintptr_t base)
     {
-        return (spanInlineMarkBits*)(gocpp::unsafe_pointer(base + gc::PageSize - gocpp::Sizeof<spanInlineMarkBits>()));
+        return (spanInlineMarkBits*)(gocpp::unsafe_pointer(base + gc::PageSize - gocpp::unsafe_sizeof<spanInlineMarkBits>()));
     }
 
     // initInlineMarkBits initializes the inlineMarkBits stored at the end of the span.
@@ -916,7 +916,7 @@ namespace golang::runtime
         }
 
         r->cap = cap;
-        auto ring = sysAlloc(uintptr_t(cap) * gocpp::Sizeof<objptr>(), & memstats.gcMiscSys, "GC span queue"_s);
+        auto ring = sysAlloc(uintptr_t(cap) * gocpp::unsafe_sizeof<objptr>(), & memstats.gcMiscSys, "GC span queue"_s);
         atomic::StorepNoWB(gocpp::unsafe_pointer(& r->ring), ring);
         return r;
     }
@@ -934,7 +934,7 @@ namespace golang::runtime
     // deinit frees any resources the spanSPMC is holding onto and zeroes it.
     void rec::deinit(spanSPMC* r)
     {
-        sysFree(gocpp::unsafe_pointer(r->ring), uintptr_t(r->cap) * gocpp::Sizeof<objptr>(), & memstats.gcMiscSys);
+        sysFree(gocpp::unsafe_pointer(r->ring), uintptr_t(r->cap) * gocpp::unsafe_sizeof<objptr>(), & memstats.gcMiscSys);
         r->ring = nullptr;
         rec::Store(gocpp::recv(r->dead), false);
         rec::StoreNoWB(gocpp::recv(r->prev), nullptr);
@@ -948,7 +948,7 @@ namespace golang::runtime
     objptr* rec::slot(spanSPMC* r, uint32_t i)
     {
         auto idx = uintptr_t(i & (r->cap - 1));
-        return (objptr*)(unsafe::Add(gocpp::unsafe_pointer(r->ring), idx * gocpp::Sizeof<objptr>()));
+        return (objptr*)(unsafe::Add(gocpp::unsafe_pointer(r->ring), idx * gocpp::unsafe_sizeof<objptr>()));
     }
 
     // freeDeadSpanSPMCs frees dead spanSPMCs back to the OS.
@@ -1082,7 +1082,7 @@ namespace golang::runtime
 
         // Compute nelems.
         auto divMagic = uint64_t(gc::SizeClassToDivMagic[rec::sizeclass(gocpp::recv(spanclass))]);
-        uint64_t usableSpanSize = uint64_t(gc::PageSize - gocpp::Sizeof<spanInlineMarkBits>());
+        uint64_t usableSpanSize = uint64_t(gc::PageSize - gocpp::unsafe_sizeof<spanInlineMarkBits>());
         if(! rec::noscan(gocpp::recv(spanclass)))
         {
             usableSpanSize -= gc::PageSize / goarch::PtrSize / 8;
@@ -1335,7 +1335,7 @@ namespace golang::runtime
     // - Contains pointers.
     gocpp::array_ptr<gc::PtrMask> spanPtrMaskUnsafe(uintptr_t spanBase)
     {
-        auto base = spanBase + gc::PageSize - gocpp::Sizeof<gc::PtrMask>() - gocpp::Sizeof<spanInlineMarkBits>();
+        auto base = spanBase + gc::PageSize - gocpp::unsafe_sizeof<gc::PtrMask>() - gocpp::unsafe_sizeof<spanInlineMarkBits>();
         return (gocpp::array_ptr<gc::PtrMask>)(gocpp::unsafe_pointer(base));
     }
 

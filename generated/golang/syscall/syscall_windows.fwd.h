@@ -38,6 +38,6 @@ namespace golang::syscall
     struct GoTag_Signal;
     using Signal = gocpp::defined<int64_t, GoTag_Signal>;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    inline constexpr uintptr_t ptrSize = gocpp::Sizeof<uintptr_t>();
+    inline constexpr uintptr_t ptrSize = gocpp::unsafe_sizeof<uintptr_t>();
     struct Sockaddr;
 }

@@ -847,7 +847,7 @@ namespace golang::runtime
             struct pollDescPadded
             {
                 pollDesc pollDesc{};
-                gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::pollDesc>()> pad{};
+                gocpp::array<unsigned char, tagAlign - gocpp::unsafe_sizeof<golang::runtime::pollDesc>()> pad{};
 
                 using isGoStruct = void;
 
@@ -860,7 +860,7 @@ namespace golang::runtime
                     return os;
                 }
             };
-            constexpr uintptr_t pdSize = gocpp::Sizeof<pollDescPadded>();
+            constexpr uintptr_t pdSize = gocpp::unsafe_sizeof<pollDescPadded>();
             uintptr_t n = pollBlockSize / pdSize;
             if(n == 0)
             {

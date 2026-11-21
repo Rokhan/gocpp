@@ -459,7 +459,7 @@ namespace golang::golang_org::x::tools::internal::event::label
     // access should be done with the From method of the key.
     gocpp::string rec::UnpackString(golang::golang_org::x::tools::internal::event::label::Label t)
     {
-        return unsafe::String((unsigned char*)(gocpp::assertValue<stringptr>(t.untyped)), int64_t(t.packed));
+        return gocpp::unsafe_string((unsigned char*)(gocpp::assertValue<stringptr>(t.untyped)), int64_t(t.packed));
     }
 
     // Valid returns true if the Label is a valid one (it has a key).

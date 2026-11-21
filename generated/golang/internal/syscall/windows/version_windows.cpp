@@ -96,7 +96,7 @@ namespace golang::internal::syscall::windows
     _OSVERSIONINFOEXW* getVersionInfo()
     {
         auto info = _OSVERSIONINFOEXW {};
-        info.osVersionInfoSize = uint32_t(gocpp::Sizeof<windows::_OSVERSIONINFOEXW>());
+        info.osVersionInfoSize = uint32_t(gocpp::unsafe_sizeof<windows::_OSVERSIONINFOEXW>());
         rtlGetVersion(& info);
         return & info;
     }
@@ -200,7 +200,7 @@ namespace golang::internal::syscall::windows
         // First call to get the required buffer size in bytes.
         // Ignore the error, it will always fail.
         std::tie(std::ignore, std::ignore) = syscall::WSAEnumProtocols(nullptr, nullptr, & size);
-        auto n = int32_t(size) / int32_t(gocpp::Sizeof<syscall::WSAProtocolInfo>());
+        auto n = int32_t(size) / int32_t(gocpp::unsafe_sizeof<syscall::WSAProtocolInfo>());
         // Second call to get the actual protocols.
         auto buf = gocpp::make(gocpp::Tag<gocpp::slice<syscall::WSAProtocolInfo>>(), n);
         gocpp::error err;

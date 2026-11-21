@@ -71,5 +71,5 @@ namespace golang::runtime
     inline constexpr int64_t pallocChunksL2Bits = heapAddrBits - logPallocChunkBytes - pallocChunksL1Bits;
     inline constexpr int64_t pallocChunksL1Shift = pallocChunksL2Bits;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    inline constexpr uintptr_t pallocSumBytes = gocpp::Sizeof<pallocSum>();
+    inline constexpr uintptr_t pallocSumBytes = gocpp::unsafe_sizeof<pallocSum>();
 }

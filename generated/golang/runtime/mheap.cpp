@@ -677,7 +677,7 @@ namespace golang::runtime
             *(notInHeapSlice*)(gocpp::unsafe_pointer(& h->allspans)) = *(notInHeapSlice*)(gocpp::unsafe_pointer(& go_new));
             if(len(oldAllspans) != 0)
             {
-                sysFree(gocpp::unsafe_pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * gocpp::Sizeof<mspan*>(), & memstats.other_sys);
+                sysFree(gocpp::unsafe_pointer(& oldAllspans[0]), uintptr_t(cap(oldAllspans)) * gocpp::unsafe_sizeof<mspan*>(), & memstats.other_sys);
             }
         }
         h->allspans = h->allspans.make_slice(0, len(h->allspans) + 1);
@@ -942,20 +942,20 @@ namespace golang::runtime
         lockInit(& h->lock, lockRankMheap);
         lockInit(& h->speciallock, lockRankMheapSpecial);
 
-        rec::init(gocpp::recv(h->spanalloc), gocpp::Sizeof<mspan>(), recordspan, gocpp::unsafe_pointer(h), & memstats.mspan_sys);
-        rec::init(gocpp::recv(h->spanSPMCAlloc), gocpp::Sizeof<spanSPMC>(), nullptr, nullptr, & memstats.gcMiscSys);
-        rec::init(gocpp::recv(h->cachealloc), gocpp::Sizeof<mcache>(), nullptr, nullptr, & memstats.mcache_sys);
-        rec::init(gocpp::recv(h->specialfinalizeralloc), gocpp::Sizeof<specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialCleanupAlloc), gocpp::Sizeof<specialCleanup>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialCheckFinalizerAlloc), gocpp::Sizeof<specialCheckFinalizer>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialTinyBlockAlloc), gocpp::Sizeof<specialTinyBlock>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialprofilealloc), gocpp::Sizeof<specialprofile>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialReachableAlloc), gocpp::Sizeof<specialReachable>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialPinCounterAlloc), gocpp::Sizeof<specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialSecretAlloc), gocpp::Sizeof<specialSecret>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->specialWeakHandleAlloc), gocpp::Sizeof<specialWeakHandle>(), nullptr, nullptr, & memstats.gcMiscSys);
-        rec::init(gocpp::recv(h->specialBubbleAlloc), gocpp::Sizeof<specialBubble>(), nullptr, nullptr, & memstats.other_sys);
-        rec::init(gocpp::recv(h->arenaHintAlloc), gocpp::Sizeof<arenaHint>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->spanalloc), gocpp::unsafe_sizeof<mspan>(), recordspan, gocpp::unsafe_pointer(h), & memstats.mspan_sys);
+        rec::init(gocpp::recv(h->spanSPMCAlloc), gocpp::unsafe_sizeof<spanSPMC>(), nullptr, nullptr, & memstats.gcMiscSys);
+        rec::init(gocpp::recv(h->cachealloc), gocpp::unsafe_sizeof<mcache>(), nullptr, nullptr, & memstats.mcache_sys);
+        rec::init(gocpp::recv(h->specialfinalizeralloc), gocpp::unsafe_sizeof<specialfinalizer>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialCleanupAlloc), gocpp::unsafe_sizeof<specialCleanup>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialCheckFinalizerAlloc), gocpp::unsafe_sizeof<specialCheckFinalizer>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialTinyBlockAlloc), gocpp::unsafe_sizeof<specialTinyBlock>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialprofilealloc), gocpp::unsafe_sizeof<specialprofile>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialReachableAlloc), gocpp::unsafe_sizeof<specialReachable>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialPinCounterAlloc), gocpp::unsafe_sizeof<specialPinCounter>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialSecretAlloc), gocpp::unsafe_sizeof<specialSecret>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->specialWeakHandleAlloc), gocpp::unsafe_sizeof<specialWeakHandle>(), nullptr, nullptr, & memstats.gcMiscSys);
+        rec::init(gocpp::recv(h->specialBubbleAlloc), gocpp::unsafe_sizeof<specialBubble>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(h->arenaHintAlloc), gocpp::unsafe_sizeof<arenaHint>(), nullptr, nullptr, & memstats.other_sys);
 
         // Don't zero mspan allocations. Background sweeping can
         // inspect a span concurrently with allocating it, so it's
@@ -1715,7 +1715,7 @@ namespace golang::runtime
                     if(gcUsesSpanInlineMarkBits(s->elemsize))
                     {
                         // Reserve space for the inline mark bits.
-                        reserve += gocpp::Sizeof<spanInlineMarkBits>();
+                        reserve += gocpp::unsafe_sizeof<spanInlineMarkBits>();
                     }
                     if(heapBitsInSpan(s->elemsize) && ! rec::noscan(gocpp::recv(s->spanclass)))
                     {
@@ -3120,7 +3120,7 @@ namespace golang::runtime
         struct weakHandleBox
         {
             atomic::Uintptr h{};
-            gocpp::array<unsigned char, maxTinySize - gocpp::Sizeof<atomic::Uintptr>()> _1{};
+            gocpp::array<unsigned char, maxTinySize - gocpp::unsafe_sizeof<atomic::Uintptr>()> _1{};
 
             using isGoStruct = void;
 
@@ -3337,7 +3337,7 @@ namespace golang::runtime
                 // the same node are much less likely.
                 if(newNode == nullptr)
                 {
-                    newNode = (immortalWeakHandle*)(persistentalloc(gocpp::Sizeof<immortalWeakHandle>(), goarch::PtrSize, & memstats.gcMiscSys));
+                    newNode = (immortalWeakHandle*)(persistentalloc(gocpp::unsafe_sizeof<immortalWeakHandle>(), goarch::PtrSize, & memstats.gcMiscSys));
                     newNode->ptr = p;
                 }
                 if(rec::CompareAndSwapNoWB(gocpp::recv(m), nullptr, gocpp::unsafe_pointer(newNode)))
@@ -4015,7 +4015,7 @@ namespace golang::runtime
         result->next = nullptr;
         // If result.bits is not 8 byte aligned adjust index so
         // that &result.bits[result.free] is 8 byte aligned.
-        if(gocpp::Offsetof<gcBitsArena>(&gcBitsArena::bits) & 7 == 0)
+        if(gocpp::unsafe_offsetof<gcBitsArena>(&gcBitsArena::bits) & 7 == 0)
         {
             result->free = 0;
         }

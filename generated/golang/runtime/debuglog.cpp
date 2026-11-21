@@ -108,7 +108,7 @@ namespace golang::runtime
         {
             // Use sysAllocOS instead of sysAlloc because we want to interfere
             // with the runtime as little as possible, and sysAlloc updates accounting.
-            l = (dloggerImpl*)(sysAllocOS(gocpp::Sizeof<dloggerImpl>(), "debug log"_s));
+            l = (dloggerImpl*)(sysAllocOS(gocpp::unsafe_sizeof<dloggerImpl>(), "debug log"_s));
             if(l == nullptr)
             {
                 go_throw("failed to allocate debug log"_s);
@@ -1204,7 +1204,7 @@ namespace golang::runtime
         };
         // Use sysAllocOS instead of sysAlloc because we want to interfere
         // with the runtime as little as possible, and sysAlloc updates accounting.
-        auto state1 = sysAllocOS(gocpp::Sizeof<readState>() * uintptr_t(n), "debug log"_s);
+        auto state1 = sysAllocOS(gocpp::unsafe_sizeof<readState>() * uintptr_t(n), "debug log"_s);
         if(state1 == nullptr)
         {
             println("failed to allocate read state for"_s, n, "logs"_s);

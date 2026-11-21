@@ -2235,11 +2235,11 @@ namespace golang::runtime
         }
         if(msanenabled)
         {
-            msanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
+            msanwrite(gocpp::unsafe_pointer(arg), gocpp::unsafe_sizeof<cgoSymbolizerArg>());
         }
         if(asanenabled)
         {
-            asanwrite(gocpp::unsafe_pointer(arg), gocpp::Sizeof<cgoSymbolizerArg>());
+            asanwrite(gocpp::unsafe_pointer(arg), gocpp::unsafe_sizeof<cgoSymbolizerArg>());
         }
         call(_cgo_call_symbolizer_function, noescape(gocpp::unsafe_pointer(arg)));
     }
@@ -2263,11 +2263,11 @@ namespace golang::runtime
         });
         if(msanenabled)
         {
-            msanwrite(gocpp::unsafe_pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
+            msanwrite(gocpp::unsafe_pointer(& arg), gocpp::unsafe_sizeof<cgoTracebackArg>());
         }
         if(asanenabled)
         {
-            asanwrite(gocpp::unsafe_pointer(& arg), gocpp::Sizeof<cgoTracebackArg>());
+            asanwrite(gocpp::unsafe_pointer(& arg), gocpp::unsafe_sizeof<cgoTracebackArg>());
         }
         call(_cgo_call_traceback_function, noescape(gocpp::unsafe_pointer(& arg)));
     }

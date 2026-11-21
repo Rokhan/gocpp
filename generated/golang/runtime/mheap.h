@@ -97,7 +97,7 @@ namespace golang::runtime
     void setTinyBlockContext(gocpp::unsafe_pointer ptr);
     gocpp::unsafe_pointer internal_weak_runtime_registerWeakPointer(gocpp::unsafe_pointer p);
     gocpp::unsafe_pointer internal_weak_runtime_makeStrongFromWeak(gocpp::unsafe_pointer u);
-    inline constexpr uintptr_t gcBitsHeaderBytes = gocpp::Sizeof<gcBitsHeader>();
+    inline constexpr uintptr_t gcBitsHeaderBytes = gocpp::unsafe_sizeof<gcBitsHeader>();
 }
 #include "golang/runtime/type.fwd.h"
 
@@ -230,7 +230,7 @@ namespace golang::runtime
     struct gocpp_id_1
     {
         mcentral mcentral{};
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<golang::runtime::mcentral>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> pad{};
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::unsafe_sizeof<golang::runtime::mcentral>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> pad{};
 
         using isGoStruct = void;
 

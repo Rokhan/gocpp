@@ -77,7 +77,7 @@ namespace golang::runtime
     uintptr_t memhash_varlen(gocpp::unsafe_pointer p, uintptr_t h)
     {
         auto ptr = sys::GetClosurePtr();
-        auto size = *(uintptr_t*)(gocpp::unsafe_pointer(ptr + gocpp::Sizeof<uintptr_t>()));
+        auto size = *(uintptr_t*)(gocpp::unsafe_pointer(ptr + gocpp::unsafe_sizeof<uintptr_t>()));
         return memhash(p, h, size);
     }
 

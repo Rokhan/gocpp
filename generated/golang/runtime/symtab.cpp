@@ -1446,7 +1446,7 @@ namespace golang::runtime
         auto b = x / abi::FuncTabBucketSize;
         auto i = x % abi::FuncTabBucketSize / (abi::FuncTabBucketSize / nsub);
 
-        auto ffb = (findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::Sizeof<findfuncbucket>()));
+        auto ffb = (findfuncbucket*)(add(gocpp::unsafe_pointer(datap->findfunctab), b * gocpp::unsafe_sizeof<findfuncbucket>()));
         auto idx = ffb->idx + uint32_t(ffb->subbuckets[i]);
 
         // Find the ftab entry.
@@ -1882,7 +1882,7 @@ namespace golang::runtime
 
     uint32_t pcdatastart(golang::runtime::funcInfo f, uint32_t table)
     {
-        return *(uint32_t*)(add(gocpp::unsafe_pointer(& f._func.nfuncdata), gocpp::Sizeof<uint8_t>() + uintptr_t(table) * 4));
+        return *(uint32_t*)(add(gocpp::unsafe_pointer(& f._func.nfuncdata), gocpp::unsafe_sizeof<uint8_t>() + uintptr_t(table) * 4));
     }
 
     int32_t pcdatavalue(golang::runtime::funcInfo f, uint32_t table, uintptr_t targetpc)
@@ -1925,7 +1925,7 @@ namespace golang::runtime
         }
         // load gofunc address early so that we calculate during cache misses
         auto base = f.datap->gofunc;
-        auto p = uintptr_t(gocpp::unsafe_pointer(& f._func.nfuncdata)) + gocpp::Sizeof<uint8_t>() + uintptr_t(f._func.npcdata) * 4 + uintptr_t(i) * 4;
+        auto p = uintptr_t(gocpp::unsafe_pointer(& f._func.nfuncdata)) + gocpp::unsafe_sizeof<uint8_t>() + uintptr_t(f._func.npcdata) * 4 + uintptr_t(i) * 4;
         auto off = *(uint32_t*)(gocpp::unsafe_pointer(p));
         // Return off == ^uint32(0) ? 0 : f.datap.gofunc + uintptr(off), but without branches.
         // The compiler calculates mask on most architectures using conditional assignment.

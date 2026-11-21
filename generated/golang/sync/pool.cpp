@@ -440,7 +440,7 @@ namespace golang::sync
 
     poolLocal* indexLocal(gocpp::unsafe_pointer l, int64_t i)
     {
-        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::Sizeof<poolLocal>());
+        auto lp = gocpp::unsafe_pointer(uintptr_t(l) + uintptr_t(i) * gocpp::unsafe_sizeof<poolLocal>());
         return (poolLocal*)(lp);
     }
 

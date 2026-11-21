@@ -1020,7 +1020,7 @@ namespace golang::runtime
         for(; ; )
         {
             auto b = *(uint8_t*)(fd);
-            fd = add(fd, gocpp::Sizeof<uint8_t>());
+            fd = add(fd, gocpp::unsafe_sizeof<uint8_t>());
             if(b < 128)
             {
                 return {r + (uint32_t(b) << shift), fd};

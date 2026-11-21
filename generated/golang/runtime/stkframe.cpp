@@ -346,7 +346,7 @@ namespace golang::runtime
 
         // stack objects.
         if((GOARCH == "amd64"_s || GOARCH == "arm64"_s || GOARCH == "loong64"_s || GOARCH == "ppc64"_s || GOARCH == "ppc64le"_s || GOARCH == "riscv64"_s || GOARCH == "s390x"_s) &&
-                gocpp::Sizeof<abi::RegArgs>() > 0 && isReflect)
+                gocpp::unsafe_sizeof<abi::RegArgs>() > 0 && isReflect)
         {
             // For reflect.makeFuncStub and reflect.methodValueCall,
             // we need to fake the stack object record.

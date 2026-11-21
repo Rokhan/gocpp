@@ -289,7 +289,7 @@ namespace golang::reflect
             // (Normally the prove pass removes them, but for -N builds we
             // use too much stack.)
             // ptr := &args.Ptrs[i] (but cast from *unsafe.Pointer to *uintptr)
-            auto ptr = (uintptr_t*)(add(gocpp::unsafe_pointer(unsafe::SliceData(args->Ptrs.make_slice(0))), uintptr_t(i) * goarch::PtrSize, "always in [0:IntArgRegs]"_s));
+            auto ptr = (uintptr_t*)(add(gocpp::unsafe_pointer(gocpp::unsafe_slice_data(args->Ptrs.make_slice(0))), uintptr_t(i) * goarch::PtrSize, "always in [0:IntArgRegs]"_s));
             if(rec::Get(gocpp::recv(ctxt->regPtrs), i))
             {
                 *ptr = arg;

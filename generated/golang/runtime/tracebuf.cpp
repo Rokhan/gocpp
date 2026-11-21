@@ -804,7 +804,7 @@ namespace golang::runtime
             else
             {
                 unlock(& runtime::trace.lock);
-                w.traceBuf = (traceBuf*)(sysAlloc(gocpp::Sizeof<traceBuf>(), & memstats.other_sys, "trace buffer"_s));
+                w.traceBuf = (traceBuf*)(sysAlloc(gocpp::unsafe_sizeof<traceBuf>(), & memstats.other_sys, "trace buffer"_s));
                 if(w.traceBuf == nullptr)
                 {
                     go_throw("trace: out of memory"_s);

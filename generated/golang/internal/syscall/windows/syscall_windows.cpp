@@ -48,7 +48,7 @@ namespace golang::internal::syscall::windows
         int64_t n = 0;
         for(; *(uint16_t*)(end) != 0; )
         {
-            end = gocpp::unsafe_pointer(uintptr_t(end) + gocpp::Sizeof<uint16_t>());
+            end = gocpp::unsafe_pointer(uintptr_t(end) + gocpp::unsafe_sizeof<uint16_t>());
             n++;
         }
         return syscall::UTF16ToString(unsafe::Slice(p, n));
@@ -720,12 +720,12 @@ namespace golang::internal::syscall::windows
                 }
                 defer.push_back([=]{ syscall::CloseHandle(s); });
                 uint32_t n = {};
-                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(gocpp::unsafe_pointer(& WSAID_WSARECVMSG)), uint32_t(gocpp::Sizeof<syscall::GUID>()), (unsigned char*)(gocpp::unsafe_pointer(& sendRecvMsgFunc.recvAddr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
+                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(gocpp::unsafe_pointer(& WSAID_WSARECVMSG)), uint32_t(gocpp::unsafe_sizeof<syscall::GUID>()), (unsigned char*)(gocpp::unsafe_pointer(& sendRecvMsgFunc.recvAddr)), uint32_t(gocpp::unsafe_sizeof<uintptr_t>()), & n, nullptr, 0);
                 if(sendRecvMsgFunc.err != nullptr)
                 {
                     return;
                 }
-                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(gocpp::unsafe_pointer(& WSAID_WSASENDMSG)), uint32_t(gocpp::Sizeof<syscall::GUID>()), (unsigned char*)(gocpp::unsafe_pointer(& sendRecvMsgFunc.sendAddr)), uint32_t(gocpp::Sizeof<uintptr_t>()), & n, nullptr, 0);
+                sendRecvMsgFunc.err = syscall::WSAIoctl(s, syscall::SIO_GET_EXTENSION_FUNCTION_POINTER, (unsigned char*)(gocpp::unsafe_pointer(& WSAID_WSASENDMSG)), uint32_t(gocpp::unsafe_sizeof<syscall::GUID>()), (unsigned char*)(gocpp::unsafe_pointer(& sendRecvMsgFunc.sendAddr)), uint32_t(gocpp::unsafe_sizeof<uintptr_t>()), & n, nullptr, 0);
             }
             catch(gocpp::GoPanic& gp)
             {

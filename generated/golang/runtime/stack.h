@@ -208,7 +208,7 @@ namespace golang::runtime
     struct stackpoolStruct
     {
         stackpoolItem item{};
-        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::Sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
+        gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::unsafe_sizeof<stackpoolItem>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> _1{};
 
         using isGoStruct = void;
 

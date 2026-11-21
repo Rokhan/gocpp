@@ -249,7 +249,7 @@ namespace golang::runtime
                     // mark it allocated here and in stackfree and stackpoolfree, and free'd in
                     // stackalloc in order to avoid overlapping allocations and
                     // uninitialized memory errors in valgrind.
-                    valgrindMalloc(gocpp::unsafe_pointer(rec::ptr(gocpp::recv(x))), gocpp::Sizeof<gclink*>());
+                    valgrindMalloc(gocpp::unsafe_pointer(rec::ptr(gocpp::recv(x))), gocpp::unsafe_sizeof<gclink*>());
                 }
                 rec::ptr(gocpp::recv(x))->next = s->manualFreeList;
                 s->manualFreeList = x;
@@ -600,7 +600,7 @@ namespace golang::runtime
                 {
                     // x.ptr() is the head of the list of free stacks, and will be used
                     // when allocating a new stack, so it has to be marked allocated.
-                    valgrindMalloc(gocpp::unsafe_pointer(rec::ptr(gocpp::recv(x))), gocpp::Sizeof<gclink*>());
+                    valgrindMalloc(gocpp::unsafe_pointer(rec::ptr(gocpp::recv(x))), gocpp::unsafe_sizeof<gclink*>());
                 }
                 stackpoolfree(x, order);
                 unlock(& stackpool[order].item.mu);
@@ -617,7 +617,7 @@ namespace golang::runtime
                     // x.ptr() is the head of the list of free stacks, and will
                     // be used when allocating a new stack, so it has to be
                     // marked allocated.
-                    valgrindMalloc(gocpp::unsafe_pointer(rec::ptr(gocpp::recv(x))), gocpp::Sizeof<gclink*>());
+                    valgrindMalloc(gocpp::unsafe_pointer(rec::ptr(gocpp::recv(x))), gocpp::unsafe_sizeof<gclink*>());
                 }
                 rec::ptr(gocpp::recv(x))->next = c->stackcache[order].list;
                 c->stackcache[order].list = x;
@@ -713,7 +713,7 @@ namespace golang::runtime
             // as uninitialized. We just initialize it if valgrind thinks its
             // uninitialized.
             // See go.dev/issues/73801.
-            valgrindMakeMemDefined(gocpp::unsafe_pointer(& p), gocpp::Sizeof<uintptr_t*>());
+            valgrindMakeMemDefined(gocpp::unsafe_pointer(& p), gocpp::unsafe_sizeof<uintptr_t*>());
         }
         if(adjinfo->old.lo <= p && p < adjinfo->old.hi)
         {

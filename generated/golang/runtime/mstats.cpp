@@ -290,14 +290,14 @@ namespace golang::runtime
 
     void init()
     {
-        if(uintptr_t offset = gocpp::Offsetof<mstats>(&mstats::heapStats); offset % 8 != 0)
+        if(uintptr_t offset = gocpp::unsafe_offsetof<mstats>(&mstats::heapStats); offset % 8 != 0)
         {
             println(offset);
             go_throw("memstats.heapStats not aligned to 8 bytes"_s);
         }
         // Ensure the size of heapStatsDelta causes adjacent fields/slots (e.g.
         // [3]heapStatsDelta) to be 8-byte aligned.
-        if(uintptr_t size = gocpp::Sizeof<heapStatsDelta>(); size % 8 != 0)
+        if(uintptr_t size = gocpp::unsafe_sizeof<heapStatsDelta>(); size % 8 != 0)
         {
             println(size);
             go_throw("heapStatsDelta not a multiple of 8 bytes in size"_s);

@@ -545,7 +545,7 @@ namespace golang::runtime
         {
             return s;
         }
-        return (spanSetBlock*)(persistentalloc(gocpp::Sizeof<spanSetBlock>(), gocpp::max(cpu::CacheLineSize, tagAlign), & memstats.gcMiscSys));
+        return (spanSetBlock*)(persistentalloc(gocpp::unsafe_sizeof<spanSetBlock>(), gocpp::max(cpu::CacheLineSize, tagAlign), & memstats.gcMiscSys));
     }
 
     // free returns a spanSetBlock back to the pool.

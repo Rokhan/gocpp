@@ -241,7 +241,7 @@ namespace golang::runtime
     struct gcBgMarkWorkerNodePadded
     {
         gcBgMarkWorkerNode gcBgMarkWorkerNode{};
-        gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::gcBgMarkWorkerNode>() - gcBgMarkWorkerNodeRedZoneSize> pad{};
+        gocpp::array<unsigned char, tagAlign - gocpp::unsafe_sizeof<golang::runtime::gcBgMarkWorkerNode>() - gcBgMarkWorkerNodeRedZoneSize> pad{};
 
         using isGoStruct = void;
 

@@ -340,7 +340,7 @@ namespace golang::internal::syscall::windows
                 x.Flags = FILE_DISPOSITION_DELETE |
                                 FILE_DISPOSITION_POSIX_SEMANTICS |
                                 FILE_DISPOSITION_IGNORE_READONLY_ATTRIBUTE;
-            })), uint32_t(gocpp::Sizeof<FILE_DISPOSITION_INFORMATION_EX>()), FileDispositionInformationEx);
+            })), uint32_t(gocpp::unsafe_sizeof<FILE_DISPOSITION_INFORMATION_EX>()), FileDispositionInformationEx);
             //Go switch emulation
             {
                 auto condition = err;
@@ -391,7 +391,7 @@ namespace golang::internal::syscall::windows
             }
             err = SetFileInformationByHandle(wh, FileBasicInfo, gocpp::unsafe_pointer(gocpp::InitPtr<FILE_BASIC_INFO>([=](auto& x) {
                 x.FileAttributes = (data.FileAttributes & ~(FILE_ATTRIBUTE_READONLY));
-            })), uint32_t(gocpp::Sizeof<FILE_BASIC_INFO>()));
+            })), uint32_t(gocpp::unsafe_sizeof<FILE_BASIC_INFO>()));
             syscall::CloseHandle(wh);
             if(err != nullptr)
             {
@@ -401,7 +401,7 @@ namespace golang::internal::syscall::windows
 
         return SetFileInformationByHandle(h, FileDispositionInfo, gocpp::unsafe_pointer(gocpp::InitPtr<FILE_DISPOSITION_INFO>([=](auto& x) {
             x.DeleteFile = 1;
-        })), uint32_t(gocpp::Sizeof<FILE_DISPOSITION_INFO>()));
+        })), uint32_t(gocpp::unsafe_sizeof<FILE_DISPOSITION_INFO>()));
     }
 
     gocpp::error Renameat(syscall::Handle olddirfd, gocpp::string oldpath, syscall::Handle newdirfd, gocpp::string newpath)
@@ -442,7 +442,7 @@ namespace golang::internal::syscall::windows
 
             constexpr int64_t FileRenameInformation = 10;
             constexpr int64_t FileRenameInformationEx = 65;
-            err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& renameInfoEx), uint32_t(gocpp::Sizeof<FILE_RENAME_INFORMATION_EX>()), FileRenameInformationEx);
+            err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& renameInfoEx), uint32_t(gocpp::unsafe_sizeof<FILE_RENAME_INFORMATION_EX>()), FileRenameInformationEx);
             if(err == nullptr)
             {
                 return nullptr;
@@ -459,7 +459,7 @@ namespace golang::internal::syscall::windows
             copy(renameInfo.FileName.make_slice(0), p16);
             renameInfo.FileNameLength = renameInfoEx.FileNameLength;
 
-            err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& renameInfo), uint32_t(gocpp::Sizeof<FILE_RENAME_INFORMATION>()), FileRenameInformation);
+            err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& renameInfo), uint32_t(gocpp::unsafe_sizeof<FILE_RENAME_INFORMATION>()), FileRenameInformation);
             if(auto [st, ok] = gocpp::getValue<NTStatus>(err); ok)
             {
                 return gocpp::error(rec::Errno(gocpp::recv(st)));
@@ -507,7 +507,7 @@ namespace golang::internal::syscall::windows
             linkInfo.FileNameLength = uint32_t((len(p16) - 1) * 2);
 
             constexpr int64_t FileLinkInformation = 11;
-            err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& linkInfo), uint32_t(gocpp::Sizeof<FILE_LINK_INFORMATION>()), FileLinkInformation);
+            err = NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& linkInfo), uint32_t(gocpp::unsafe_sizeof<FILE_LINK_INFORMATION>()), FileLinkInformation);
             if(auto [st, ok] = gocpp::getValue<NTStatus>(err); ok)
             {
                 return gocpp::error(rec::Errno(gocpp::recv(st)));
@@ -610,8 +610,8 @@ namespace golang::internal::syscall::windows
                 }
             };
 
-            const uint16_t headerSize = uint16_t(gocpp::Offsetof<reparseDataBufferT>(&reparseDataBufferT::SubstituteNameOffset));
-            constexpr uint16_t bufferSize = uint16_t(gocpp::Sizeof<reparseDataBufferT>());
+            const uint16_t headerSize = uint16_t(gocpp::unsafe_offsetof<reparseDataBufferT>(&reparseDataBufferT::SubstituteNameOffset));
+            constexpr uint16_t bufferSize = uint16_t(gocpp::unsafe_sizeof<reparseDataBufferT>());
 
             // Data buffer containing a SymbolicLinkReparseBuffer followed by the link target.
             auto rdbbuf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), bufferSize + uint16_t(2 * len(oldnameu16)));
@@ -629,7 +629,7 @@ namespace golang::internal::syscall::windows
             }
 
             auto namebuf = rdbbuf.make_slice(bufferSize);
-            copy(namebuf, unsafe::String((unsigned char*)(gocpp::unsafe_pointer(& oldnameu16[0])), 2 * len(oldnameu16)));
+            copy(namebuf, gocpp::unsafe_string((unsigned char*)(gocpp::unsafe_pointer(& oldnameu16[0])), 2 * len(oldnameu16)));
 
             uint32_t bytesReturned = {};
             err = syscall::DeviceIoControl(h, FSCTL_SET_REPARSE_POINT, & rdbbuf[0], uint32_t(len(rdbbuf)), nullptr, 0, & bytesReturned, nullptr);
@@ -639,7 +639,7 @@ namespace golang::internal::syscall::windows
                 constexpr int64_t FileDispositionInformation = 13;
                 NtSetInformationFile(h, new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(gocpp::InitPtr<FILE_DISPOSITION_INFORMATION>([=](auto& x) {
                     x.DeleteFile = 1;
-                })), uint32_t(gocpp::Sizeof<FILE_DISPOSITION_INFORMATION>()), FileDispositionInformation);
+                })), uint32_t(gocpp::unsafe_sizeof<FILE_DISPOSITION_INFORMATION>()), FileDispositionInformation);
                 return err;
             }
 

@@ -197,7 +197,7 @@ namespace golang::runtime
             }
 
             // Allocate a new block.
-            block = (traceRegionAllocBlock*)(sysAlloc(gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys, "trace arena alloc"_s));
+            block = (traceRegionAllocBlock*)(sysAlloc(gocpp::unsafe_sizeof<traceRegionAllocBlock>(), & memstats.other_sys, "trace arena alloc"_s));
             if(block == nullptr)
             {
                 go_throw("traceRegion: out of memory"_s);
@@ -226,11 +226,11 @@ namespace golang::runtime
         {
             auto block = a->full;
             a->full = block->traceRegionAllocBlockHeader.next;
-            sysFree(gocpp::unsafe_pointer(block), gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
+            sysFree(gocpp::unsafe_pointer(block), gocpp::unsafe_sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
         }
         if(auto current = rec::Load(gocpp::recv(a->current)); current != nullptr)
         {
-            sysFree(current, gocpp::Sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
+            sysFree(current, gocpp::unsafe_sizeof<traceRegionAllocBlock>(), & memstats.other_sys);
             rec::StoreNoWB(gocpp::recv(a->current), nullptr);
         }
         rec::Store(gocpp::recv(a->dropping), false);

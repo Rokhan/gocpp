@@ -89,7 +89,7 @@ namespace golang::runtime
     struct gocpp_id_0
     {
         semaRoot root{};
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<semaRoot>()> pad{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::unsafe_sizeof<semaRoot>()> pad{};
 
         using isGoStruct = void;
 
@@ -938,9 +938,9 @@ namespace golang::runtime
     //go:linkname notifyListCheck sync.runtime_notifyListCheck
     void notifyListCheck(uintptr_t sz)
     {
-        if(sz != gocpp::Sizeof<notifyList>())
+        if(sz != gocpp::unsafe_sizeof<notifyList>())
         {
-            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::Sizeof<notifyList>(), "\n"_s);
+            print("runtime: bad notifyList size - sync="_s, sz, " runtime="_s, gocpp::unsafe_sizeof<notifyList>(), "\n"_s);
             go_throw("bad notifyList size"_s);
         }
     }

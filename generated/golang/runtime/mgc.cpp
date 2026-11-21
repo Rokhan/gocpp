@@ -104,7 +104,7 @@ namespace golang::runtime
 
     void gcinit()
     {
-        if(gocpp::Sizeof<workbuf>() != _WorkbufSize)
+        if(gocpp::unsafe_sizeof<workbuf>() != _WorkbufSize)
         {
             go_throw("size of Workbuf is suboptimal"_s);
         }
@@ -124,7 +124,7 @@ namespace golang::runtime
 
         work.startSema = 1;
         work.markDoneSema = 1;
-        rec::init(gocpp::recv(work.spanSPMCs.list), gocpp::Offsetof<spanSPMC>(&spanSPMC::allnode));
+        rec::init(gocpp::recv(work.spanSPMCs.list), gocpp::unsafe_offsetof<spanSPMC>(&spanSPMC::allnode));
         lockInit(& work.sweepWaiters.lock, lockRankSweepWaiters);
         lockInit(& work.assistQueue.lock, lockRankAssistQueue);
         lockInit(& work.strongFromWeak.lock, lockRankStrongFromWeakQueue);

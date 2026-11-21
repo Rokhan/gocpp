@@ -1348,7 +1348,7 @@ namespace golang::runtime
         auto span = c->alloc[tinySpanClass];
 
         constexpr int64_t nbytes = 8192;
-        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / 16);
+        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::unsafe_sizeof<spanInlineMarkBits>()) / 16);
         gclinkptr nextFreeFastResult = {};
         if(span->allocCache != 0)
         {
@@ -2162,7 +2162,7 @@ namespace golang::runtime
         auto span = c->alloc[tinySpanClass];
 
         constexpr int64_t nbytes = 8192;
-        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / 16);
+        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::unsafe_sizeof<spanInlineMarkBits>()) / 16);
         gclinkptr nextFreeFastResult = {};
         if(span->allocCache != 0)
         {

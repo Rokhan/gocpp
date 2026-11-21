@@ -977,7 +977,7 @@ namespace golang::runtime
                     for(int32_t i = int32_t(0); i < n; i++)
                     {
                         auto p = argv_index(argv, argc + 1 + i);
-                        auto s = unsafe::String(p, findnull(p));
+                        auto s = gocpp::unsafe_string(p, findnull(p));
 
                         if(stringslite::HasPrefix(s, prefix))
                         {
@@ -1029,7 +1029,7 @@ namespace golang::runtime
 
         lockVerifyMSize();
 
-        rec::init(gocpp::recv(sched.midle), gocpp::Offsetof<m>(&m::idleNode));
+        rec::init(gocpp::recv(sched.midle), gocpp::unsafe_offsetof<m>(&m::idleNode));
 
         // raceinit must be the first call to race detector.
         // In particular, it must be done before mallocinit below calls racemapshadow.
@@ -3418,11 +3418,11 @@ namespace golang::runtime
             ts.fn = gocpp::unsafe_pointer(abi::FuncPCABI0(mstart));
             if(msanenabled)
             {
-                msanwrite(gocpp::unsafe_pointer(& ts), gocpp::Sizeof<cgothreadstart>());
+                msanwrite(gocpp::unsafe_pointer(& ts), gocpp::unsafe_sizeof<cgothreadstart>());
             }
             if(asanenabled)
             {
-                asanwrite(gocpp::unsafe_pointer(& ts), gocpp::Sizeof<cgothreadstart>());
+                asanwrite(gocpp::unsafe_pointer(& ts), gocpp::unsafe_sizeof<cgothreadstart>());
             }
             // Prevent process clone.
             rec::rlock(gocpp::recv(execLock));
@@ -6207,7 +6207,7 @@ namespace golang::runtime
             *(uintptr_t*)(gocpp::unsafe_pointer(sp - goarch::PtrSize)) = 0;
         }
 
-        memclrNoHeapPointers(gocpp::unsafe_pointer(& newg->sched), gocpp::Sizeof<gobuf>());
+        memclrNoHeapPointers(gocpp::unsafe_pointer(& newg->sched), gocpp::unsafe_sizeof<gobuf>());
         newg->sched.sp = sp;
         newg->stktopsp = sp;
         // +PCQuantum so that previous instruction is in same function

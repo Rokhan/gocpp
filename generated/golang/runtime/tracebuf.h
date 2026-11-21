@@ -75,7 +75,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1{};
         traceBufHeader traceBufHeader{};
-        gocpp::array<unsigned char, tracev2::MaxBatchSize - gocpp::Sizeof<golang::runtime::traceBufHeader>()> arr{}; // underlying buffer for traceBufHeader.buf
+        gocpp::array<unsigned char, tracev2::MaxBatchSize - gocpp::unsafe_sizeof<golang::runtime::traceBufHeader>()> arr{}; // underlying buffer for traceBufHeader.buf
 
         using isGoStruct = void;
 

@@ -233,7 +233,7 @@ namespace golang::internal::strconv
         int64_t minExp = {};
         //Go switch emulation
         {
-            auto condition = 8 * gocpp::Sizeof<F>();
+            auto condition = 8 * gocpp::unsafe_sizeof<F>();
             int conditionId = -1;
             if(condition == 32) { conditionId = 0; }
             else if(condition == 64) { conditionId = 1; }

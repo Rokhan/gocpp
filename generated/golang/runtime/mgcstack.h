@@ -136,7 +136,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1{};
         stackObjectBufHdr stackObjectBufHdr{};
-        gocpp::array<stackObject, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::Sizeof<stackObject>()> obj{};
+        gocpp::array<stackObject, (_WorkbufSize - gocpp::unsafe_sizeof<golang::runtime::stackObjectBufHdr>()) / gocpp::unsafe_sizeof<stackObject>()> obj{};
 
         using isGoStruct = void;
 
@@ -161,7 +161,7 @@ namespace golang::runtime
     {
         sys::NotInHeap _1{};
         stackWorkBufHdr stackWorkBufHdr{};
-        gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj{};
+        gocpp::array<uintptr_t, (_WorkbufSize - gocpp::unsafe_sizeof<golang::runtime::stackWorkBufHdr>()) / goarch::PtrSize> obj{};
 
         using isGoStruct = void;
 

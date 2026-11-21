@@ -159,7 +159,7 @@ namespace golang::os
         if(d.FileAttributes & syscall::FILE_ATTRIBUTE_REPARSE_POINT != 0)
         {
             windows::FILE_ATTRIBUTE_TAG_INFO ti = {};
-            err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::Sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
+            err = windows::GetFileInformationByHandleEx(h, windows::FileAttributeTagInfo, (unsigned char*)(gocpp::unsafe_pointer(& ti)), uint32_t(gocpp::unsafe_sizeof<windows::FILE_ATTRIBUTE_TAG_INFO>()));
             if(err != nullptr)
             {
                 return {nullptr, gocpp::error(gocpp::InitPtr<PathError>([=](auto& x) {

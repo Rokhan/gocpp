@@ -593,7 +593,7 @@ namespace golang::runtime
     gclinkptr nextFreeFastTiny(mspan* span)
     {
         constexpr int64_t nbytes = 8192;
-        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::Sizeof<spanInlineMarkBits>()) / elemsize_);
+        constexpr uint16_t nelems = uint16_t((nbytes - gocpp::unsafe_sizeof<spanInlineMarkBits>()) / elemsize_);
         gclinkptr nextFreeFastResult = {};
         if(span->allocCache != 0)
         {

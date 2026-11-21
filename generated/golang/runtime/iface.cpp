@@ -148,7 +148,7 @@ namespace golang::runtime
         }
 
         // Entry doesn't exist yet. Make a new entry & add it.
-        m = (itab*)(persistentalloc(gocpp::Sizeof<itab>() + uintptr_t(len(inter->Methods) - 1) * goarch::PtrSize, 0, & memstats.other_sys));
+        m = (itab*)(persistentalloc(gocpp::unsafe_sizeof<itab>() + uintptr_t(len(inter->Methods) - 1) * goarch::PtrSize, 0, & memstats.other_sys));
         m->Inter = inter;
         m->Type = typ;
         // The hash is used in type switches. However, compiler statically generates itab's
@@ -572,7 +572,7 @@ namespace golang::runtime
         }
         else
         {
-            x = mallocgc(gocpp::Sizeof<gocpp::string>(), stringType, true);
+            x = mallocgc(gocpp::unsafe_sizeof<gocpp::string>(), stringType, true);
             *(gocpp::string*)(x) = val;
         }
         return x;
@@ -597,7 +597,7 @@ namespace golang::runtime
         }
         else
         {
-            x = mallocgc(gocpp::Sizeof<gocpp::slice<unsigned char>>(), sliceType, true);
+            x = mallocgc(gocpp::unsafe_sizeof<gocpp::slice<unsigned char>>(), sliceType, true);
             *(gocpp::slice<unsigned char>*)(x) = val;
         }
         return x;
@@ -696,7 +696,7 @@ namespace golang::runtime
         newN = 1 << sys::Len64(uint64_t(newN - 1));
 
         // Allocate the new table.
-        auto newSize = gocpp::Sizeof<abi::TypeAssertCache>() + uintptr_t(newN - 1) * gocpp::Sizeof<abi::TypeAssertCacheEntry>();
+        auto newSize = gocpp::unsafe_sizeof<abi::TypeAssertCache>() + uintptr_t(newN - 1) * gocpp::unsafe_sizeof<abi::TypeAssertCacheEntry>();
         auto newC = (abi::TypeAssertCache*)(mallocgc(newSize, nullptr, true));
         newC->Mask = uintptr_t(newN - 1);
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);
@@ -819,7 +819,7 @@ namespace golang::runtime
         newN = 1 << sys::Len64(uint64_t(newN - 1));
 
         // Allocate the new table.
-        auto newSize = gocpp::Sizeof<abi::InterfaceSwitchCache>() + uintptr_t(newN - 1) * gocpp::Sizeof<abi::InterfaceSwitchCacheEntry>();
+        auto newSize = gocpp::unsafe_sizeof<abi::InterfaceSwitchCache>() + uintptr_t(newN - 1) * gocpp::unsafe_sizeof<abi::InterfaceSwitchCacheEntry>();
         auto newC = (abi::InterfaceSwitchCache*)(mallocgc(newSize, nullptr, true));
         newC->Mask = uintptr_t(newN - 1);
         auto newEntries = unsafe::Slice(& newC->Entries[0], newN);

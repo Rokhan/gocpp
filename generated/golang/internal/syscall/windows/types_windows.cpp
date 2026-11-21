@@ -166,7 +166,7 @@ namespace golang::internal::syscall::windows
         {
             o->RootDirectory = root;
         }
-        o->Length = uint32_t(gocpp::Sizeof<windows::OBJECT_ATTRIBUTES>());
+        o->Length = uint32_t(gocpp::unsafe_sizeof<windows::OBJECT_ATTRIBUTES>());
         return nullptr;
     }
 

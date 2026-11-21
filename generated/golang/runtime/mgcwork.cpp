@@ -612,7 +612,7 @@ namespace golang::runtime
         auto n = b->workbufhdr.nobj / 2;
         b->workbufhdr.nobj -= n;
         b1->workbufhdr.nobj = n;
-        memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->workbufhdr.nobj]), uintptr_t(n) * gocpp::Sizeof<uintptr_t>());
+        memmove(gocpp::unsafe_pointer(& b1->obj[0]), gocpp::unsafe_pointer(& b->obj[b->workbufhdr.nobj]), uintptr_t(n) * gocpp::unsafe_sizeof<uintptr_t>());
 
         // Put b on full list - let first half of b get stolen.
         putfull(b);

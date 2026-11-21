@@ -390,7 +390,7 @@ namespace golang::internal::syscall::windows
     std::ostream& operator<<(std::ostream& os, const struct ModuleEntry32& value);
     std::tuple<gocpp::string, gocpp::error> FinalPath(syscall::Handle h, uint32_t flags);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    inline constexpr uintptr_t SizeofModuleEntry32 = gocpp::Sizeof<ModuleEntry32>();
+    inline constexpr uintptr_t SizeofModuleEntry32 = gocpp::unsafe_sizeof<ModuleEntry32>();
 }
 #include "golang/syscall/types_windows.h"
 

@@ -162,7 +162,7 @@ namespace golang::runtime
 
         // Create new storage for the argument.
         S* argv = {};
-        if(auto size = gocpp::Sizeof<S>(); size < maxTinySize && argType->PtrBytes == 0)
+        if(auto size = gocpp::unsafe_sizeof<S>(); size < maxTinySize && argType->PtrBytes == 0)
         {
             // Side-step the tiny allocator to avoid liveness issues, since this box
             // will be treated like a root by the GC. We model the box as an array of

@@ -655,7 +655,7 @@ namespace golang::internal::reflectlite
             return ""_s;
         }
         auto [i, l] = rec::readVarint(gocpp::recv(n), 1);
-        return unsafe::String(rec::data(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
+        return gocpp::unsafe_string(rec::data(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
     }
 
     gocpp::string rec::tag(golang::internal::reflectlite::name n)
@@ -666,7 +666,7 @@ namespace golang::internal::reflectlite
         }
         auto [i, l] = rec::readVarint(gocpp::recv(n), 1);
         auto [i2, l2] = rec::readVarint(gocpp::recv(n), 1 + i + l);
-        return unsafe::String(rec::data(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
+        return gocpp::unsafe_string(rec::data(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
     }
 
     gocpp::string pkgPath(abi::Name n)

@@ -254,7 +254,7 @@ namespace golang::os
             {
                 objAttrs->RootDirectory = dirfd;
             }
-            objAttrs->Length = uint32_t(gocpp::Sizeof<windows::OBJECT_ATTRIBUTES>());
+            objAttrs->Length = uint32_t(gocpp::unsafe_sizeof<windows::OBJECT_ATTRIBUTES>());
             syscall::Handle h = {};
             err = windows::NtCreateFile(& h, windows::FILE_GENERIC_READ, objAttrs, new windows::IO_STATUS_BLOCK {}, nullptr, uint32_t(syscall::FILE_ATTRIBUTE_NORMAL), syscall::FILE_SHARE_READ | syscall::FILE_SHARE_WRITE | syscall::FILE_SHARE_DELETE, windows::FILE_OPEN, windows::FILE_SYNCHRONOUS_IO_NONALERT | windows::FILE_OPEN_REPARSE_POINT, nullptr, 0);
             if(err != nullptr)
@@ -455,7 +455,7 @@ namespace golang::os
 
             windows::FILE_BASIC_INFO fbi = {};
             fbi.FileAttributes = attrs;
-            return windows::SetFileInformationByHandle(h, windows::FileBasicInfo, gocpp::unsafe_pointer(& fbi), uint32_t(gocpp::Sizeof<windows::FILE_BASIC_INFO>()));
+            return windows::SetFileInformationByHandle(h, windows::FileBasicInfo, gocpp::unsafe_pointer(& fbi), uint32_t(gocpp::unsafe_sizeof<windows::FILE_BASIC_INFO>()));
         }
         catch(gocpp::GoPanic& gp)
         {

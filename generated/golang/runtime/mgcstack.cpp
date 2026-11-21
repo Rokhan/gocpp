@@ -174,11 +174,11 @@ namespace golang::runtime
 
     void init()
     {
-        if(gocpp::Sizeof<stackWorkBuf>() > gocpp::Sizeof<workbuf>())
+        if(gocpp::unsafe_sizeof<stackWorkBuf>() > gocpp::unsafe_sizeof<workbuf>())
         {
             gocpp::panic("stackWorkBuf too big"_s);
         }
-        if(gocpp::Sizeof<stackObjectBuf>() > gocpp::Sizeof<workbuf>())
+        if(gocpp::unsafe_sizeof<stackObjectBuf>() > gocpp::unsafe_sizeof<workbuf>())
         {
             gocpp::panic("stackObjectBuf too big"_s);
         }

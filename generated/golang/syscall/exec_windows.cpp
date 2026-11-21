@@ -621,7 +621,7 @@ namespace golang::syscall
             }
             defer.push_back([=]{ rec::go_delete(gocpp::recv(procAttrList)); });
             auto si = new _STARTUPINFOEXW{};
-            si->StartupInfo.Cb = uint32_t(gocpp::Sizeof<_STARTUPINFOEXW>());
+            si->StartupInfo.Cb = uint32_t(gocpp::unsafe_sizeof<_STARTUPINFOEXW>());
             si->StartupInfo.Flags = STARTF_USESTDHANDLES;
             if(sys->HideWindow)
             {
@@ -630,7 +630,7 @@ namespace golang::syscall
             }
             if(sys->ParentProcess != 0)
             {
-                err = rec::update(gocpp::recv(procAttrList), _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, gocpp::unsafe_pointer(& sys->ParentProcess), gocpp::Sizeof<Handle>());
+                err = rec::update(gocpp::recv(procAttrList), _PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, gocpp::unsafe_pointer(& sys->ParentProcess), gocpp::unsafe_sizeof<Handle>());
                 if(err != nullptr)
                 {
                     return {0, 0, err};
@@ -660,7 +660,7 @@ namespace golang::syscall
             // Do not accidentally inherit more than these handles.
             if(willInheritHandles)
             {
-                err = rec::update(gocpp::recv(procAttrList), _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, gocpp::unsafe_pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::Sizeof<Handle>());
+                err = rec::update(gocpp::recv(procAttrList), _PROC_THREAD_ATTRIBUTE_HANDLE_LIST, gocpp::unsafe_pointer(& fd[0]), uintptr_t(len(fd)) * gocpp::unsafe_sizeof<Handle>());
                 if(err != nullptr)
                 {
                     return {0, 0, err};

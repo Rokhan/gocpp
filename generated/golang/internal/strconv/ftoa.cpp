@@ -89,7 +89,7 @@ namespace golang::internal::strconv
         int64_t bias = {};
         //Go switch emulation
         {
-            auto condition = 8 * gocpp::Sizeof<float>();
+            auto condition = 8 * gocpp::unsafe_sizeof<float>();
             int conditionId = -1;
             if(condition == 32) { conditionId = 0; }
             else if(condition == 64) { conditionId = 1; }
@@ -302,7 +302,7 @@ namespace golang::internal::strconv
         int64_t bias = {};
         //Go switch emulation
         {
-            auto condition = 8 * gocpp::Sizeof<double>();
+            auto condition = 8 * gocpp::unsafe_sizeof<double>();
             int conditionId = -1;
             if(condition == 32) { conditionId = 0; }
             else if(condition == 64) { conditionId = 1; }

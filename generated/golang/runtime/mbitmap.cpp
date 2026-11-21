@@ -683,7 +683,7 @@ namespace golang::runtime
         base = spanBase + spanSize - size;
         if(goexperiment::GreenTeaGC && gcUsesSpanInlineMarkBits(elemsize))
         {
-            base -= gocpp::Sizeof<spanInlineMarkBits>();
+            base -= gocpp::unsafe_sizeof<spanInlineMarkBits>();
         }
         return {base, size};
     }

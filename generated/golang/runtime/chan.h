@@ -79,7 +79,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct hchan& value);
-    inline constexpr uintptr_t hchanSize = gocpp::Sizeof<golang::runtime::hchan>() + uintptr_t(- int64_t(gocpp::Sizeof<golang::runtime::hchan>()) & (maxAlign - 1));
+    inline constexpr uintptr_t hchanSize = gocpp::unsafe_sizeof<golang::runtime::hchan>() + uintptr_t(- int64_t(gocpp::unsafe_sizeof<golang::runtime::hchan>()) & (maxAlign - 1));
     golang::runtime::hchan* reflect_makechan(chantype* t, int64_t size);
     golang::runtime::hchan* makechan64(chantype* t, int64_t size);
     golang::runtime::hchan* makechan(chantype* t, int64_t size);

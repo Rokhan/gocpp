@@ -57,8 +57,8 @@ namespace golang::internal::chacha8rand
 namespace golang::internal::chacha8rand
 {
     // Offsets into internal/cpu records for use in assembly.
-    inline const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
-    inline const uintptr_t offsetRISCV64HasV = gocpp::Offsetof<cpu::RISCV64Struct>(&cpu::RISCV64Struct::HasV);
+    inline const uintptr_t offsetLOONG64HasLSX = gocpp::unsafe_offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    inline const uintptr_t offsetRISCV64HasV = gocpp::unsafe_offsetof<cpu::RISCV64Struct>(&cpu::RISCV64Struct::HasV);
 
     namespace rec
     {

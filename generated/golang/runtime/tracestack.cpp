@@ -240,7 +240,7 @@ namespace golang::runtime
             // ID 0 is reserved for zero-length stacks.
             return 0;
         }
-        auto [id, gocpp_id_0] = rec::put(gocpp::recv(t->tab), noescape(gocpp::unsafe_pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::Sizeof<uintptr_t>());
+        auto [id, gocpp_id_0] = rec::put(gocpp::recv(t->tab), noescape(gocpp::unsafe_pointer(& pcs[0])), uintptr_t(len(pcs)) * gocpp::unsafe_sizeof<uintptr_t>());
         return id;
     }
 
@@ -261,7 +261,7 @@ namespace golang::runtime
 
     traceWriter dumpStacksRec(traceMapNode* node, traceWriter w, gocpp::slice<uintptr_t> stackBuf)
     {
-        auto stack = unsafe::Slice((uintptr_t*)(gocpp::unsafe_pointer(& node->data[0])), uintptr_t(len(node->data)) / gocpp::Sizeof<uintptr_t>());
+        auto stack = unsafe::Slice((uintptr_t*)(gocpp::unsafe_pointer(& node->data[0])), uintptr_t(len(node->data)) / gocpp::unsafe_sizeof<uintptr_t>());
 
         // N.B. This might allocate, but that's OK because we're not writing to the M's buffer,
         // but one we're about to create (with ensure).

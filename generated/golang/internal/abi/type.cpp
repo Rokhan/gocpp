@@ -1712,10 +1712,10 @@ namespace golang::internal::abi
 
     gocpp::slice<Type*> rec::InSlice(golang::internal::abi::FuncType* t)
     {
-        uintptr_t uadd = gocpp::Sizeof<abi::FuncType>();
+        uintptr_t uadd = gocpp::unsafe_sizeof<abi::FuncType>();
         if(t->Type.TFlag & TFlagUncommon != 0)
         {
-            uadd += gocpp::Sizeof<UncommonType>();
+            uadd += gocpp::unsafe_sizeof<UncommonType>();
         }
         if(t->InCount == 0)
         {
@@ -1731,10 +1731,10 @@ namespace golang::internal::abi
         {
             return nullptr;
         }
-        uintptr_t uadd = gocpp::Sizeof<abi::FuncType>();
+        uintptr_t uadd = gocpp::unsafe_sizeof<abi::FuncType>();
         if(t->Type.TFlag & TFlagUncommon != 0)
         {
-            uadd += gocpp::Sizeof<UncommonType>();
+            uadd += gocpp::unsafe_sizeof<UncommonType>();
         }
         return ((gocpp::array_ptr<gocpp::array<Type*, 1 << 17>>)(addChecked(gocpp::unsafe_pointer(t), uadd, "outCount > 0"_s))).make_slice(t->InCount, t->InCount + outCount, t->InCount + outCount);
     }
@@ -2216,7 +2216,7 @@ namespace golang::internal::abi
             return ""_s;
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
-        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
+        return gocpp::unsafe_string(rec::DataChecked(gocpp::recv(n), 1 + i, "non-empty string"_s), l);
     }
 
     // Tag returns the tag string for n, or empty if there is none.
@@ -2228,7 +2228,7 @@ namespace golang::internal::abi
         }
         auto [i, l] = rec::ReadVarint(gocpp::recv(n), 1);
         auto [i2, l2] = rec::ReadVarint(gocpp::recv(n), 1 + i + l);
-        return unsafe::String(rec::DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
+        return gocpp::unsafe_string(rec::DataChecked(gocpp::recv(n), 1 + i + l + i2, "non-empty string"_s), l2);
     }
 
     golang::internal::abi::Name NewName(gocpp::string n, gocpp::string tag, bool exported, bool embedded)
@@ -2366,7 +2366,7 @@ namespace golang::internal::abi
                 case 23:
                 case 24:
                 case 25:
-                    baseSize = int64_t(gocpp::Sizeof<abi::Type>());
+                    baseSize = int64_t(gocpp::unsafe_sizeof<abi::Type>());
                     addSize = 0;
                     break;
 
@@ -2384,13 +2384,13 @@ namespace golang::internal::abi
         auto ut = rec::Uncommon(gocpp::recv(t));
         if(ut != nullptr)
         {
-            ret += int64_t(gocpp::Sizeof<abi::UncommonType>());
+            ret += int64_t(gocpp::unsafe_sizeof<abi::UncommonType>());
             mcount = int64_t(ut->Mcount);
         }
 
         ret += addSize;
 
-        ret += mcount * int64_t(gocpp::Sizeof<Method>());
+        ret += mcount * int64_t(gocpp::unsafe_sizeof<Method>());
 
         return ret;
     }
@@ -2399,21 +2399,21 @@ namespace golang::internal::abi
     {
         int64_t base;
         int64_t add;
-        return {int64_t(gocpp::Sizeof<abi::ArrayType>()), 0};
+        return {int64_t(gocpp::unsafe_sizeof<abi::ArrayType>()), 0};
     }
 
     std::tuple<int64_t, int64_t> rec::descriptorSizes(golang::internal::abi::ChanType* ct)
     {
         int64_t base;
         int64_t add;
-        return {int64_t(gocpp::Sizeof<abi::ChanType>()), 0};
+        return {int64_t(gocpp::unsafe_sizeof<abi::ChanType>()), 0};
     }
 
     std::tuple<int64_t, int64_t> rec::descriptorSizes(golang::internal::abi::FuncType* ft)
     {
         int64_t base;
         int64_t add;
-        base = int64_t(gocpp::Sizeof<abi::FuncType>());
+        base = int64_t(gocpp::unsafe_sizeof<abi::FuncType>());
         add = (rec::NumIn(gocpp::recv(ft)) + rec::NumOut(gocpp::recv(ft))) * goarch::PtrSize;
         return {base, add};
     }
@@ -2422,8 +2422,8 @@ namespace golang::internal::abi
     {
         int64_t base;
         int64_t add;
-        base = int64_t(gocpp::Sizeof<abi::InterfaceType>());
-        add = len(it->Methods) * int64_t(gocpp::Sizeof<Imethod>());
+        base = int64_t(gocpp::unsafe_sizeof<abi::InterfaceType>());
+        add = len(it->Methods) * int64_t(gocpp::unsafe_sizeof<Imethod>());
         return {base, add};
     }
 
@@ -2431,29 +2431,29 @@ namespace golang::internal::abi
     {
         int64_t base;
         int64_t add;
-        return {int64_t(gocpp::Sizeof<abi::MapType>()), 0};
+        return {int64_t(gocpp::unsafe_sizeof<abi::MapType>()), 0};
     }
 
     std::tuple<int64_t, int64_t> rec::descriptorSizes(PtrType* pt)
     {
         int64_t base;
         int64_t add;
-        return {int64_t(gocpp::Sizeof<abi::PtrType>()), 0};
+        return {int64_t(gocpp::unsafe_sizeof<abi::PtrType>()), 0};
     }
 
     std::tuple<int64_t, int64_t> rec::descriptorSizes(golang::internal::abi::SliceType* st)
     {
         int64_t base;
         int64_t add;
-        return {int64_t(gocpp::Sizeof<abi::SliceType>()), 0};
+        return {int64_t(gocpp::unsafe_sizeof<abi::SliceType>()), 0};
     }
 
     std::tuple<int64_t, int64_t> rec::descriptorSizes(golang::internal::abi::StructType* st)
     {
         int64_t base;
         int64_t add;
-        base = int64_t(gocpp::Sizeof<abi::StructType>());
-        add = len(st->Fields) * int64_t(gocpp::Sizeof<StructField>());
+        base = int64_t(gocpp::unsafe_sizeof<abi::StructType>());
+        add = len(st->Fields) * int64_t(gocpp::unsafe_sizeof<StructField>());
         return {base, add};
     }
 

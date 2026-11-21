@@ -91,7 +91,7 @@ namespace golang::runtime
     // lockVerifyMSize confirms that we can recreate the low bits of the M pointer.
     void lockVerifyMSize()
     {
-        auto size = roundupsize(gocpp::Sizeof<mPadded>(), false) + gc::MallocHeaderSize;
+        auto size = roundupsize(gocpp::unsafe_sizeof<mPadded>(), false) + gc::MallocHeaderSize;
         if(size & mutexMMask != 0)
         {
             print("M structure uses sizeclass "_s, size, "/"_s, hex(size), " bytes; "_s, "incompatible with mutex flag mask "_s, hex(mutexMMask), "\n"_s);

@@ -204,7 +204,7 @@ namespace golang::internal::syscall::windows
 
     uint32_t rec::Size(TOKEN_MANDATORY_LABEL* tml)
     {
-        return uint32_t(gocpp::Sizeof<TOKEN_MANDATORY_LABEL>()) + syscall::GetLengthSid(tml->Label.Sid);
+        return uint32_t(gocpp::unsafe_sizeof<TOKEN_MANDATORY_LABEL>()) + syscall::GetLengthSid(tml->Label.Sid);
     }
 
     

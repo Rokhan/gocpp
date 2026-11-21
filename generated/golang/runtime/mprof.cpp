@@ -335,7 +335,7 @@ namespace golang::runtime
     // newBucket allocates a bucket with the given type and number of stack entries.
     bucket* newBucket(bucketType typ, int64_t nstk)
     {
-        auto size = gocpp::Sizeof<bucket>() + uintptr_t(nstk) * gocpp::Sizeof<uintptr_t>();
+        auto size = gocpp::unsafe_sizeof<bucket>() + uintptr_t(nstk) * gocpp::unsafe_sizeof<uintptr_t>();
         //Go switch emulation
         {
             auto condition = typ;
@@ -349,11 +349,11 @@ namespace golang::runtime
                     go_throw("invalid profile bucket type"_s);
                     break;
                 case 0:
-                    size += gocpp::Sizeof<memRecord>();
+                    size += gocpp::unsafe_sizeof<memRecord>();
                     break;
                 case 1:
                 case 2:
-                    size += gocpp::Sizeof<blockRecord>();
+                    size += gocpp::unsafe_sizeof<blockRecord>();
                     break;
             }
         }
@@ -368,7 +368,7 @@ namespace golang::runtime
     // backing array is immutable.
     gocpp::slice<uintptr_t> rec::stk(bucket* b)
     {
-        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxProfStackDepth>>)(runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>()));
+        auto stk = (gocpp::array_ptr<gocpp::array<uintptr_t, maxProfStackDepth>>)(runtime::add(gocpp::unsafe_pointer(b), gocpp::unsafe_sizeof<bucket>()));
         if(b->nstk > maxProfStackDepth)
         {
             // prove that slicing works; otherwise a failure requires a P
@@ -384,7 +384,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.mp"_s);
         }
-        auto data = runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
+        auto data = runtime::add(gocpp::unsafe_pointer(b), gocpp::unsafe_sizeof<bucket>() + b->nstk * gocpp::unsafe_sizeof<uintptr_t>());
         return (memRecord*)(data);
     }
 
@@ -395,7 +395,7 @@ namespace golang::runtime
         {
             go_throw("bad use of bucket.bp"_s);
         }
-        auto data = runtime::add(gocpp::unsafe_pointer(b), gocpp::Sizeof<bucket>() + b->nstk * gocpp::Sizeof<uintptr_t>());
+        auto data = runtime::add(gocpp::unsafe_pointer(b), gocpp::unsafe_sizeof<bucket>() + b->nstk * gocpp::unsafe_sizeof<uintptr_t>());
         return (blockRecord*)(data);
     }
 
@@ -410,7 +410,7 @@ namespace golang::runtime
             bh = (gocpp::array_ptr<buckhashArray>)(rec::Load(gocpp::recv(buckhash)));
             if(bh == nullptr)
             {
-                bh = (gocpp::array_ptr<buckhashArray>)(sysAlloc(gocpp::Sizeof<buckhashArray>(), & memstats.buckhash_sys, "profiler hash buckets"_s));
+                bh = (gocpp::array_ptr<buckhashArray>)(sysAlloc(gocpp::unsafe_sizeof<buckhashArray>(), & memstats.buckhash_sys, "profiler hash buckets"_s));
                 if(bh == nullptr)
                 {
                     go_throw("runtime: cannot allocate memory"_s);
@@ -1366,15 +1366,15 @@ namespace golang::runtime
         dst->FreeObjects = src.FreeObjects;
         if(raceenabled)
         {
-            racewriterangepc(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), sys::GetCallerPC(), abi::FuncPCABIInternal(MemProfile));
+            racewriterangepc(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::unsafe_sizeof<gocpp::array<uintptr_t, 32>>(), sys::GetCallerPC(), abi::FuncPCABIInternal(MemProfile));
         }
         if(msanenabled)
         {
-            msanwrite(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            msanwrite(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::unsafe_sizeof<gocpp::array<uintptr_t, 32>>());
         }
         if(asanenabled)
         {
-            asanwrite(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            asanwrite(gocpp::unsafe_pointer(& dst->Stack0[0]), gocpp::unsafe_sizeof<gocpp::array<uintptr_t, 32>>());
         }
         auto i = copy(dst->Stack0.make_slice(0), src.Stack);
         clear(dst->Stack0.make_slice(i));
@@ -1543,15 +1543,15 @@ namespace golang::runtime
         dst->Cycles = src.Cycles;
         if(raceenabled)
         {
-            racewriterangepc(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>(), sys::GetCallerPC(), abi::FuncPCABIInternal(BlockProfile));
+            racewriterangepc(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::unsafe_sizeof<gocpp::array<uintptr_t, 32>>(), sys::GetCallerPC(), abi::FuncPCABIInternal(BlockProfile));
         }
         if(msanenabled)
         {
-            msanwrite(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            msanwrite(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::unsafe_sizeof<gocpp::array<uintptr_t, 32>>());
         }
         if(asanenabled)
         {
-            asanwrite(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::Sizeof<gocpp::array<uintptr_t, 32>>());
+            asanwrite(gocpp::unsafe_pointer(& dst->StackRecord.Stack0[0]), gocpp::unsafe_sizeof<gocpp::array<uintptr_t, 32>>());
         }
         // We just copy the stack here without inline expansion
         // (needed if frame pointer unwinding is used)

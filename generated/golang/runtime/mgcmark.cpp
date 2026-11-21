@@ -282,7 +282,7 @@ namespace golang::runtime
                     for(auto fb = allfin; fb != nullptr; fb = fb->alllink)
                     {
                         auto cnt = uintptr_t(atomic::Load(& fb->cnt));
-                        scanblock(uintptr_t(gocpp::unsafe_pointer(& fb->fin[0])), cnt * gocpp::Sizeof<finalizer>(), & finptrmask[0], gcw, nullptr);
+                        scanblock(uintptr_t(gocpp::unsafe_pointer(& fb->fin[0])), cnt * gocpp::unsafe_sizeof<finalizer>(), & finptrmask[0], gcw, nullptr);
                     }
                     break;
 
@@ -298,7 +298,7 @@ namespace golang::runtime
                         // N.B. This only needs to synchronize with cleanup execution, which only resets these blocks.
                         // All cleanup queueing happens during sweep.
                         auto n = uintptr_t(atomic::Load(& cb->cleanupBlockHeader.n));
-                        scanblock(uintptr_t(gocpp::unsafe_pointer(& cb->cleanups[0])), n * gocpp::Sizeof<cleanupFn>(), & cleanupBlockPtrMask[0], gcw, nullptr);
+                        scanblock(uintptr_t(gocpp::unsafe_pointer(& cb->cleanups[0])), n * gocpp::unsafe_sizeof<cleanupFn>(), & cleanupBlockPtrMask[0], gcw, nullptr);
                     }
                     break;
 
@@ -578,7 +578,7 @@ namespace golang::runtime
     void gcScanCleanup(specialCleanup* spc, gcWork* gcw)
     {
         // The special itself is a root.
-        scanblock(uintptr_t(gocpp::unsafe_pointer(& spc->cleanup)), gocpp::Sizeof<cleanupFn>(), & cleanupFnPtrMask[0], gcw, nullptr);
+        scanblock(uintptr_t(gocpp::unsafe_pointer(& spc->cleanup)), gocpp::unsafe_sizeof<cleanupFn>(), & cleanupFnPtrMask[0], gcw, nullptr);
     }
 
     // gcAssistAlloc performs GC work to make gp's assist debt positive.

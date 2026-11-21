@@ -179,7 +179,7 @@ namespace golang::internal::stringslite
         }
         auto b = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), len(s));
         copy(b, s);
-        return unsafe::String(& b[0], len(b));
+        return gocpp::unsafe_string(& b[0], len(b));
     }
 
 }

@@ -1018,7 +1018,7 @@ namespace golang::runtime
         }
 
         // Allocate a very rough estimate of the number of types.
-        auto ret = gocpp::make(gocpp::Tag<gocpp::slice<_type*>>(), 0, md->typedesclen / (2 * gocpp::Sizeof<_type>()));
+        auto ret = gocpp::make(gocpp::Tag<gocpp::slice<_type*>>(), 0, md->typedesclen / (2 * gocpp::unsafe_sizeof<_type>()));
 
         auto td = md->types;
 

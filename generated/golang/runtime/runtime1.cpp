@@ -243,63 +243,63 @@ namespace golang::runtime
         x1t x1 = {};
         y1t y1 = {};
 
-        if(gocpp::Sizeof<int8_t>() != 1)
+        if(gocpp::unsafe_sizeof<int8_t>() != 1)
         {
             go_throw("bad a"_s);
         }
-        if(gocpp::Sizeof<uint8_t>() != 1)
+        if(gocpp::unsafe_sizeof<uint8_t>() != 1)
         {
             go_throw("bad b"_s);
         }
-        if(gocpp::Sizeof<int16_t>() != 2)
+        if(gocpp::unsafe_sizeof<int16_t>() != 2)
         {
             go_throw("bad c"_s);
         }
-        if(gocpp::Sizeof<uint16_t>() != 2)
+        if(gocpp::unsafe_sizeof<uint16_t>() != 2)
         {
             go_throw("bad d"_s);
         }
-        if(gocpp::Sizeof<int32_t>() != 4)
+        if(gocpp::unsafe_sizeof<int32_t>() != 4)
         {
             go_throw("bad e"_s);
         }
-        if(gocpp::Sizeof<uint32_t>() != 4)
+        if(gocpp::unsafe_sizeof<uint32_t>() != 4)
         {
             go_throw("bad f"_s);
         }
-        if(gocpp::Sizeof<int64_t>() != 8)
+        if(gocpp::unsafe_sizeof<int64_t>() != 8)
         {
             go_throw("bad g"_s);
         }
-        if(gocpp::Sizeof<uint64_t>() != 8)
+        if(gocpp::unsafe_sizeof<uint64_t>() != 8)
         {
             go_throw("bad h"_s);
         }
-        if(gocpp::Sizeof<float>() != 4)
+        if(gocpp::unsafe_sizeof<float>() != 4)
         {
             go_throw("bad i"_s);
         }
-        if(gocpp::Sizeof<double>() != 8)
+        if(gocpp::unsafe_sizeof<double>() != 8)
         {
             go_throw("bad j"_s);
         }
-        if(gocpp::Sizeof<unsafe::Pointer>() != goarch::PtrSize)
+        if(gocpp::unsafe_sizeof<unsafe::Pointer>() != goarch::PtrSize)
         {
             go_throw("bad k"_s);
         }
-        if(gocpp::Sizeof<uint16_t*>() != goarch::PtrSize)
+        if(gocpp::unsafe_sizeof<uint16_t*>() != goarch::PtrSize)
         {
             go_throw("bad l"_s);
         }
-        if(gocpp::Sizeof<x1t>() != 1)
+        if(gocpp::unsafe_sizeof<x1t>() != 1)
         {
             go_throw("bad unsafe.Sizeof x1"_s);
         }
-        if(gocpp::Offsetof<y1t>(&y1t::y) != 1)
+        if(gocpp::unsafe_offsetof<y1t>(&y1t::y) != 1)
         {
             go_throw("bad offsetof y1.y"_s);
         }
-        if(gocpp::Sizeof<y1t>() != 2)
+        if(gocpp::unsafe_sizeof<y1t>() != 2)
         {
             go_throw("bad unsafe.Sizeof y1"_s);
         }

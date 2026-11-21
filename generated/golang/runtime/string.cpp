@@ -214,7 +214,7 @@ namespace golang::runtime
             {
                 p = add(p, 7);
             }
-            return unsafe::String((unsigned char*)(p), 1);
+            return gocpp::unsafe_string((unsigned char*)(p), 1);
         }
 
         gocpp::unsafe_pointer p = {};
@@ -227,7 +227,7 @@ namespace golang::runtime
             p = mallocgc(uintptr_t(n), nullptr, false);
         }
         memmove(p, gocpp::unsafe_pointer(ptr), uintptr_t(n));
-        return unsafe::String((unsigned char*)(p), n);
+        return gocpp::unsafe_string((unsigned char*)(p), n);
     }
 
     // stringDataOnStack reports whether the string's data is
@@ -283,7 +283,7 @@ namespace golang::runtime
         {
             asanread(gocpp::unsafe_pointer(ptr), uintptr_t(n));
         }
-        return unsafe::String(ptr, n);
+        return gocpp::unsafe_string(ptr, n);
     }
 
     gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s)
@@ -336,15 +336,15 @@ namespace golang::runtime
     {
         if(raceenabled && len(a) > 0)
         {
-            racereadrangepc(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>(), sys::GetCallerPC(), abi::FuncPCABIInternal(slicerunetostring));
+            racereadrangepc(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::unsafe_sizeof<gocpp::rune>(), sys::GetCallerPC(), abi::FuncPCABIInternal(slicerunetostring));
         }
         if(msanenabled && len(a) > 0)
         {
-            msanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
+            msanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::unsafe_sizeof<gocpp::rune>());
         }
         if(asanenabled && len(a) > 0)
         {
-            asanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::Sizeof<gocpp::rune>());
+            asanread(gocpp::unsafe_pointer(& a[0]), uintptr_t(len(a)) * gocpp::unsafe_sizeof<gocpp::rune>());
         }
         gocpp::array<unsigned char, 4> dum = {};
         int64_t size1 = 0;
@@ -466,7 +466,7 @@ namespace golang::runtime
         gocpp::string s;
         gocpp::slice<unsigned char> b;
         auto p = mallocgc(uintptr_t(size), nullptr, false);
-        return {unsafe::String((unsigned char*)(p), size), unsafe::Slice((unsigned char*)(p), size)};
+        return {gocpp::unsafe_string((unsigned char*)(p), size), unsafe::Slice((unsigned char*)(p), size)};
     }
 
     // rawbyteslice allocates a new byte slice. The byte slice is not zeroed.

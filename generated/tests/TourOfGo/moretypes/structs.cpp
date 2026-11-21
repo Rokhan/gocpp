@@ -558,15 +558,15 @@ namespace golang::main
         emptyStructs();
 
         auto vv = Vertex {3, 4};
-        uintptr_t offsetX = gocpp::Offsetof<Vertex>(&Vertex::X);
-        uintptr_t offsetY = gocpp::Offsetof<Vertex>(&Vertex::Y);
+        uintptr_t offsetX = gocpp::unsafe_offsetof<Vertex>(&Vertex::X);
+        uintptr_t offsetY = gocpp::unsafe_offsetof<Vertex>(&Vertex::Y);
         mocklib::Println("Offset of X in Vertex:"_s, offsetX);
         mocklib::Println("Offset of Y in Vertex:"_s, offsetY);
-        mocklib::Println("Size of Vertex:"_s, gocpp::Sizeof<Vertex>());
+        mocklib::Println("Size of Vertex:"_s, gocpp::unsafe_sizeof<Vertex>());
 
-        mocklib::Println("Offset of a in Anonymous struct:"_s, gocpp::Offsetof<AnonymousStructStruct>(&AnonymousStructStruct::first));
-        mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::Offsetof<AnonymousStructStruct>(&AnonymousStructStruct::second));
-        mocklib::Println("Size of Anonymous struct:"_s, gocpp::Sizeof<AnonymousStructStruct>());
+        mocklib::Println("Offset of a in Anonymous struct:"_s, gocpp::unsafe_offsetof<AnonymousStructStruct>(&AnonymousStructStruct::first));
+        mocklib::Println("Offset of b in Anonymous struct:"_s, gocpp::unsafe_offsetof<AnonymousStructStruct>(&AnonymousStructStruct::second));
+        mocklib::Println("Size of Anonymous struct:"_s, gocpp::unsafe_sizeof<AnonymousStructStruct>());
 
         // test field access
         Dummy3 d3 = Dummy3 {Dummy2 {Dummy {1, 2}, Vertex {3, 4}, 5}, 6, 7};

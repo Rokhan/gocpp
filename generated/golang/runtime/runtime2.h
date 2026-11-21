@@ -1168,7 +1168,7 @@ namespace golang::runtime
         // not in the next-smallest (1792-byte) size class. That leaves the 11 low
         // bits of muintptr values available for flags, as required by
         // lock_spinbit.go.
-        gocpp::array<unsigned char, (1 - goarch::IsWasm) * (2048 - mallocHeaderSize - mRedZoneSize - gocpp::Sizeof<golang::runtime::m>())> _1{};
+        gocpp::array<unsigned char, (1 - goarch::IsWasm) * (2048 - mallocHeaderSize - mRedZoneSize - gocpp::unsafe_sizeof<golang::runtime::m>())> _1{};
 
         using isGoStruct = void;
 

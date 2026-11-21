@@ -35,14 +35,14 @@ namespace golang::internal::bytealg
 namespace golang::internal::bytealg
 {
     // Offsets into internal/cpu records for use in assembly.
-    inline const uintptr_t offsetPPC64HasPOWER9 = gocpp::Offsetof<cpu::PPC64Struct>(&cpu::PPC64Struct::IsPOWER9);
-    inline const uintptr_t offsetRISCV64HasV = gocpp::Offsetof<cpu::RISCV64Struct>(&cpu::RISCV64Struct::HasV);
-    inline const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
-    inline const uintptr_t offsetLOONG64HasLASX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
-    inline const uintptr_t offsetS390xHasVX = gocpp::Offsetof<cpu::S390XStruct>(&cpu::S390XStruct::HasVX);
-    inline const uintptr_t offsetX86HasSSE42 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasSSE42);
-    inline const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
-    inline const uintptr_t offsetX86HasPOPCNT = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasPOPCNT);
+    inline const uintptr_t offsetPPC64HasPOWER9 = gocpp::unsafe_offsetof<cpu::PPC64Struct>(&cpu::PPC64Struct::IsPOWER9);
+    inline const uintptr_t offsetRISCV64HasV = gocpp::unsafe_offsetof<cpu::RISCV64Struct>(&cpu::RISCV64Struct::HasV);
+    inline const uintptr_t offsetLOONG64HasLSX = gocpp::unsafe_offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    inline const uintptr_t offsetLOONG64HasLASX = gocpp::unsafe_offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
+    inline const uintptr_t offsetS390xHasVX = gocpp::unsafe_offsetof<cpu::S390XStruct>(&cpu::S390XStruct::HasVX);
+    inline const uintptr_t offsetX86HasSSE42 = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasSSE42);
+    inline const uintptr_t offsetX86HasAVX2 = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
+    inline const uintptr_t offsetX86HasPOPCNT = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasPOPCNT);
 
     namespace rec
     {

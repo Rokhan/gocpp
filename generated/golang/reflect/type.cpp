@@ -2730,7 +2730,7 @@ namespace golang::reflect
         {
             auto staticuint64s = getStaticuint64s();
             auto p = gocpp::unsafe_pointer(& (*staticuint64s)[i]);
-            if(gocpp::Sizeof<int64_t>() == 4 && goarch::BigEndian)
+            if(gocpp::unsafe_sizeof<int64_t>() == 4 && goarch::BigEndian)
             {
                 p = unsafe::Add(p, 4);
             }
@@ -4838,7 +4838,7 @@ namespace golang::reflect
             // need to compute xcount as the number of exported methods.
             ut->Mcount = uint16_t(len(methods));
             ut->Xcount = ut->Mcount;
-            ut->Moff = uint32_t(gocpp::Sizeof<uncommonType>());
+            ut->Moff = uint32_t(gocpp::unsafe_sizeof<uncommonType>());
 
             if(len(fs) > 0)
             {

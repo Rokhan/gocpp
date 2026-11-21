@@ -427,7 +427,7 @@ namespace golang::runtime
             // contiguous.
             // 3. We try to stake out a reasonably large initial
             // heap reservation.
-            constexpr uintptr_t arenaMetaSize = (1LL << arenaBits) * gocpp::Sizeof<heapArena>();
+            constexpr uintptr_t arenaMetaSize = (1LL << arenaBits) * gocpp::unsafe_sizeof<heapArena>();
             auto meta = uintptr_t(sysReserve(nullptr, arenaMetaSize, "heap reservation"_s));
             if(meta != 0)
             {
@@ -661,18 +661,18 @@ namespace golang::runtime
                 // is paged in is too expensive. Trying to account for the whole region means
                 // that it will appear like an enormous memory overhead in statistics, even though
                 // it is not.
-                l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>(), "heap index"_s));
+                l2 = (gocpp::array_ptr<gocpp::array<heapArena*, 1 << arenaL2Bits>>)(sysAllocOS(gocpp::unsafe_sizeof<gocpp::array<heapArena*, 1048576>>(), "heap index"_s));
                 if(l2 == nullptr)
                 {
                     go_throw("out of memory allocating heap arena map"_s);
                 }
                 if(h->arenasHugePages)
                 {
-                    sysHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>());
+                    sysHugePage(gocpp::unsafe_pointer(l2), gocpp::unsafe_sizeof<gocpp::array<heapArena*, 1048576>>());
                 }
                 else
                 {
-                    sysNoHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>());
+                    sysNoHugePage(gocpp::unsafe_pointer(l2), gocpp::unsafe_sizeof<gocpp::array<heapArena*, 1048576>>());
                 }
                 atomic::StorepNoWB(gocpp::unsafe_pointer(& h->arenas[rec::l1(gocpp::recv(ri))]), gocpp::unsafe_pointer(l2));
             }
@@ -682,10 +682,10 @@ namespace golang::runtime
                 go_throw("arena already initialized"_s);
             }
             heapArena* r = {};
-            r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys, "heap metadata"_s));
+            r = (heapArena*)(rec::alloc(gocpp::recv(h->heapArenaAlloc), gocpp::unsafe_sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys, "heap metadata"_s));
             if(r == nullptr)
             {
-                r = (heapArena*)(persistentalloc(gocpp::Sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
+                r = (heapArena*)(persistentalloc(gocpp::unsafe_sizeof<heapArena>(), goarch::PtrSize, & memstats.gcMiscSys));
                 if(r == nullptr)
                 {
                     go_throw("out of memory allocating heap arena metadata"_s);
@@ -771,7 +771,7 @@ namespace golang::runtime
             {
                 continue;
             }
-            sysHugePage(gocpp::unsafe_pointer(l2), gocpp::Sizeof<gocpp::array<heapArena*, 1048576>>());
+            sysHugePage(gocpp::unsafe_pointer(l2), gocpp::unsafe_sizeof<gocpp::array<heapArena*, 1048576>>());
         }
     }
 

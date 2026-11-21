@@ -215,7 +215,7 @@ namespace golang::runtime
         memmove(gocpp::unsafe_pointer(sl.array), data, size);
 
         // Create metadata structure.
-        auto meta = (traceMapNode*)(gocpp::unsafe_pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::Sizeof<traceMapNode>())));
+        auto meta = (traceMapNode*)(gocpp::unsafe_pointer(rec::alloc(gocpp::recv(tab->mem), gocpp::unsafe_sizeof<traceMapNode>())));
         *(notInHeapSlice*)(gocpp::unsafe_pointer(& meta->data)) = sl;
         meta->id = id;
         meta->hash = hash;

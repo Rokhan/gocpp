@@ -729,7 +729,7 @@ namespace golang::runtime
                 {
                     auto buf = runtime::trace.empty;
                     runtime::trace.empty = buf->traceBufHeader.link;
-                    sysFree(gocpp::unsafe_pointer(buf), gocpp::Sizeof<traceBuf>(), & memstats.other_sys);
+                    sysFree(gocpp::unsafe_pointer(buf), gocpp::unsafe_sizeof<traceBuf>(), & memstats.other_sys);
                 }
                 // Clear trace.shutdown and other flags.
                 runtime::trace.headerWritten = false;

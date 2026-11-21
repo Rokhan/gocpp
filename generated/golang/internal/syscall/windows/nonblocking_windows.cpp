@@ -32,7 +32,7 @@ namespace golang::internal::syscall::windows
         bool nonblocking;
         gocpp::error err;
         FILE_MODE_INFORMATION info = {};
-        if(auto err = NtQueryInformationFile(syscall::Handle(fd), new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& info), uint32_t(gocpp::Sizeof<windows::FILE_MODE_INFORMATION>()), FileModeInformation); err != nullptr)
+        if(auto err = NtQueryInformationFile(syscall::Handle(fd), new IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& info), uint32_t(gocpp::unsafe_sizeof<windows::FILE_MODE_INFORMATION>()), FileModeInformation); err != nullptr)
         {
             return {false, err};
         }

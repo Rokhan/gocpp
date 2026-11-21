@@ -178,7 +178,7 @@ namespace golang::runtime
     struct spanSetBlockHeader2
     {
         spanSetBlockHeader spanSetBlockHeader{};
-        gocpp::array<unsigned char, tagAlign - gocpp::Sizeof<golang::runtime::spanSetBlockHeader>()> pad{};
+        gocpp::array<unsigned char, tagAlign - gocpp::unsafe_sizeof<golang::runtime::spanSetBlockHeader>()> pad{};
 
         using isGoStruct = void;
 

@@ -411,7 +411,7 @@ namespace golang::runtime
     //go:linkname windows_GetSystemDirectory internal/syscall/windows.GetSystemDirectory
     gocpp::string windows_GetSystemDirectory()
     {
-        return unsafe::String(& sysDirectory[0], sysDirectoryLen);
+        return gocpp::unsafe_string(& sysDirectory[0], sysDirectoryLen);
     }
 
     uintptr_t windowsLoadSystemLib(gocpp::slice<uint16_t> name)
@@ -534,7 +534,7 @@ namespace golang::runtime
         if(ret != 0)
         {
             int64_t n = 0;
-            int64_t maskbits = int64_t(gocpp::Sizeof<uintptr_t>() * 8);
+            int64_t maskbits = int64_t(gocpp::unsafe_sizeof<uintptr_t>() * 8);
             for(int64_t i = 0; i < maskbits; i++)
             {
                 if(mask & (1 << (uint64_t)(i)) != 0)
@@ -655,7 +655,7 @@ namespace golang::runtime
 
         // Check that we're ≥ 10.0.15063.
         auto info = windows::OSVERSIONINFOW {};
-        info.OSVersionInfoSize = uint32_t(gocpp::Sizeof<windows::OSVERSIONINFOW>());
+        info.OSVersionInfoSize = uint32_t(gocpp::unsafe_sizeof<windows::OSVERSIONINFOW>());
         stdcall(_RtlGetVersion, uintptr_t(gocpp::unsafe_pointer(& info)));
         if(info.MajorVersion < 10 || (info.MajorVersion == 10 && info.MinorVersion == 0 && info.BuildNumber < 15063))
         {
@@ -1166,7 +1166,7 @@ namespace golang::runtime
         // Query the true stack base from the OS. Currently we're
         // running on a small assumed stack.
         windows::MemoryBasicInformation mbi = {};
-        auto res = stdcall(_VirtualQuery, uintptr_t(gocpp::unsafe_pointer(& mbi)), uintptr_t(gocpp::unsafe_pointer(& mbi)), gocpp::Sizeof<windows::MemoryBasicInformation>());
+        auto res = stdcall(_VirtualQuery, uintptr_t(gocpp::unsafe_pointer(& mbi)), uintptr_t(gocpp::unsafe_pointer(& mbi)), gocpp::unsafe_sizeof<windows::MemoryBasicInformation>());
         if(res == 0)
         {
             print("runtime: VirtualQuery failed; errno="_s, getlasterror(), "\n"_s);
@@ -1406,7 +1406,7 @@ namespace golang::runtime
     {
         // Align Context to 16 bytes.
         windows::Context* c = {};
-        gocpp::array<unsigned char, gocpp::Sizeof<windows::Context>() + 15> cbuf = {};
+        gocpp::array<unsigned char, gocpp::unsafe_sizeof<windows::Context>() + 15> cbuf = {};
         c = (windows::Context*)(gocpp::unsafe_pointer(((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) & ~(15))));
 
         c->ContextFlags = windows::CONTEXT_CONTROL;
@@ -1564,7 +1564,7 @@ namespace golang::runtime
 
         // Prepare thread context buffer. This must be aligned to 16 bytes.
         windows::Context* c = {};
-        gocpp::array<unsigned char, gocpp::Sizeof<windows::Context>() + 15> cbuf = {};
+        gocpp::array<unsigned char, gocpp::unsafe_sizeof<windows::Context>() + 15> cbuf = {};
         c = (windows::Context*)(gocpp::unsafe_pointer(((uintptr_t(gocpp::unsafe_pointer(& cbuf[15]))) & ~(15))));
         c->ContextFlags = windows::CONTEXT_CONTROL;
 

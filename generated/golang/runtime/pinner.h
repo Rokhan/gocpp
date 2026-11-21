@@ -51,7 +51,7 @@ namespace golang::runtime
     // panic function is a variable, that can be overwritten by a test.
     extern std::function<void (void)> pinnerLeakPanic;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    inline constexpr uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::Sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::Sizeof<unsafe::Pointer>();
+    inline constexpr uintptr_t pinnerRefStoreSize = (pinnerSize - gocpp::unsafe_sizeof<gocpp::slice<gocpp::unsafe_pointer>>()) / gocpp::unsafe_sizeof<unsafe::Pointer>();
     struct pinner
     {
         gocpp::slice<gocpp::unsafe_pointer> refs{};

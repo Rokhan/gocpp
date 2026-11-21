@@ -66,7 +66,7 @@ namespace golang::internal::poll
     {
         auto protos = gocpp::array<int32_t, 2> {syscall::IPPROTO_TCP, 0};
         gocpp::array<syscall::WSAProtocolInfo, 32> buf = {};
-        uint32_t len = uint32_t(gocpp::Sizeof<gocpp::array<syscall::WSAProtocolInfo, 32>>());
+        uint32_t len = uint32_t(gocpp::unsafe_sizeof<gocpp::array<syscall::WSAProtocolInfo, 32>>());
         auto [n, err] = syscall::WSAEnumProtocols(& protos[0], & buf[0], & len);
         if(err != nullptr)
         {
@@ -96,7 +96,7 @@ namespace golang::internal::poll
             return true;
         }
         syscall::WSAProtocolInfo info = {};
-        int32_t size = int32_t(gocpp::Sizeof<syscall::WSAProtocolInfo>());
+        int32_t size = int32_t(gocpp::unsafe_sizeof<syscall::WSAProtocolInfo>());
         if(syscall::Getsockopt(h, syscall::SOL_SOCKET, windows::SO_PROTOCOL_INFOW, (unsigned char*)(gocpp::unsafe_pointer(& info)), & size) != nullptr)
         {
             return false;
@@ -174,7 +174,7 @@ namespace golang::internal::poll
     syscall::WSABuf* newWsaBuf(gocpp::slice<unsigned char> b)
     {
         return gocpp::InitPtr<syscall::WSABuf>([=](auto& x) {
-            x.Buf = unsafe::SliceData(b);
+            x.Buf = gocpp::unsafe_slice_data(b);
             x.Len = uint32_t(len(b));
         });
     }
@@ -256,12 +256,12 @@ namespace golang::internal::poll
         // Use a pool to reuse allocations.
         auto msg = gocpp::assertValue<windows::WSAMsg*>(rec::Get(gocpp::recv(wsaMsgPool)));
         msg->Buffers->Len = uint32_t(len(p));
-        msg->Buffers->Buf = unsafe::SliceData(p);
+        msg->Buffers->Buf = gocpp::unsafe_slice_data(p);
         if(len(oob) > 0)
         {
             msg->Control = gocpp::Init<syscall::WSABuf>([=](auto& x) {
                 x.Len = uint32_t(len(oob));
-                x.Buf = unsafe::SliceData(oob);
+                x.Buf = gocpp::unsafe_slice_data(oob);
             });
         }
         msg->Flags = uint32_t(flags);
@@ -331,7 +331,7 @@ namespace golang::internal::poll
     {
         auto rsa = gocpp::assertValue<wsaRsa*>(rec::Get(gocpp::recv(wsaRsaPool)));
         rsa->name = syscall::RawSockaddrAny {};
-        rsa->namelen = int32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
+        rsa->namelen = int32_t(gocpp::unsafe_sizeof<syscall::RawSockaddrAny>());
         return rsa;
     }
 
@@ -727,7 +727,7 @@ namespace golang::internal::poll
             }
 
             auto info = windows::FILE_COMPLETION_INFORMATION {};
-            if(auto err = windows::NtSetInformationFile(fd->Sysfd, new windows::IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& info), uint32_t(gocpp::Sizeof<windows::FILE_COMPLETION_INFORMATION>()), windows::FileReplaceCompletionInformation); err != nullptr)
+            if(auto err = windows::NtSetInformationFile(fd->Sysfd, new windows::IO_STATUS_BLOCK {}, gocpp::unsafe_pointer(& info), uint32_t(gocpp::unsafe_sizeof<windows::FILE_COMPLETION_INFORMATION>()), windows::FileReplaceCompletionInformation); err != nullptr)
             {
                 return err;
             }
@@ -802,7 +802,7 @@ namespace golang::internal::poll
         {
             return nullptr;
         }
-        return gocpp::slice<go_any> {unsafe::SliceData(buf)};
+        return gocpp::slice<go_any> {gocpp::unsafe_slice_data(buf)};
     }
 
     // Read implements io.Reader.
@@ -1099,7 +1099,7 @@ namespace golang::internal::poll
                 uint32_t flags = {};
                 err = syscall::WSARecvFrom(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & rsa->name, & rsa->namelen, & o->o, nullptr);
                 return {qty, err};
-            }, unsafe::SliceData(buf), rsa);
+            }, gocpp::unsafe_slice_data(buf), rsa);
             auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
@@ -1144,7 +1144,7 @@ namespace golang::internal::poll
                 uint32_t flags = {};
                 err = syscall::WSARecvFrom(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & rsa->name, & rsa->namelen, & o->o, nullptr);
                 return {qty, err};
-            }, unsafe::SliceData(buf), rsa);
+            }, gocpp::unsafe_slice_data(buf), rsa);
             auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
@@ -1189,7 +1189,7 @@ namespace golang::internal::poll
                 uint32_t flags = {};
                 err = syscall::WSARecvFrom(fd->Sysfd, newWsaBuf(buf), 1, & qty, & flags, & rsa->name, & rsa->namelen, & o->o, nullptr);
                 return {qty, err};
-            }, unsafe::SliceData(buf), rsa);
+            }, gocpp::unsafe_slice_data(buf), rsa);
             auto& err = err_tmp;
             err = rec::eofError(gocpp::recv(fd), n, err);
             if(err != nullptr)
@@ -1504,7 +1504,7 @@ namespace golang::internal::poll
                     gocpp::error err;
                     err = syscall::WSASendto(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, sa, & o->o, nullptr);
                     return {qty, err};
-                }, unsafe::SliceData(b));
+                }, gocpp::unsafe_slice_data(b));
                 auto& err = err_tmp;
                 ntotal += int64_t(n);
                 if(err != nullptr)
@@ -1561,7 +1561,7 @@ namespace golang::internal::poll
                     gocpp::error err;
                     err = windows::WSASendtoInet4(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, sa4, & o->o, nullptr);
                     return {qty, err};
-                }, unsafe::SliceData(b));
+                }, gocpp::unsafe_slice_data(b));
                 auto& err = err_tmp;
                 ntotal += int64_t(n);
                 if(err != nullptr)
@@ -1618,7 +1618,7 @@ namespace golang::internal::poll
                     gocpp::error err;
                     err = windows::WSASendtoInet6(fd->Sysfd, newWsaBuf(b), 1, & qty, 0, sa6, & o->o, nullptr);
                     return {qty, err};
-                }, unsafe::SliceData(b));
+                }, gocpp::unsafe_slice_data(b));
                 auto& err = err_tmp;
                 ntotal += int64_t(n);
                 if(err != nullptr)
@@ -1650,7 +1650,7 @@ namespace golang::internal::poll
     std::tuple<gocpp::string, gocpp::error> rec::acceptOne(FD* fd, syscall::Handle s, gocpp::slice<syscall::RawSockaddrAny> rawsa)
     {
         // Submit accept request.
-        uint32_t rsan = uint32_t(gocpp::Sizeof<syscall::RawSockaddrAny>());
+        uint32_t rsan = uint32_t(gocpp::unsafe_sizeof<syscall::RawSockaddrAny>());
         auto [gocpp_id_3, err_tmp] = rec::execIO(gocpp::recv(fd), 'r', [=](operation* o) mutable -> std::tuple<uint32_t, gocpp::error>
         {
             uint32_t qty;
@@ -1666,7 +1666,7 @@ namespace golang::internal::poll
         }
 
         // Inherit properties of the listening socket.
-        err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(gocpp::unsafe_pointer(& fd->Sysfd)), int32_t(gocpp::Sizeof<syscall::Handle>()));
+        err = syscall::Setsockopt(s, syscall::SOL_SOCKET, syscall::SO_UPDATE_ACCEPT_CONTEXT, (unsigned char*)(gocpp::unsafe_pointer(& fd->Sysfd)), int32_t(gocpp::unsafe_sizeof<syscall::Handle>()));
         if(err != nullptr)
         {
             CloseFunc(s);
@@ -1702,7 +1702,7 @@ namespace golang::internal::poll
                 std::tie(errcall, err) = rec::acceptOne(gocpp::recv(fd), s, rawsa.make_slice(0));
                 if(err == nullptr)
                 {
-                    return {s, rawsa.make_slice(0), uint32_t(gocpp::Sizeof<syscall::RawSockaddrAny>()), ""_s, nullptr};
+                    return {s, rawsa.make_slice(0), uint32_t(gocpp::unsafe_sizeof<syscall::RawSockaddrAny>()), ""_s, nullptr};
                 }
 
                 // Sometimes we see WSAECONNRESET and ERROR_NETNAME_DELETED is
@@ -1841,7 +1841,7 @@ namespace golang::internal::poll
 
             windows::FILE_BASIC_INFO du = {};
             du.FileAttributes = attrs;
-            return windows::SetFileInformationByHandle(fd->Sysfd, windows::FileBasicInfo, gocpp::unsafe_pointer(& du), uint32_t(gocpp::Sizeof<windows::FILE_BASIC_INFO>()));
+            return windows::SetFileInformationByHandle(fd->Sysfd, windows::FileBasicInfo, gocpp::unsafe_pointer(& du), uint32_t(gocpp::unsafe_sizeof<windows::FILE_BASIC_INFO>()));
         }
         catch(gocpp::GoPanic& gp)
         {
@@ -1991,7 +1991,7 @@ namespace golang::internal::poll
         p[0] = (unsigned char)(sa->Port >> 8);
         p[1] = (unsigned char)(sa->Port);
         raw->Addr = sa->Addr;
-        return int32_t(gocpp::Sizeof<syscall::RawSockaddrInet4>());
+        return int32_t(gocpp::unsafe_sizeof<syscall::RawSockaddrInet4>());
     }
 
     int32_t sockaddrInet6ToRaw(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet6* sa)
@@ -2004,7 +2004,7 @@ namespace golang::internal::poll
         p[1] = (unsigned char)(sa->Port);
         raw->Scope_id = sa->ZoneId;
         raw->Addr = sa->Addr;
-        return int32_t(gocpp::Sizeof<syscall::RawSockaddrInet6>());
+        return int32_t(gocpp::unsafe_sizeof<syscall::RawSockaddrInet6>());
     }
 
     void rawToSockaddrInet4(syscall::RawSockaddrAny* rsa, syscall::SockaddrInet4* sa)

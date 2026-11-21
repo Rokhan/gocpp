@@ -87,7 +87,7 @@ namespace golang::strings
     // String returns the accumulated string.
     gocpp::string rec::String(Builder* b)
     {
-        return unsafe::String(unsafe::SliceData(b->buf), len(b->buf));
+        return gocpp::unsafe_string(gocpp::unsafe_slice_data(b->buf), len(b->buf));
     }
 
     // Len returns the number of accumulated bytes; b.Len() == len(b.String()).

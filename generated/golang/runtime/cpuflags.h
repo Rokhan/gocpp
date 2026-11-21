@@ -32,15 +32,15 @@ namespace golang::runtime
 namespace golang::runtime
 {
     // Offsets into internal/cpu records for use in assembly.
-    inline const uintptr_t offsetX86HasAVX = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX);
-    inline const uintptr_t offsetX86HasAVX2 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
-    inline const uintptr_t offsetX86HasAVX512 = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512);
-    inline const uintptr_t offsetX86HasERMS = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasERMS);
-    inline const uintptr_t offsetX86HasRDTSCP = gocpp::Offsetof<cpu::X86Struct>(&cpu::X86Struct::HasRDTSCP);
-    inline const uintptr_t offsetARMHasIDIVA = gocpp::Offsetof<cpu::ARMStruct>(&cpu::ARMStruct::HasIDIVA);
-    inline const uintptr_t offsetMIPS64XHasMSA = gocpp::Offsetof<cpu::MIPS64XStruct>(&cpu::MIPS64XStruct::HasMSA);
-    inline const uintptr_t offsetLOONG64HasLSX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
-    inline const uintptr_t offsetLOONG64HasLASX = gocpp::Offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
+    inline const uintptr_t offsetX86HasAVX = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX);
+    inline const uintptr_t offsetX86HasAVX2 = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX2);
+    inline const uintptr_t offsetX86HasAVX512 = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasAVX512);
+    inline const uintptr_t offsetX86HasERMS = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasERMS);
+    inline const uintptr_t offsetX86HasRDTSCP = gocpp::unsafe_offsetof<cpu::X86Struct>(&cpu::X86Struct::HasRDTSCP);
+    inline const uintptr_t offsetARMHasIDIVA = gocpp::unsafe_offsetof<cpu::ARMStruct>(&cpu::ARMStruct::HasIDIVA);
+    inline const uintptr_t offsetMIPS64XHasMSA = gocpp::unsafe_offsetof<cpu::MIPS64XStruct>(&cpu::MIPS64XStruct::HasMSA);
+    inline const uintptr_t offsetLOONG64HasLSX = gocpp::unsafe_offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLSX);
+    inline const uintptr_t offsetLOONG64HasLASX = gocpp::unsafe_offsetof<cpu::Loong64Struct>(&cpu::Loong64Struct::HasLASX);
 
     namespace rec
     {

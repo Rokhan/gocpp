@@ -222,12 +222,12 @@ namespace golang::runtime
                 {
                     // Build pointer mask for Finalizer array in block.
                     // Check assumptions made in finalizer1 array above.
-                    if((gocpp::Sizeof<finalizer>() != 5 * goarch::PtrSize ||
-                                        gocpp::Offsetof<finalizer>(&finalizer::fn) != 0 ||
-                                        gocpp::Offsetof<finalizer>(&finalizer::arg) != goarch::PtrSize ||
-                                        gocpp::Offsetof<finalizer>(&finalizer::nret) != 2 * goarch::PtrSize ||
-                                        gocpp::Offsetof<finalizer>(&finalizer::fint) != 3 * goarch::PtrSize ||
-                                        gocpp::Offsetof<finalizer>(&finalizer::ot) != 4 * goarch::PtrSize))
+                    if((gocpp::unsafe_sizeof<finalizer>() != 5 * goarch::PtrSize ||
+                                        gocpp::unsafe_offsetof<finalizer>(&finalizer::fn) != 0 ||
+                                        gocpp::unsafe_offsetof<finalizer>(&finalizer::arg) != goarch::PtrSize ||
+                                        gocpp::unsafe_offsetof<finalizer>(&finalizer::nret) != 2 * goarch::PtrSize ||
+                                        gocpp::unsafe_offsetof<finalizer>(&finalizer::fint) != 3 * goarch::PtrSize ||
+                                        gocpp::unsafe_offsetof<finalizer>(&finalizer::ot) != 4 * goarch::PtrSize))
                     {
                         go_throw("finalizer out of sync"_s);
                     }
@@ -349,7 +349,7 @@ namespace golang::runtime
                     // amount of returns and it would be complex to try and
                     // figure out how many of those can get passed in registers,
                     // just conservatively assume none of them do.
-                    auto framesz = gocpp::Sizeof<go_any>() + f->nret;
+                    auto framesz = gocpp::unsafe_sizeof<go_any>() + f->nret;
                     if(framecap < framesz)
                     {
                         // The frame does not contain pointers interesting for GC,

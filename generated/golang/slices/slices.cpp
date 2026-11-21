@@ -557,7 +557,7 @@ namespace golang::slices
         {
             return false;
         }
-        auto elemSize = gocpp::Sizeof<E>();
+        auto elemSize = gocpp::unsafe_sizeof<E>();
         if(elemSize == 0)
         {
             return false;

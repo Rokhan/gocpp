@@ -37,7 +37,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct traceRegionAllocBlockHeader& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    inline constexpr uintptr_t traceRegionAllocBlockData = (64 << 10) - gocpp::Sizeof<traceRegionAllocBlockHeader>();
+    inline constexpr uintptr_t traceRegionAllocBlockData = (64 << 10) - gocpp::unsafe_sizeof<traceRegionAllocBlockHeader>();
 }
 #include "golang/runtime/runtime2.h"
 

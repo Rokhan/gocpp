@@ -108,7 +108,7 @@ namespace golang::runtime
         finBlock* next{};
         uint32_t cnt{};
         int32_t _2{};
-        gocpp::array<finalizer, (finBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::Sizeof<finalizer>()> fin{};
+        gocpp::array<finalizer, (finBlockSize - 2 * goarch::PtrSize - 2 * 4) / gocpp::unsafe_sizeof<finalizer>()> fin{};
 
         using isGoStruct = void;
 

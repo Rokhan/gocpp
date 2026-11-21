@@ -232,7 +232,7 @@ namespace golang::runtime
         // a pointer/scalar bitmap. We also reserve space for a dummy _type that
         // refers to the bitmap. The PtrBytes field of the dummy _type indicates how
         // many of those bits are valid.
-        return userArenaChunkBytes / goarch::PtrSize / 8 + gocpp::Sizeof<_type>();
+        return userArenaChunkBytes / goarch::PtrSize / 8 + gocpp::unsafe_sizeof<_type>();
     }
 
     
@@ -1737,7 +1737,7 @@ namespace golang::runtime
         // Set up an allocation header. Avoid write barriers here because this type
         // is not a real type, and it exists in an invalid location.
         *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType)) = uintptr_t(gocpp::unsafe_pointer(s->limit));
-        *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType->GCData)) = s->limit + gocpp::Sizeof<_type>();
+        *(uintptr_t*)(gocpp::unsafe_pointer(& s->largeType->GCData)) = s->limit + gocpp::unsafe_sizeof<_type>();
         s->largeType->PtrBytes = 0;
         s->largeType->Size_ = s->elemsize;
 

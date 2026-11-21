@@ -119,7 +119,7 @@ namespace golang::runtime
     struct cleanupBlock
     {
         cleanupBlockHeader cleanupBlockHeader{};
-        gocpp::array<cleanupFn, (cleanupBlockSize - gocpp::Sizeof<golang::runtime::cleanupBlockHeader>()) / gocpp::Sizeof<cleanupFn>()> cleanups{};
+        gocpp::array<cleanupFn, (cleanupBlockSize - gocpp::unsafe_sizeof<golang::runtime::cleanupBlockHeader>()) / gocpp::unsafe_sizeof<cleanupFn>()> cleanups{};
 
         using isGoStruct = void;
 
@@ -149,7 +149,7 @@ namespace golang::runtime
         // Stack of full cleanup blocks.
         lfstack full{};
         atomic::Uint64 workUnits{}; // length of full; decrement before pop from full, increment after push to full
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<lfstack>() - gocpp::Sizeof<atomic::Uint64>()> _1{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::unsafe_sizeof<lfstack>() - gocpp::unsafe_sizeof<atomic::Uint64>()> _1{};
         // Stack of free cleanup blocks.
         lfstack free{};
         // flushed indicates whether all local cleanupBlocks have been
@@ -157,10 +157,10 @@ namespace golang::runtime
         // stable (after the last sweeper, before the next sweep phase
         // begins).
         atomic::Bool flushed{}; // Next to free because frequently accessed together.
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<lfstack>() - 1> _2{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::unsafe_sizeof<lfstack>() - 1> _2{};
         // Linked list of all cleanup blocks.
         atomic::UnsafePointer all{}; // *cleanupBlock
-        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::Sizeof<atomic::UnsafePointer>()> _3{};
+        gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::unsafe_sizeof<atomic::UnsafePointer>()> _3{};
         // Goroutine block state.
         mutex lock{};
         // sleeping is the list of sleeping cleanup goroutines.

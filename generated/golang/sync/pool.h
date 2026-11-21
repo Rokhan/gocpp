@@ -84,7 +84,7 @@ namespace golang::sync
         poolLocalInternal poolLocalInternal{};
         // Prevents false sharing on widespread platforms with
         // 128 mod (cache line size) = 0 .
-        gocpp::array<unsigned char, 128 - gocpp::Sizeof<golang::sync::poolLocalInternal>() % 128> pad{};
+        gocpp::array<unsigned char, 128 - gocpp::unsafe_sizeof<golang::sync::poolLocalInternal>() % 128> pad{};
 
         using isGoStruct = void;
 

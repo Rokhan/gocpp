@@ -124,7 +124,7 @@ namespace golang::runtime
         sys::NotInHeap _1{};
         workbufhdr workbufhdr{};
         // account for the above fields
-        gocpp::array<uintptr_t, (_WorkbufSize - gocpp::Sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj{};
+        gocpp::array<uintptr_t, (_WorkbufSize - gocpp::unsafe_sizeof<golang::runtime::workbufhdr>()) / goarch::PtrSize> obj{};
 
         using isGoStruct = void;
 

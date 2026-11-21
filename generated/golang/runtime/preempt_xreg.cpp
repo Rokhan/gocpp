@@ -176,7 +176,7 @@ namespace golang::runtime
     void xRegInitAlloc()
     {
         lockInit(& xRegAlloc.lock, lockRankXRegAlloc);
-        rec::init(gocpp::recv(xRegAlloc.alloc), gocpp::Sizeof<xRegState>(), nullptr, nullptr, & memstats.other_sys);
+        rec::init(gocpp::recv(xRegAlloc.alloc), gocpp::unsafe_sizeof<xRegState>(), nullptr, nullptr, & memstats.other_sys);
     }
 
     // xRegSave saves the extended register state on this P to gp.
@@ -281,7 +281,7 @@ namespace golang::runtime
             go_throw("gp.xRegs.state == nil on a scanstack attempt during async preemption"_s);
         }
         auto b = uintptr_t(gocpp::unsafe_pointer(& gp->xRegs.state->regs));
-        uintptr_t n = uintptr_t(gocpp::Sizeof<xRegs>());
+        uintptr_t n = uintptr_t(gocpp::unsafe_sizeof<xRegs>());
         if(debugScanConservative)
         {
             print("begin scan xRegs of goroutine "_s, gp->goid, " at ["_s, hex(b), ","_s, hex(b + n), ")\n"_s);

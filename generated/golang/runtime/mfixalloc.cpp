@@ -141,7 +141,7 @@ namespace golang::runtime
         {
             go_throw("runtime: fixalloc size too large"_s);
         }
-        size = gocpp::max(size, gocpp::Sizeof<mlink>());
+        size = gocpp::max(size, gocpp::unsafe_sizeof<mlink>());
 
         f->size = size;
         f->first = first;

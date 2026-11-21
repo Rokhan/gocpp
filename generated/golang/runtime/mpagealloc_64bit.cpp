@@ -205,7 +205,7 @@ namespace golang::runtime
             print("runtime: base = "_s, runtime::hex(base), ", limit = "_s, runtime::hex(limit), "\n"_s);
             go_throw("sysGrow bounds not aligned to pallocChunkBytes"_s);
         }
-        uintptr_t scSize = gocpp::Sizeof<atomicScavChunkData>();
+        uintptr_t scSize = gocpp::unsafe_sizeof<atomicScavChunkData>();
         // Map and commit the pieces of chunks that we need.
         // We always map the full range of the minimum heap address to the
         // maximum heap address. We don't do this for the summary structure
@@ -263,7 +263,7 @@ namespace golang::runtime
     uintptr_t rec::sysInit(scavengeIndex* s, bool test, sysMemStat* sysStat)
     {
         uintptr_t n = uintptr_t(1 << heapAddrBits) / pallocChunkBytes;
-        auto nbytes = n * gocpp::Sizeof<atomicScavChunkData>();
+        auto nbytes = n * gocpp::unsafe_sizeof<atomicScavChunkData>();
         auto r = sysReserve(nullptr, nbytes, "scavenge index"_s);
         auto sl = notInHeapSlice {(notInHeap*)(r), int64_t(n), int64_t(n)};
         s->chunks = *(gocpp::slice<atomicScavChunkData>*)(gocpp::unsafe_pointer(& sl));

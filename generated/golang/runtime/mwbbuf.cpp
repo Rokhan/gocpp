@@ -89,10 +89,10 @@ namespace golang::runtime
         }
         else
         {
-            b->end = start + uintptr_t(len(b->buf)) * gocpp::Sizeof<uintptr_t>();
+            b->end = start + uintptr_t(len(b->buf)) * gocpp::unsafe_sizeof<uintptr_t>();
         }
 
-        if((b->end - b->next) % gocpp::Sizeof<uintptr_t>() != 0)
+        if((b->end - b->next) % gocpp::unsafe_sizeof<uintptr_t>() != 0)
         {
             go_throw("bad write barrier buffer bounds"_s);
         }
@@ -210,7 +210,7 @@ namespace golang::runtime
     {
         // Get the buffered pointers.
         auto start = uintptr_t(gocpp::unsafe_pointer(& pp->wbBuf.buf[0]));
-        auto n = (pp->wbBuf.next - start) / gocpp::Sizeof<uintptr_t>();
+        auto n = (pp->wbBuf.next - start) / gocpp::unsafe_sizeof<uintptr_t>();
         auto ptrs = pp->wbBuf.buf.make_slice(0, n);
 
         // Poison the buffer to make extra sure nothing is enqueued

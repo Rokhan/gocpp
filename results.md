@@ -182,7 +182,7 @@
 | $(ImportDir)/encoding/json/v2/doc.go | ✔️ ([cpp](generated/golang/encoding/json/v2/doc.cpp), [h](generated/golang/encoding/json/v2/doc.h))| ✔️ | ✔️ |
 | $(ImportDir)/encoding/json/v2/errors.go | ✔️ ([cpp](generated/golang/encoding/json/v2/errors.cpp), [h](generated/golang/encoding/json/v2/errors.h))| ❌ | ❌ |
 | $(ImportDir)/encoding/json/v2/fields.go | ✔️ ([cpp](generated/golang/encoding/json/v2/fields.cpp), [h](generated/golang/encoding/json/v2/fields.h))| ❌ | ❌ |
-| $(ImportDir)/encoding/json/v2/fold.go | ✔️ ([cpp](generated/golang/encoding/json/v2/fold.cpp), [h](generated/golang/encoding/json/v2/fold.h))| ✔️ | ❌ |
+| $(ImportDir)/encoding/json/v2/fold.go | ✔️ ([cpp](generated/golang/encoding/json/v2/fold.cpp), [h](generated/golang/encoding/json/v2/fold.h))| ✔️ | ✔️ |
 | $(ImportDir)/encoding/json/v2/intern.go | ✔️ ([cpp](generated/golang/encoding/json/v2/intern.cpp), [h](generated/golang/encoding/json/v2/intern.h))| ✔️ | ❌ |
 | $(ImportDir)/encoding/json/v2/options.go | ✔️ ([cpp](generated/golang/encoding/json/v2/options.cpp), [h](generated/golang/encoding/json/v2/options.h))| ❌ | ❌ |
 | $(ImportDir)/encoding/json/v2_decode.go | ✔️ ([cpp](generated/golang/encoding/json/v2_decode.cpp), [h](generated/golang/encoding/json/v2_decode.h))| ❌ | ❌ |
@@ -606,7 +606,7 @@
 | $(ImportDir)/regexp/exec.go | ✔️ ([cpp](generated/golang/regexp/exec.cpp), [h](generated/golang/regexp/exec.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/onepass.go | ✔️ ([cpp](generated/golang/regexp/onepass.cpp), [h](generated/golang/regexp/onepass.h))| ✔️ | ❌ |
 | $(ImportDir)/regexp/regexp.go | ✔️ ([cpp](generated/golang/regexp/regexp.cpp), [h](generated/golang/regexp/regexp.h))| ❌ | ❌ |
-| $(ImportDir)/regexp/syntax/compile.go | ✔️ ([cpp](generated/golang/regexp/syntax/compile.cpp), [h](generated/golang/regexp/syntax/compile.h))| ✔️ | ❌ |
+| $(ImportDir)/regexp/syntax/compile.go | ✔️ ([cpp](generated/golang/regexp/syntax/compile.cpp), [h](generated/golang/regexp/syntax/compile.h))| ✔️ | ✔️ |
 | $(ImportDir)/regexp/syntax/parse.go | ✔️ ([cpp](generated/golang/regexp/syntax/parse.cpp), [h](generated/golang/regexp/syntax/parse.h))| ❌ | ❌ |
 | $(ImportDir)/regexp/syntax/perl_groups.go | ✔️ ([cpp](generated/golang/regexp/syntax/perl_groups.cpp), [h](generated/golang/regexp/syntax/perl_groups.h))| ✔️ | ✔️ |
 | $(ImportDir)/regexp/syntax/prog.go | ✔️ ([cpp](generated/golang/regexp/syntax/prog.cpp), [h](generated/golang/regexp/syntax/prog.h))| ✔️ | ❌ |
@@ -817,9 +817,9 @@
 | $(ImportDir)/time/zoneinfo_goroot.go | ✔️ ([cpp](generated/golang/time/zoneinfo_goroot.cpp), [h](generated/golang/time/zoneinfo_goroot.h))| ✔️ | ✔️ |
 | $(ImportDir)/time/zoneinfo_read.go | ✔️ ([cpp](generated/golang/time/zoneinfo_read.cpp), [h](generated/golang/time/zoneinfo_read.h))| ✔️ | ❌ |
 | $(ImportDir)/time/zoneinfo_windows.go | ✔️ ([cpp](generated/golang/time/zoneinfo_windows.cpp), [h](generated/golang/time/zoneinfo_windows.h))| ✔️ | ❌ |
-| $(ImportDir)/unicode/digit.go | ✔️ ([cpp](generated/golang/unicode/digit.cpp), [h](generated/golang/unicode/digit.h))| ✔️ | ❌ |
-| $(ImportDir)/unicode/graphic.go | ✔️ ([cpp](generated/golang/unicode/graphic.cpp), [h](generated/golang/unicode/graphic.h))| ✔️ | ❌ |
-| $(ImportDir)/unicode/letter.go | ✔️ ([cpp](generated/golang/unicode/letter.cpp), [h](generated/golang/unicode/letter.h))| ✔️ | ❌ |
-| $(ImportDir)/unicode/tables.go | ✔️ ([cpp](generated/golang/unicode/tables.cpp), [h](generated/golang/unicode/tables.h))| ❌ | ❌ |
+| $(ImportDir)/unicode/digit.go | ✔️ ([cpp](generated/golang/unicode/digit.cpp), [h](generated/golang/unicode/digit.h))| ✔️ | ✔️ |
+| $(ImportDir)/unicode/graphic.go | ✔️ ([cpp](generated/golang/unicode/graphic.cpp), [h](generated/golang/unicode/graphic.h))| ✔️ | ✔️ |
+| $(ImportDir)/unicode/letter.go | ✔️ ([cpp](generated/golang/unicode/letter.cpp), [h](generated/golang/unicode/letter.h))| ✔️ | ✔️ |
+| $(ImportDir)/unicode/tables.go | ✔️ ([cpp](generated/golang/unicode/tables.cpp), [h](generated/golang/unicode/tables.h))| ✔️ | ✔️ |
 | $(ImportDir)/unicode/utf16/utf16.go | ✔️ ([cpp](generated/golang/unicode/utf16/utf16.cpp), [h](generated/golang/unicode/utf16/utf16.h))| ✔️ | ✔️ |
 | $(ImportDir)/unicode/utf8/utf8.go | ✔️ ([cpp](generated/golang/unicode/utf8/utf8.cpp), [h](generated/golang/unicode/utf8/utf8.h))| ✔️ | ✔️ |

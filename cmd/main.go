@@ -2773,10 +2773,10 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 								if cv.ignoreKnownError(name, knownMissingDeps) {
 									exprType = exprType.inComment()
 									expr = expr.inComment()
-									result = append(result, headerStrf(typeOnlySpec(s), "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(typeOnlySpecFor(s, i), "/* extern %s %s [known mising deps] */%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "/* %s %s = %s [known mising deps] */%s", exprType, name, expr, end)...)
 								} else {
-									result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
+									result = append(result, headerStrf(typeOnlySpecFor(s, i), "extern %s %s%s", exprType.withoutDefs() /* don't duplicate defs */, name, end)...)
 									result = append(result, inlineStrf(s, "%s %s = %s%s", exprType, name, expr, end)...)
 								}
 							}
@@ -2787,12 +2787,12 @@ func (cv *cppConverter) convertGenDecl(gd *ast.GenDecl, tok token.Token, isNames
 					for i, name := range s.Names {
 						exprType := cv.convertExprCppType(name)
 						if i == 0 {
-							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType, name, end)...)
+							result = append(result, headerStrf(typeOnlySpecFor(s, i), "extern %s %s%s", exprType, name, end)...)
 						} else if name.Name == "_" {
 							names = append(names, "_")
 						} else {
 							names = append(names, GetCppName(name.Name))
-							result = append(result, headerStrf(typeOnlySpec(s), "extern %s %s%s", exprType, name, end)...)
+							result = append(result, headerStrf(typeOnlySpecFor(s, i), "extern %s %s%s", exprType, name, end)...)
 							result = append(result, inlineStrf(s, "%s %s%s", exprType, name, end)...)
 						}
 					}
@@ -3117,6 +3117,20 @@ func typeOnlySpec(s *ast.ValueSpec) *ast.ValueSpec {
 	hdrValueSpec := *s
 	hdrValueSpec.Values = nil
 	return &hdrValueSpec
+}
+
+// Same than typeOnlySpec but retrieve the type from the value if
+// the type is not set in the spec.
+func typeOnlySpecFor(s *ast.ValueSpec, i int) *ast.ValueSpec {
+	spec := *s
+	spec.Names = []*ast.Ident{s.Names[i]}
+	spec.Values = nil
+	if spec.Type == nil && i < len(s.Values) {
+		if lit, ok := ast.Unparen(s.Values[i]).(*ast.CompositeLit); ok {
+			spec.Type = lit.Type
+		}
+	}
+	return &spec
 }
 
 func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamespace bool) cppType {

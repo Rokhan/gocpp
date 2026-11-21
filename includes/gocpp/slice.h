@@ -182,6 +182,9 @@ namespace gocpp
             panic("invalid slice");
         }
 
+        template<typename U> friend typename slice<T>::store_type::value_type* unsafe_slice_data(const slice<U>& s);
+        template<typename P, typename N> friend gocpp::string unsafe_string(const P* ptr, N n);
+
         // put all elements to default value
         friend inline void clear(slice<T> input)
         {

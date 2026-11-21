@@ -444,6 +444,9 @@ var cppKeyWordsMapping = map[string]string{
 	"STILL_ACTIVE":         "go_STILL_ACTIVE",
 }
 
+const unsafe_sizeof = "gocpp::unsafe_sizeof"
+const unsafe_offsetof = "gocpp::unsafe_offsetof"
+
 var stdFuncMapping = map[string]string{
 	// Temporary mappings while 'import' isn't implemented
 	// fmt
@@ -494,13 +497,15 @@ var stdFuncMapping = map[string]string{
 	"go_delete": "remove", // if already renamed by keyword mapping
 
 	// Predefined functions
-	"make":             "gocpp::make",
-	"max":              "gocpp::max",
-	"min":              "gocpp::min",
-	"panic":            "gocpp::panic",
-	"recover":          "gocpp::recover",
-	"unsafe::Sizeof":   "gocpp::Sizeof",
-	"unsafe::Offsetof": "gocpp::Offsetof",
+	"make":              "gocpp::make",
+	"max":               "gocpp::max",
+	"min":               "gocpp::min",
+	"panic":             "gocpp::panic",
+	"recover":           "gocpp::recover",
+	"unsafe::Offsetof":  unsafe_offsetof,
+	"unsafe::Sizeof":    unsafe_sizeof,
+	"unsafe::String":    "gocpp::unsafe_string",
+	"unsafe::SliceData": "gocpp::unsafe_slice_data",
 
 	// type conversions
 	"byte":       "(unsigned char)",

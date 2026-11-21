@@ -40,7 +40,7 @@ namespace gocpp
     inline constexpr ValueSink _{};
 
     template<typename T> 
-    constexpr int Sizeof()
+    constexpr int unsafe_sizeof()
     {
         return sizeof(T);
     }
@@ -54,7 +54,7 @@ namespace gocpp
     // Todo one day with c++26 static reflection ?
     //  -> constexpr std::size_t off = std::meta::offset_of(^^Foo::y); 
     template <typename T, typename M>
-    std::size_t Offsetof(M T::* member)
+    std::size_t unsafe_offsetof(M T::* member)
     {
         char buf[sizeof(T)];
         T* obj = reinterpret_cast<T*>(buf);

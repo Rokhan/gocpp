@@ -469,7 +469,7 @@
 | $(ImportDir)/internal/strconv/itoa.go | ✔️ ([cpp](generated/golang/internal/strconv/itoa.cpp), [h](generated/golang/internal/strconv/itoa.h))| ✔️ | ✔️ |
 | $(ImportDir)/internal/strconv/pow10tab.go | ✔️ ([cpp](generated/golang/internal/strconv/pow10tab.cpp), [h](generated/golang/internal/strconv/pow10tab.h))| ✔️ | ✔️ |
 | $(ImportDir)/internal/strconv/uscale.go | ✔️ ([cpp](generated/golang/internal/strconv/uscale.cpp), [h](generated/golang/internal/strconv/uscale.h))| ✔️ | ✔️ |
-| $(ImportDir)/internal/stringslite/strings.go | ✔️ ([cpp](generated/golang/internal/stringslite/strings.cpp), [h](generated/golang/internal/stringslite/strings.h))| ❌ | ❌ |
+| $(ImportDir)/internal/stringslite/strings.go | ✔️ ([cpp](generated/golang/internal/stringslite/strings.cpp), [h](generated/golang/internal/stringslite/strings.h))| ✔️ | ❌ |
 | $(ImportDir)/internal/sync/hashtriemap.go | ✔️ ([cpp](generated/golang/internal/sync/hashtriemap.cpp), [h](generated/golang/internal/sync/hashtriemap.h))| ❌ | ❌ |
 | $(ImportDir)/internal/sync/mutex.go | ✔️ ([cpp](generated/golang/internal/sync/mutex.cpp), [h](generated/golang/internal/sync/mutex.h))| ✔️ | ❌ |
 | $(ImportDir)/internal/sync/runtime.go | ✔️ ([cpp](generated/golang/internal/sync/runtime.cpp), [h](generated/golang/internal/sync/runtime.h))| ✔️ | ✔️ |

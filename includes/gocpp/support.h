@@ -742,6 +742,58 @@ namespace gocpp
         return mocklib::PrintSliceTo<T>(gocpp::IsGoStruct<T>(), os, slice);
     }
 
+    // Implementation of go "unsafe.SliceData(s)"
+    template<typename T>
+    typename slice<T>::store_type::value_type* unsafe_slice_data(const slice<T>& s)
+    {
+        if(!s.mArray)
+        {
+            return nullptr;
+        }
+        return s.mArray->data() + s.mStart;
+    }
+
+    // Implementation of go "unsafe.String(ptr, len)"
+    // Here the bytes are copied, not aliased.
+    template<typename P, typename N>
+    gocpp::string unsafe_string(const P* ptr, N n)
+    {
+        // The length is checked as a Go `int`: negative values, and unsigned
+        // values above MaxInt, are "len out of range".
+        if constexpr(std::is_signed_v<N>)
+        {
+            if(n < 0)
+            {
+                panic("runtime error: unsafe.String: len out of range");
+            }
+        }
+        else
+        {
+            if(static_cast<uint64_t>(n) > static_cast<uint64_t>(INT64_MAX))
+            {
+                panic("runtime error: unsafe.String: len out of range");
+            }
+        }
+
+        // Go: uintptr(len) > -uintptr(ptr), i.e. ptr+len would wrap around the
+        // address space. For a nil pointer this is true for any len > 0.
+        uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+        if(static_cast<uint64_t>(n) > static_cast<uint64_t>(uintptr_t(0) - addr))
+        {
+            if(ptr == nullptr)
+            {
+                panic("runtime error: unsafe.String: ptr is nil and len is not zero");
+            }
+            panic("runtime error: unsafe.String: len out of range");
+        }
+
+        if(n == 0)
+        {
+            return gocpp::string();
+        }
+        return gocpp::string(reinterpret_cast<const char*>(ptr), static_cast<size_t>(n));
+    }
+
     template <typename T>
     T make(Tag<T>)
     {

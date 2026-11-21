@@ -5108,11 +5108,11 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 				funcName = GetCppExprFunc(funcName)
 				// Need a special case for unsafe::Sizeof to avoid difficulties with constexpr
 				switch funcName.str {
-				case "gocpp::Sizeof":
+				case unsafe_sizeof:
 					convertAsType = true
 					cv.BuffExprPrintf(buf, "%v<", funcName)
 					closeStr = ">()"
-				case "gocpp::Offsetof":
+				case unsafe_offsetof:
 					isOffsetOf = true
 					cv.BuffExprPrintf(buf, "%v<", funcName)
 				default:

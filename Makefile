@@ -205,12 +205,13 @@ go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FILES))
 
 GOLANG_LIB_COMPILE = \
-	(cd $(OUTDIR) && \
-	timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) \
+	( set -o pipefail; \
+	  cd $(OUTDIR) && \
+	  LC_ALL=C timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) \
 		-I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes \
 		-ffunction-sections -fdata-sections \
 		$(1).cpp \
-		-o ../$(LOGDIR)/$(1).o)
+		-o ../$(LOGDIR)/$(1).o 2>&1 | tee ../$(LOGDIR)/$(1).compile.log )
 
 $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FILES)
 	$(call DEBUG_LOG, " => $<")
@@ -219,9 +220,11 @@ $(GENERATED_GOLANG_LIB_OBJ_FILES): $(LOGDIR)/%.o : $(OUTDIR)/%.cpp $(SUPPORT_FIL
 
 	mkdir -p $$(dirname $@) || true
 
-	($(call compute-time,$<,$(call GOLANG_LIB_COMPILE,$*),$(LOGDIR)/$*.time)) \
+	@($(call compute-time,$<,$(call GOLANG_LIB_COMPILE,$*),$(LOGDIR)/$*.time)) \
 		&&  echo -n " ✔️ |" > $(LOGDIR)/$*.obj.md \
-		|| (echo    " ❌ |" > $(LOGDIR)/$*.obj.md  && rm -f $@ && $(ON_GCC_ERROR))
+		|| ( [ -s $(LOGDIR)/$*.compile.log ] \
+			|| echo "$*.cpp:0:0: error: compile timeout or killed ($(GCC_TIMEOUT))" > $(LOGDIR)/$*.compile.log; \
+		    	 echo " ❌ |" > $(LOGDIR)/$*.obj.md  && rm -f $@ && $(ON_GCC_ERROR))
 
 
 go-stdlib-link: $(GENERATED_GOLANG_LIB_LINK_MD_FILES)
@@ -266,6 +269,45 @@ link-multiple-definition:
 
 md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES))
+
+
+# Non-empty compile logs (only failed files keep an error log).
+COMPILE_LOGS = $$(find $(LOGDIR)/golang -name '*.compile.log' -size +0)
+
+# Strip "path:line:col: [fatal ]error: ".
+STRIP_LOC = sed -E 's/^.*:[0-9]+:[0-9]+: (fatal )?error: //'
+# Replace every 'quoted' name with 'X', so the same cause counts once.
+GENERALIZE = sed -E "s/'[^']*'/'X'/g"
+
+# Root-cause view: only the FIRST error of each file (later ones are mostly cascades).
+# Messages are generalized (names replaced by 'X') so identical causes group together.
+compile-errors:
+	@echo "### first error per file, generalized (count = number of files) ###"
+	@find $(LOGDIR)/golang -name '*.compile.log' -size +0 | xargs -r -n1 grep -m1 -h 'error:' \
+		| $(STRIP_LOC) | $(GENERALIZE) | sort | uniq -c | sort -rn | head -50
+
+# Same, with the exact names kept (to see which identifier/header is missing).
+compile-errors-exact:
+	@find $(LOGDIR)/golang -name '*.compile.log' -size +0 | xargs -r -n1 grep -m1 -h 'error:' \
+		| $(STRIP_LOC) | sort | uniq -c | sort -rn | head -50
+
+# Every error, not only the first one (noisy because of cascades).
+compile-errors-all:
+	@cat $(COMPILE_LOGS) | grep 'error:' | $(STRIP_LOC) | $(GENERALIZE) | sort | uniq -c | sort -rn | head -50
+
+# Files that have the most errors.
+compile-errors-files:
+	@for f in $(COMPILE_LOGS); do echo "$$(grep -c 'error:' $$f) $$f"; done | sort -rn | head -30
+
+# Files that fail for a given cause. usage: make compile-errors-grep PATTERN="was not declared"
+compile-errors-grep:
+	@grep -l -m1 -- "$(PATTERN)" $(COMPILE_LOGS) | sed 's|$(LOGDIR)/||; s|\.compile\.log||'
+
+# Compile everything and keep going, then report.
+compile-report:
+	-$(MAKE) -k go-stdlib
+	$(MAKE) compile-errors
+
 
 $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES): $(LOGDIR)/%.full.md : $(LOGDIR)/%.obj.md $(LOGDIR)/%.status.md $(LOGDIR)/%.link.md
 	$(call DEBUG_LOG, " => $<")

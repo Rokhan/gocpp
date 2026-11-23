@@ -65,58 +65,58 @@ namespace gocpp
     {
         using std::string::string;
 
-        constexpr inline string(const string& src) : std::string(src) { }
-        constexpr inline string(string&& src) : std::string(std::move(src)) { }
+        constexpr string(const string& src) : std::string(src) { }
+        constexpr string(string&& src) : std::string(std::move(src)) { }
 
-        constexpr inline string(const std::string& src) : std::string(src) { }
-        constexpr inline string(std::string&& src) : std::string(std::move(src)) { }
+        constexpr string(const std::string& src) : std::string(src) { }
+        constexpr string(std::string&& src) : std::string(std::move(src)) { }
 
-        constexpr inline string(const rune& src);
+        constexpr string(const rune& src);
 
-        constexpr inline ~string() { }
+        constexpr ~string() { }
 
-        constexpr inline string make_slice(size_t low) const
+        constexpr string make_slice(size_t low) const
         {
             return string(this->substr(low));
         }
 
-        constexpr inline string make_slice(size_t low, size_t high) const
+        constexpr string make_slice(size_t low, size_t high) const
         {
             return string(this->substr(low, high - low));
         }
 
         // Assignment operators
-        constexpr inline string& operator=(const string& src)
+        constexpr string& operator=(const string& src)
         {
             std::string::operator=(src);
             return *this;
         }
 
-        constexpr inline string& operator=(string&& src) noexcept
+        constexpr string& operator=(string&& src) noexcept
         {
             std::string::operator=(std::move(src));
             return *this;
         }
 
-        constexpr inline string& operator=(const std::string& src)
+        constexpr string& operator=(const std::string& src)
         {
             std::string::operator=(src);
             return *this;
         }
 
-        constexpr inline string& operator=(std::string&& src) noexcept
+        constexpr string& operator=(std::string&& src) noexcept
         {
             std::string::operator=(std::move(src));
             return *this;
         }
 
-        constexpr inline string& operator=(const char* s)
+        constexpr string& operator=(const char* s)
         {
             std::string::operator=(s ? s : "");
             return *this;
         }
 
-        constexpr inline string& operator=(const rune& r);
+        constexpr string& operator=(const rune& r);
 
         using string_iterator = typename std::string::iterator;
         using const_string_iterator = typename std::string::const_iterator;

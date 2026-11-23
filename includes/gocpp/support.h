@@ -310,9 +310,9 @@ namespace gocpp
         }
     };
 
-    constexpr inline string::string(const rune& src) : std::string(mocklib::RuneToString(src)) { }
+    constexpr string::string(const rune& src) : std::string(mocklib::RuneToString(src)) { }
 
-    constexpr inline string& string::operator=(const rune& r)
+    constexpr string& string::operator=(const rune& r)
     {
         std::string::operator=(mocklib::RuneToString(r));
         return *this;
@@ -351,12 +351,12 @@ namespace gocpp
         return { std::string::size(), std::string::end() };
     }
 
-    constexpr inline complex64 complex(float r, float i)
+    constexpr complex64 complex(float r, float i)
     {
         return std::complex<float>(r, i);
     }
 
-    constexpr inline complex128 complex(double r, double i)
+    constexpr complex128 complex(double r, double i)
     {
         return std::complex<double>(r, i);
     }

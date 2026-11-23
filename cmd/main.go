@@ -45,7 +45,7 @@ type cppConverterSharedData struct {
 	usedFiles      map[string]bool
 	packagePaths   map[string]string
 
-	nonConstexprConsts map[types.Object]bool
+	nonConstexprConsts map[string]bool
 
 	// logging
 	logPerf outFile
@@ -199,7 +199,7 @@ func buildSharedData() (shared *cppConverterSharedData) {
 	shared.parsedFiles = map[string]*ast.File{}
 	shared.usedFiles = map[string]bool{}
 	shared.packagePaths = map[string]string{}
-	shared.nonConstexprConsts = map[types.Object]bool{}
+	shared.nonConstexprConsts = map[string]bool{}
 	return
 }
 
@@ -919,6 +919,9 @@ func (cv *cppConverter) getUsedDependency() (pkgInfos []*pkgInfo) {
 			pkgInfos = append(pkgInfos, result)
 		}
 	}
+	slices.SortFunc(pkgInfos, func(a, b *pkgInfo) int {
+		return strings.Compare(a.filePath, b.filePath)
+	})
 	return
 }
 
@@ -3045,6 +3048,11 @@ func constFitsOnlyUint64(obj types.Object) bool {
 		constant.Compare(v, token.LEQ, uint64Max)
 }
 
+func (cv *cppConverter) constKey(obj types.Object) string {
+	p := cv.pcShared.fileSet.Position(obj.Pos())
+	return fmt.Sprintf("%s:%d", CleanPath(p.Filename), p.Offset)
+}
+
 // usesNonConstexpr reports whether a constant initializer calls a listed builtin,
 // or refers to a constant that was itself emitted without constexpr.
 func (cv *cppConverter) usesNonConstexpr(expr ast.Expr) bool {
@@ -3059,7 +3067,7 @@ func (cv *cppConverter) usesNonConstexpr(expr ast.Expr) bool {
 				}
 			}
 		case *ast.Ident:
-			if c, ok := cv.typeInfo.Uses[n].(*types.Const); ok && cv.shared.nonConstexprConsts[c] {
+			if c, ok := cv.typeInfo.Uses[n].(*types.Const); ok && cv.shared.nonConstexprConsts[cv.constKey(c)] {
 				found = true
 			}
 		}
@@ -3090,7 +3098,7 @@ func (cv *cppConverter) constQualifier(obj types.Object, init ast.Expr) string {
 		q = "inline const"
 	}
 	if q == "inline const" && obj != nil {
-		cv.shared.nonConstexprConsts[obj] = true // so dependents are downgraded too
+		cv.shared.nonConstexprConsts[cv.constKey(obj)] = true // so dependents are downgraded too
 	}
 	return q
 }
@@ -3108,7 +3116,7 @@ func (cv *cppConverter) localConstQualifier(obj types.Object, init ast.Expr) str
 		q = "const"
 	}
 	if q == "const" && obj != nil {
-		cv.shared.nonConstexprConsts[obj] = true // dependents get downgraded too
+		cv.shared.nonConstexprConsts[cv.constKey(obj)] = true // dependents get downgraded too
 	}
 	return q
 }
@@ -5950,8 +5958,8 @@ func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInf
 		toBeConverted = notConverted
 
 		// Retry all ignored files in case they were needed by new generated file
-		for _, cv := range ignoredFiles {
-			toBeConverted = append(toBeConverted, cv)
+		for _, name := range slices.Sorted(maps.Keys(ignoredFiles)) {
+			toBeConverted = append(toBeConverted, ignoredFiles[name])
 		}
 	}
 

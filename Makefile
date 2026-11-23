@@ -270,6 +270,10 @@ link-multiple-definition:
 md-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES)
 #	$(call DEBUG_LOG, $(GENERATED_GOLANG_LIB_OBJ_FULLMD_FILES))
 
+# Like "head -N", but reports how many lines were cut.
+# Override on the command line: make compile-errors TOP_N=100
+TOP_N ?= 10
+TOP = awk -v n=$(TOP_N) 'NR <= n { print; next } { skipped++ } END { if (skipped) printf "... (%d more lines skipped)\n", skipped }'
 
 # Non-empty compile logs (only failed files keep an error log).
 COMPILE_LOGS = $$(find $(LOGDIR)/golang -name '*.compile.log' -size +0)
@@ -284,24 +288,32 @@ GENERALIZE = sed -E "s/'[^']*'/'X'/g"
 compile-errors:
 	@echo "### first error per file, generalized (count = number of files) ###"
 	@find $(LOGDIR)/golang -name '*.compile.log' -size +0 | xargs -r -n1 grep -m1 -h 'error:' \
-		| $(STRIP_LOC) | $(GENERALIZE) | sort | uniq -c | sort -rn | head -50
+		| $(STRIP_LOC) | $(GENERALIZE) | sort | uniq -c | sort -rn | $(TOP)
 
 # Same, with the exact names kept (to see which identifier/header is missing).
 compile-errors-exact:
 	@find $(LOGDIR)/golang -name '*.compile.log' -size +0 | xargs -r -n1 grep -m1 -h 'error:' \
-		| $(STRIP_LOC) | sort | uniq -c | sort -rn | head -50
+		| $(STRIP_LOC) | sort | uniq -c | sort -rn | $(TOP)
 
 # Every error, not only the first one (noisy because of cascades).
 compile-errors-all:
-	@cat $(COMPILE_LOGS) | grep 'error:' | $(STRIP_LOC) | $(GENERALIZE) | sort | uniq -c | sort -rn | head -50
+	@cat $(COMPILE_LOGS) | grep 'error:' | $(STRIP_LOC) | $(GENERALIZE) | sort | uniq -c | sort -rn | $(TOP)
 
 # Files that have the most errors.
 compile-errors-files:
-	@for f in $(COMPILE_LOGS); do echo "$$(grep -c 'error:' $$f) $$f"; done | sort -rn | head -30
+	@for f in $(COMPILE_LOGS); do echo "$$(grep -c 'error:' $$f) $$f"; done | sort -rn | $(TOP)
 
-# Files that fail for a given cause. usage: make compile-errors-grep PATTERN="was not declared"
+# Files that fail for a given cause. usage: make compile-errors-all-grep PATTERN="was not declared"
+compile-errors-all-grep:
+	@grep -l -m1 -- "$(PATTERN)" $(COMPILE_LOGS) | sed 's|$(LOGDIR)/||; s|\.compile\.log||' | $(TOP)
+
+# Same as compile-errors-all-grep, but only the FIRST error of each file is tested
 compile-errors-grep:
-	@grep -l -m1 -- "$(PATTERN)" $(COMPILE_LOGS) | sed 's|$(LOGDIR)/||; s|\.compile\.log||'
+	@for f in $(COMPILE_LOGS); do \
+		if grep -m1 -h 'error:' "$$f" | grep -q -- "$(PATTERN)"; then \
+			echo "$$f"; \
+		fi; \
+	done | sed 's|$(LOGDIR)/||; s|\.compile\.log||' | $(TOP)
 
 # Compile everything and keep going, then report.
 compile-report:

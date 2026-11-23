@@ -194,7 +194,7 @@ namespace golang::sync
     {
         auto ptr = uintptr_t(((gocpp::array_ptr<gocpp::array<gocpp::unsafe_pointer, 2>>)(gocpp::unsafe_pointer(& x)))[1]);
         auto h = uint32_t((uint64_t(uint32_t(ptr)) * 0x85ebca6b) >> 16);
-        return gocpp::unsafe_pointer(& poolRaceHash[h % uint32_t(len(poolRaceHash))]);
+        return gocpp::unsafe_pointer(& poolRaceHash[h % uint32_t(gocpp::array_length<decltype(poolRaceHash)>)]);
     }
 
     // Put adds x to the pool.

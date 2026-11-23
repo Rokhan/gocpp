@@ -1427,7 +1427,7 @@ namespace golang::runtime
         {
             return golang::runtime::funcInfo {};
         }
-        constexpr uintptr_t nsub = uintptr_t(len(findfuncbucket {}.subbuckets));
+        constexpr uintptr_t nsub = uintptr_t(gocpp::array_length<decltype(findfuncbucket {}.subbuckets)>);
 
         auto [pcOff, ok] = rec::textOff(gocpp::recv(datap), pc);
         if(! ok)
@@ -1605,7 +1605,7 @@ namespace golang::runtime
     // In practice, this appears to be fairly randomly and evenly distributed.
     uintptr_t pcvalueCacheKey(uintptr_t targetpc)
     {
-        return (targetpc / goarch::PtrSize) % uintptr_t(len(pcvalueCache {}.entries));
+        return (targetpc / goarch::PtrSize) % uintptr_t(gocpp::array_length<decltype(pcvalueCache {}.entries)>);
     }
 
     // Returns the PCData value, and the PC where this value starts.
@@ -1722,7 +1722,7 @@ namespace golang::runtime
                     if(cache->inUse == 1)
                     {
                         auto e = gocpp::make_array_ptr(cache->entries[ck]);
-                        auto ci = cheaprandn(uint32_t(len(cache->entries[ck])));
+                        auto ci = cheaprandn(uint32_t(gocpp::array_length<decltype(cache->entries[ck])>));
                         e[ci] = e[0];
                         e[0] = gocpp::Init<pcvalueCacheEnt>([=](auto& x) {
                             x.targetpc = targetpc;

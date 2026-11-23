@@ -151,11 +151,11 @@ namespace golang::runtime
         }
         else
         // wbuf is empty at this point.
-        if(wbuf->workbufhdr.nobj == len(wbuf->obj))
+        if(wbuf->workbufhdr.nobj == gocpp::array_length<decltype(wbuf->obj)>)
         {
             std::tie(w->wbuf1, w->wbuf2) = std::tuple{w->wbuf2, w->wbuf1};
             wbuf = w->wbuf1;
-            if(wbuf->workbufhdr.nobj == len(wbuf->obj))
+            if(wbuf->workbufhdr.nobj == gocpp::array_length<decltype(wbuf->obj)>)
             {
                 putfull(wbuf);
                 w->flushedWork = true;
@@ -192,7 +192,7 @@ namespace golang::runtime
     bool rec::putObjFast(gcWork* w, uintptr_t obj)
     {
         auto wbuf = w->wbuf1;
-        if(wbuf == nullptr || wbuf->workbufhdr.nobj == len(wbuf->obj))
+        if(wbuf == nullptr || wbuf->workbufhdr.nobj == gocpp::array_length<decltype(wbuf->obj)>)
         {
             return false;
         }
@@ -223,7 +223,7 @@ namespace golang::runtime
 
         for(; len(obj) > 0; )
         {
-            for(; wbuf->workbufhdr.nobj == len(wbuf->obj); )
+            for(; wbuf->workbufhdr.nobj == gocpp::array_length<decltype(wbuf->obj)>; )
             {
                 putfull(wbuf);
                 w->flushedWork = true;

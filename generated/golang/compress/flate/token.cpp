@@ -377,7 +377,7 @@ namespace golang::compress::flate
     // offsetCode returns the offset code corresponding to a specific offset.
     uint32_t offsetCode(uint32_t off)
     {
-        if(off < uint32_t(len(offsetCodes)))
+        if(off < uint32_t(gocpp::array_length<decltype(offsetCodes)>))
         {
             return offsetCodes[uint8_t(off)];
         }

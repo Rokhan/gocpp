@@ -459,27 +459,27 @@ namespace golang::runtime
         {
             // Fast path: the allocation doesn't span more than one chunk,
             // so update this one and if the summary didn't change, return.
-            auto x = p->summary[len(p->summary) - 1][sc];
+            auto x = p->summary[gocpp::array_length<decltype(p->summary)> - 1][sc];
             auto y = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)));
             if(x == y)
             {
                 return;
             }
-            p->summary[len(p->summary) - 1][sc] = y;
+            p->summary[gocpp::array_length<decltype(p->summary)> - 1][sc] = y;
         }
         else
         if(contig)
         {
             // Slow contiguous path: the allocation spans more than one chunk
             // and at least one summary is guaranteed to change.
-            auto summary = p->summary[len(p->summary) - 1];
+            auto summary = p->summary[gocpp::array_length<decltype(p->summary)> - 1];
 
             // Update the summary for chunk sc.
             summary[sc] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), sc)));
 
             // Update the summaries for chunks in between, which are
             // either totally allocated or freed.
-            auto whole = p->summary[len(p->summary) - 1].make_slice(sc + 1, ec);
+            auto whole = p->summary[gocpp::array_length<decltype(p->summary)> - 1].make_slice(sc + 1, ec);
             if(alloc)
             {
                 clear(whole);
@@ -501,7 +501,7 @@ namespace golang::runtime
             // and at least one summary is guaranteed to change.
             // We can't assume a contiguous allocation happened, so walk over
             // every chunk in the range and manually recompute the summary.
-            auto summary = p->summary[len(p->summary) - 1];
+            auto summary = p->summary[gocpp::array_length<decltype(p->summary)> - 1];
             for(auto c = sc; c <= ec; c++)
             {
                 summary[c] = rec::summarize(gocpp::recv(rec::chunkOf(gocpp::recv(p), c)));
@@ -510,7 +510,7 @@ namespace golang::runtime
 
         // Walk up the radix tree and update the summaries appropriately.
         bool changed = true;
-        for(int64_t l = len(p->summary) - 2; l >= 0 && changed; l--)
+        for(int64_t l = gocpp::array_length<decltype(p->summary)> - 2; l >= 0 && changed; l--)
         {
             // Update summaries at level l from summaries at level l+1.
             changed = false;
@@ -752,7 +752,7 @@ namespace golang::runtime
         int64_t lastSumIdx = - 1;
 
         nextLevel:
-        for(int64_t l = 0; l < len(p->summary); l++)
+        for(int64_t l = 0; l < gocpp::array_length<decltype(p->summary)>; l++)
         {
             if(false) {
             nextLevel_continue:
@@ -883,8 +883,8 @@ namespace golang::runtime
         {
             // We couldn't find any space in this chunk despite the summaries telling
             // us it should be there. There's likely a bug, so dump some state and throw.
-            auto sum = p->summary[len(p->summary) - 1][i];
-            print("runtime: summary["_s, len(p->summary) - 1, "]["_s, i, "] = ("_s, rec::start(gocpp::recv(sum)), ", "_s, rec::max(gocpp::recv(sum)), ", "_s, rec::end(gocpp::recv(sum)), ")\n"_s);
+            auto sum = p->summary[gocpp::array_length<decltype(p->summary)> - 1][i];
+            print("runtime: summary["_s, gocpp::array_length<decltype(p->summary)> - 1, "]["_s, i, "] = ("_s, rec::start(gocpp::recv(sum)), ", "_s, rec::max(gocpp::recv(sum)), ", "_s, rec::end(gocpp::recv(sum)), ")\n"_s);
             print("runtime: npages = "_s, npages, "\n"_s);
             go_throw("bad summary data"_s);
         }
@@ -931,7 +931,7 @@ namespace golang::runtime
         {
             // npages is guaranteed to be no greater than pallocChunkPages here.
             auto i = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
-            if(auto max = rec::max(gocpp::recv(p->summary[len(p->summary) - 1][i])); max >= (uint64_t)(npages))
+            if(auto max = rec::max(gocpp::recv(p->summary[gocpp::array_length<decltype(p->summary)> - 1][i])); max >= (uint64_t)(npages))
             {
                 auto [j, searchIdx] = rec::find(gocpp::recv(rec::chunkOf(gocpp::recv(p), i)), npages, chunkPageIndex(rec::addr(gocpp::recv(p->searchAddr))));
                 if(j == ~ (uint64_t)(0))

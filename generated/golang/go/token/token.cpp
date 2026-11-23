@@ -121,7 +121,7 @@ namespace golang::go::token
     gocpp::string rec::String(Token tok)
     {
         gocpp::string s = ""_s;
-        if(0 <= tok && tok < Token(len(tokens)))
+        if(0 <= tok && tok < Token(gocpp::array_length<decltype(tokens)>))
         {
             s = tokens[tok];
         }

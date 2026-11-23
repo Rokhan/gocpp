@@ -201,7 +201,7 @@ namespace golang::runtime
         // span sizes are one page. Some code relies on this.
         bool minSizeForMallocHeaderIsSizeClass = false;
         bool sizeClassesUpToMinSizeForMallocHeaderAreOnePage = true;
-        for(int64_t i = 0; i < len(gc::SizeClassToSize); i++)
+        for(int64_t i = 0; i < gocpp::array_length<decltype(gc::SizeClassToSize)>; i++)
         {
             if(gc::SizeClassToNPages[i] > 1)
             {
@@ -883,7 +883,7 @@ namespace golang::runtime
             return gocpp::unsafe_pointer(& zerobase);
         }
 
-        if(sizeSpecializedMallocEnabled && size < uintptr_t(len(mallocNoScanTable)))
+        if(sizeSpecializedMallocEnabled && size < uintptr_t(gocpp::array_length<decltype(mallocNoScanTable)>))
         {
             if(typ == nullptr || ! rec::Pointers(gocpp::recv(typ)))
             {

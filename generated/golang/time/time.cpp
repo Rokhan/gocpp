@@ -809,7 +809,7 @@ namespace golang::time
     int64_t rec::format(Duration d, gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
     {
         // Largest time is 2540400h10m10.000000000s
-        int64_t w = len(buf);
+        int64_t w = gocpp::array_length<decltype(buf)>;
 
         auto u = uint64_t(d);
         auto neg = d < 0;

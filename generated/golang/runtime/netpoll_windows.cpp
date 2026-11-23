@@ -281,7 +281,7 @@ namespace golang::runtime
         {
             wait = uint32_t(delay / 1'000'000);
         }
-        auto n = len(entries) / int64_t(gomaxprocs);
+        auto n = gocpp::array_length<decltype(entries)> / int64_t(gomaxprocs);
         if(n < 8)
         {
             n = 8;

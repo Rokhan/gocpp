@@ -833,7 +833,7 @@ namespace golang::runtime
         if(arenaL1Bits == 0)
         {
             // If there's no L1, then ri.l1() can't be out of bounds but ri.l2() can.
-            if(rec::l2(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas[0])))
+            if(rec::l2(gocpp::recv(ri)) >= (uint64_t)(gocpp::array_length<decltype(mheap_.arenas[0])>))
             {
                 return nullptr;
             }
@@ -841,7 +841,7 @@ namespace golang::runtime
         else
         {
             // If there's an L1, then ri.l1() can be out of bounds but ri.l2() can't.
-            if(rec::l1(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas)))
+            if(rec::l1(gocpp::recv(ri)) >= (uint64_t)(gocpp::array_length<decltype(mheap_.arenas)>))
             {
                 return nullptr;
             }
@@ -902,7 +902,7 @@ namespace golang::runtime
         uint8_t pageMask;
         auto ai = arenaIndex(p);
         arena = mheap_.arenas[rec::l1(gocpp::recv(ai))][rec::l2(gocpp::recv(ai))];
-        pageIdx = ((p / pageSize) / 8) % uintptr_t(len(arena->pageInUse));
+        pageIdx = ((p / pageSize) / 8) % uintptr_t(gocpp::array_length<decltype(arena->pageInUse)>);
         pageMask = (unsigned char)(1 << ((p / pageSize) % 8));
         return {arena, pageIdx, pageMask};
     }
@@ -914,7 +914,7 @@ namespace golang::runtime
         if(arenaL1Bits == 0)
         {
             // If there's no L1, then ri.l1() can't be out of bounds but ri.l2() can.
-            if(rec::l2(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas[0])))
+            if(rec::l2(gocpp::recv(ri)) >= (uint64_t)(gocpp::array_length<decltype(mheap_.arenas[0])>))
             {
                 return nullptr;
             }
@@ -922,7 +922,7 @@ namespace golang::runtime
         else
         {
             // If there's an L1, then ri.l1() can be out of bounds but ri.l2() can't.
-            if(rec::l1(gocpp::recv(ri)) >= (uint64_t)(len(mheap_.arenas)))
+            if(rec::l1(gocpp::recv(ri)) >= (uint64_t)(gocpp::array_length<decltype(mheap_.arenas)>))
             {
                 return nullptr;
             }
@@ -1364,7 +1364,7 @@ namespace golang::runtime
         // Refill the cache if necessary.
         if(pp->mspancache.len == 0)
         {
-            constexpr int64_t refillCount = len(pp->mspancache.buf) / 2;
+            constexpr int64_t refillCount = gocpp::array_length<decltype(pp->mspancache.buf)> / 2;
             for(int64_t i = 0; i < refillCount; i++)
             {
                 pp->mspancache.buf[i] = (mspan*)(rec::alloc(gocpp::recv(h->spanalloc)));
@@ -1393,7 +1393,7 @@ namespace golang::runtime
 
         auto pp = rec::ptr(gocpp::recv(getg()->m->p));
         // First try to free the mspan directly to the cache.
-        if(pp != nullptr && pp->mspancache.len < len(pp->mspancache.buf))
+        if(pp != nullptr && pp->mspancache.len < gocpp::array_length<decltype(pp->mspancache.buf)>)
         {
             pp->mspancache.buf[pp->mspancache.len] = s;
             pp->mspancache.len++;
@@ -3867,13 +3867,13 @@ namespace golang::runtime
     // This is safe to call concurrently.
     gcBits* rec::tryAlloc(gcBitsArena* b, uintptr_t bytes)
     {
-        if(b == nullptr || atomic::Loaduintptr(& b->free) + bytes > uintptr_t(len(b->bits)))
+        if(b == nullptr || atomic::Loaduintptr(& b->free) + bytes > uintptr_t(gocpp::array_length<decltype(b->bits)>))
         {
             return nullptr;
         }
         // Try to allocate from this block.
         auto end = atomic::Xadduintptr(& b->free, bytes);
-        if(end > uintptr_t(len(b->bits)))
+        if(end > uintptr_t(gocpp::array_length<decltype(b->bits)>))
         {
             return nullptr;
         }

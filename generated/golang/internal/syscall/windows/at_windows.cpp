@@ -433,7 +433,7 @@ namespace golang::internal::syscall::windows
             {
                 return err;
             }
-            if(len(p16) > len(renameInfoEx.FileName))
+            if(len(p16) > gocpp::array_length<decltype(renameInfoEx.FileName)>)
             {
                 return gocpp::error(syscall::go_EINVAL);
             }
@@ -499,7 +499,7 @@ namespace golang::internal::syscall::windows
             {
                 return err;
             }
-            if(len(p16) > len(linkInfo.FileName))
+            if(len(p16) > gocpp::array_length<decltype(linkInfo.FileName)>)
             {
                 return gocpp::error(syscall::go_EINVAL);
             }

@@ -1461,7 +1461,7 @@ namespace golang::image::png
         gocpp::array<unsigned char, 4096> ignored = {};
         for(; length > 0; )
         {
-            auto [n, err] = io::ReadFull(d->r, ignored.make_slice(0, gocpp::min(len(ignored), int64_t(length))));
+            auto [n, err] = io::ReadFull(d->r, ignored.make_slice(0, gocpp::min(gocpp::array_length<decltype(ignored)>, int64_t(length))));
             if(err != nullptr)
             {
                 return err;

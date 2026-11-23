@@ -582,8 +582,8 @@ namespace golang::internal::bisect
             u = - u;
         }
         gocpp::array<unsigned char, 24> buf = {};
-        int64_t i = len(buf);
-        for(; i == len(buf) || u > 0; )
+        int64_t i = gocpp::array_length<decltype(buf)>;
+        for(; i == gocpp::array_length<decltype(buf)> || u > 0; )
         {
             i--;
             buf[i] = '0' + (unsigned char)(u % 10);
@@ -1230,8 +1230,8 @@ namespace golang::internal::bisect
     // overwriting whatever was there before.
     bool rec::seenLossy(dedup* d, uint64_t h)
     {
-        auto cache = gocpp::make_array_ptr(d->recent[(uint64_t)(h) % (uint64_t)(len(d->recent))]);
-        for(int64_t i = 0; i < len(cache); i++)
+        auto cache = gocpp::make_array_ptr(d->recent[(uint64_t)(h) % (uint64_t)(gocpp::array_length<decltype(d->recent)>)]);
+        for(int64_t i = 0; i < gocpp::array_length<decltype(cache)>; i++)
         {
             if(atomic::LoadUint64(& cache[i]) == h)
             {
@@ -1245,7 +1245,7 @@ namespace golang::internal::bisect
         {
             ch = fnvUint64(ch, x);
         }
-        atomic::StoreUint64(& cache[(uint64_t)(ch) % (uint64_t)(len(cache))], h);
+        atomic::StoreUint64(& cache[(uint64_t)(ch) % (uint64_t)(gocpp::array_length<decltype(cache)>)], h);
         return false;
     }
 

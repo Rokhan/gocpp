@@ -195,7 +195,7 @@ namespace golang::syscall
     {
         // deal with special go errors
         auto idx = int64_t(e - APPLICATION_ERROR);
-        if(0 <= idx && idx < len(errors))
+        if(0 <= idx && idx < gocpp::array_length<decltype(errors)>)
         {
             return errors[idx];
         }
@@ -1310,7 +1310,7 @@ namespace golang::syscall
     {
         auto name = sa->Name;
         auto n = len(name);
-        if(n > len(sa->raw.Path))
+        if(n > gocpp::array_length<decltype(sa->raw.Path)>)
         {
             return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
@@ -1320,7 +1320,7 @@ namespace golang::syscall
 
         // Non-abstract named addresses are NUL terminated.
         // The length can't use the full capacity as we need to add NUL.
-        if(n == len(sa->raw.Path) && ! isAbstract)
+        if(n == gocpp::array_length<decltype(sa->raw.Path)> && ! isAbstract)
         {
             return {nullptr, 0, gocpp::error(go_EINVAL)};
         }
@@ -1378,7 +1378,7 @@ namespace golang::syscall
                     // to be uninterpreted fixed-size binary blobs--but
                     // everyone uses this convention.
                     int64_t n = 0;
-                    for(; n < len(pp->Path) && pp->Path[n] != 0; )
+                    for(; n < gocpp::array_length<decltype(pp->Path)> && pp->Path[n] != 0; )
                     {
                         n++;
                     }
@@ -2235,7 +2235,7 @@ namespace golang::syscall
 
     gocpp::string rec::String(golang::syscall::Signal s)
     {
-        if(0 <= s && int64_t(s) < len(signals))
+        if(0 <= s && int64_t(s) < gocpp::array_length<decltype(signals)>)
         {
             auto str = signals[s];
             if(str != ""_s)

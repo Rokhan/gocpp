@@ -102,7 +102,7 @@ namespace golang::runtime
     bool sigsend(uint32_t s)
     {
         auto bit = uint32_t(1) << (uint64_t)(s & 31);
-        if(s >= uint32_t(32 * len(sig.wanted)))
+        if(s >= uint32_t(32 * gocpp::array_length<decltype(sig.wanted)>))
         {
             return false;
         }
@@ -305,7 +305,7 @@ namespace golang::runtime
             }
         }
 
-        if(s >= uint32_t(len(sig.wanted) * 32))
+        if(s >= uint32_t(gocpp::array_length<decltype(sig.wanted)> * 32))
         {
             return;
         }
@@ -326,7 +326,7 @@ namespace golang::runtime
     //go:linkname signal_disable os/signal.signal_disable
     void signal_disable(uint32_t s)
     {
-        if(s >= uint32_t(len(sig.wanted) * 32))
+        if(s >= uint32_t(gocpp::array_length<decltype(sig.wanted)> * 32))
         {
             return;
         }
@@ -342,7 +342,7 @@ namespace golang::runtime
     //go:linkname signal_ignore os/signal.signal_ignore
     void signal_ignore(uint32_t s)
     {
-        if(s >= uint32_t(len(sig.wanted) * 32))
+        if(s >= uint32_t(gocpp::array_length<decltype(sig.wanted)> * 32))
         {
             return;
         }

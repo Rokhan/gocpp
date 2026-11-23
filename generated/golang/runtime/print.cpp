@@ -72,7 +72,7 @@ namespace golang::runtime
                 auto n = copy(printBacklog.make_slice(printBacklogIndex), b.make_slice(i));
                 i += n;
                 printBacklogIndex += n;
-                printBacklogIndex %= len(printBacklog);
+                printBacklogIndex %= gocpp::array_length<decltype(printBacklog)>;
             }
         }
 
@@ -213,11 +213,11 @@ namespace golang::runtime
     {
         const gocpp::string dig = "0123456789abcdef"_s;
         gocpp::array<unsigned char, 100> buf = {};
-        int64_t i = len(buf);
+        int64_t i = gocpp::array_length<decltype(buf)>;
         for(i--; i > 0; i--)
         {
             buf[i] = dig[v % 16];
-            if(v < 16 && len(buf) - i >= mindigits)
+            if(v < 16 && gocpp::array_length<decltype(buf)> - i >= mindigits)
             {
                 break;
             }

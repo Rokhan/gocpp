@@ -50,9 +50,9 @@ namespace golang::main
         gocpp::array<int64_t, n * typed> arr2 = {};
         auto f = [=]() mutable -> int64_t
         {
-            return len(arr) + b;
+            return gocpp::array_length<decltype(arr)> + b;
         };
-        mocklib::Println(len(arr), len(arr2), big, a, b, f());
+        mocklib::Println(gocpp::array_length<decltype(arr)>, gocpp::array_length<decltype(arr2)>, big, a, b, f());
     }
 
 }

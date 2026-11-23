@@ -209,7 +209,7 @@ namespace golang::main
         auto p = gocpp::slice_to_array_ptr<4>(s);
         p[0] = 1;
         p[3] = 4;
-        mocklib::Println("alias:"_s, s, len(p));
+        mocklib::Println("alias:"_s, s, gocpp::array_length<decltype(p)>);
 
         *p = gocpp::array<int64_t, 4> {5, 6, 7, 8};
         mocklib::Println("write through ptr:"_s, s);
@@ -291,14 +291,14 @@ namespace golang::main
 
         auto p = gocpp::slice_to_array_ptr<ten>(s);
         p[ten - 1] = 100;
-        mocklib::Println("const length ptr:"_s, len(p), s);
+        mocklib::Println("const length ptr:"_s, gocpp::array_length<decltype(p)>, s);
 
         auto a = gocpp::slice_to_array<half>(s.make_slice(ten - half));
         a[0] = - 1;
         mocklib::Println("const length copy:"_s, a, s.make_slice(ten - half));
 
         auto q = gocpp::slice_to_array_ptr<(half + 2)>(s);
-        mocklib::Println("expression length:"_s, len(q), *q);
+        mocklib::Println("expression length:"_s, gocpp::array_length<decltype(q)>, *q);
 
         gocpp::array<int64_t, ten> zero = {};
         *gocpp::slice_to_array_ptr<(ten / 2 * 2)>(s) = zero;
@@ -337,7 +337,7 @@ namespace golang::main
         mocklib::Println(hwBytes2);
 
         gocpp::array<unsigned char, 32> buf = {};
-        int64_t n = len(buf);
+        int64_t n = gocpp::array_length<decltype(buf)>;
         mocklib::Println("Length of buf:"_s, n);
 
         auto w = arrayLen(gocpp::make_array_ptr(buf));
@@ -356,7 +356,7 @@ namespace golang::main
 
     int64_t arrayLen(gocpp::array_ptr<gocpp::array<unsigned char, 32>> buf)
     {
-        int64_t w = len(buf);
+        int64_t w = gocpp::array_length<decltype(buf)>;
         return w;
     }
 

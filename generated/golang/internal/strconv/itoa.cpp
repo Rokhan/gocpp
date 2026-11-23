@@ -128,7 +128,7 @@ namespace golang::internal::strconv
 
         // +1 for sign of 64bit value in base 2
         gocpp::array<unsigned char, 64 + 1> a = {};
-        int64_t i = len(a);
+        int64_t i = gocpp::array_length<decltype(a)>;
         if(neg)
         {
             u = - u;

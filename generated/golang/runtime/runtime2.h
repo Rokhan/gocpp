@@ -155,9 +155,9 @@ namespace golang::runtime
     // The G is always actually executing on the system stack in these cases.
     //
     // TODO(mknyszek): Consider replacing this with a new dedicated G status.
-    extern gocpp::array<bool, len(waitReasonStrings)> isWaitingForSuspendG;
+    extern gocpp::array<bool, gocpp::array_length<decltype(waitReasonStrings)>> isWaitingForSuspendG;
     // isIdleInSynctest indicates that a goroutine is considered idle by synctest.Wait.
-    extern gocpp::array<bool, len(waitReasonStrings)> isIdleInSynctest;
+    extern gocpp::array<bool, gocpp::array_length<decltype(waitReasonStrings)>> isIdleInSynctest;
     extern int32_t gomaxprocs;
     extern int32_t numCPUStartup;
     extern int32_t newprocs;

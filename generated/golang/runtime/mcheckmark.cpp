@@ -310,7 +310,7 @@ namespace golang::runtime
             }
             if(issues != 0)
             {
-                if(nreports >= len(reports))
+                if(nreports >= gocpp::array_length<decltype(reports)>)
                 {
                     more = true;
                     return false;

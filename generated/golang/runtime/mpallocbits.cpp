@@ -167,7 +167,7 @@ namespace golang::runtime
         // sentinel for start value
         constexpr uint64_t notSetYet = ~ (uint64_t)(0);
         start = notSetYet;
-        for(int64_t i = 0; i < len(b); i++)
+        for(int64_t i = 0; i < gocpp::array_length<decltype(b)>; i++)
         {
             auto x = b[i];
             if(x == 0)
@@ -191,7 +191,7 @@ namespace golang::runtime
         if(start == notSetYet)
         {
             // Made it all the way through without finding a single 1 bit.
-            constexpr uint64_t n = (uint64_t)(64 * len(b));
+            constexpr uint64_t n = (uint64_t)(64 * gocpp::array_length<decltype(b)>);
             return packPallocSum(n, n, n);
         }
         most = gocpp::max(most, cur);
@@ -204,7 +204,7 @@ namespace golang::runtime
         // Now look inside each uint64 for runs of zeros.
         // All uint64s must be nonzero, or we would have aborted above.
         outer:
-        for(int64_t i = 0; i < len(b); i++)
+        for(int64_t i = 0; i < gocpp::array_length<decltype(b)>; i++)
         {
             if(false) {
             outer_continue:
@@ -316,7 +316,7 @@ namespace golang::runtime
     {
         // lift nil check out of loop
         _ = b[0];
-        for(auto i = searchIdx / 64; i < (uint64_t)(len(b)); i++)
+        for(auto i = searchIdx / 64; i < (uint64_t)(gocpp::array_length<decltype(b)>); i++)
         {
             auto x = b[i];
             if(~ x == 0)
@@ -341,7 +341,7 @@ namespace golang::runtime
     std::tuple<uint64_t, uint64_t> rec::findSmallN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, uint64_t searchIdx)
     {
         auto [end, newSearchIdx] = std::tuple{(uint64_t)(0), ~ (uint64_t)(0)};
-        for(auto i = searchIdx / 64; i < (uint64_t)(len(b)); i++)
+        for(auto i = searchIdx / 64; i < (uint64_t)(gocpp::array_length<decltype(b)>); i++)
         {
             auto bi = b[i];
             if(~ bi == 0)
@@ -386,7 +386,7 @@ namespace golang::runtime
     std::tuple<uint64_t, uint64_t> rec::findLargeN(gocpp::array_ptr<pallocBits> b, uintptr_t npages, uint64_t searchIdx)
     {
         auto [start, size, newSearchIdx] = std::tuple{~ (uint64_t)(0), (uint64_t)(0), ~ (uint64_t)(0)};
-        for(auto i = searchIdx / 64; i < (uint64_t)(len(b)); i++)
+        for(auto i = searchIdx / 64; i < (uint64_t)(gocpp::array_length<decltype(b)>); i++)
         {
             auto x = b[i];
             if(x == ~ uint64_t(0))

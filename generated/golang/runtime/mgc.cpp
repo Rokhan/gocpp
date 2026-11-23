@@ -1712,8 +1712,8 @@ namespace golang::runtime
         atomic::Store64(& memstats.last_gc_unix, uint64_t(unixNow));
         // monotonic time for us
         atomic::Store64(& memstats.last_gc_nanotime, uint64_t(now));
-        memstats.pause_ns[memstats.numgc % uint32_t(len(memstats.pause_ns))] = uint64_t(work.pauseNS);
-        memstats.pause_end[memstats.numgc % uint32_t(len(memstats.pause_end))] = uint64_t(unixNow);
+        memstats.pause_ns[memstats.numgc % uint32_t(gocpp::array_length<decltype(memstats.pause_ns)>)] = uint64_t(work.pauseNS);
+        memstats.pause_end[memstats.numgc % uint32_t(gocpp::array_length<decltype(memstats.pause_end)>)] = uint64_t(unixNow);
         memstats.pause_total_ns += uint64_t(work.pauseNS);
 
         // Accumulate CPU stats.

@@ -403,7 +403,7 @@ namespace golang::compress::flate
     // codegens returns current number of non-zero codegens.
     int64_t rec::codegens(huffmanBitWriter* w)
     {
-        int64_t numCodegens = len(w->codegenFreq);
+        int64_t numCodegens = gocpp::array_length<decltype(w->codegenFreq)>;
         for(; numCodegens > 4 && w->codegenFreq[codegenOrder[numCodegens - 1]] == 0; )
         {
             numCodegens--;
@@ -416,7 +416,7 @@ namespace golang::compress::flate
     {
         int64_t size;
         int64_t numCodegens;
-        numCodegens = len(w->codegenFreq);
+        numCodegens = gocpp::array_length<decltype(w->codegenFreq)>;
         for(; numCodegens > 4 && w->codegenFreq[codegenOrder[numCodegens - 1]] == 0; )
         {
             numCodegens--;
@@ -912,13 +912,13 @@ namespace golang::compress::flate
             return {numLiterals, numOffsets};
         }
         // get the number of literals
-        numLiterals = len(w->literalFreq);
+        numLiterals = gocpp::array_length<decltype(w->literalFreq)>;
         for(; w->literalFreq[numLiterals - 1] == 0; )
         {
             numLiterals--;
         }
         // get the number of offsets
-        numOffsets = len(w->offsetFreq);
+        numOffsets = gocpp::array_length<decltype(w->offsetFreq)>;
         for(; numOffsets > 0 && w->offsetFreq[numOffsets - 1] == 0; )
         {
             numOffsets--;

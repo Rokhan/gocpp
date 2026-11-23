@@ -76,7 +76,7 @@ namespace golang::runtime
     mutex profMemActiveLock;
     // profMemFutureLock is a set of locks that protect the respective elements
     // of the future array of every memRecord struct
-    gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    gocpp::array<mutex, gocpp::array_length<decltype(memRecord {}.future)>> profMemFutureLock;
     // A bucket holds per-call-stack profiling information.
     // The representation is a bit sleazy, inherited from C.
     // This struct defines the bucket header. It is followed in
@@ -537,7 +537,7 @@ namespace golang::runtime
             return;
         }
 
-        auto index = cycle % uint32_t(len(memRecord {}.future));
+        auto index = cycle % uint32_t(gocpp::array_length<decltype(memRecord {}.future)>);
         lock(& profMemActiveLock);
         lock(& profMemFutureLock[index]);
         mProf_FlushLocked(index);
@@ -579,7 +579,7 @@ namespace golang::runtime
         // and so on.
         auto cycle = rec::read(gocpp::recv(mProfCycle)) + 1;
 
-        auto index = cycle % uint32_t(len(memRecord {}.future));
+        auto index = cycle % uint32_t(gocpp::array_length<decltype(memRecord {}.future)>);
         lock(& profMemActiveLock);
         lock(& profMemFutureLock[index]);
         mProf_FlushLocked(index);
@@ -601,7 +601,7 @@ namespace golang::runtime
         // Only use the part of mp.profStack we need and ignore the extra space
         // reserved for delayed inline expansion with frame pointer unwinding.
         auto nstk = callers(3, mp->profStack.make_slice(0, debug.profstackdepth + 2));
-        auto index = (rec::read(gocpp::recv(mProfCycle)) + 2) % uint32_t(len(memRecord {}.future));
+        auto index = (rec::read(gocpp::recv(mProfCycle)) + 2) % uint32_t(gocpp::array_length<decltype(memRecord {}.future)>);
 
         auto b = stkbucket(memProfile, size, mp->profStack.make_slice(0, nstk), true);
         auto mr = rec::mp(gocpp::recv(b));
@@ -624,7 +624,7 @@ namespace golang::runtime
     // Called when freeing a profiled block.
     void mProf_Free(bucket* b)
     {
-        auto index = (rec::read(gocpp::recv(mProfCycle)) + 1) % uint32_t(len(memRecord {}.future));
+        auto index = (rec::read(gocpp::recv(mProfCycle)) + 1) % uint32_t(gocpp::array_length<decltype(memRecord {}.future)>);
 
         auto mp = rec::mp(gocpp::recv(b));
         auto mpc = & mp->future[index];
@@ -1294,7 +1294,7 @@ namespace golang::runtime
         // If we're between mProf_NextCycle and mProf_Flush, take care
         // of flushing to the active profile so we only have to look
         // at the active profile below.
-        auto index = cycle % uint32_t(len(memRecord {}.future));
+        auto index = cycle % uint32_t(gocpp::array_length<decltype(memRecord {}.future)>);
         lock(& profMemActiveLock);
         lock(& profMemFutureLock[index]);
         mProf_FlushLocked(index);

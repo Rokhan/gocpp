@@ -211,7 +211,7 @@ namespace golang::runtime
 
         lock(& finlock);
 
-        if(finq == nullptr || finq->cnt == uint32_t(len(finq->fin)))
+        if(finq == nullptr || finq->cnt == uint32_t(gocpp::array_length<decltype(finq->fin)>))
         {
             if(finc == nullptr)
             {
@@ -233,7 +233,7 @@ namespace golang::runtime
                     }
                     for(auto [i, gocpp_ignored] : finptrmask)
                     {
-                        finptrmask[i] = finalizer1[i % len(finalizer1)];
+                        finptrmask[i] = finalizer1[i % gocpp::array_length<decltype(finalizer1)>];
                     }
                 }
             }

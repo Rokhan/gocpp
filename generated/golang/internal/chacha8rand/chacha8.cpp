@@ -132,18 +132,18 @@ namespace golang::internal::chacha8rand
             // This gives a delayed benefit for the forward secrecy
             // (you can reconstruct the recent past given a memory dump),
             // which we deem acceptable in exchange for the reduced size.
-            s->seed[0] = s->buf[len(s->buf) - reseed + 0];
-            s->seed[1] = s->buf[len(s->buf) - reseed + 1];
-            s->seed[2] = s->buf[len(s->buf) - reseed + 2];
-            s->seed[3] = s->buf[len(s->buf) - reseed + 3];
+            s->seed[0] = s->buf[gocpp::array_length<decltype(s->buf)> - reseed + 0];
+            s->seed[1] = s->buf[gocpp::array_length<decltype(s->buf)> - reseed + 1];
+            s->seed[2] = s->buf[gocpp::array_length<decltype(s->buf)> - reseed + 2];
+            s->seed[3] = s->buf[gocpp::array_length<decltype(s->buf)> - reseed + 3];
             s->c = 0;
         }
         block(gocpp::make_array_ptr(s->seed), gocpp::make_array_ptr(s->buf), s->c);
         s->i = 0;
-        s->n = uint32_t(len(s->buf));
+        s->n = uint32_t(gocpp::array_length<decltype(s->buf)>);
         if(s->c == ctrMax - ctrInc)
         {
-            s->n = uint32_t(len(s->buf)) - reseed;
+            s->n = uint32_t(gocpp::array_length<decltype(s->buf)>) - reseed;
         }
     }
 

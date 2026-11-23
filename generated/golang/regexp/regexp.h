@@ -163,7 +163,7 @@ namespace golang::regexp
 
 namespace golang::regexp
 {
-    extern gocpp::array<sync::Pool, len(matchSize)> matchPool;
+    extern gocpp::array<sync::Pool, gocpp::array_length<decltype(matchSize)>> matchPool;
 }
 #include "golang/io/io.h"
 

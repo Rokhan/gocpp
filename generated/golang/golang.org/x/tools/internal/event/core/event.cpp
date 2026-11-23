@@ -89,16 +89,16 @@ namespace golang::golang_org::x::tools::internal::event::core
 
     bool rec::Valid(Event ev, int64_t index)
     {
-        return index >= 0 && index < len(ev.go_static) + len(ev.dynamic);
+        return index >= 0 && index < gocpp::array_length<decltype(ev.go_static)> + len(ev.dynamic);
     }
 
     label::Label rec::Label(Event ev, int64_t index)
     {
-        if(index < len(ev.go_static))
+        if(index < gocpp::array_length<decltype(ev.go_static)>)
         {
             return ev.go_static[index];
         }
-        return ev.dynamic[index - len(ev.go_static)];
+        return ev.dynamic[index - gocpp::array_length<decltype(ev.go_static)>];
     }
 
     // Labels returns an iterator over the event's valid labels.

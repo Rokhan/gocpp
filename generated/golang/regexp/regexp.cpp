@@ -327,7 +327,7 @@ namespace golang::regexp
     // so matchPool[0] has 16*2*128 = 4kB queues, etc.
     // The final matchPool is a catch-all for very large queues.
     gocpp::array<int64_t, 5> matchSize = gocpp::array<int64_t, 5> {128, 512, 2048, 16384, 0};
-    gocpp::array<sync::Pool, len(matchSize)> matchPool;
+    gocpp::array<sync::Pool, gocpp::array_length<decltype(matchSize)>> matchPool;
     // get returns a machine to use for matching re.
     // It uses the re's machine cache if possible, to avoid
     // unnecessary allocation.

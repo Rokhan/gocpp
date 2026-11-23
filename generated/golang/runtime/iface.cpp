@@ -495,7 +495,7 @@ namespace golang::runtime
     gocpp::unsafe_pointer convT16(uint16_t val)
     {
         gocpp::unsafe_pointer x;
-        if(val < uint16_t(len(staticuint64s)))
+        if(val < uint16_t(gocpp::array_length<decltype(staticuint64s)>))
         {
             x = gocpp::unsafe_pointer(& staticuint64s[val]);
             if(goarch::BigEndian)
@@ -514,7 +514,7 @@ namespace golang::runtime
     gocpp::unsafe_pointer convT32(uint32_t val)
     {
         gocpp::unsafe_pointer x;
-        if(val < uint32_t(len(staticuint64s)))
+        if(val < uint32_t(gocpp::array_length<decltype(staticuint64s)>))
         {
             x = gocpp::unsafe_pointer(& staticuint64s[val]);
             if(goarch::BigEndian)
@@ -542,7 +542,7 @@ namespace golang::runtime
     gocpp::unsafe_pointer convT64(uint64_t val)
     {
         gocpp::unsafe_pointer x;
-        if(val < uint64_t(len(staticuint64s)))
+        if(val < uint64_t(gocpp::array_length<decltype(staticuint64s)>))
         {
             x = gocpp::unsafe_pointer(& staticuint64s[val]);
         }

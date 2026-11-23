@@ -257,7 +257,7 @@ namespace golang::math::big
     // n must not be negative.
     Float* rec::pow5(Float* z, uint64_t n)
     {
-        constexpr uint64_t m = uint64_t(len(pow5tab) - 1);
+        constexpr uint64_t m = uint64_t(gocpp::array_length<decltype(pow5tab)> - 1);
         // n > m
         if(n <= m)
         {

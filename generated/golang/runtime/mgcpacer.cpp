@@ -519,7 +519,7 @@ namespace golang::runtime
             }
         }
         copy(c->lastConsMark.make_slice(0), c->lastConsMark.make_slice(1));
-        c->lastConsMark[len(c->lastConsMark) - 1] = currentConsMark;
+        c->lastConsMark[gocpp::array_length<decltype(c->lastConsMark)> - 1] = currentConsMark;
 
         if(debug.gcpacertrace > 0)
         {

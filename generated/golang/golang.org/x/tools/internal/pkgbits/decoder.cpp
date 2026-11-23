@@ -159,7 +159,7 @@ namespace golang::golang_org::x::tools::internal::pkgbits
 
         assert(binary::Read(r, binary::LittleEndian, pr.elemEndsEnds.make_slice(0)) == nullptr);
 
-        pr.elemEnds = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), pr.elemEndsEnds[len(pr.elemEndsEnds) - 1]);
+        pr.elemEnds = gocpp::make(gocpp::Tag<gocpp::slice<uint32_t>>(), pr.elemEndsEnds[gocpp::array_length<decltype(pr.elemEndsEnds)> - 1]);
         assert(binary::Read(r, binary::LittleEndian, pr.elemEnds.make_slice(0)) == nullptr);
 
         auto [pos, err] = rec::Seek(gocpp::recv(r), 0, io::SeekCurrent);

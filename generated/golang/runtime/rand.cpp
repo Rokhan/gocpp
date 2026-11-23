@@ -103,12 +103,12 @@ namespace golang::runtime
         {
             for(auto [i, c] : startupRand)
             {
-                seed[i % len(seed)] ^= c;
+                seed[i % gocpp::array_length<decltype(seed)>] ^= c;
             }
         }
         else
         {
-            if(readRandom(seed.make_slice(0)) != len(seed) || allZero(seed.make_slice(0)))
+            if(readRandom(seed.make_slice(0)) != gocpp::array_length<decltype(seed)> || allZero(seed.make_slice(0)))
             {
                 // readRandom should never fail, but if it does we'd rather
                 // not make Go binaries completely unusable, so make up

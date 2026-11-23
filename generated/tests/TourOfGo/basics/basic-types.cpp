@@ -145,7 +145,7 @@ namespace golang::main
     {
         gocpp::array<int64_t, Size> grid = {};
         grid[Size - 1] = 5;
-        mocklib::Println(len(grid), grid);
+        mocklib::Println(gocpp::array_length<decltype(grid)>, grid);
     }
 
     void main()

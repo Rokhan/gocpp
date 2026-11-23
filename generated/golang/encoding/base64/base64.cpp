@@ -340,7 +340,7 @@ namespace golang::encoding::base64
         // Large interior chunks.
         for(; len(p) >= 3; )
         {
-            int64_t nn = len(e->out) / 4 * 3;
+            int64_t nn = gocpp::array_length<decltype(e->out)> / 4 * 3;
             if(nn > len(p))
             {
                 nn = len(p);
@@ -424,7 +424,7 @@ namespace golang::encoding::base64
         // Lift the nil check outside of the loop.
         _ = enc->decodeMap;
 
-        for(int64_t j = 0; j < len(dbuf); j++)
+        for(int64_t j = 0; j < gocpp::array_length<decltype(dbuf)>; j++)
         {
             if(len(src) == si)
             {
@@ -661,9 +661,9 @@ namespace golang::encoding::base64
             {
                 nn = 4;
             }
-            if(nn > len(d->buf))
+            if(nn > gocpp::array_length<decltype(d->buf)>)
             {
-                nn = len(d->buf);
+                nn = gocpp::array_length<decltype(d->buf)>;
             }
             std::tie(nn, d->readErr) = rec::Read(gocpp::recv(d->r), d->buf.make_slice(d->nbuf, nn));
             d->nbuf += nn;

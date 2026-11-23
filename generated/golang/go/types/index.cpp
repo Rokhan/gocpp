@@ -640,7 +640,7 @@ namespace golang::go::types
         // constant indices must be in range
         // (check.index already checks that existing indices >= 0)
         L:
-        for(auto [i, x] : ind.make_slice(0, len(ind) - 1))
+        for(auto [i, x] : ind.make_slice(0, gocpp::array_length<decltype(ind)> - 1))
         {
             if(false) {
             L_continue:

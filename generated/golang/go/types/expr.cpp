@@ -149,7 +149,7 @@ namespace golang::go::types
                 case 0:
                 {
                     ast::BinaryExpr* e = gocpp::any_cast<ast::BinaryExpr*>(e_ref);
-                    if(int64_t(e->Op) < len(op2str2))
+                    if(int64_t(e->Op) < gocpp::array_length<decltype(op2str2)>)
                     {
                         return op2str2[e->Op];
                     }
@@ -158,7 +158,7 @@ namespace golang::go::types
                 case 1:
                 {
                     ast::UnaryExpr* e = gocpp::any_cast<ast::UnaryExpr*>(e_ref);
-                    if(int64_t(e->Op) < len(op2str1))
+                    if(int64_t(e->Op) < gocpp::array_length<decltype(op2str1)>)
                     {
                         return op2str1[e->Op];
                     }

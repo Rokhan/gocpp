@@ -4058,7 +4058,7 @@ namespace golang::runtime
         if(! rec::empty(gocpp::recv(sched.runq)))
         {
             lock(& sched.lock);
-            auto [gp, q] = globrunqgetbatch(int32_t(len(pp->runq)) / 2);
+            auto [gp, q] = globrunqgetbatch(int32_t(gocpp::array_length<decltype(pp->runq)>) / 2);
             unlock(& sched.lock);
             if(gp != nullptr)
             {
@@ -4199,7 +4199,7 @@ namespace golang::runtime
         }
         if(! rec::empty(gocpp::recv(sched.runq)))
         {
-            auto [gp, q] = globrunqgetbatch(int32_t(len(pp->runq)) / 2);
+            auto [gp, q] = globrunqgetbatch(int32_t(gocpp::array_length<decltype(pp->runq)>) / 2);
             unlock(& sched.lock);
             if(gp == nullptr)
             {
@@ -4278,7 +4278,7 @@ namespace golang::runtime
                 auto [pp, gocpp_id_2] = pidlegetSpinning(0);
                 if(pp != nullptr)
                 {
-                    auto [gp, q] = globrunqgetbatch(int32_t(len(pp->runq)) / 2);
+                    auto [gp, q] = globrunqgetbatch(int32_t(gocpp::array_length<decltype(pp->runq)>) / 2);
                     unlock(& sched.lock);
                     if(gp == nullptr)
                     {
@@ -6802,7 +6802,7 @@ namespace golang::runtime
             // about any other code interrupting us.
             if(rec::Load(gocpp::recv(mp->cgoCallersUse)) == 0 && mp->cgoCallers != nullptr && mp->cgoCallers[0] != 0)
             {
-                for(; cgoOff < len(mp->cgoCallers) && mp->cgoCallers[cgoOff] != 0; )
+                for(; cgoOff < gocpp::array_length<decltype(mp->cgoCallers)> && mp->cgoCallers[cgoOff] != 0; )
                 {
                     cgoOff++;
                 }
@@ -6995,7 +6995,7 @@ namespace golang::runtime
         {
             // Pop from tail of local queue
             pp->runqtail--;
-            auto gp = rec::ptr(gocpp::recv(pp->runq[pp->runqtail % uint32_t(len(pp->runq))]));
+            auto gp = rec::ptr(gocpp::recv(pp->runq[pp->runqtail % uint32_t(gocpp::array_length<decltype(pp->runq)>)]));
             // Push onto head of global queue
             globrunqputhead(gp);
         }
@@ -8838,9 +8838,9 @@ namespace golang::runtime
         retry:
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
-        if(t - h < uint32_t(len(pp->runq)))
+        if(t - h < uint32_t(gocpp::array_length<decltype(pp->runq)>))
         {
-            rec::set(gocpp::recv(pp->runq[t % uint32_t(len(pp->runq))]), gp);
+            rec::set(gocpp::recv(pp->runq[t % uint32_t(gocpp::array_length<decltype(pp->runq)>)]), gp);
             // store-release, makes the item available for consumption
             atomic::StoreRel(& pp->runqtail, t + 1);
             return;
@@ -8857,18 +8857,18 @@ namespace golang::runtime
     // Executed only by the owner P.
     bool runqputslow(golang::runtime::p* pp, g* gp, uint32_t h, uint32_t t)
     {
-        gocpp::array<g*, len(pp->runq) / 2 + 1> batch = {};
+        gocpp::array<g*, gocpp::array_length<decltype(pp->runq)> / 2 + 1> batch = {};
 
         // First, grab a batch from local queue.
         auto n = t - h;
         n = n / 2;
-        if(n != uint32_t(len(pp->runq) / 2))
+        if(n != uint32_t(gocpp::array_length<decltype(pp->runq)> / 2))
         {
             go_throw("runqputslow: queue is not full"_s);
         }
         for(uint32_t i = uint32_t(0); i < n; i++)
         {
-            batch[i] = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
+            batch[i] = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(gocpp::array_length<decltype(pp->runq)>)]));
         }
         if(! atomic::CasRel(& pp->runqhead, h, h + n))
         {
@@ -8913,10 +8913,10 @@ namespace golang::runtime
         auto h = atomic::LoadAcq(& pp->runqhead);
         auto t = pp->runqtail;
         uint32_t n = uint32_t(0);
-        for(; ! rec::empty(gocpp::recv(q)) && t - h < uint32_t(len(pp->runq)); )
+        for(; ! rec::empty(gocpp::recv(q)) && t - h < uint32_t(gocpp::array_length<decltype(pp->runq)>); )
         {
             auto gp = rec::pop(gocpp::recv(q));
-            rec::set(gocpp::recv(pp->runq[t % uint32_t(len(pp->runq))]), gp);
+            rec::set(gocpp::recv(pp->runq[t % uint32_t(gocpp::array_length<decltype(pp->runq)>)]), gp);
             t++;
             n++;
         }
@@ -8925,7 +8925,7 @@ namespace golang::runtime
         {
             auto off = [=](uint32_t o) mutable -> uint32_t
             {
-                return (pp->runqtail + o) % uint32_t(len(pp->runq));
+                return (pp->runqtail + o) % uint32_t(gocpp::array_length<decltype(pp->runq)>);
             };
             for(uint32_t i = uint32_t(1); i < n; i++)
             {
@@ -8966,7 +8966,7 @@ namespace golang::runtime
             {
                 return {nullptr, false};
             }
-            auto gp = rec::ptr(gocpp::recv(pp->runq[h % uint32_t(len(pp->runq))]));
+            auto gp = rec::ptr(gocpp::recv(pp->runq[h % uint32_t(gocpp::array_length<decltype(pp->runq)>)]));
             if(atomic::CasRel(& pp->runqhead, h, h + 1))
             {
                 // cas-release, commits consume
@@ -8995,7 +8995,7 @@ namespace golang::runtime
         {
             return drainQ;
         }
-        if(qn > uint32_t(len(pp->runq)))
+        if(qn > uint32_t(gocpp::array_length<decltype(pp->runq)>))
         {
             // read inconsistent h and t
             goto retry;
@@ -9016,7 +9016,7 @@ namespace golang::runtime
         // See https://groups.google.com/g/golang-dev/c/0pTKxEKhHSc/m/6Q85QjdVBQAJ for more details.
         for(uint32_t i = uint32_t(0); i < qn; i++)
         {
-            auto gp = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(len(pp->runq))]));
+            auto gp = rec::ptr(gocpp::recv(pp->runq[(h + i) % uint32_t(gocpp::array_length<decltype(pp->runq)>)]));
             rec::pushBack(gocpp::recv(drainQ), gp);
         }
         return drainQ;
@@ -9086,21 +9086,21 @@ namespace golang::runtime
                         {
                             continue;
                         }
-                        batch[batchHead % uint32_t(len(batch))] = next;
+                        batch[batchHead % uint32_t(gocpp::array_length<decltype(batch)>)] = next;
                         return 1;
                     }
                 }
                 return 0;
             }
-            if(n > uint32_t(len(pp->runq) / 2))
+            if(n > uint32_t(gocpp::array_length<decltype(pp->runq)> / 2))
             {
                 // read inconsistent h and t
                 continue;
             }
             for(uint32_t i = uint32_t(0); i < n; i++)
             {
-                auto g = pp->runq[(h + i) % uint32_t(len(pp->runq))];
-                batch[(batchHead + i) % uint32_t(len(batch))] = g;
+                auto g = pp->runq[(h + i) % uint32_t(gocpp::array_length<decltype(pp->runq)>)];
+                batch[(batchHead + i) % uint32_t(gocpp::array_length<decltype(batch)>)] = g;
             }
             if(atomic::CasRel(& pp->runqhead, h, h + n))
             {
@@ -9122,14 +9122,14 @@ namespace golang::runtime
             return nullptr;
         }
         n--;
-        auto gp = rec::ptr(gocpp::recv(pp->runq[(t + n) % uint32_t(len(pp->runq))]));
+        auto gp = rec::ptr(gocpp::recv(pp->runq[(t + n) % uint32_t(gocpp::array_length<decltype(pp->runq)>)]));
         if(n == 0)
         {
             return gp;
         }
         // load-acquire, synchronize with consumers
         auto h = atomic::LoadAcq(& pp->runqhead);
-        if(t - h + n >= uint32_t(len(pp->runq)))
+        if(t - h + n >= uint32_t(gocpp::array_length<decltype(pp->runq)>))
         {
             go_throw("runqsteal: runq overflow"_s);
         }

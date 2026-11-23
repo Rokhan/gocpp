@@ -1093,7 +1093,7 @@ namespace golang::runtime
     //go:nosplit
     bool rec::available(traceBuf* buf, int64_t size)
     {
-        return len(buf->arr) - buf->traceBufHeader.pos >= size;
+        return gocpp::array_length<decltype(buf->arr)> - buf->traceBufHeader.pos >= size;
     }
 
     // varintAt writes varint v at byte position pos in buf. This always

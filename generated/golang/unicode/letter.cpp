@@ -548,7 +548,7 @@ namespace golang::unicode
             return r;
         }
 
-        if(int64_t(r) < len(asciiFold))
+        if(int64_t(r) < gocpp::array_length<decltype(asciiFold)>)
         {
             return gocpp::rune(asciiFold[r]);
         }

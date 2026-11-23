@@ -677,7 +677,7 @@ namespace golang::runtime
     //go:nosplit
     void rec::ensure(debugLogWriter* l, uint64_t n)
     {
-        for(; l->write + n >= l->r.begin + uint64_t(len(l->data.b)); )
+        for(; l->write + n >= l->r.begin + uint64_t(gocpp::array_length<decltype(l->data.b)>); )
         {
             // Consume record at begin.
             if(rec::skip(gocpp::recv(l->r)) == ~ uint64_t(0))
@@ -695,8 +695,8 @@ namespace golang::runtime
     //go:nosplit
     bool rec::writeFrameAt(debugLogWriter* l, uint64_t pos, uint64_t size)
     {
-        l->data.b[pos % uint64_t(len(l->data.b))] = uint8_t(size);
-        l->data.b[(pos + 1) % uint64_t(len(l->data.b))] = uint8_t(size >> 8);
+        l->data.b[pos % uint64_t(gocpp::array_length<decltype(l->data.b)>)] = uint8_t(size);
+        l->data.b[(pos + 1) % uint64_t(gocpp::array_length<decltype(l->data.b)>)] = uint8_t(size >> 8);
         return size <= 0xFFFF;
     }
 
@@ -726,7 +726,7 @@ namespace golang::runtime
         rec::ensure(gocpp::recv(l), 1);
         auto pos = l->write;
         l->write++;
-        l->data.b[pos % uint64_t(len(l->data.b))] = x;
+        l->data.b[pos % uint64_t(gocpp::array_length<decltype(l->data.b)>)] = x;
     }
 
     //go:nosplit
@@ -737,7 +737,7 @@ namespace golang::runtime
         l->write += uint64_t(len(x));
         for(; len(x) > 0; )
         {
-            auto n = copy(l->data.b.make_slice(pos % uint64_t(len(l->data.b))), x);
+            auto n = copy(l->data.b.make_slice(pos % uint64_t(gocpp::array_length<decltype(l->data.b)>)), x);
             pos += uint64_t(n);
             x = x.make_slice(n);
         }
@@ -843,8 +843,8 @@ namespace golang::runtime
     //go:nosplit
     uint16_t rec::readUint16LEAt(debugLogReader* r, uint64_t pos)
     {
-        return uint16_t(r->data->b[pos % uint64_t(len(r->data->b))]) |
-                (uint16_t(r->data->b[(pos + 1) % uint64_t(len(r->data->b))]) << 8);
+        return uint16_t(r->data->b[pos % uint64_t(gocpp::array_length<decltype(r->data->b)>)]) |
+                (uint16_t(r->data->b[(pos + 1) % uint64_t(gocpp::array_length<decltype(r->data->b)>)]) << 8);
     }
 
     //go:nosplit
@@ -853,7 +853,7 @@ namespace golang::runtime
         gocpp::array<unsigned char, 8> b = {};
         for(auto [i, gocpp_ignored] : b)
         {
-            b[i] = r->data->b[pos % uint64_t(len(r->data->b))];
+            b[i] = r->data->b[pos % uint64_t(gocpp::array_length<decltype(r->data->b)>)];
             pos++;
         }
         return byteorder::LEUint64(b.make_slice(0));
@@ -894,7 +894,7 @@ namespace golang::runtime
         uint64_t u = {};
         for(uint64_t i = (uint64_t)(0); ; i += 7)
         {
-            auto b = r->data->b[pos % uint64_t(len(r->data->b))];
+            auto b = r->data->b[pos % uint64_t(gocpp::array_length<decltype(r->data->b)>)];
             pos++;
             u |= uint64_t((b & ~(0x80))) << i;
             if(b & 0x80 == 0)
@@ -934,7 +934,7 @@ namespace golang::runtime
         uint64_t u = {};
         for(uint64_t i = (uint64_t)(0); ; i += 7)
         {
-            auto b = r->data->b[r->begin % uint64_t(len(r->data->b))];
+            auto b = r->data->b[r->begin % uint64_t(gocpp::array_length<decltype(r->data->b)>)];
             r->begin++;
             u |= uint64_t((b & ~(0x80))) << i;
             if(b & 0x80 == 0)
@@ -962,7 +962,7 @@ namespace golang::runtime
 
     bool rec::printVal(debugLogReader* r)
     {
-        auto typ = r->data->b[r->begin % uint64_t(len(r->data->b))];
+        auto typ = r->data->b[r->begin % uint64_t(gocpp::array_length<decltype(r->data->b)>)];
         r->begin++;
 
         //Go switch emulation
@@ -1025,7 +1025,7 @@ namespace golang::runtime
                     }
                     for(; sl > 0; )
                     {
-                        auto b = r->data->b.make_slice(r->begin % uint64_t(len(r->data->b)));
+                        auto b = r->data->b.make_slice(r->begin % uint64_t(gocpp::array_length<decltype(r->data->b)>));
                         if(uint64_t(len(b)) > sl)
                         {
                             b = b.make_slice(0, sl);
@@ -1074,7 +1074,7 @@ namespace golang::runtime
                     });
                     for(; bl > 0; )
                     {
-                        auto b = r->data->b.make_slice(r->begin % uint64_t(len(r->data->b)));
+                        auto b = r->data->b.make_slice(r->begin % uint64_t(gocpp::array_length<decltype(r->data->b)>));
                         if(uint64_t(len(b)) > bl)
                         {
                             b = b.make_slice(0, bl);

@@ -187,7 +187,7 @@ namespace golang::runtime
             osyield();
         }
 
-        if(cpuprof.numExtra + 1 + len(stk) < len(cpuprof.extra))
+        if(cpuprof.numExtra + 1 + len(stk) < gocpp::array_length<decltype(cpuprof.extra)>)
         {
             auto i = cpuprof.numExtra;
             cpuprof.extra[i] = uintptr_t(1 + len(stk));

@@ -1506,7 +1506,7 @@ namespace golang::runtime
 
         // Basic string status
         gocpp::string status = {};
-        if(0 <= gpstatus && gpstatus < uint32_t(len(gStatusStrings)))
+        if(0 <= gpstatus && gpstatus < uint32_t(gocpp::array_length<decltype(gStatusStrings)>))
         {
             status = gStatusStrings[gpstatus];
         }

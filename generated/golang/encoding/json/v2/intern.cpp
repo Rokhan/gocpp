@@ -75,7 +75,7 @@ namespace golang::encoding::json::v2
         }
 
         // Check the cache for the string.
-        auto i = h % uint32_t(len(*c));
+        auto i = h % uint32_t(gocpp::array_length<decltype(*c)>);
         if(auto s = (*c)[i]; s == gocpp::string(b))
         {
             return s;

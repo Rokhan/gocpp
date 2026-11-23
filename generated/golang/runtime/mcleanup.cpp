@@ -509,7 +509,7 @@ namespace golang::runtime
     // full returns true if the cleanup block is full.
     bool rec::full(cleanupBlock* b)
     {
-        return b->cleanupBlockHeader.n == uint32_t(len(b->cleanups));
+        return b->cleanupBlockHeader.n == uint32_t(gocpp::array_length<decltype(b->cleanups)>);
     }
 
     // empty returns true if the cleanup block is empty.
@@ -534,7 +534,7 @@ namespace golang::runtime
             // Partial take. Copy from the tail to avoid having
             // to move more memory around.
             copy(dst, b->cleanups.make_slice(b->cleanupBlockHeader.n - uint32_t(len(dst)), b->cleanupBlockHeader.n));
-            a->cleanupBlockHeader.n = uint32_t(len(a->cleanups));
+            a->cleanupBlockHeader.n = uint32_t(gocpp::array_length<decltype(a->cleanups)>);
             b->cleanupBlockHeader.n -= uint32_t(len(dst));
         }
     }

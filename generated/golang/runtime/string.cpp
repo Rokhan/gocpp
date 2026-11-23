@@ -138,7 +138,7 @@ namespace golang::runtime
         }
 
         gocpp::slice<unsigned char> b = {};
-        if(buf != nullptr && l <= len(buf))
+        if(buf != nullptr && l <= gocpp::array_length<decltype(buf)>)
         {
             *buf = tmpBuf {};
             b = buf.make_slice(0, l);
@@ -218,7 +218,7 @@ namespace golang::runtime
         }
 
         gocpp::unsafe_pointer p = {};
-        if(buf != nullptr && n <= len(buf))
+        if(buf != nullptr && n <= gocpp::array_length<decltype(buf)>)
         {
             p = gocpp::unsafe_pointer(buf);
         }
@@ -243,7 +243,7 @@ namespace golang::runtime
     {
         gocpp::string s;
         gocpp::slice<unsigned char> b;
-        if(buf != nullptr && l <= len(buf))
+        if(buf != nullptr && l <= gocpp::array_length<decltype(buf)>)
         {
             b = buf.make_slice(0, l);
             s = slicebytetostringtmp(& b[0], len(b));
@@ -289,7 +289,7 @@ namespace golang::runtime
     gocpp::slice<unsigned char> stringtoslicebyte(gocpp::array_ptr<tmpBuf> buf, gocpp::string s)
     {
         gocpp::slice<unsigned char> b = {};
-        if(buf != nullptr && len(s) <= len(buf))
+        if(buf != nullptr && len(s) <= gocpp::array_length<decltype(buf)>)
         {
             *buf = tmpBuf {};
             b = buf.make_slice(0, len(s));
@@ -313,7 +313,7 @@ namespace golang::runtime
         }
 
         gocpp::slice<gocpp::rune> a = {};
-        if(buf != nullptr && n <= len(buf))
+        if(buf != nullptr && n <= gocpp::array_length<decltype(buf)>)
         {
             *buf = gocpp::array<gocpp::rune, tmpStringBufSize> {};
             a = buf.make_slice(0, n);

@@ -318,7 +318,7 @@ namespace golang::runtime
             *head = buf;
         }
         else
-        if(buf->stackWorkBufHdr.workbufhdr.nobj == len(buf->obj))
+        if(buf->stackWorkBufHdr.workbufhdr.nobj == gocpp::array_length<decltype(buf->obj)>)
         {
             if(s->freeBuf != nullptr)
             {
@@ -399,7 +399,7 @@ namespace golang::runtime
         {
             go_throw("objects added out of order or overlapping"_s);
         }
-        if(x->stackObjectBufHdr.workbufhdr.nobj == len(x->obj))
+        if(x->stackObjectBufHdr.workbufhdr.nobj == gocpp::array_length<decltype(x->obj)>)
         {
             // full buffer - allocate a new buffer, add to end of linked list
             auto y = (stackObjectBuf*)(gocpp::unsafe_pointer(getempty()));
@@ -444,7 +444,7 @@ namespace golang::runtime
         std::tie(left, x, idx) = binarySearchTree(x, idx, n / 2);
         root = & x->obj[idx];
         idx++;
-        if(idx == len(x->obj))
+        if(idx == gocpp::array_length<decltype(x->obj)>)
         {
             x = x->stackObjectBufHdr.next;
             idx = 0;

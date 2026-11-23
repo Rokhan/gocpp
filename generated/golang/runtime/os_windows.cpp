@@ -399,8 +399,8 @@ namespace golang::runtime
     uintptr_t sysDirectoryLen;
     void initSysDirectory()
     {
-        auto l = stdcall(_GetSystemDirectoryA, uintptr_t(gocpp::unsafe_pointer(& sysDirectory[0])), uintptr_t(len(sysDirectory) - 1));
-        if(l == 0 || l > uintptr_t(len(sysDirectory) - 1))
+        auto l = stdcall(_GetSystemDirectoryA, uintptr_t(gocpp::unsafe_pointer(& sysDirectory[0])), uintptr_t(gocpp::array_length<decltype(sysDirectory)> - 1));
+        if(l == 0 || l > uintptr_t(gocpp::array_length<decltype(sysDirectory)> - 1))
         {
             go_throw("Unable to determine system directory"_s);
         }

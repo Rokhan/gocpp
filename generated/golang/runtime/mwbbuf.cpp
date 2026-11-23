@@ -89,7 +89,7 @@ namespace golang::runtime
         }
         else
         {
-            b->end = start + uintptr_t(len(b->buf)) * gocpp::unsafe_sizeof<uintptr_t>();
+            b->end = start + uintptr_t(gocpp::array_length<decltype(b->buf)>) * gocpp::unsafe_sizeof<uintptr_t>();
         }
 
         if((b->end - b->next) % gocpp::unsafe_sizeof<uintptr_t>() != 0)

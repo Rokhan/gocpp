@@ -820,7 +820,7 @@ namespace golang::go::types
         // all digits 0...9 have the same utf8 width
         constexpr int64_t w = len("₀"_s);
         gocpp::array<unsigned char, 32 * w> buf = {};
-        int64_t i = len(buf);
+        int64_t i = gocpp::array_length<decltype(buf)>;
         for(; ; )
         {
             i -= w;

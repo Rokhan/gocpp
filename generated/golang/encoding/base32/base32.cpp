@@ -327,7 +327,7 @@ namespace golang::encoding::base32
         // Large interior chunks.
         for(; len(p) >= 5; )
         {
-            int64_t nn = len(e->out) / 8 * 5;
+            int64_t nn = gocpp::array_length<decltype(e->out)> / 8 * 5;
             if(nn > len(p))
             {
                 nn = len(p);
@@ -650,9 +650,9 @@ namespace golang::encoding::base32
         {
             nn = 8;
         }
-        if(nn > len(d->buf))
+        if(nn > gocpp::array_length<decltype(d->buf)>)
         {
-            nn = len(d->buf);
+            nn = gocpp::array_length<decltype(d->buf)>;
         }
 
         // Minimum amount of bytes that needs to be read each cycle

@@ -195,7 +195,7 @@ namespace golang::runtime
         // chunk index
         auto ci = chunkIndex(rec::addr(gocpp::recv(p->searchAddr)));
         pallocData* chunk = {};
-        if(p->summary[len(p->summary) - 1][ci] != 0)
+        if(p->summary[gocpp::array_length<decltype(p->summary)> - 1][ci] != 0)
         {
             // Fast path: there's free pages at or near the searchAddr address.
             chunk = rec::chunkOf(gocpp::recv(p), ci);

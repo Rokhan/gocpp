@@ -230,7 +230,7 @@ namespace golang::go::types
                     types::Basic* t = gocpp::any_cast<types::Basic*>(rec::Underlying(gocpp::recv(T)));
                     assert(isTyped(T));
                     auto k = t->kind;
-                    if(int64_t(k) < len(basicSizes))
+                    if(int64_t(k) < gocpp::array_length<decltype(basicSizes)>)
                     {
                         if(auto s = basicSizes[k]; s > 0)
                         {

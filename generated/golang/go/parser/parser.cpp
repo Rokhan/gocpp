@@ -2635,7 +2635,7 @@ namespace golang::go::parser
                 {
                     case 0:
                         // slice expression
-                        for(; p->tok == token::COLON && ncolons < len(colons); )
+                        for(; p->tok == token::COLON && ncolons < gocpp::array_length<decltype(colons)>; )
                         {
                             colons[ncolons] = p->pos;
                             ncolons++;

@@ -593,7 +593,7 @@ namespace golang::runtime
             cbs.index = gocpp::make(gocpp::Tag<gocpp::map<winCallbackKey, int64_t>>());
         }
         auto n = cbs.n;
-        if(n >= len(cbs.ctxt))
+        if(n >= gocpp::array_length<decltype(cbs.ctxt)>)
         {
             cbsUnlock();
             go_throw("too many callback functions"_s);

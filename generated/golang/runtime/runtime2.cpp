@@ -2171,7 +2171,7 @@ namespace golang::runtime
     });
     gocpp::string rec::String(waitReason w)
     {
-        if(w < 0 || w >= waitReason(len(waitReasonStrings)))
+        if(w < 0 || w >= waitReason(gocpp::array_length<decltype(waitReasonStrings)>))
         {
             return "unknown wait reason"_s;
         }
@@ -2220,7 +2220,7 @@ namespace golang::runtime
     // The G is always actually executing on the system stack in these cases.
     //
     // TODO(mknyszek): Consider replacing this with a new dedicated G status.
-    gocpp::array<bool, len(waitReasonStrings)> isWaitingForSuspendG = gocpp::Init<gocpp::array<bool, len(waitReasonStrings)>>([](auto& x) {
+    gocpp::array<bool, gocpp::array_length<decltype(waitReasonStrings)>> isWaitingForSuspendG = gocpp::Init<gocpp::array<bool, gocpp::array_length<decltype(waitReasonStrings)>>>([](auto& x) {
         x[waitReasonStoppingTheWorld] = true;
         x[waitReasonGCMarkTermination] = true;
         x[waitReasonGarbageCollection] = true;
@@ -2238,7 +2238,7 @@ namespace golang::runtime
     }
 
     // isIdleInSynctest indicates that a goroutine is considered idle by synctest.Wait.
-    gocpp::array<bool, len(waitReasonStrings)> isIdleInSynctest = gocpp::Init<gocpp::array<bool, len(waitReasonStrings)>>([](auto& x) {
+    gocpp::array<bool, gocpp::array_length<decltype(waitReasonStrings)>> isIdleInSynctest = gocpp::Init<gocpp::array<bool, gocpp::array_length<decltype(waitReasonStrings)>>>([](auto& x) {
         x[waitReasonChanReceiveNilChan] = true;
         x[waitReasonChanSendNilChan] = true;
         x[waitReasonSelectNoCases] = true;

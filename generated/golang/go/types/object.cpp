@@ -1163,7 +1163,7 @@ namespace golang::go::types
     });
     gocpp::string rec::String(VarKind kind)
     {
-        if(0 <= kind && int64_t(kind) < len(varKindNames))
+        if(0 <= kind && int64_t(kind) < gocpp::array_length<decltype(varKindNames)>)
         {
             return varKindNames[kind];
         }

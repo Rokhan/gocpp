@@ -211,7 +211,7 @@ namespace golang::internal::strconv
                             b->dp--;
                             continue;
                         }
-                        if(b->nd < len(b->d))
+                        if(b->nd < gocpp::array_length<decltype(b->d)>)
                         {
                             b->d[b->nd] = s[i];
                             b->nd++;

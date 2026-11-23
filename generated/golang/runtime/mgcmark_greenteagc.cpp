@@ -254,7 +254,7 @@ namespace golang::runtime
         for(uintptr_t i = uintptr_t(0); i < bytes; i += goarch::PtrSize)
         {
             auto marks = bswapIfBigEndian(imbMarks[i / goarch::PtrSize]);
-            if(i / goarch::PtrSize == uintptr_t(len(imb->marks) + 1) / goarch::PtrSize - 1)
+            if(i / goarch::PtrSize == uintptr_t(gocpp::array_length<decltype(imb->marks)> + 1) / goarch::PtrSize - 1)
             {
                 // mask out class
                 marks &= ~(0xff << ((goarch::PtrSize - 1) * 8));
@@ -340,7 +340,7 @@ namespace golang::runtime
         {
             return false;
         }
-        auto pageIdx = ((p / pageSize) / 8) % uintptr_t(len(ha->pageInUse));
+        auto pageIdx = ((p / pageSize) / 8) % uintptr_t(gocpp::array_length<decltype(ha->pageInUse)>);
         auto pageMask = (unsigned char)(1 << ((p / pageSize) % 8));
         if(ha->pageUseSpanInlineMarkBits[pageIdx] & pageMask == 0)
         {
@@ -495,11 +495,11 @@ namespace golang::runtime
     bool rec::putFast(spanQueue* q, objptr s)
     {
         bool ok;
-        if(q->tail - q->head == uint32_t(len(q->ring)))
+        if(q->tail - q->head == uint32_t(gocpp::array_length<decltype(q->ring)>))
         {
             return false;
         }
-        q->ring[q->tail % uint32_t(len(q->ring))] = s;
+        q->ring[q->tail % uint32_t(gocpp::array_length<decltype(q->ring)>)] = s;
         q->tail++;
         return true;
     }
@@ -543,7 +543,7 @@ namespace golang::runtime
         }
 
         // We're out of space. Drain out our local spans.
-        rec::drain(gocpp::recv(q), uint32_t(len(q->ring)) / 2);
+        rec::drain(gocpp::recv(q), uint32_t(gocpp::array_length<decltype(q->ring)>) / 2);
         if(! rec::putFast(gocpp::recv(q), s))
         {
             go_throw("failed putFast after drain"_s);
@@ -662,7 +662,7 @@ namespace golang::runtime
         {
             for(uint32_t i = uint32_t(0); i < n; i++)
             {
-                *rec::slot(gocpp::recv(r), t + i) = q->ring[(q->head + i) % uint32_t(len(q->ring))];
+                *rec::slot(gocpp::recv(r), t + i) = q->ring[(q->head + i) % uint32_t(gocpp::array_length<decltype(q->ring)>)];
             }
             // Makes the items avail for consumption.
             rec::Store(gocpp::recv(r->tail), t + n);
@@ -680,7 +680,7 @@ namespace golang::runtime
         {
             return 0;
         }
-        auto s = q->ring[q->head % uint32_t(len(q->ring))];
+        auto s = q->ring[q->head % uint32_t(gocpp::array_length<decltype(q->ring)>)];
         q->head++;
         return s;
     }
@@ -763,7 +763,7 @@ namespace golang::runtime
                 // read inconsistent h and t
                 continue;
             }
-            n = gocpp::min(n, uint32_t(len(q->ring) / 2));
+            n = gocpp::min(n, uint32_t(gocpp::array_length<decltype(q->ring)> / 2));
             for(uint32_t i = uint32_t(0); i < n; i++)
             {
                 q->ring[i] = *rec::slot(gocpp::recv(r), h + i);
@@ -1170,7 +1170,7 @@ namespace golang::runtime
             auto marks = imbMarks[i / goarch::PtrSize];
             scans = bswapIfBigEndian(scans);
             marks = bswapIfBigEndian(marks);
-            if(i / goarch::PtrSize == uintptr_t(len(imb->marks) + 1) / goarch::PtrSize - 1)
+            if(i / goarch::PtrSize == uintptr_t(gocpp::array_length<decltype(imb->marks)> + 1) / goarch::PtrSize - 1)
             {
                 // mask out owned
                 scans &= ~(0xff << ((goarch::PtrSize - 1) * 8));

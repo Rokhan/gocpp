@@ -211,7 +211,7 @@ namespace golang::runtime
             // Construct the stack for insertion to the stack table.
             int64_t nstk = 1;
             pcBuf[0] = logicalStackSentinel;
-            for(; nstk < len(pcBuf) && nstk - 1 < len(stk); nstk++)
+            for(; nstk < gocpp::array_length<decltype(pcBuf)> && nstk - 1 < len(stk); nstk++)
             {
                 pcBuf[nstk] = uintptr_t(stk[nstk - 1]);
             }

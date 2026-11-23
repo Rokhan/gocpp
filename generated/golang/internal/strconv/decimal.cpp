@@ -213,7 +213,7 @@ namespace golang::internal::strconv
         {
             auto dig = n >> k;
             n &= mask;
-            if(w < len(a->d))
+            if(w < gocpp::array_length<decltype(a->d)>)
             {
                 a->d[w] = (unsigned char)(dig + '0');
                 w++;
@@ -375,7 +375,7 @@ namespace golang::internal::strconv
             auto quo = n / 10;
             auto rem = n - 10 * quo;
             w--;
-            if(w < len(a->d))
+            if(w < gocpp::array_length<decltype(a->d)>)
             {
                 a->d[w] = (unsigned char)(rem + '0');
             }
@@ -393,7 +393,7 @@ namespace golang::internal::strconv
             auto quo = n / 10;
             auto rem = n - 10 * quo;
             w--;
-            if(w < len(a->d))
+            if(w < gocpp::array_length<decltype(a->d)>)
             {
                 a->d[w] = (unsigned char)(rem + '0');
             }
@@ -406,9 +406,9 @@ namespace golang::internal::strconv
         }
 
         a->nd += delta;
-        if(a->nd >= len(a->d))
+        if(a->nd >= gocpp::array_length<decltype(a->d)>)
         {
-            a->nd = len(a->d);
+            a->nd = gocpp::array_length<decltype(a->d)>;
         }
         a->dp += delta;
         trim(a);

@@ -335,7 +335,7 @@ namespace golang::compress::flate
             reverse >>= (uint64_t)(16 - n);
             if(n <= huffmanChunkBits)
             {
-                for(auto off = reverse; off < len(h->chunks); off += 1 << (uint64_t)(n))
+                for(auto off = reverse; off < gocpp::array_length<decltype(h->chunks)>; off += 1 << (uint64_t)(n))
                 {
                     // We should never need to overwrite
                     // an existing chunk. Also, 0 is
@@ -683,7 +683,7 @@ namespace golang::compress::flate
             f->b >>= 3;
             f->nb -= 3;
         }
-        for(auto i = nclen; i < len(codeOrder); i++)
+        for(auto i = nclen; i < gocpp::array_length<decltype(codeOrder)>; i++)
         {
             f->codebits[codeOrder[i]] = 0;
         }

@@ -148,9 +148,9 @@ namespace golang::runtime
         atomic::Pointer<g> reader{}; // goroutine that called ReadTrace, or nil
         // Fast mappings from enumerations to string IDs that are prepopulated
         // in the trace.
-        gocpp::array<gocpp::array<traceArg, len(gcMarkWorkerModeStrings)>, 2> markWorkerLabels{};
-        gocpp::array<gocpp::array<traceArg, len(traceGoStopReasonStrings)>, 2> goStopReasons{};
-        gocpp::array<gocpp::array<traceArg, len(traceBlockReasonStrings)>, 2> goBlockReasons{};
+        gocpp::array<gocpp::array<traceArg, gocpp::array_length<decltype(gcMarkWorkerModeStrings)>>, 2> markWorkerLabels{};
+        gocpp::array<gocpp::array<traceArg, gocpp::array_length<decltype(traceGoStopReasonStrings)>>, 2> goStopReasons{};
+        gocpp::array<gocpp::array<traceArg, gocpp::array_length<decltype(traceBlockReasonStrings)>>, 2> goBlockReasons{};
         // enabled indicates whether tracing is enabled, but it is only an optimization,
         // NOT the source of truth on whether tracing is enabled. Tracing is only truly
         // enabled if gen != 0. This is used as an optimistic fast path check.

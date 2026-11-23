@@ -694,7 +694,7 @@ namespace golang::runtime
         }
 
         runtime::lock(p->mheapLock);
-        if(rec::max(gocpp::recv(p->summary[len(p->summary) - 1][ci])) >= (uint64_t)(minPages))
+        if(rec::max(gocpp::recv(p->summary[gocpp::array_length<decltype(p->summary)> - 1][ci])) >= (uint64_t)(minPages))
         {
             // We only bother looking for a candidate if there at least
             // minPages free pages at all.

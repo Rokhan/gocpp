@@ -576,7 +576,7 @@ namespace golang::runtime
     {
         auto p = *pauses;
         // Calling code in runtime/debug should make the slice large enough.
-        if(cap(p) < len(memstats.pause_ns) + 3)
+        if(cap(p) < gocpp::array_length<decltype(memstats.pause_ns)> + 3)
         {
             go_throw("short slice passed to readGCStats"_s);
         }
@@ -585,9 +585,9 @@ namespace golang::runtime
         lock(& mheap_.lock);
 
         auto n = memstats.numgc;
-        if(n > uint32_t(len(memstats.pause_ns)))
+        if(n > uint32_t(gocpp::array_length<decltype(memstats.pause_ns)>))
         {
-            n = uint32_t(len(memstats.pause_ns));
+            n = uint32_t(gocpp::array_length<decltype(memstats.pause_ns)>);
         }
 
         // The pause buffer is circular. The most recent pause is at
@@ -597,7 +597,7 @@ namespace golang::runtime
         p = p.make_slice(0, cap(p));
         for(uint32_t i = uint32_t(0); i < n; i++)
         {
-            auto j = (memstats.numgc - 1 - i) % uint32_t(len(memstats.pause_ns));
+            auto j = (memstats.numgc - 1 - i) % uint32_t(gocpp::array_length<decltype(memstats.pause_ns)>);
             p[i] = memstats.pause_ns[j];
             p[n + i] = memstats.pause_end[j];
         }

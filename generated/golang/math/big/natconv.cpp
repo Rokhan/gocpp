@@ -742,7 +742,7 @@ namespace golang::math::big
 
         // determine k where (bb**leafSize)**(2**k) >= sqrt(x)
         int64_t k = 1;
-        for(auto words = leafSize; words < (m >> 1) && k < len(cacheBase10.table); words <<= 1)
+        for(auto words = leafSize; words < (m >> 1) && k < gocpp::array_length<decltype(cacheBase10.table)>; words <<= 1)
         {
             k++;
         }

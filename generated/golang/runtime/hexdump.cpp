@@ -157,7 +157,7 @@ namespace golang::runtime
             auto n = copy(h->dataBuf.make_slice(h->dataPos), data);
             h->dataPos += uint8_t(n);
             data = data.make_slice(n);
-            if(h->dataPos < uint8_t(len(h->dataBuf)))
+            if(h->dataPos < uint8_t(gocpp::array_length<decltype(h->dataBuf)>))
             {
                 return;
             }
@@ -166,10 +166,10 @@ namespace golang::runtime
         }
 
         // Handle full lines in data
-        for(; len(data) >= len(h->dataBuf); )
+        for(; len(data) >= gocpp::array_length<decltype(h->dataBuf)>; )
         {
-            rec::flushLine(gocpp::recv(h), data.make_slice(0, len(h->dataBuf)));
-            data = data.make_slice(len(h->dataBuf));
+            rec::flushLine(gocpp::recv(h), data.make_slice(0, gocpp::array_length<decltype(h->dataBuf)>));
+            data = data.make_slice(gocpp::array_length<decltype(h->dataBuf)>);
         }
 
         // Handle trailing data
@@ -186,7 +186,7 @@ namespace golang::runtime
 
     void rec::init(hexdumper* h)
     {
-        constexpr int64_t bytesPerLine = len(h->dataBuf);
+        constexpr int64_t bytesPerLine = gocpp::array_length<decltype(h->dataBuf)>;
 
         if(h->addrBytes == 0)
         {
@@ -240,7 +240,7 @@ namespace golang::runtime
 
     void rec::flushLine(hexdumper* h, gocpp::slice<unsigned char> data)
     {
-        constexpr int64_t bytesPerLine = len(h->dataBuf);
+        constexpr int64_t bytesPerLine = gocpp::array_length<decltype(h->dataBuf)>;
 
         constexpr int64_t maxAddrChars = 2 * goarch::PtrSize;
         const gocpp::string addrSep = ": "_s;
@@ -358,10 +358,10 @@ namespace golang::runtime
         {
             spaces[i] = ' ';
         }
-        for(; m.chars > len(spaces); )
+        for(; m.chars > gocpp::array_length<decltype(spaces)>; )
         {
             gwrite(spaces.make_slice(0));
-            m.chars -= len(spaces);
+            m.chars -= gocpp::array_length<decltype(spaces)>;
         }
         gwrite(spaces.make_slice(0, m.chars));
         print("^ "_s);

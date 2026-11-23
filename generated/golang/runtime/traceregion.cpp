@@ -164,7 +164,7 @@ namespace golang::runtime
         if(block != nullptr)
         {
             auto r = rec::Add(gocpp::recv(block->traceRegionAllocBlockHeader.off), n);
-            if(r <= uintptr_t(len(block->data)))
+            if(r <= uintptr_t(gocpp::array_length<decltype(block->data)>))
             {
                 return (notInHeap*)(gocpp::unsafe_pointer(& block->data[r - n]));
             }
@@ -184,7 +184,7 @@ namespace golang::runtime
             if(block != nullptr)
             {
                 auto r = rec::Add(gocpp::recv(block->traceRegionAllocBlockHeader.off), n);
-                if(r <= uintptr_t(len(block->data)))
+                if(r <= uintptr_t(gocpp::array_length<decltype(block->data)>))
                 {
                     unlock(& a->lock);
                     x = (notInHeap*)(gocpp::unsafe_pointer(& block->data[r - n]));

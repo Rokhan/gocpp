@@ -77,7 +77,7 @@ namespace golang::runtime
 
     std::ostream& operator<<(std::ostream& os, const struct blockRecord& value);
     struct GoTag_buckhashArray { };
-    inline constexpr uint32_t mProfCycleWrap = uint32_t(len(memRecord {}.future)) * (2 << 24);
+    inline constexpr uint32_t mProfCycleWrap = uint32_t(gocpp::array_length<decltype(memRecord {}.future)>) * (2 << 24);
     bool eqslice(gocpp::slice<uintptr_t> x, gocpp::slice<uintptr_t> y);
     void mProf_NextCycle();
     void mProf_Flush();
@@ -207,7 +207,7 @@ namespace golang::runtime
     extern mutex profMemActiveLock;
     // profMemFutureLock is a set of locks that protect the respective elements
     // of the future array of every memRecord struct
-    extern gocpp::array<mutex, len(memRecord {}.future)> profMemFutureLock;
+    extern gocpp::array<mutex, gocpp::array_length<decltype(memRecord {}.future)>> profMemFutureLock;
 }
 #include "golang/internal/profilerecord/profilerecord.h"
 

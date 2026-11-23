@@ -73,6 +73,8 @@ namespace gocpp
 
         constexpr inline string(const rune& src);
 
+        constexpr inline ~string() { }
+
         constexpr inline string make_slice(size_t low) const
         {
             return string(this->substr(low));

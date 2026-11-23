@@ -49,6 +49,16 @@ GOCPP_PARAMETERS += -cppOutDir=$(OUTDIR)
 ON_DIFF_ERROR = false
 ON_GCC_ERROR = false
 
+ifeq ($(OS),Windows_NT)
+    # Windows (MinGW/MSVC): no change
+else
+    UNAME_S := $(shell uname -s)
+
+    ifneq ($(filter CYGWIN_NT-%,$(UNAME_S)),)
+        CPPFLAGS += -D_GLIBCXX_USE_CXX11_ABI=1
+    endif
+endif
+
 GOCPP_SANITIZE ?=
 # usage: make GOCPP_SANITIZE=address ...
 CXX_SANITIZE = $(if $(GOCPP_SANITIZE),-fsanitize=$(GOCPP_SANITIZE) -g,)
@@ -71,6 +81,7 @@ endef
 define compute-time
 	$(call check-nonempty,$(1)) || { echo "$(1) | ERROR: empty input" > $(3); exit 1; }; \
 	start=$$(date +%s%N); \
+	echo "Running command: $(2)"; \
 	$(2); \
 	status=$$?; \
 	end=$$(date +%s%N); \
@@ -172,7 +183,7 @@ $(OUT_EXE_TEST_FILES): $(LOGDIR)/%.exe : %.go $(SUPPORT_FILES) gocpp.exe
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
-	(cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ $(CXX_SANITIZE) ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
+	(cd $(OUTDIR) && $(CCACHE) g++ -w -c -std=c++20  $(CPPFLAGS) $(CXX_SANITIZE) -I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes $*.cpp -o ../$(LOGDIR)/$*.o && g++ $(CXX_SANITIZE) ../$(LOGDIR)/$*.o -o ../$(LOGDIR)/$*.exe) \
 		&&  echo -n "| ✔️ " >> $(LOGDIR)/$*.md \
 		|| (echo    "| ❌ | ❌ | ❌ |" >> $(LOGDIR)/$*.md && false)
 
@@ -207,7 +218,7 @@ go-stdlib: $(GENERATED_GOLANG_LIB_OBJ_FILES)
 GOLANG_LIB_COMPILE = \
 	( set -o pipefail; \
 	  cd $(OUTDIR) && \
-	  LC_ALL=C timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 $(CXX_SANITIZE) \
+	  LC_ALL=C timeout $(GCC_TIMEOUT) $(CCACHE) g++ -w -c -std=c++20 $(CPPFLAGS) $(CXX_SANITIZE) \
 		-I. -I../includes -I../$(OUTDIR) -I../thirdparty/includes \
 		-ffunction-sections -fdata-sections \
 		$(1).cpp \

@@ -119,6 +119,13 @@ func (cv *cppConverter) GenerateCustomId(prefix string) string {
 	return id
 }
 
+// Name for a generated type (anonymous struct/interface), unique per namespace.
+func (cv *cppConverter) GenerateTypeId() string {
+	// "golang/runtime/mheap" -> "mheap"
+	base := sanitizeIdent(filepath.Base(cv.baseName))
+	return cv.GenerateCustomId("gocpp_" + base + "_")
+}
+
 func includeDependencies(out io.Writer, convSharedData *cppConverterSharedData, pkgInfos []*pkgInfo, tag tagType, incType includeType) set[string] {
 	if pkgInfos == nil {
 		return nil
@@ -3527,7 +3534,7 @@ var exprToId map[ast.Expr]string = map[ast.Expr]string{}
 var typeToId map[types.Type]string = map[types.Type]string{}
 
 func (cv *cppConverter) GenerateExprId(expr ast.Expr) (string, bool) {
-	return cv.GetOrCreateExprCustomedId(expr, cv.GenerateId)
+	return cv.GetOrCreateExprCustomedId(expr, cv.GenerateTypeId)
 }
 
 func (cv *cppConverter) GetOrCreateExprCustomedId(expr ast.Expr, hint func() string) (string, bool) {
@@ -3553,7 +3560,7 @@ func (cv *cppConverter) GetOrCreateExprCustomedId(expr ast.Expr, hint func() str
 func (cv *cppConverter) GetOrCreateExprId(expr ast.Expr, ctx ctContext, suffix string) (string, bool) {
 	return cv.GetOrCreateExprCustomedId(expr, func() string {
 		if ctx.targetVarName == "" {
-			return cv.GenerateId()
+			return cv.GenerateTypeId()
 		} else {
 			return ctx.targetVarName + suffix
 		}

@@ -123,6 +123,18 @@ func (cv *parsingInfos) isCurrentPkgTopLevel(obj types.Object) bool {
 	return obj != nil && obj.Pkg() != nil && obj.Pkg() == cv.pkg && isTopLevel(obj)
 }
 
+func (cv *parsingInfos) isArrayOrArrayPtr(e ast.Expr) bool {
+	t := cv.typeInfo.TypeOf(e)
+	if t == nil {
+		return false
+	}
+	if p, ok := t.Underlying().(*types.Pointer); ok {
+		t = p.Elem()
+	}
+	_, ok := t.Underlying().(*types.Array)
+	return ok
+}
+
 // Tell whether obj is a package-level object whose name is also used
 // by a function in the rec:: namespace.
 func (cv *cppConverter) isShadowedByRec(obj types.Object) bool {

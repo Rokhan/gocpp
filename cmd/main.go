@@ -5186,6 +5186,12 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 					buf.dbgs = append(buf.dbgs, fmt.Sprintf("/*DEBUG: new, %T, %s, %T*/", n.Fun, types.ExprString(n.Args[0]), cv.typeInfo.Types[n.Args[0]]))
 				}
 
+			case "len", "cap":
+				if cv.isConstExpr(n) && len(n.Args) == 1 && cv.isArrayOrArrayPtr(n.Args[0]) {
+					return ExprPrintf("gocpp::array_length<decltype(%s)>", cv.convertExpr(n.Args[0]))
+				}
+				fallthrough
+
 			default:
 				needNamespace := false
 				// Allow to call function from current namespace in methods if there is a method with the same name

@@ -357,4 +357,28 @@ namespace gocpp
             return N;
         }
     };
+
+    namespace details
+    {
+        // Base case, len() of a non-array is a compilation error.
+        template<typename T> struct array_length_impl;
+
+        template<typename T, int N>
+        struct array_length_impl<array<T, N>> : std::integral_constant<long, N> { };
+
+        // *[N]T
+        template<typename TArray>
+        struct array_length_impl<array_ptr<TArray>> : array_length_impl<TArray> { };
+
+        template<typename T>
+        struct array_length_impl<T*> : array_length_impl<T> { };
+
+        // type X [N]T
+        template<typename T, typename Tag>
+        struct array_length_impl<defined<T, Tag>> : array_length_impl<T> { };
+    }
+
+    // Accepts the type of any expression (decltype may give T& or const T).
+    template<typename T>
+    inline constexpr long array_length = details::array_length_impl<std::remove_cvref_t<T>>::value;
 }

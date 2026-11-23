@@ -842,7 +842,7 @@ namespace golang::go::build
     }
 
     godebug::Setting* installgoroot = godebug::New("installgoroot"_s);
-    struct gocpp_id_2
+    struct gocpp_build_0
             {
                 gocpp::slice<gocpp::string> vendor{};
                 gocpp::string goroot{};
@@ -880,7 +880,7 @@ namespace golang::go::build
                 }
             };
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_build_0& value)
             {
                 return value.PrintTo(os);
             }
@@ -1057,7 +1057,7 @@ namespace golang::go::build
             auto gopath = rec::gopath(gocpp::recv(ctxt));
 
             // tried records the location of unsuccessful package lookups
-            gocpp_id_2 tried = {};
+            gocpp_build_0 tried = {};
 
             // Vendor directories get first chance to satisfy import.
             if(mode & IgnoreVendor == 0 && srcDir != ""_s)
@@ -1746,7 +1746,7 @@ namespace golang::go::build
             // If the source directory is in GOROOT, then the in-process code works fine
             // and we should keep using it. Moreover, the 'go list' approach below doesn't
             // take standard-library vendoring into account and will fail.
-            if(auto [gocpp_id_3, ok] = rec::hasSubdir(gocpp::recv(ctxt), filepath::Join(ctxt->GOROOT, "src"_s), absSrcDir); ok)
+            if(auto [gocpp_id_2, ok] = rec::hasSubdir(gocpp::recv(ctxt), filepath::Join(ctxt->GOROOT, "src"_s), absSrcDir); ok)
             {
                 return errNoModules;
             }
@@ -1788,7 +1788,7 @@ namespace golang::go::build
                 if(auto [f, err] = rec::openFile(gocpp::recv(ctxt), rec::joinPath(gocpp::recv(ctxt), parent, "go.mod"_s)); err == nullptr)
                 {
                     auto buf = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), 100);
-                    auto [gocpp_id_4, err] = rec::Read(gocpp::recv(f), buf);
+                    auto [gocpp_id_3, err] = rec::Read(gocpp::recv(f), buf);
                     rec::Close(gocpp::recv(f));
                     if(err == nullptr || err == io::go_EOF)
                     {
@@ -1861,7 +1861,7 @@ namespace golang::go::build
     // non-vendored a/b. See golang.org/issue/13832.
     bool hasGoFiles(Context* ctxt, gocpp::string dir)
     {
-        auto [ents, gocpp_id_5] = rec::readDir(gocpp::recv(ctxt), dir);
+        auto [ents, gocpp_id_4] = rec::readDir(gocpp::recv(ctxt), dir);
         for(auto [gocpp_ignored, ent] : ents)
         {
             if(! rec::IsDir(gocpp::recv(ent)) && strings::HasSuffix(rec::Name(gocpp::recv(ent)), ".go"_s))

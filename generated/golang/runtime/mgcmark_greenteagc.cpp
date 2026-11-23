@@ -418,7 +418,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_mgcmark_greenteagc_0::operator T()
     {
         T result;
         result.head = this->head;
@@ -427,14 +427,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_mgcmark_greenteagc_0::operator==(const T& ref) const
     {
         if (head != ref.head) return false;
         if (tail != ref.tail) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgcmark_greenteagc_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << head;
@@ -443,7 +443,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgcmark_greenteagc_0& value)
     {
         return value.PrintTo(os);
     }
@@ -1200,7 +1200,7 @@ namespace golang::runtime
 
     void scanObjectSmall(uintptr_t spanBase, uintptr_t b, uintptr_t objSize, gcWork* gcw)
     {
-        auto [hbitsBase, gocpp_id_1] = spanHeapBitsRange(spanBase, gc::PageSize, objSize);
+        auto [hbitsBase, gocpp_id_0] = spanHeapBitsRange(spanBase, gc::PageSize, objSize);
         auto hbits = (unsigned char*)(gocpp::unsafe_pointer(hbitsBase));
         auto ptrBits = extractHeapBitsSmall(hbits, spanBase, b, objSize);
         gcw->heapScanWork += int64_t(sys::Len64(uint64_t(ptrBits)) * goarch::PtrSize);
@@ -1249,7 +1249,7 @@ namespace golang::runtime
                 break;
             }
             auto n = sys::OnesCount64(uint64_t(bits));
-            auto [hbitsBase, gocpp_id_2] = spanHeapBitsRange(base, gc::PageSize, objSize);
+            auto [hbitsBase, gocpp_id_1] = spanHeapBitsRange(base, gc::PageSize, objSize);
             auto hbits = (unsigned char*)(gocpp::unsafe_pointer(hbitsBase));
             for(int i = 0; i < n; ++i)
             {

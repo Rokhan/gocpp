@@ -192,7 +192,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_runtime2_0
     {
         // We need an explicit length here because this field is used
         // in allocation codepaths where write barriers are not allowed,
@@ -213,7 +213,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_runtime2_0& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     struct iface
     {
@@ -497,7 +497,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_1
+    struct gocpp_runtime2_1
     {
         // user disables scheduling of user goroutines.
         bool user{};
@@ -514,8 +514,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct gocpp_id_2
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_runtime2_1& value);
+    struct gocpp_runtime2_2
     {
         mutex lock{};
         gList stack{}; // Gs with stacks
@@ -532,7 +532,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_runtime2_2& value);
     // Bitmask of Ps in _Pidle list, one bit per P. Reads and writes must
     // be atomic. Length may change at safe points.
     //
@@ -674,9 +674,9 @@ namespace golang::runtime
         // disable controls selective disabling of the scheduler.
         // Use schedEnableUser to control this.
         // disable is protected by sched.lock.
-        gocpp_id_1 disable{};
+        gocpp_runtime2_1 disable{};
         // Global cache of dead G's.
-        gocpp_id_2 gFree{};
+        gocpp_runtime2_2 gFree{};
         // Central cache of sudog structs.
         mutex sudoglock{};
         sudog* sudogcache{};
@@ -946,7 +946,7 @@ namespace golang::runtime
         gocpp::slice<sudog*> sudogcache{};
         gocpp::array<sudog*, 128> sudogbuf{};
         // Cache of mspan objects from the heap.
-        gocpp_id_0 mspancache{};
+        gocpp_runtime2_0 mspancache{};
         // Cache of a single pinner object to reduce allocations from repeated
         // pinner creation.
         pinner* pinnerCache{};

@@ -252,7 +252,7 @@ namespace golang::runtime
     workType work;
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_mgc_0::operator T()
     {
         T result;
         result.lock = this->lock;
@@ -262,7 +262,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_mgc_0::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (free != ref.free) return false;
@@ -270,7 +270,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgc_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
@@ -280,7 +280,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_0& value)
     {
         return value.PrintTo(os);
     }
@@ -288,7 +288,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_mgc_1::operator T()
     {
         T result;
         result.lock = this->lock;
@@ -297,14 +297,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_mgc_1::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (list != ref.list) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgc_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
@@ -313,7 +313,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_1& value)
     {
         return value.PrintTo(os);
     }
@@ -321,7 +321,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_mgc_2::operator T()
     {
         T result;
         result.pending = this->pending;
@@ -332,7 +332,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_mgc_2::operator==(const T& ref) const
     {
         if (pending != ref.pending) return false;
         if (enabled != ref.enabled) return false;
@@ -341,7 +341,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgc_2::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << pending;
@@ -352,7 +352,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_2& value)
     {
         return value.PrintTo(os);
     }
@@ -360,7 +360,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_3::operator T()
+    gocpp_mgc_3::operator T()
     {
         T result;
         result.lock = this->lock;
@@ -369,14 +369,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_3::operator==(const T& ref) const
+    bool gocpp_mgc_3::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (q != ref.q) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgc_3::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
@@ -385,7 +385,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_3& value)
     {
         return value.PrintTo(os);
     }
@@ -393,7 +393,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_4::operator T()
+    gocpp_mgc_4::operator T()
     {
         T result;
         result.lock = this->lock;
@@ -402,14 +402,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_4::operator==(const T& ref) const
+    bool gocpp_mgc_4::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (list != ref.list) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgc_4::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
@@ -418,7 +418,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_4& value)
     {
         return value.PrintTo(os);
     }
@@ -426,7 +426,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_5::operator T()
+    gocpp_mgc_5::operator T()
     {
         T result;
         result.block = this->block;
@@ -436,7 +436,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_5::operator==(const T& ref) const
+    bool gocpp_mgc_5::operator==(const T& ref) const
     {
         if (block != ref.block) return false;
         if (lock != ref.lock) return false;
@@ -444,7 +444,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_5::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgc_5::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << block;
@@ -454,7 +454,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_5& value)
     {
         return value.PrintTo(os);
     }
@@ -848,7 +848,7 @@ namespace golang::runtime
             {
                 case 0:
                 {
-                    auto [trigger, gocpp_id_6] = rec::trigger(gocpp::recv(gcController));
+                    auto [trigger, gocpp_id_0] = rec::trigger(gocpp::recv(gcController));
                     return rec::Load(gocpp::recv(gcController.heapLive)) >= trigger;
                     break;
                 }
@@ -1704,7 +1704,7 @@ namespace golang::runtime
 
         // Update timing memstats
         auto now = nanotime();
-        auto [sec, nsec, gocpp_id_7] = time_now();
+        auto [sec, nsec, gocpp_id_1] = time_now();
         auto unixNow = sec * 1'000'000'000 + int64_t(nsec);
         work.pauseNS += now - stw.startedStopping;
         work.tEnd = now;
@@ -2764,7 +2764,7 @@ namespace golang::runtime
         {
             return "stack"_s;
         }
-        if(auto [base, gocpp_id_8, gocpp_id_9] = findObject(p2, 0, 0); base != 0)
+        if(auto [base, gocpp_id_2, gocpp_id_3] = findObject(p2, 0, 0); base != 0)
         {
             return "heap"_s;
         }

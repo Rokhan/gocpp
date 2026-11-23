@@ -280,7 +280,7 @@ namespace golang::os
                 {
                     const auto& gocpp_id_5 = gocpp::type_info(err);
                     int conditionId = -1;
-                    if(gocpp_id_5 == typeid(untyped nil)) { conditionId = 0; }
+                    if(gocpp_id_5 == typeid(nullptr_t)) { conditionId = 0; }
                     else if(gocpp_id_5 == typeid(errSymlink)) { conditionId = 1; }
                     switch(conditionId)
                     {
@@ -357,7 +357,7 @@ namespace golang::os
             {
                 const auto& gocpp_id_6 = gocpp::type_info(err);
                 int conditionId = -1;
-                if(gocpp_id_6 == typeid(untyped nil)) { conditionId = 0; }
+                if(gocpp_id_6 == typeid(nullptr_t)) { conditionId = 0; }
                 else if(gocpp_id_6 == typeid(errSymlink)) { conditionId = 1; }
                 switch(conditionId)
                 {
@@ -751,14 +751,14 @@ namespace golang::os
                 {
                     const auto& gocpp_id_15 = gocpp::type_info(err);
                     int conditionId = -1;
-                    if(gocpp_id_15 == typeid(untyped nil)) { conditionId = 0; }
+                    if(gocpp_id_15 == typeid(nullptr_t)) { conditionId = 0; }
                     else if(gocpp_id_15 == typeid(errSymlink)) { conditionId = 1; }
                     else if(gocpp_id_15 == typeid(PathError*)) { conditionId = 2; }
                     switch(conditionId)
                     {
                         case 0:
                         {
-                            untyped nil e = gocpp::any_cast<untyped nil>(err);
+                            nullptr_t e = gocpp::any_cast<nullptr_t>(err);
                             break;
                         }
                         case 1:

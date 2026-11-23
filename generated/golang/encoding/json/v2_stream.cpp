@@ -102,7 +102,7 @@ namespace golang::encoding::json
         return value.PrintTo(os);
     }
 
-    struct gocpp_id_1
+    struct gocpp_v2_stream_0
             {
                 io::Reader Reader{};
 
@@ -134,17 +134,17 @@ namespace golang::encoding::json
 
             namespace rec
             {
-                std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::slice<unsigned char> p)
+                std::tuple<int64_t, gocpp::error> Read(const gocpp::PtrRecv<struct gocpp_v2_stream_0, false>& self, gocpp::slice<unsigned char> p)
                 {
                     return io::rec::Read(gocpp::recv(self.ptr->Reader), p);
                 }
-                std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::slice<unsigned char> p)
+                std::tuple<int64_t, gocpp::error> Read(const gocpp::ObjRecv<struct gocpp_v2_stream_0>& self, gocpp::slice<unsigned char> p)
                 {
                     return io::rec::Read(gocpp::recv(self.obj.Reader), p);
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_v2_stream_0& value)
             {
                 return value.PrintTo(os);
             }
@@ -161,7 +161,7 @@ namespace golang::encoding::json
         // to the bytes.Buffer while it is in use by jsontext.Decoder.
         if(auto [gocpp_id_0, ok] = gocpp::getValue<bytes::Buffer*>(r); ok)
         {
-            r = gocpp_id_1 {r};
+            r = gocpp_v2_stream_0 {r};
         }
 
         auto dec = new json::Decoder{};
@@ -174,7 +174,7 @@ namespace golang::encoding::json
     // interface value as a [Number] instead of as a float64.
     void rec::UseNumber(Decoder* dec)
     {
-        if(auto [useNumber, gocpp_id_2] = jsonv2::GetOption(dec->opts, unmarshalAnyWithRawNumber); ! useNumber)
+        if(auto [useNumber, gocpp_id_1] = jsonv2::GetOption(dec->opts, unmarshalAnyWithRawNumber); ! useNumber)
         {
             dec->opts = jsonv2::JoinOptions(dec->opts, unmarshalAnyWithRawNumber(true));
         }
@@ -185,7 +185,7 @@ namespace golang::encoding::json
     // non-ignored, exported fields in the destination.
     void rec::DisallowUnknownFields(Decoder* dec)
     {
-        if(auto [reject, gocpp_id_3] = jsonv2::GetOption(dec->opts, jsonv2::RejectUnknownMembers); ! reject)
+        if(auto [reject, gocpp_id_2] = jsonv2::GetOption(dec->opts, jsonv2::RejectUnknownMembers); ! reject)
         {
             dec->opts = jsonv2::JoinOptions(dec->opts, jsonv2::RejectUnknownMembers(true));
         }
@@ -326,7 +326,7 @@ namespace golang::encoding::json
             }
             b = append(b, '\n');
 
-            if(auto [gocpp_id_4, err] = rec::Write(gocpp::recv(enc->w), b); err != nullptr)
+            if(auto [gocpp_id_3, err] = rec::Write(gocpp::recv(enc->w), b); err != nullptr)
             {
                 enc->err = err;
                 return err;
@@ -360,7 +360,7 @@ namespace golang::encoding::json
     // of the output, SetEscapeHTML(false) disables this behavior.
     void rec::SetEscapeHTML(Encoder* enc, bool on)
     {
-        if(auto [escape, gocpp_id_5] = jsonv2::GetOption(enc->opts, jsontext::EscapeForHTML); escape != on)
+        if(auto [escape, gocpp_id_4] = jsonv2::GetOption(enc->opts, jsontext::EscapeForHTML); escape != on)
         {
             enc->opts = jsonv2::JoinOptions(enc->opts, jsontext::EscapeForHTML(on));
         }
@@ -452,7 +452,7 @@ namespace golang::encoding::json
                     break;
                 case 4:
                 {
-                    if(auto [useNumber, gocpp_id_6] = jsonv2::GetOption(dec->opts, unmarshalAnyWithRawNumber); useNumber)
+                    if(auto [useNumber, gocpp_id_5] = jsonv2::GetOption(dec->opts, unmarshalAnyWithRawNumber); useNumber)
                     {
                         return {Number(rec::String(gocpp::recv(tok))), nullptr};
                     }
@@ -493,7 +493,7 @@ namespace golang::encoding::json
             {
                 // PeekKind doesn't distinguish between EOF and error,
                 // so read the next token to see which we get.
-                auto [gocpp_id_7, err] = rec::ReadToken(gocpp::recv(dec->dec));
+                auto [gocpp_id_6, err] = rec::ReadToken(gocpp::recv(dec->dec));
                 if(err == nullptr)
                 {
                     // This is only possible if jsontext violates its documentation.

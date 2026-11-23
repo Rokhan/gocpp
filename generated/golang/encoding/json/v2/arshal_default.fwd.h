@@ -13,10 +13,10 @@ namespace golang::encoding::json::v2
     inline constexpr long startDetectingCyclesAfter = 1000;
     using seenPointers = gocpp::map<go_any, gocpp::empty_struct>;
     struct typedPointer;
-    struct gocpp_id_6;
-    struct gocpp_id_7;
-    struct gocpp_id_8;
-    struct gocpp_id_9;
+    struct gocpp_arshal_default_0;
+    struct gocpp_arshal_default_1;
+    struct gocpp_arshal_default_2;
+    struct gocpp_arshal_default_3;
     struct GoTag_uintSet64;
     using uintSet64 = gocpp::defined<uint64_t, GoTag_uintSet64>;
     struct uintSet;

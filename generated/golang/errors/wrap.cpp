@@ -32,54 +32,54 @@ namespace golang::errors
 
     
         template<typename T>
-        gocpp_id_0::gocpp_id_0(T& ref)
+        gocpp_wrap_0::gocpp_wrap_0(T& ref)
         {
-            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_wrap_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_0::gocpp_id_0(const T& ref)
+        gocpp_wrap_0::gocpp_wrap_0(const T& ref)
         {
-            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_wrap_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_0::gocpp_id_0(T* ptr)
+        gocpp_wrap_0::gocpp_wrap_0(T* ptr)
         {
-            mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+            mValue.reset(new gocpp_wrap_0Impl<T, gocpp::ptr<T>>(ptr));
         }
 
-        std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+        std::ostream& gocpp_wrap_0::PrintTo(std::ostream& os) const
         {
             return os;
         }
 
         template<typename T, typename TStore, typename TInterface>
-        gocpp::error gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vUnwrap()
+        gocpp::error gocpp_wrap_0::gocpp_wrap_0Impl<T, TStore, TInterface>::vUnwrap()
         {
             return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
         }
 
-        inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+        inline gocpp_wrap_0::Igocpp_wrap_0* gocpp_wrap_0::value() const
         {
             if(auto res = mValue.get()) { return res; }
-            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+            throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_0'");
         }
 
         namespace rec
         {
-            gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
+            gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_0, false>& self)
             {
                 return self.ptr->value()->vUnwrap();
             }
 
-            gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_0>& self)
+            gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_0>& self)
             {
                 return self.obj.value()->vUnwrap();
             }
         }
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_0& value)
         {
             return value.PrintTo(os);
         }
@@ -93,7 +93,7 @@ namespace golang::errors
     // In particular Unwrap does not unwrap errors returned by [Join].
     gocpp::error Unwrap(gocpp::error err)
     {
-        auto [u, ok] = gocpp::getValue<gocpp_id_0>(err);
+        auto [u, ok] = gocpp::getValue<gocpp_wrap_0>(err);
         if(! ok)
         {
             return nullptr;
@@ -132,54 +132,54 @@ namespace golang::errors
 
     
             template<typename T>
-            gocpp_id_1::gocpp_id_1(T& ref)
+            gocpp_wrap_1::gocpp_wrap_1(T& ref)
             {
-                mValue.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_wrap_1Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_1::gocpp_id_1(const T& ref)
+            gocpp_wrap_1::gocpp_wrap_1(const T& ref)
             {
-                mValue.reset(new gocpp_id_1Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_wrap_1Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_1::gocpp_id_1(T* ptr)
+            gocpp_wrap_1::gocpp_wrap_1(T* ptr)
             {
-                mValue.reset(new gocpp_id_1Impl<T, gocpp::ptr<T>>(ptr));
+                mValue.reset(new gocpp_wrap_1Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_wrap_1::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename TStore, typename TInterface>
-            bool gocpp_id_1::gocpp_id_1Impl<T, TStore, TInterface>::vIs(gocpp::error _1)
+            bool gocpp_wrap_1::gocpp_wrap_1Impl<T, TStore, TInterface>::vIs(gocpp::error _1)
             {
                 return rec::Is(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
 
-            inline gocpp_id_1::Igocpp_id_1* gocpp_id_1::value() const
+            inline gocpp_wrap_1::Igocpp_wrap_1* gocpp_wrap_1::value() const
             {
                 if(auto res = mValue.get()) { return res; }
-                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_1'");
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_1'");
             }
 
             namespace rec
             {
-                bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::error _1)
+                bool Is(const gocpp::PtrRecv<struct gocpp_wrap_1, false>& self, gocpp::error _1)
                 {
                     return self.ptr->value()->vIs(_1);
                 }
 
-                bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::error _1)
+                bool Is(const gocpp::ObjRecv<struct gocpp_wrap_1>& self, gocpp::error _1)
                 {
                     return self.obj.value()->vIs(_1);
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_1& value)
             {
                 return value.PrintTo(os);
             }
@@ -187,54 +187,54 @@ namespace golang::errors
 
     
                 template<typename T>
-                gocpp_id_3::gocpp_id_3(T& ref)
+                gocpp_wrap_2::gocpp_wrap_2(T& ref)
                 {
-                    mValue.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_2Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_3::gocpp_id_3(const T& ref)
+                gocpp_wrap_2::gocpp_wrap_2(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_2Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_3::gocpp_id_3(T* ptr)
+                gocpp_wrap_2::gocpp_wrap_2(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_3Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_wrap_2Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_wrap_2::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                gocpp::error gocpp_id_3::gocpp_id_3Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::error gocpp_wrap_2::gocpp_wrap_2Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_3::Igocpp_id_3* gocpp_id_3::value() const
+                inline gocpp_wrap_2::Igocpp_wrap_2* gocpp_wrap_2::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_3'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_2'");
                 }
 
                 namespace rec
                 {
-                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_3, false>& self)
+                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_2, false>& self)
                     {
                         return self.ptr->value()->vUnwrap();
                     }
 
-                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_3>& self)
+                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_2>& self)
                     {
                         return self.obj.value()->vUnwrap();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_2& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -242,54 +242,54 @@ namespace golang::errors
 
     
                 template<typename T>
-                gocpp_id_4::gocpp_id_4(T& ref)
+                gocpp_wrap_3::gocpp_wrap_3(T& ref)
                 {
-                    mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_3Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_4::gocpp_id_4(const T& ref)
+                gocpp_wrap_3::gocpp_wrap_3(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_3Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_4::gocpp_id_4(T* ptr)
+                gocpp_wrap_3::gocpp_wrap_3(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_4Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_wrap_3Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_wrap_3::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                gocpp::slice<gocpp::error> gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::slice<gocpp::error> gocpp_wrap_3::gocpp_wrap_3Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_4::Igocpp_id_4* gocpp_id_4::value() const
+                inline gocpp_wrap_3::Igocpp_wrap_3* gocpp_wrap_3::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_4'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_3'");
                 }
 
                 namespace rec
                 {
-                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_4, false>& self)
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_3, false>& self)
                     {
                         return self.ptr->value()->vUnwrap();
                     }
 
-                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_4>& self)
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_3>& self)
                     {
                         return self.obj.value()->vUnwrap();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_3& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -303,21 +303,21 @@ namespace golang::errors
             {
                 return true;
             }
-            if(auto [x, ok] = gocpp::getValue<gocpp_id_1>(err); ok && rec::Is(gocpp::recv(x), target))
+            if(auto [x, ok] = gocpp::getValue<gocpp_wrap_1>(err); ok && rec::Is(gocpp::recv(x), target))
             {
                 return true;
             }
             //Go type switch emulation
             {
-                const auto& gocpp_id_2 = gocpp::type_info(err);
+                const auto& gocpp_id_0 = gocpp::type_info(err);
                 int conditionId = -1;
-                if(gocpp_id_2 == typeid(gocpp_id_3)) { conditionId = 0; }
-                else if(gocpp_id_2 == typeid(gocpp_id_4)) { conditionId = 1; }
+                if(gocpp_id_0 == typeid(gocpp_wrap_2)) { conditionId = 0; }
+                else if(gocpp_id_0 == typeid(gocpp_wrap_3)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        gocpp_id_3 x = gocpp::any_cast<gocpp_id_3>(err);
+                        gocpp_wrap_2 x = gocpp::any_cast<gocpp_wrap_2>(err);
                         err = rec::Unwrap(gocpp::recv(x));
                         if(err == nullptr)
                         {
@@ -327,7 +327,7 @@ namespace golang::errors
                     }
                     case 1:
                     {
-                        gocpp_id_4 x = gocpp::any_cast<gocpp_id_4>(err);
+                        gocpp_wrap_3 x = gocpp::any_cast<gocpp_wrap_3>(err);
                         for(auto [gocpp_ignored, err] : rec::Unwrap(gocpp::recv(x)))
                         {
                             if(is(err, target, targetComparable))
@@ -396,54 +396,54 @@ namespace golang::errors
 
     
             template<typename T>
-            gocpp_id_5::gocpp_id_5(T& ref)
+            gocpp_wrap_4::gocpp_wrap_4(T& ref)
             {
-                mValue.reset(new gocpp_id_5Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_wrap_4Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_5::gocpp_id_5(const T& ref)
+            gocpp_wrap_4::gocpp_wrap_4(const T& ref)
             {
-                mValue.reset(new gocpp_id_5Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_wrap_4Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_5::gocpp_id_5(T* ptr)
+            gocpp_wrap_4::gocpp_wrap_4(T* ptr)
             {
-                mValue.reset(new gocpp_id_5Impl<T, gocpp::ptr<T>>(ptr));
+                mValue.reset(new gocpp_wrap_4Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_5::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_wrap_4::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename TStore, typename TInterface>
-            bool gocpp_id_5::gocpp_id_5Impl<T, TStore, TInterface>::vAs(go_any _1)
+            bool gocpp_wrap_4::gocpp_wrap_4Impl<T, TStore, TInterface>::vAs(go_any _1)
             {
                 return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
 
-            inline gocpp_id_5::Igocpp_id_5* gocpp_id_5::value() const
+            inline gocpp_wrap_4::Igocpp_wrap_4* gocpp_wrap_4::value() const
             {
                 if(auto res = mValue.get()) { return res; }
-                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_5'");
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_4'");
             }
 
             namespace rec
             {
-                bool As(const gocpp::PtrRecv<struct gocpp_id_5, false>& self, go_any _1)
+                bool As(const gocpp::PtrRecv<struct gocpp_wrap_4, false>& self, go_any _1)
                 {
                     return self.ptr->value()->vAs(_1);
                 }
 
-                bool As(const gocpp::ObjRecv<struct gocpp_id_5>& self, go_any _1)
+                bool As(const gocpp::ObjRecv<struct gocpp_wrap_4>& self, go_any _1)
                 {
                     return self.obj.value()->vAs(_1);
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_4& value)
             {
                 return value.PrintTo(os);
             }
@@ -451,54 +451,54 @@ namespace golang::errors
 
     
                 template<typename T>
-                gocpp_id_7::gocpp_id_7(T& ref)
+                gocpp_wrap_5::gocpp_wrap_5(T& ref)
                 {
-                    mValue.reset(new gocpp_id_7Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_5Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_7::gocpp_id_7(const T& ref)
+                gocpp_wrap_5::gocpp_wrap_5(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_7Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_5Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_7::gocpp_id_7(T* ptr)
+                gocpp_wrap_5::gocpp_wrap_5(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_7Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_wrap_5Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_7::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_wrap_5::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                gocpp::error gocpp_id_7::gocpp_id_7Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::error gocpp_wrap_5::gocpp_wrap_5Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_7::Igocpp_id_7* gocpp_id_7::value() const
+                inline gocpp_wrap_5::Igocpp_wrap_5* gocpp_wrap_5::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_7'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_5'");
                 }
 
                 namespace rec
                 {
-                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_7, false>& self)
+                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_5, false>& self)
                     {
                         return self.ptr->value()->vUnwrap();
                     }
 
-                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_7>& self)
+                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_5>& self)
                     {
                         return self.obj.value()->vUnwrap();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_5& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -506,54 +506,54 @@ namespace golang::errors
 
     
                 template<typename T>
-                gocpp_id_8::gocpp_id_8(T& ref)
+                gocpp_wrap_6::gocpp_wrap_6(T& ref)
                 {
-                    mValue.reset(new gocpp_id_8Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_6Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_8::gocpp_id_8(const T& ref)
+                gocpp_wrap_6::gocpp_wrap_6(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_8Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_6Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_8::gocpp_id_8(T* ptr)
+                gocpp_wrap_6::gocpp_wrap_6(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_8Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_wrap_6Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_8::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_wrap_6::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                gocpp::slice<gocpp::error> gocpp_id_8::gocpp_id_8Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::slice<gocpp::error> gocpp_wrap_6::gocpp_wrap_6Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_8::Igocpp_id_8* gocpp_id_8::value() const
+                inline gocpp_wrap_6::Igocpp_wrap_6* gocpp_wrap_6::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_8'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_6'");
                 }
 
                 namespace rec
                 {
-                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_8, false>& self)
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_6, false>& self)
                     {
                         return self.ptr->value()->vUnwrap();
                     }
 
-                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_8>& self)
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_6>& self)
                     {
                         return self.obj.value()->vUnwrap();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_6& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -568,21 +568,21 @@ namespace golang::errors
                 rec::Set(gocpp::recv(rec::Elem(gocpp::recv(targetVal))), reflectlite::ValueOf(err));
                 return true;
             }
-            if(auto [x, ok] = gocpp::getValue<gocpp_id_5>(err); ok && rec::As(gocpp::recv(x), target))
+            if(auto [x, ok] = gocpp::getValue<gocpp_wrap_4>(err); ok && rec::As(gocpp::recv(x), target))
             {
                 return true;
             }
             //Go type switch emulation
             {
-                const auto& gocpp_id_6 = gocpp::type_info(err);
+                const auto& gocpp_id_1 = gocpp::type_info(err);
                 int conditionId = -1;
-                if(gocpp_id_6 == typeid(gocpp_id_7)) { conditionId = 0; }
-                else if(gocpp_id_6 == typeid(gocpp_id_8)) { conditionId = 1; }
+                if(gocpp_id_1 == typeid(gocpp_wrap_5)) { conditionId = 0; }
+                else if(gocpp_id_1 == typeid(gocpp_wrap_6)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        gocpp_id_7 x = gocpp::any_cast<gocpp_id_7>(err);
+                        gocpp_wrap_5 x = gocpp::any_cast<gocpp_wrap_5>(err);
                         err = rec::Unwrap(gocpp::recv(x));
                         if(err == nullptr)
                         {
@@ -592,7 +592,7 @@ namespace golang::errors
                     }
                     case 1:
                     {
-                        gocpp_id_8 x = gocpp::any_cast<gocpp_id_8>(err);
+                        gocpp_wrap_6 x = gocpp::any_cast<gocpp_wrap_6>(err);
                         for(auto [gocpp_ignored, err] : rec::Unwrap(gocpp::recv(x)))
                         {
                             if(err == nullptr)
@@ -647,54 +647,54 @@ namespace golang::errors
 
     
             template<typename T>
-            gocpp_id_9::gocpp_id_9(T& ref)
+            gocpp_wrap_7::gocpp_wrap_7(T& ref)
             {
-                mValue.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_wrap_7Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_9::gocpp_id_9(const T& ref)
+            gocpp_wrap_7::gocpp_wrap_7(const T& ref)
             {
-                mValue.reset(new gocpp_id_9Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_wrap_7Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_9::gocpp_id_9(T* ptr)
+            gocpp_wrap_7::gocpp_wrap_7(T* ptr)
             {
-                mValue.reset(new gocpp_id_9Impl<T, gocpp::ptr<T>>(ptr));
+                mValue.reset(new gocpp_wrap_7Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_9::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_wrap_7::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename TStore, typename TInterface>
-            bool gocpp_id_9::gocpp_id_9Impl<T, TStore, TInterface>::vAs(go_any _1)
+            bool gocpp_wrap_7::gocpp_wrap_7Impl<T, TStore, TInterface>::vAs(go_any _1)
             {
                 return rec::As(gocpp::PtrRecv<T, false>(value.get()), _1);
             }
 
-            inline gocpp_id_9::Igocpp_id_9* gocpp_id_9::value() const
+            inline gocpp_wrap_7::Igocpp_wrap_7* gocpp_wrap_7::value() const
             {
                 if(auto res = mValue.get()) { return res; }
-                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_9'");
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_7'");
             }
 
             namespace rec
             {
-                bool As(const gocpp::PtrRecv<struct gocpp_id_9, false>& self, go_any _1)
+                bool As(const gocpp::PtrRecv<struct gocpp_wrap_7, false>& self, go_any _1)
                 {
                     return self.ptr->value()->vAs(_1);
                 }
 
-                bool As(const gocpp::ObjRecv<struct gocpp_id_9>& self, go_any _1)
+                bool As(const gocpp::ObjRecv<struct gocpp_wrap_7>& self, go_any _1)
                 {
                     return self.obj.value()->vAs(_1);
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_7& value)
             {
                 return value.PrintTo(os);
             }
@@ -702,54 +702,54 @@ namespace golang::errors
 
     
                 template<typename T>
-                gocpp_id_11::gocpp_id_11(T& ref)
+                gocpp_wrap_8::gocpp_wrap_8(T& ref)
                 {
-                    mValue.reset(new gocpp_id_11Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_8Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_11::gocpp_id_11(const T& ref)
+                gocpp_wrap_8::gocpp_wrap_8(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_11Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_8Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_11::gocpp_id_11(T* ptr)
+                gocpp_wrap_8::gocpp_wrap_8(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_11Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_wrap_8Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_11::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_wrap_8::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                gocpp::error gocpp_id_11::gocpp_id_11Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::error gocpp_wrap_8::gocpp_wrap_8Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_11::Igocpp_id_11* gocpp_id_11::value() const
+                inline gocpp_wrap_8::Igocpp_wrap_8* gocpp_wrap_8::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_11'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_8'");
                 }
 
                 namespace rec
                 {
-                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_11, false>& self)
+                    gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_8, false>& self)
                     {
                         return self.ptr->value()->vUnwrap();
                     }
 
-                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_11>& self)
+                    gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_8>& self)
                     {
                         return self.obj.value()->vUnwrap();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_8& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -757,54 +757,54 @@ namespace golang::errors
 
     
                 template<typename T>
-                gocpp_id_12::gocpp_id_12(T& ref)
+                gocpp_wrap_9::gocpp_wrap_9(T& ref)
                 {
-                    mValue.reset(new gocpp_id_12Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_9Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_12::gocpp_id_12(const T& ref)
+                gocpp_wrap_9::gocpp_wrap_9(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_12Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_wrap_9Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_12::gocpp_id_12(T* ptr)
+                gocpp_wrap_9::gocpp_wrap_9(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_12Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_wrap_9Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_12::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_wrap_9::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                gocpp::slice<gocpp::error> gocpp_id_12::gocpp_id_12Impl<T, TStore, TInterface>::vUnwrap()
+                gocpp::slice<gocpp::error> gocpp_wrap_9::gocpp_wrap_9Impl<T, TStore, TInterface>::vUnwrap()
                 {
                     return rec::Unwrap(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_12::Igocpp_id_12* gocpp_id_12::value() const
+                inline gocpp_wrap_9::Igocpp_wrap_9* gocpp_wrap_9::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_12'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_wrap_9'");
                 }
 
                 namespace rec
                 {
-                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_12, false>& self)
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_9, false>& self)
                     {
                         return self.ptr->value()->vUnwrap();
                     }
 
-                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_12>& self)
+                    gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_9>& self)
                     {
                         return self.obj.value()->vUnwrap();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_12& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_9& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -821,7 +821,7 @@ namespace golang::errors
             {
                 return {e, true};
             }
-            if(auto [x, ok] = gocpp::getValue<gocpp_id_9>(err); ok)
+            if(auto [x, ok] = gocpp::getValue<gocpp_wrap_7>(err); ok)
             {
                 if(*ppe == nullptr)
                 {
@@ -834,15 +834,15 @@ namespace golang::errors
             }
             //Go type switch emulation
             {
-                const auto& gocpp_id_10 = gocpp::type_info(err);
+                const auto& gocpp_id_2 = gocpp::type_info(err);
                 int conditionId = -1;
-                if(gocpp_id_10 == typeid(gocpp_id_11)) { conditionId = 0; }
-                else if(gocpp_id_10 == typeid(gocpp_id_12)) { conditionId = 1; }
+                if(gocpp_id_2 == typeid(gocpp_wrap_8)) { conditionId = 0; }
+                else if(gocpp_id_2 == typeid(gocpp_wrap_9)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:
                     {
-                        gocpp_id_11 x = gocpp::any_cast<gocpp_id_11>(err);
+                        gocpp_wrap_8 x = gocpp::any_cast<gocpp_wrap_8>(err);
                         err = rec::Unwrap(gocpp::recv(x));
                         if(err == nullptr)
                         {
@@ -852,7 +852,7 @@ namespace golang::errors
                     }
                     case 1:
                     {
-                        gocpp_id_12 x = gocpp::any_cast<gocpp_id_12>(err);
+                        gocpp_wrap_9 x = gocpp::any_cast<gocpp_wrap_9>(err);
                         for(auto [gocpp_ignored, err] : rec::Unwrap(gocpp::recv(x)))
                         {
                             if(err == nullptr)

@@ -26,7 +26,7 @@ namespace golang::main
         x[5] = "permission denied"_s;
         x[1] = "address already in use"_s;
     });
-    struct gocpp_id_0
+    struct gocpp_slice_literals_0
         {
             int64_t i{};
             bool b{};
@@ -60,7 +60,7 @@ namespace golang::main
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_slice_literals_0& value)
         {
             return value.PrintTo(os);
         }
@@ -74,7 +74,7 @@ namespace golang::main
         auto r = gocpp::slice<bool> {true, false, true, true, false, true};
         mocklib::Println(r);
 
-        auto s = gocpp::slice<gocpp_id_0> {
+        auto s = gocpp::slice<gocpp_slice_literals_0> {
             {2, true},
             {3, false},
             {5, true},

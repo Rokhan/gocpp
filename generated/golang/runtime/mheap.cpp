@@ -88,7 +88,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_mheap_0::operator T()
     {
         T result;
         result.base = this->base;
@@ -97,14 +97,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_mheap_0::operator==(const T& ref) const
     {
         if (base != ref.base) return false;
         if (end != ref.end) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mheap_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << base;
@@ -113,7 +113,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mheap_0& value)
     {
         return value.PrintTo(os);
     }
@@ -121,7 +121,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_mheap_1::operator T()
     {
         T result;
         result.mcentral = this->mcentral;
@@ -130,14 +130,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_mheap_1::operator==(const T& ref) const
     {
         if (mcentral != ref.mcentral) return false;
         if (pad != ref.pad) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mheap_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << mcentral;
@@ -146,7 +146,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mheap_1& value)
     {
         return value.PrintTo(os);
     }
@@ -154,7 +154,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_mheap_2::operator T()
     {
         T result;
         result.arenaHints = this->arenaHints;
@@ -164,7 +164,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_mheap_2::operator==(const T& ref) const
     {
         if (arenaHints != ref.arenaHints) return false;
         if (quarantineList != ref.quarantineList) return false;
@@ -172,7 +172,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mheap_2::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << arenaHints;
@@ -182,7 +182,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mheap_2& value)
     {
         return value.PrintTo(os);
     }
@@ -2541,7 +2541,7 @@ namespace golang::runtime
             // has already run but mark termination hasn't yet.
             if(gcphase != _GCoff)
             {
-                auto [base, span, gocpp_id_3] = findObject(uintptr_t(p), 0, 0);
+                auto [base, span, gocpp_id_0] = findObject(uintptr_t(p), 0, 0);
                 auto mp = acquirem();
                 auto gcw = & rec::ptr(gocpp::recv(mp->p))->gcw;
                 // Mark everything reachable from the object
@@ -2910,7 +2910,7 @@ namespace golang::runtime
             return false;
         }
         auto offset = ptr - rec::base(gocpp::recv(span));
-        auto [gocpp_id_4, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialTinyBlock);
+        auto [gocpp_id_1, exists] = rec::specialFindSplicePoint(gocpp::recv(span), offset, _KindSpecialTinyBlock);
         return exists;
     }
 

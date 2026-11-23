@@ -12,7 +12,7 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_mstats_0
     {
         // Size is the maximum byte size of an object in this
         // size class.
@@ -37,7 +37,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mstats_0& value);
     struct MemStats
     {
         // Alloc is bytes of allocated heap objects.
@@ -205,7 +205,7 @@ namespace golang::runtime
         // BySize[N] gives statistics for allocations of size S where
         // BySize[N-1].Size < S ≤ BySize[N].Size.
         // This does not report allocations larger than BySize[60].Size.
-        gocpp::array<gocpp_id_0, 61> BySize{};
+        gocpp::array<gocpp_mstats_0, 61> BySize{};
 
         using isGoStruct = void;
 

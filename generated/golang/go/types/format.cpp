@@ -56,7 +56,7 @@ namespace golang::go::types
             {
                 const auto& gocpp_id_0 = gocpp::type_info(arg);
                 int conditionId = -1;
-                if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+                if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
                 else if(gocpp_id_0 == typeid(types::operand)) { conditionId = 1; }
                 else if(gocpp_id_0 == typeid(types::operand*)) { conditionId = 2; }
                 else if(gocpp_id_0 == typeid(gocpp::slice<types::operand*>)) { conditionId = 3; }
@@ -71,7 +71,7 @@ namespace golang::go::types
                 {
                     case 0:
                     {
-                        untyped nil a = gocpp::any_cast<untyped nil>(arg);
+                        nullptr_t a = gocpp::any_cast<nullptr_t>(arg);
                         arg = "<nil>"_s;
                         break;
                     }

@@ -6,5 +6,5 @@
 
 namespace golang::golang_org::x::tour::wc
 {
-    struct gocpp_id_0;
+    struct gocpp_wc_0;
 }

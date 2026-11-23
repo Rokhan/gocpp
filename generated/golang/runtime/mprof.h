@@ -325,7 +325,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mLockProfile& value);
-    extern gocpp_id_0 goroutineProfile;
+    extern gocpp_mprof_0 goroutineProfile;
 
     namespace rec
     {

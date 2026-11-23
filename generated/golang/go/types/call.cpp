@@ -1426,13 +1426,13 @@ namespace golang::go::types
         {
             const auto& gocpp_id_10 = gocpp::type_info(ast::Unparen(e));
             int conditionId = -1;
-            if(gocpp_id_10 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_10 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_10 == typeid(ast::Ident*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 {
-                    untyped nil n = gocpp::any_cast<untyped nil>(ast::Unparen(e));
+                    nullptr_t n = gocpp::any_cast<nullptr_t>(ast::Unparen(e));
                     break;
                 }
                 // nothing to do

@@ -103,7 +103,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_mgcmark_greenteagc_0
     {
         // head is the spanSPMC to put to. This is only accessed
         // by the producer, so doesn't need to be synchronized.
@@ -123,7 +123,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgcmark_greenteagc_0& value);
     struct spanQueue
     {
         // head, tail, and ring represent a local non-thread-safe ring buffer.
@@ -136,7 +136,7 @@ namespace golang::runtime
         // In particular, that means a linked chain of single-producer multi-consumer
         // ring buffers where the single producer is this P only.
         // This linked chain structure is based off the sync.Pool dequeue.
-        gocpp_id_0 chain{};
+        gocpp_mgcmark_greenteagc_0 chain{};
 
         using isGoStruct = void;
 

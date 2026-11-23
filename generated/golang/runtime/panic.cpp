@@ -908,13 +908,13 @@ namespace golang::runtime
                 {
                     const auto& gocpp_id_0 = gocpp::type_info(gocpp::recover());
                     int conditionId = -1;
-                    if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+                    if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
                     else if(gocpp_id_0 == typeid(gocpp::string)) { conditionId = 1; }
                     switch(conditionId)
                     {
                         case 0:
                         {
-                            untyped nil r = gocpp::any_cast<untyped nil>(gocpp::recover());
+                            nullptr_t r = gocpp::any_cast<nullptr_t>(gocpp::recover());
                             break;
                         }
                         // nothing to do

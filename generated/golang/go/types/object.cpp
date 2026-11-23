@@ -975,7 +975,7 @@ namespace golang::go::types
         {
             const auto& gocpp_id_1 = gocpp::type_info(obj->object.typ);
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_1 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(types::Basic*)) { conditionId = 1; }
             else if(gocpp_id_1 == typeid(types::Named*)) { conditionId = 2; }
             else if(gocpp_id_1 == typeid(types::TypeParam*)) { conditionId = 3; }
@@ -983,7 +983,7 @@ namespace golang::go::types
             {
                 case 0:
                 {
-                    untyped nil t = gocpp::any_cast<untyped nil>(obj->object.typ);
+                    nullptr_t t = gocpp::any_cast<nullptr_t>(obj->object.typ);
                     return false;
                     break;
                 }

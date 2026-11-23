@@ -12,43 +12,43 @@
 
 namespace golang::go::types
 {
-    struct gocpp_id_8 : virtual gocpp::Interface
+    struct gocpp_typexpr_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_8(){}
-        gocpp_id_8(gocpp_id_8& i) = default;
-        gocpp_id_8(const gocpp_id_8& i) = default;
-        gocpp_id_8& operator=(gocpp_id_8& i) = default;
-        gocpp_id_8& operator=(const gocpp_id_8& i) = default;
+        gocpp_typexpr_0(){}
+        gocpp_typexpr_0(gocpp_typexpr_0& i) = default;
+        gocpp_typexpr_0(const gocpp_typexpr_0& i) = default;
+        gocpp_typexpr_0& operator=(gocpp_typexpr_0& i) = default;
+        gocpp_typexpr_0& operator=(const gocpp_typexpr_0& i) = default;
 
-        inline gocpp_id_8(nullptr_t) {};
-        gocpp_id_8& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_8(T& ref);
+        inline gocpp_typexpr_0(nullptr_t) {};
+        gocpp_typexpr_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_8(const T& ref);
+        gocpp_typexpr_0(T& ref);
 
         template<typename T>
-        gocpp_id_8(T* ptr);
+        gocpp_typexpr_0(const T& ref);
+
+        template<typename T>
+        gocpp_typexpr_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_8
+        struct Igocpp_typexpr_0
         {
             virtual TypeName* vObj() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_8>
-        struct gocpp_id_8Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_typexpr_0>
+        struct gocpp_typexpr_0Impl : virtual TInterface
         {
-            explicit gocpp_id_8Impl(T* ptr)
+            explicit gocpp_typexpr_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -63,18 +63,18 @@ namespace golang::go::types
             TStore value;
         };
 
-        inline Igocpp_id_8* value() const;
+        inline Igocpp_typexpr_0* value() const;
 
-        std::shared_ptr<Igocpp_id_8> mValue;
+        std::shared_ptr<Igocpp_typexpr_0> mValue;
     };
 
     namespace rec
     {
-        TypeName* Obj(const gocpp::PtrRecv<struct gocpp_id_8, false>& self);
-        TypeName* Obj(const gocpp::ObjRecv<struct gocpp_id_8>& self);
+        TypeName* Obj(const gocpp::PtrRecv<struct gocpp_typexpr_0, false>& self);
+        TypeName* Obj(const gocpp::ObjRecv<struct gocpp_typexpr_0>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_typexpr_0& value);
 }
 #include "golang/go/types/type.h"
 

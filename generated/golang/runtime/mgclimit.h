@@ -12,7 +12,7 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_mgclimit_0
     {
         // Invariants:
         // - fill >= 0
@@ -32,7 +32,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgclimit_0& value);
     struct GoTag_limiterEventType { };
     using limiterEventType = gocpp::defined<uint8_t, GoTag_limiterEventType>;
     struct GoTag_limiterEventStamp { };
@@ -58,7 +58,7 @@ namespace golang::runtime
         bool transitioning{};
         // test indicates whether this instance of the struct was made for testing purposes.
         bool test{};
-        gocpp_id_0 bucket{};
+        gocpp_mgclimit_0 bucket{};
         // overflow is the cumulative amount of GC CPU time that we tried to fill the
         // bucket with but exceeded its capacity.
         uint64_t overflow{};

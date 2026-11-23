@@ -3587,7 +3587,7 @@ namespace golang::go::parser
         });
     }
 
-    struct gocpp_id_7
+    struct gocpp_parser_0
         {
             token::Pos pos{};
             gocpp::string lit{}; // ";" or "\n"; valid if pos.IsValid()
@@ -3621,7 +3621,7 @@ namespace golang::go::parser
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_parser_0& value)
         {
             return value.PrintTo(os);
         }
@@ -3661,7 +3661,7 @@ namespace golang::go::parser
         }
 
         ast::Stmt condStmt = {};
-        gocpp_id_7 semi = {};
+        gocpp_parser_0 semi = {};
         if(p->tok != token::LBRACE)
         {
             if(p->tok == token::SEMICOLON)
@@ -3828,10 +3828,10 @@ namespace golang::go::parser
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_8 = gocpp::type_info(s);
+            const auto& gocpp_id_7 = gocpp::type_info(s);
             int conditionId = -1;
-            if(gocpp_id_8 == typeid(ast::ExprStmt*)) { conditionId = 0; }
-            else if(gocpp_id_8 == typeid(ast::AssignStmt*)) { conditionId = 1; }
+            if(gocpp_id_7 == typeid(ast::ExprStmt*)) { conditionId = 0; }
+            else if(gocpp_id_7 == typeid(ast::AssignStmt*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -4292,7 +4292,7 @@ namespace golang::go::parser
                         // because of the required look-ahead, labeled statements are
                         // parsed by parseSimpleStmt - don't expect a semicolon after
                         // them
-                        if(auto [gocpp_id_9, isLabeledStmt] = gocpp::getValue<ast::LabeledStmt*>(s); ! isLabeledStmt)
+                        if(auto [gocpp_id_8, isLabeledStmt] = gocpp::getValue<ast::LabeledStmt*>(s); ! isLabeledStmt)
                         {
                             rec::expectSemi(gocpp::recv(p));
                         }
@@ -4663,12 +4663,12 @@ namespace golang::go::parser
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_10 = gocpp::type_info(x);
+            const auto& gocpp_id_9 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_10 == typeid(ast::Ident*)) { conditionId = 0; }
-            else if(gocpp_id_10 == typeid(ast::BinaryExpr*)) { conditionId = 1; }
-            else if(gocpp_id_10 == typeid(ast::CallExpr*)) { conditionId = 2; }
+            if(gocpp_id_9 == typeid(ast::Ident*)) { conditionId = 0; }
+            else if(gocpp_id_9 == typeid(ast::BinaryExpr*)) { conditionId = 1; }
+            else if(gocpp_id_9 == typeid(ast::CallExpr*)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -4689,7 +4689,7 @@ namespace golang::go::parser
                         switch(conditionId)
                         {
                             case 0:
-                                if(auto [name, gocpp_id_11] = gocpp::getValue<ast::Ident*>(x->X); name != nullptr && (force || isTypeElem(x->Y)))
+                                if(auto [name, gocpp_id_10] = gocpp::getValue<ast::Ident*>(x->X); name != nullptr && (force || isTypeElem(x->Y)))
                                 {
                                     // x = name *x.Y
                                     return {name, gocpp::InitPtr<ast::StarExpr>([=](auto& y) {
@@ -4714,7 +4714,7 @@ namespace golang::go::parser
                 case 2:
                 {
                     ast::CallExpr* x = gocpp::any_cast<ast::CallExpr*>(x_ref);
-                    if(auto [name, gocpp_id_12] = gocpp::getValue<ast::Ident*>(x->Fun); name != nullptr)
+                    if(auto [name, gocpp_id_11] = gocpp::getValue<ast::Ident*>(x->Fun); name != nullptr)
                     {
                         if(len(x->Args) == 1 && x->Ellipsis == token::NoPos && (force || isTypeElem(x->Args[0])))
                         {
@@ -4741,18 +4741,18 @@ namespace golang::go::parser
     {
         //Go type switch emulation
         {
-            const auto& gocpp_id_13 = gocpp::type_info(x);
+            const auto& gocpp_id_12 = gocpp::type_info(x);
             const auto& x_ref = x;
             int conditionId = -1;
-            if(gocpp_id_13 == typeid(ast::ArrayType*)) { conditionId = 0; }
-            else if(gocpp_id_13 == typeid(ast::StructType*)) { conditionId = 1; }
-            else if(gocpp_id_13 == typeid(ast::FuncType*)) { conditionId = 2; }
-            else if(gocpp_id_13 == typeid(ast::InterfaceType*)) { conditionId = 3; }
-            else if(gocpp_id_13 == typeid(ast::MapType*)) { conditionId = 4; }
-            else if(gocpp_id_13 == typeid(ast::ChanType*)) { conditionId = 5; }
-            else if(gocpp_id_13 == typeid(ast::BinaryExpr*)) { conditionId = 6; }
-            else if(gocpp_id_13 == typeid(ast::UnaryExpr*)) { conditionId = 7; }
-            else if(gocpp_id_13 == typeid(ast::ParenExpr*)) { conditionId = 8; }
+            if(gocpp_id_12 == typeid(ast::ArrayType*)) { conditionId = 0; }
+            else if(gocpp_id_12 == typeid(ast::StructType*)) { conditionId = 1; }
+            else if(gocpp_id_12 == typeid(ast::FuncType*)) { conditionId = 2; }
+            else if(gocpp_id_12 == typeid(ast::InterfaceType*)) { conditionId = 3; }
+            else if(gocpp_id_12 == typeid(ast::MapType*)) { conditionId = 4; }
+            else if(gocpp_id_12 == typeid(ast::ChanType*)) { conditionId = 5; }
+            else if(gocpp_id_12 == typeid(ast::BinaryExpr*)) { conditionId = 6; }
+            else if(gocpp_id_12 == typeid(ast::UnaryExpr*)) { conditionId = 7; }
+            else if(gocpp_id_12 == typeid(ast::ParenExpr*)) { conditionId = 8; }
             switch(conditionId)
             {
                 case 0:

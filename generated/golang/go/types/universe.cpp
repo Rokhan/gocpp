@@ -147,7 +147,7 @@ namespace golang::go::types
         }
     }
 
-    struct gocpp_id_0
+    struct gocpp_universe_0
     {
         gocpp::string name{};
         BasicKind kind{};
@@ -185,13 +185,13 @@ namespace golang::go::types
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_universe_0& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp::array<gocpp_id_0, 3> predeclaredConsts = gocpp::array<gocpp_id_0, 3> {
+    gocpp::array<gocpp_universe_0, 3> predeclaredConsts = gocpp::array<gocpp_universe_0, 3> {
         {"true"_s, UntypedBool, constant::MakeBool(true)},
         {"false"_s, UntypedBool, constant::MakeBool(false)},
         {"iota"_s, UntypedInt, constant::MakeInt64(0)}
@@ -213,7 +213,7 @@ namespace golang::go::types
     }
 
     // A builtinId is the id of a builtin function.
-    struct gocpp_id_1
+    struct gocpp_universe_1
     {
         gocpp::string name{};
         int64_t nargs{};
@@ -255,13 +255,13 @@ namespace golang::go::types
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_universe_1& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp::array<gocpp_id_1, 28> predeclaredFuncs = gocpp::Init<gocpp::array<gocpp_id_1, 28>>([](auto& x) {
+    gocpp::array<gocpp_universe_1, 28> predeclaredFuncs = gocpp::Init<gocpp::array<gocpp_universe_1, 28>>([](auto& x) {
         x[_Append] = {"append"_s, 1, true, expression};
         x[_Cap] = {"cap"_s, 1, false, expression};
         x[_Clear] = {"clear"_s, 1, false, statement};
@@ -364,11 +364,11 @@ namespace golang::go::types
             // set Pkg field
             //Go type switch emulation
             {
-                const auto& gocpp_id_2 = gocpp::type_info(obj);
+                const auto& gocpp_id_0 = gocpp::type_info(obj);
                 const auto& obj_ref = obj;
                 int conditionId = -1;
-                if(gocpp_id_2 == typeid(types::TypeName*)) { conditionId = 0; }
-                else if(gocpp_id_2 == typeid(types::Builtin*)) { conditionId = 1; }
+                if(gocpp_id_0 == typeid(types::TypeName*)) { conditionId = 0; }
+                else if(gocpp_id_0 == typeid(types::Builtin*)) { conditionId = 1; }
                 switch(conditionId)
                 {
                     case 0:

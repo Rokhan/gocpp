@@ -514,7 +514,7 @@ namespace golang::go::types
         {
             const auto& gocpp_id_1 = gocpp::type_info(at);
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_1 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(types::posSpan)) { conditionId = 1; }
             else if(gocpp_id_1 == typeid(ast::Node)) { conditionId = 2; }
             else if(gocpp_id_1 == typeid(types::operand*)) { conditionId = 3; }
@@ -522,7 +522,7 @@ namespace golang::go::types
             {
                 case 0:
                 {
-                    untyped nil x = gocpp::any_cast<untyped nil>(at);
+                    nullptr_t x = gocpp::any_cast<nullptr_t>(at);
                     gocpp::panic("nil positioner"_s);
                     break;
                 }

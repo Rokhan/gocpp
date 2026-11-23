@@ -37,7 +37,7 @@ namespace golang::runtime
     struct StackRecord;
     struct MemProfileRecord;
     struct BlockProfileRecord;
-    struct gocpp_id_0;
+    struct gocpp_mprof_0;
     struct GoTag_goroutineProfileState;
     using goroutineProfileState = gocpp::defined<uint32_t, GoTag_goroutineProfileState>;
     inline constexpr goroutineProfileState goroutineProfileAbsent = 0;

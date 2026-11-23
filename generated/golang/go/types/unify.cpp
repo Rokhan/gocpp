@@ -726,7 +726,7 @@ namespace golang::go::types
                 else if(gocpp_id_7 == typeid(types::Chan*)) { conditionId = 9; }
                 else if(gocpp_id_7 == typeid(types::Named*)) { conditionId = 10; }
                 else if(gocpp_id_7 == typeid(types::TypeParam*)) { conditionId = 11; }
-                else if(gocpp_id_7 == typeid(untyped nil)) { conditionId = 12; }
+                else if(gocpp_id_7 == typeid(nullptr_t)) { conditionId = 12; }
                 switch(conditionId)
                 {
                     case 0:
@@ -1055,7 +1055,7 @@ namespace golang::go::types
                     // avoid a crash in case of nil type
                     case 12:
                     {
-                        untyped nil x = gocpp::any_cast<untyped nil>(x_ref);
+                        nullptr_t x = gocpp::any_cast<nullptr_t>(x_ref);
                         break;
                     }
                     default:

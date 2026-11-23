@@ -6,7 +6,7 @@
 
 namespace golang::go::types
 {
-    struct gocpp_id_0;
+    struct gocpp_universe_0;
     struct GoTag_builtinId;
     using builtinId = gocpp::defined<int64_t, GoTag_builtinId>;
     // universe scope
@@ -40,5 +40,5 @@ namespace golang::go::types
     // testing support
     inline constexpr builtinId _Assert = 26;
     inline constexpr builtinId _Trace = 27;
-    struct gocpp_id_1;
+    struct gocpp_universe_1;
 }

@@ -17,43 +17,43 @@ namespace golang::reflect
     gocpp::string valueMethodName();
     extern bool callGC;
     uintptr_t align(uintptr_t x, uintptr_t n);
-    struct gocpp_id_4 : virtual gocpp::Interface
+    struct gocpp_value_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_4(){}
-        gocpp_id_4(gocpp_id_4& i) = default;
-        gocpp_id_4(const gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(const gocpp_id_4& i) = default;
+        gocpp_value_0(){}
+        gocpp_value_0(gocpp_value_0& i) = default;
+        gocpp_value_0(const gocpp_value_0& i) = default;
+        gocpp_value_0& operator=(gocpp_value_0& i) = default;
+        gocpp_value_0& operator=(const gocpp_value_0& i) = default;
 
-        inline gocpp_id_4(nullptr_t) {};
-        gocpp_id_4& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_4(T& ref);
+        inline gocpp_value_0(nullptr_t) {};
+        gocpp_value_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_4(const T& ref);
+        gocpp_value_0(T& ref);
 
         template<typename T>
-        gocpp_id_4(T* ptr);
+        gocpp_value_0(const T& ref);
+
+        template<typename T>
+        gocpp_value_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_4
+        struct Igocpp_value_0
         {
             virtual void vM() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_4>
-        struct gocpp_id_4Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_value_0>
+        struct gocpp_value_0Impl : virtual TInterface
         {
-            explicit gocpp_id_4Impl(T* ptr)
+            explicit gocpp_value_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -68,18 +68,18 @@ namespace golang::reflect
             TStore value;
         };
 
-        inline Igocpp_id_4* value() const;
+        inline Igocpp_value_0* value() const;
 
-        std::shared_ptr<Igocpp_id_4> mValue;
+        std::shared_ptr<Igocpp_value_0> mValue;
     };
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<struct gocpp_id_4, false>& self);
-        void M(const gocpp::ObjRecv<struct gocpp_id_4>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_value_0, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_value_0>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_value_0& value);
     bool isZero(gocpp::slice<unsigned char> b);
     bool overflowFloat32(double x);
     struct StringHeader

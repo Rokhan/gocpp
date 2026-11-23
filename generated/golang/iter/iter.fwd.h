@@ -9,6 +9,6 @@ namespace golang::iter
     template<typename V> using Seq = std::function<void (std::function<bool (V _1)> yield)>;
     template<typename K, typename V> using Seq2 = std::function<void (std::function<bool (K _1, V _2)> yield)>;
     struct coro;
-    template<typename V> struct gocpp_id_0;
-    template<typename K, typename V> struct gocpp_id_1;
+    template<typename V> struct gocpp_iter_0;
+    template<typename K, typename V> struct gocpp_iter_1;
 }

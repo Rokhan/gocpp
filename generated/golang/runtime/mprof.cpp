@@ -1737,7 +1737,7 @@ namespace golang::runtime
         return goroutineLeakProfileWithLabelsConcurrent(p, labels);
     }
 
-    struct gocpp_id_0
+    struct gocpp_mprof_0
     {
         uint32_t sema{};
         bool active{};
@@ -1783,13 +1783,13 @@ namespace golang::runtime
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mprof_0& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp_id_0 goroutineProfile = gocpp::Init<gocpp_id_0>([](auto& x) {
+    gocpp_mprof_0 goroutineProfile = gocpp::Init<gocpp_mprof_0>([](auto& x) {
         x.sema = 1;
     });
     // goroutineProfileState indicates the status of a goroutine's stack for the

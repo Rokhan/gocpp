@@ -13,8 +13,8 @@ namespace golang::main
     struct Dummy2;
     struct Dummy3;
     struct Person;
-    struct gocpp_id_3;
-    struct gocpp_id_4;
-    struct gocpp_id_5;
-    struct gocpp_id_6;
+    struct gocpp_structs_2;
+    struct gocpp_structs_3;
+    struct gocpp_structs_4;
+    struct gocpp_structs_5;
 }

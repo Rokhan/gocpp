@@ -72,7 +72,7 @@ namespace golang::go::types
 
 namespace golang::go::types
 {
-    extern gocpp::array<gocpp_id_1, 28> predeclaredFuncs;
+    extern gocpp::array<gocpp_universe_1, 28> predeclaredFuncs;
 }
 #include "golang/go/constant/value.h"
 #include "golang/go/types/basic.h"
@@ -80,7 +80,7 @@ namespace golang::go::types
 namespace golang::go::types
 {
     namespace constant = golang::go::constant;
-    extern gocpp::array<gocpp_id_0, 3> predeclaredConsts;
+    extern gocpp::array<gocpp_universe_0, 3> predeclaredConsts;
 
     namespace rec
     {

@@ -272,7 +272,7 @@ namespace golang::iter
     /* convertBlockStmt, nil block */;
 
     template<typename V>
-    struct gocpp_id_0
+    struct gocpp_iter_0
         {
             V v{};
             bool ok{};
@@ -327,7 +327,7 @@ namespace golang::iter
         };
 
         template<typename V>
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0<V>& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_iter_0<V>& value)
         {
             return value.PrintTo(os);
         }
@@ -360,7 +360,7 @@ namespace golang::iter
     {
         std::function<std::tuple<V, bool> ()> next;
         std::function<void ()> stop;
-        gocpp_id_0<V> pull = {};
+        gocpp_iter_0<V> pull = {};
         auto c_tmp = newcoro([=](coro* c) mutable -> void
         {
             gocpp::Defer defer;
@@ -482,7 +482,7 @@ namespace golang::iter
     }
 
     template<typename K, typename V>
-    struct gocpp_id_1
+    struct gocpp_iter_1
         {
             K k{};
             V v{};
@@ -541,7 +541,7 @@ namespace golang::iter
         };
 
         template<typename K, typename V>
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1<K, V>& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_iter_1<K, V>& value)
         {
             return value.PrintTo(os);
         }
@@ -574,7 +574,7 @@ namespace golang::iter
     {
         std::function<std::tuple<K, V, bool> ()> next;
         std::function<void ()> stop;
-        gocpp_id_1<K, V> pull = {};
+        gocpp_iter_1<K, V> pull = {};
         auto c_tmp = newcoro([=](coro* c) mutable -> void
         {
             gocpp::Defer defer;

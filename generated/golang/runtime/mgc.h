@@ -149,7 +149,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_3
+    struct gocpp_mgc_3
     {
         mutex lock{};
         gQueue q{};
@@ -165,8 +165,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
-    struct gocpp_id_4
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_3& value);
+    struct gocpp_mgc_4
     {
         mutex lock{};
         gList list{};
@@ -182,8 +182,8 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
-    struct gocpp_id_5
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_4& value);
+    struct gocpp_mgc_5
     {
         // block is a flag set during mark termination that prevents
         // new weak->strong conversions from executing by blocking the
@@ -209,7 +209,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_5& value);
     struct gcBgMarkWorkerNode
     {
         // Unused workers are managed in a lock-free stack. This field must be first.
@@ -260,7 +260,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_mgc_0
     {
         mutex lock{};
         // free is a list of spans dedicated to workbufs, but
@@ -281,13 +281,13 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_0& value);
 }
 #include "golang/runtime/list_manual.h"
 
 namespace golang::runtime
 {
-    struct gocpp_id_1
+    struct gocpp_mgc_1
     {
         mutex lock{};
         listHeadManual list{}; // *spanSPMC
@@ -303,7 +303,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_1& value);
 }
 #include "golang/internal/runtime/atomic/atomic_amd64.fwd.h"
 
@@ -315,7 +315,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_2
+    struct gocpp_mgc_2
     {
         // Once set, it indicates that the GC will perform goroutine leak detection during
         // the next GC cycle; it is set by goroutineLeakGC and unset during gcStart.
@@ -344,7 +344,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgc_2& value);
     struct gcDebugMarkDoneStruct
     {
         // spinAfterRaggedBarrier forces gcMarkDone to spin after it executes
@@ -387,7 +387,7 @@ namespace golang::runtime
         cpu::CacheLinePad _1{}; // prevents false-sharing between full and empty
         lfstack empty{}; // lock-free list of empty blocks workbuf
         cpu::CacheLinePad _2{}; // prevents false-sharing between empty and wbufSpans
-        gocpp_id_0 wbufSpans{};
+        gocpp_mgc_0 wbufSpans{};
         cpu::CacheLinePad _3{}; // prevents false-sharing between wbufSpans and spanWorkMask
         // spanqMask is a bitmap indicating which Ps have local work worth stealing.
         // Set or cleared by the owning P, cleared by stealing Ps.
@@ -398,7 +398,7 @@ namespace golang::runtime
         cpu::CacheLinePad _4{}; // prevents false-sharing between spanqMask and everything else
         // List of all spanSPMCs.
         // Only used if goexperiment.GreenTeaGC.
-        gocpp_id_1 spanSPMCs{};
+        gocpp_mgc_1 spanSPMCs{};
         // bytesMarked is the number of bytes marked this cycle. This
         // includes bytes blackened in scanned objects, noscan objects
         // that go straight to black, objects allocated as black during
@@ -429,7 +429,7 @@ namespace golang::runtime
         int64_t nMaybeRunnableStackRoots{};
         // The following fields monitor the GC phase of the current cycle during
         // goroutine leak detection.
-        gocpp_id_2 goroutineLeak{};
+        gocpp_mgc_2 goroutineLeak{};
         // Base indexes of each root type. Set by gcPrepareMarkRoots.
         uint32_t baseData{};
         uint32_t baseBSS{};
@@ -471,13 +471,13 @@ namespace golang::runtime
         // assistQueue is a queue of assists that are blocked because
         // there was neither enough credit to steal or enough work to
         // do.
-        gocpp_id_3 assistQueue{};
+        gocpp_mgc_3 assistQueue{};
         // sweepWaiters is a list of blocked goroutines to wake when
         // we transition from mark termination to sweep.
-        gocpp_id_4 sweepWaiters{};
+        gocpp_mgc_4 sweepWaiters{};
         // strongFromWeak controls how the GC interacts with weak->strong
         // pointer conversions.
-        gocpp_id_5 strongFromWeak{};
+        gocpp_mgc_5 strongFromWeak{};
         // cycles is the number of completed GC cycles, where a GC
         // cycle is sweep termination, mark, mark termination, and
         // sweep. This differs from memstats.numgc, which is

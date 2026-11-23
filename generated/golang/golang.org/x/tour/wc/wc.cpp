@@ -50,7 +50,7 @@ namespace golang::golang_org::x::tour::wc
         }
     }
 
-    struct gocpp_id_0
+    struct gocpp_wc_0
     {
         gocpp::string in{};
         gocpp::map<gocpp::string, int64_t> want{};
@@ -84,13 +84,13 @@ namespace golang::golang_org::x::tour::wc
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wc_0& value)
     {
         return value.PrintTo(os);
     }
 
 
-    gocpp::slice<gocpp_id_0> testCases = gocpp::slice<gocpp_id_0> {
+    gocpp::slice<gocpp_wc_0> testCases = gocpp::slice<gocpp_wc_0> {
         {"I am learning Go!"_s, gocpp::map<gocpp::string, int64_t> {
         { "I"_s, 1 }, { "am"_s, 1 }, { "learning"_s, 1 }, { "Go!"_s, 1 }
     }},

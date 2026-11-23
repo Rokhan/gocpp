@@ -262,7 +262,7 @@ namespace golang::os::exec
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_exec_0::operator T()
     {
         T result;
         result.in = this->in;
@@ -271,14 +271,14 @@ namespace golang::os::exec
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_exec_0::operator==(const T& ref) const
     {
         if (in != ref.in) return false;
         if (out != ref.out) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_exec_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << in;
@@ -287,7 +287,7 @@ namespace golang::os::exec
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_exec_0& value)
     {
         return value.PrintTo(os);
     }
@@ -645,7 +645,7 @@ namespace golang::os::exec
         c->parentIOPipes = append(c->parentIOPipes, pw);
         c->goroutine = append(c->goroutine, [=]() mutable -> gocpp::error
         {
-            auto [gocpp_id_1, err] = io::Copy(pw, c->Stdin);
+            auto [gocpp_id_0, err] = io::Copy(pw, c->Stdin);
             if(skipStdinCopyError(err))
             {
                 err = nullptr;
@@ -705,7 +705,7 @@ namespace golang::os::exec
         c->parentIOPipes = append(c->parentIOPipes, pr);
         c->goroutine = append(c->goroutine, [=]() mutable -> gocpp::error
         {
-            auto [gocpp_id_2, err] = io::Copy(w, pr);
+            auto [gocpp_id_1, err] = io::Copy(w, pr);
             // in case io.Copy stopped due to write error
             rec::Close(gocpp::recv(pr));
             return err;
@@ -1766,7 +1766,7 @@ namespace golang::os::exec
     gocpp::slice<gocpp::string> rec::Environ(Cmd* c)
     {
         // Intentionally ignore errors: environ returns a best-effort environment no matter what.
-        auto [env, gocpp_id_3] = rec::environ(gocpp::recv(c));
+        auto [env, gocpp_id_2] = rec::environ(gocpp::recv(c));
         return env;
     }
 
@@ -1856,7 +1856,7 @@ namespace golang::os::exec
         }
         for(auto [gocpp_ignored, kv] : env)
         {
-            auto [k, gocpp_id_4, ok] = strings::Cut(kv, "="_s);
+            auto [k, gocpp_id_3, ok] = strings::Cut(kv, "="_s);
             if(! ok)
             {
                 continue;

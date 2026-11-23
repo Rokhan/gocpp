@@ -33,43 +33,43 @@ namespace golang::encoding::json::v2
     extern gocpp::error errAmbiguousName;
     bool isSemanticError(gocpp::error err);
     bool isSyntacticError(gocpp::error err);
-    struct gocpp_id_4 : virtual gocpp::Interface
+    struct gocpp_errors_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_4(){}
-        gocpp_id_4(gocpp_id_4& i) = default;
-        gocpp_id_4(const gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(const gocpp_id_4& i) = default;
+        gocpp_errors_0(){}
+        gocpp_errors_0(gocpp_errors_0& i) = default;
+        gocpp_errors_0(const gocpp_errors_0& i) = default;
+        gocpp_errors_0& operator=(gocpp_errors_0& i) = default;
+        gocpp_errors_0& operator=(const gocpp_errors_0& i) = default;
 
-        inline gocpp_id_4(nullptr_t) {};
-        gocpp_id_4& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_4(T& ref);
+        inline gocpp_errors_0(nullptr_t) {};
+        gocpp_errors_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_4(const T& ref);
+        gocpp_errors_0(T& ref);
 
         template<typename T>
-        gocpp_id_4(T* ptr);
+        gocpp_errors_0(const T& ref);
+
+        template<typename T>
+        gocpp_errors_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_4
+        struct Igocpp_errors_0
         {
             virtual gocpp::slice<unsigned char> vAppendStackPointer(gocpp::slice<unsigned char> _1, int64_t _2) = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_4>
-        struct gocpp_id_4Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_errors_0>
+        struct gocpp_errors_0Impl : virtual TInterface
         {
-            explicit gocpp_id_4Impl(T* ptr)
+            explicit gocpp_errors_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -84,18 +84,18 @@ namespace golang::encoding::json::v2
             TStore value;
         };
 
-        inline Igocpp_id_4* value() const;
+        inline Igocpp_errors_0* value() const;
 
-        std::shared_ptr<Igocpp_id_4> mValue;
+        std::shared_ptr<Igocpp_errors_0> mValue;
     };
 
     namespace rec
     {
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_4, false>& self, gocpp::slice<unsigned char> _1, int64_t _2);
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_4>& self, gocpp::slice<unsigned char> _1, int64_t _2);
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_errors_0, false>& self, gocpp::slice<unsigned char> _1, int64_t _2);
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_errors_0>& self, gocpp::slice<unsigned char> _1, int64_t _2);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_errors_0& value);
     gocpp::error collapseSemanticErrors(gocpp::error err);
     gocpp::error wrapErrUnsupported(gocpp::error err, gocpp::string what);
     gocpp::error toUnexpectedEOF(gocpp::error err);

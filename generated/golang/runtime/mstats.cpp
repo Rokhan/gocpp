@@ -131,7 +131,7 @@ namespace golang::runtime
     mstats memstats;
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_mstats_0::operator T()
     {
         T result;
         result.Size = this->Size;
@@ -141,7 +141,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_mstats_0::operator==(const T& ref) const
     {
         if (Size != ref.Size) return false;
         if (Mallocs != ref.Mallocs) return false;
@@ -149,7 +149,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mstats_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << Size;
@@ -159,7 +159,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mstats_0& value)
     {
         return value.PrintTo(os);
     }
@@ -328,7 +328,7 @@ namespace golang::runtime
     // ensures consistency between the values that ReadMemStats is using and the
     // runtime-internal stats.
     bool doubleCheckReadMemStats = false;
-    struct gocpp_id_1
+    struct gocpp_mstats_1
         {
             uint32_t Size{};
             uint64_t Mallocs{};
@@ -366,7 +366,7 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_mstats_1& value)
         {
             return value.PrintTo(os);
         }
@@ -402,7 +402,7 @@ namespace golang::runtime
         auto nFree = consStats.largeFreeCount;
 
         // Collect per-sizeclass stats.
-        gocpp::array<gocpp_id_1, gc::NumSizeClasses> bySize = {};
+        gocpp::array<gocpp_mstats_1, gc::NumSizeClasses> bySize = {};
         for(auto [i, gocpp_ignored] : bySize)
         {
             bySize[i].Size = uint32_t(gc::SizeClassToSize[i]);

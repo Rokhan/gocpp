@@ -13,43 +13,43 @@
 namespace golang::errors
 {
     gocpp::error Unwrap(gocpp::error err);
-    struct gocpp_id_0 : virtual gocpp::Interface
+    struct gocpp_wrap_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_0(){}
-        gocpp_id_0(gocpp_id_0& i) = default;
-        gocpp_id_0(const gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(const gocpp_id_0& i) = default;
+        gocpp_wrap_0(){}
+        gocpp_wrap_0(gocpp_wrap_0& i) = default;
+        gocpp_wrap_0(const gocpp_wrap_0& i) = default;
+        gocpp_wrap_0& operator=(gocpp_wrap_0& i) = default;
+        gocpp_wrap_0& operator=(const gocpp_wrap_0& i) = default;
 
-        inline gocpp_id_0(nullptr_t) {};
-        gocpp_id_0& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_0(T& ref);
+        inline gocpp_wrap_0(nullptr_t) {};
+        gocpp_wrap_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_0(const T& ref);
+        gocpp_wrap_0(T& ref);
 
         template<typename T>
-        gocpp_id_0(T* ptr);
+        gocpp_wrap_0(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_0
+        struct Igocpp_wrap_0
         {
             virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
-        struct gocpp_id_0Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_0>
+        struct gocpp_wrap_0Impl : virtual TInterface
         {
-            explicit gocpp_id_0Impl(T* ptr)
+            explicit gocpp_wrap_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -64,57 +64,57 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_0* value() const;
+        inline Igocpp_wrap_0* value() const;
 
-        std::shared_ptr<Igocpp_id_0> mValue;
+        std::shared_ptr<Igocpp_wrap_0> mValue;
     };
 
     namespace rec
     {
-        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
-        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_0>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_0, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_0>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_0& value);
     bool Is(gocpp::error err, gocpp::error target);
     bool is(gocpp::error err, gocpp::error target, bool targetComparable);
-    struct gocpp_id_1 : virtual gocpp::Interface
+    struct gocpp_wrap_1 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_1(){}
-        gocpp_id_1(gocpp_id_1& i) = default;
-        gocpp_id_1(const gocpp_id_1& i) = default;
-        gocpp_id_1& operator=(gocpp_id_1& i) = default;
-        gocpp_id_1& operator=(const gocpp_id_1& i) = default;
+        gocpp_wrap_1(){}
+        gocpp_wrap_1(gocpp_wrap_1& i) = default;
+        gocpp_wrap_1(const gocpp_wrap_1& i) = default;
+        gocpp_wrap_1& operator=(gocpp_wrap_1& i) = default;
+        gocpp_wrap_1& operator=(const gocpp_wrap_1& i) = default;
 
-        inline gocpp_id_1(nullptr_t) {};
-        gocpp_id_1& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_1(T& ref);
+        inline gocpp_wrap_1(nullptr_t) {};
+        gocpp_wrap_1& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_1(const T& ref);
+        gocpp_wrap_1(T& ref);
 
         template<typename T>
-        gocpp_id_1(T* ptr);
+        gocpp_wrap_1(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_1(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_1
+        struct Igocpp_wrap_1
         {
             virtual bool vIs(gocpp::error _1) = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_1>
-        struct gocpp_id_1Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_1>
+        struct gocpp_wrap_1Impl : virtual TInterface
         {
-            explicit gocpp_id_1Impl(T* ptr)
+            explicit gocpp_wrap_1Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -129,55 +129,55 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_1* value() const;
+        inline Igocpp_wrap_1* value() const;
 
-        std::shared_ptr<Igocpp_id_1> mValue;
+        std::shared_ptr<Igocpp_wrap_1> mValue;
     };
 
     namespace rec
     {
-        bool Is(const gocpp::PtrRecv<struct gocpp_id_1, false>& self, gocpp::error _1);
-        bool Is(const gocpp::ObjRecv<struct gocpp_id_1>& self, gocpp::error _1);
+        bool Is(const gocpp::PtrRecv<struct gocpp_wrap_1, false>& self, gocpp::error _1);
+        bool Is(const gocpp::ObjRecv<struct gocpp_wrap_1>& self, gocpp::error _1);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    struct gocpp_id_3 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_1& value);
+    struct gocpp_wrap_2 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_3(){}
-        gocpp_id_3(gocpp_id_3& i) = default;
-        gocpp_id_3(const gocpp_id_3& i) = default;
-        gocpp_id_3& operator=(gocpp_id_3& i) = default;
-        gocpp_id_3& operator=(const gocpp_id_3& i) = default;
+        gocpp_wrap_2(){}
+        gocpp_wrap_2(gocpp_wrap_2& i) = default;
+        gocpp_wrap_2(const gocpp_wrap_2& i) = default;
+        gocpp_wrap_2& operator=(gocpp_wrap_2& i) = default;
+        gocpp_wrap_2& operator=(const gocpp_wrap_2& i) = default;
 
-        inline gocpp_id_3(nullptr_t) {};
-        gocpp_id_3& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_3(T& ref);
+        inline gocpp_wrap_2(nullptr_t) {};
+        gocpp_wrap_2& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_3(const T& ref);
+        gocpp_wrap_2(T& ref);
 
         template<typename T>
-        gocpp_id_3(T* ptr);
+        gocpp_wrap_2(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_2(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_3
+        struct Igocpp_wrap_2
         {
             virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_3>
-        struct gocpp_id_3Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_2>
+        struct gocpp_wrap_2Impl : virtual TInterface
         {
-            explicit gocpp_id_3Impl(T* ptr)
+            explicit gocpp_wrap_2Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -192,55 +192,55 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_3* value() const;
+        inline Igocpp_wrap_2* value() const;
 
-        std::shared_ptr<Igocpp_id_3> mValue;
+        std::shared_ptr<Igocpp_wrap_2> mValue;
     };
 
     namespace rec
     {
-        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_3, false>& self);
-        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_3>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_2, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_2>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
-    struct gocpp_id_4 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_2& value);
+    struct gocpp_wrap_3 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_4(){}
-        gocpp_id_4(gocpp_id_4& i) = default;
-        gocpp_id_4(const gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(const gocpp_id_4& i) = default;
+        gocpp_wrap_3(){}
+        gocpp_wrap_3(gocpp_wrap_3& i) = default;
+        gocpp_wrap_3(const gocpp_wrap_3& i) = default;
+        gocpp_wrap_3& operator=(gocpp_wrap_3& i) = default;
+        gocpp_wrap_3& operator=(const gocpp_wrap_3& i) = default;
 
-        inline gocpp_id_4(nullptr_t) {};
-        gocpp_id_4& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_4(T& ref);
+        inline gocpp_wrap_3(nullptr_t) {};
+        gocpp_wrap_3& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_4(const T& ref);
+        gocpp_wrap_3(T& ref);
 
         template<typename T>
-        gocpp_id_4(T* ptr);
+        gocpp_wrap_3(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_3(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_4
+        struct Igocpp_wrap_3
         {
             virtual gocpp::slice<gocpp::error> vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_4>
-        struct gocpp_id_4Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_3>
+        struct gocpp_wrap_3Impl : virtual TInterface
         {
-            explicit gocpp_id_4Impl(T* ptr)
+            explicit gocpp_wrap_3Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -255,56 +255,56 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_4* value() const;
+        inline Igocpp_wrap_3* value() const;
 
-        std::shared_ptr<Igocpp_id_4> mValue;
+        std::shared_ptr<Igocpp_wrap_3> mValue;
     };
 
     namespace rec
     {
-        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_4, false>& self);
-        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_4>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_3, false>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_3>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_3& value);
     bool As(gocpp::error err, go_any target);
-    struct gocpp_id_5 : virtual gocpp::Interface
+    struct gocpp_wrap_4 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_5(){}
-        gocpp_id_5(gocpp_id_5& i) = default;
-        gocpp_id_5(const gocpp_id_5& i) = default;
-        gocpp_id_5& operator=(gocpp_id_5& i) = default;
-        gocpp_id_5& operator=(const gocpp_id_5& i) = default;
+        gocpp_wrap_4(){}
+        gocpp_wrap_4(gocpp_wrap_4& i) = default;
+        gocpp_wrap_4(const gocpp_wrap_4& i) = default;
+        gocpp_wrap_4& operator=(gocpp_wrap_4& i) = default;
+        gocpp_wrap_4& operator=(const gocpp_wrap_4& i) = default;
 
-        inline gocpp_id_5(nullptr_t) {};
-        gocpp_id_5& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_5(T& ref);
+        inline gocpp_wrap_4(nullptr_t) {};
+        gocpp_wrap_4& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_5(const T& ref);
+        gocpp_wrap_4(T& ref);
 
         template<typename T>
-        gocpp_id_5(T* ptr);
+        gocpp_wrap_4(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_4(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_5
+        struct Igocpp_wrap_4
         {
             virtual bool vAs(go_any _1) = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_5>
-        struct gocpp_id_5Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_4>
+        struct gocpp_wrap_4Impl : virtual TInterface
         {
-            explicit gocpp_id_5Impl(T* ptr)
+            explicit gocpp_wrap_4Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -319,55 +319,55 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_5* value() const;
+        inline Igocpp_wrap_4* value() const;
 
-        std::shared_ptr<Igocpp_id_5> mValue;
+        std::shared_ptr<Igocpp_wrap_4> mValue;
     };
 
     namespace rec
     {
-        bool As(const gocpp::PtrRecv<struct gocpp_id_5, false>& self, go_any _1);
-        bool As(const gocpp::ObjRecv<struct gocpp_id_5>& self, go_any _1);
+        bool As(const gocpp::PtrRecv<struct gocpp_wrap_4, false>& self, go_any _1);
+        bool As(const gocpp::ObjRecv<struct gocpp_wrap_4>& self, go_any _1);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_5& value);
-    struct gocpp_id_7 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_4& value);
+    struct gocpp_wrap_5 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_7(){}
-        gocpp_id_7(gocpp_id_7& i) = default;
-        gocpp_id_7(const gocpp_id_7& i) = default;
-        gocpp_id_7& operator=(gocpp_id_7& i) = default;
-        gocpp_id_7& operator=(const gocpp_id_7& i) = default;
+        gocpp_wrap_5(){}
+        gocpp_wrap_5(gocpp_wrap_5& i) = default;
+        gocpp_wrap_5(const gocpp_wrap_5& i) = default;
+        gocpp_wrap_5& operator=(gocpp_wrap_5& i) = default;
+        gocpp_wrap_5& operator=(const gocpp_wrap_5& i) = default;
 
-        inline gocpp_id_7(nullptr_t) {};
-        gocpp_id_7& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_7(T& ref);
+        inline gocpp_wrap_5(nullptr_t) {};
+        gocpp_wrap_5& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_7(const T& ref);
+        gocpp_wrap_5(T& ref);
 
         template<typename T>
-        gocpp_id_7(T* ptr);
+        gocpp_wrap_5(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_5(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_7
+        struct Igocpp_wrap_5
         {
             virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_7>
-        struct gocpp_id_7Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_5>
+        struct gocpp_wrap_5Impl : virtual TInterface
         {
-            explicit gocpp_id_7Impl(T* ptr)
+            explicit gocpp_wrap_5Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -382,55 +382,55 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_7* value() const;
+        inline Igocpp_wrap_5* value() const;
 
-        std::shared_ptr<Igocpp_id_7> mValue;
+        std::shared_ptr<Igocpp_wrap_5> mValue;
     };
 
     namespace rec
     {
-        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_7, false>& self);
-        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_7>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_5, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_5>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value);
-    struct gocpp_id_8 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_5& value);
+    struct gocpp_wrap_6 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_8(){}
-        gocpp_id_8(gocpp_id_8& i) = default;
-        gocpp_id_8(const gocpp_id_8& i) = default;
-        gocpp_id_8& operator=(gocpp_id_8& i) = default;
-        gocpp_id_8& operator=(const gocpp_id_8& i) = default;
+        gocpp_wrap_6(){}
+        gocpp_wrap_6(gocpp_wrap_6& i) = default;
+        gocpp_wrap_6(const gocpp_wrap_6& i) = default;
+        gocpp_wrap_6& operator=(gocpp_wrap_6& i) = default;
+        gocpp_wrap_6& operator=(const gocpp_wrap_6& i) = default;
 
-        inline gocpp_id_8(nullptr_t) {};
-        gocpp_id_8& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_8(T& ref);
+        inline gocpp_wrap_6(nullptr_t) {};
+        gocpp_wrap_6& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_8(const T& ref);
+        gocpp_wrap_6(T& ref);
 
         template<typename T>
-        gocpp_id_8(T* ptr);
+        gocpp_wrap_6(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_6(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_8
+        struct Igocpp_wrap_6
         {
             virtual gocpp::slice<gocpp::error> vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_8>
-        struct gocpp_id_8Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_6>
+        struct gocpp_wrap_6Impl : virtual TInterface
         {
-            explicit gocpp_id_8Impl(T* ptr)
+            explicit gocpp_wrap_6Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -445,61 +445,61 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_8* value() const;
+        inline Igocpp_wrap_6* value() const;
 
-        std::shared_ptr<Igocpp_id_8> mValue;
+        std::shared_ptr<Igocpp_wrap_6> mValue;
     };
 
     namespace rec
     {
-        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_8, false>& self);
-        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_8>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_6, false>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_6>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_6& value);
 
     template<typename E>
     std::tuple<E, bool> AsType(gocpp::error err);
 
     template<typename E>
     std::tuple<E, bool> asType(gocpp::error err, E** ppe);
-    struct gocpp_id_9 : virtual gocpp::Interface
+    struct gocpp_wrap_7 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_9(){}
-        gocpp_id_9(gocpp_id_9& i) = default;
-        gocpp_id_9(const gocpp_id_9& i) = default;
-        gocpp_id_9& operator=(gocpp_id_9& i) = default;
-        gocpp_id_9& operator=(const gocpp_id_9& i) = default;
+        gocpp_wrap_7(){}
+        gocpp_wrap_7(gocpp_wrap_7& i) = default;
+        gocpp_wrap_7(const gocpp_wrap_7& i) = default;
+        gocpp_wrap_7& operator=(gocpp_wrap_7& i) = default;
+        gocpp_wrap_7& operator=(const gocpp_wrap_7& i) = default;
 
-        inline gocpp_id_9(nullptr_t) {};
-        gocpp_id_9& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_9(T& ref);
+        inline gocpp_wrap_7(nullptr_t) {};
+        gocpp_wrap_7& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_9(const T& ref);
+        gocpp_wrap_7(T& ref);
 
         template<typename T>
-        gocpp_id_9(T* ptr);
+        gocpp_wrap_7(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_7(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_9
+        struct Igocpp_wrap_7
         {
             virtual bool vAs(go_any _1) = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_9>
-        struct gocpp_id_9Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_7>
+        struct gocpp_wrap_7Impl : virtual TInterface
         {
-            explicit gocpp_id_9Impl(T* ptr)
+            explicit gocpp_wrap_7Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -514,55 +514,55 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_9* value() const;
+        inline Igocpp_wrap_7* value() const;
 
-        std::shared_ptr<Igocpp_id_9> mValue;
+        std::shared_ptr<Igocpp_wrap_7> mValue;
     };
 
     namespace rec
     {
-        bool As(const gocpp::PtrRecv<struct gocpp_id_9, false>& self, go_any _1);
-        bool As(const gocpp::ObjRecv<struct gocpp_id_9>& self, go_any _1);
+        bool As(const gocpp::PtrRecv<struct gocpp_wrap_7, false>& self, go_any _1);
+        bool As(const gocpp::ObjRecv<struct gocpp_wrap_7>& self, go_any _1);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value);
-    struct gocpp_id_11 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_7& value);
+    struct gocpp_wrap_8 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_11(){}
-        gocpp_id_11(gocpp_id_11& i) = default;
-        gocpp_id_11(const gocpp_id_11& i) = default;
-        gocpp_id_11& operator=(gocpp_id_11& i) = default;
-        gocpp_id_11& operator=(const gocpp_id_11& i) = default;
+        gocpp_wrap_8(){}
+        gocpp_wrap_8(gocpp_wrap_8& i) = default;
+        gocpp_wrap_8(const gocpp_wrap_8& i) = default;
+        gocpp_wrap_8& operator=(gocpp_wrap_8& i) = default;
+        gocpp_wrap_8& operator=(const gocpp_wrap_8& i) = default;
 
-        inline gocpp_id_11(nullptr_t) {};
-        gocpp_id_11& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_11(T& ref);
+        inline gocpp_wrap_8(nullptr_t) {};
+        gocpp_wrap_8& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_11(const T& ref);
+        gocpp_wrap_8(T& ref);
 
         template<typename T>
-        gocpp_id_11(T* ptr);
+        gocpp_wrap_8(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_8(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_11
+        struct Igocpp_wrap_8
         {
             virtual gocpp::error vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_11>
-        struct gocpp_id_11Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_8>
+        struct gocpp_wrap_8Impl : virtual TInterface
         {
-            explicit gocpp_id_11Impl(T* ptr)
+            explicit gocpp_wrap_8Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -577,55 +577,55 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_11* value() const;
+        inline Igocpp_wrap_8* value() const;
 
-        std::shared_ptr<Igocpp_id_11> mValue;
+        std::shared_ptr<Igocpp_wrap_8> mValue;
     };
 
     namespace rec
     {
-        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_id_11, false>& self);
-        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_id_11>& self);
+        gocpp::error Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_8, false>& self);
+        gocpp::error Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_8>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_11& value);
-    struct gocpp_id_12 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_8& value);
+    struct gocpp_wrap_9 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_12(){}
-        gocpp_id_12(gocpp_id_12& i) = default;
-        gocpp_id_12(const gocpp_id_12& i) = default;
-        gocpp_id_12& operator=(gocpp_id_12& i) = default;
-        gocpp_id_12& operator=(const gocpp_id_12& i) = default;
+        gocpp_wrap_9(){}
+        gocpp_wrap_9(gocpp_wrap_9& i) = default;
+        gocpp_wrap_9(const gocpp_wrap_9& i) = default;
+        gocpp_wrap_9& operator=(gocpp_wrap_9& i) = default;
+        gocpp_wrap_9& operator=(const gocpp_wrap_9& i) = default;
 
-        inline gocpp_id_12(nullptr_t) {};
-        gocpp_id_12& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_12(T& ref);
+        inline gocpp_wrap_9(nullptr_t) {};
+        gocpp_wrap_9& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_12(const T& ref);
+        gocpp_wrap_9(T& ref);
 
         template<typename T>
-        gocpp_id_12(T* ptr);
+        gocpp_wrap_9(const T& ref);
+
+        template<typename T>
+        gocpp_wrap_9(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_12
+        struct Igocpp_wrap_9
         {
             virtual gocpp::slice<gocpp::error> vUnwrap() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_12>
-        struct gocpp_id_12Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_wrap_9>
+        struct gocpp_wrap_9Impl : virtual TInterface
         {
-            explicit gocpp_id_12Impl(T* ptr)
+            explicit gocpp_wrap_9Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -640,18 +640,18 @@ namespace golang::errors
             TStore value;
         };
 
-        inline Igocpp_id_12* value() const;
+        inline Igocpp_wrap_9* value() const;
 
-        std::shared_ptr<Igocpp_id_12> mValue;
+        std::shared_ptr<Igocpp_wrap_9> mValue;
     };
 
     namespace rec
     {
-        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_id_12, false>& self);
-        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_id_12>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::PtrRecv<struct gocpp_wrap_9, false>& self);
+        gocpp::slice<gocpp::error> Unwrap(const gocpp::ObjRecv<struct gocpp_wrap_9>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_12& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_wrap_9& value);
 }
 #include "golang/internal/reflectlite/type.fwd.h"
 

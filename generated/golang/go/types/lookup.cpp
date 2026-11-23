@@ -76,7 +76,7 @@ namespace golang::go::types
         {
             const auto& gocpp_id_0 = gocpp::type_info(obj);
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(types::Func*)) { conditionId = 1; }
             else if(gocpp_id_0 == typeid(types::Var*)) { conditionId = 2; }
             switch(conditionId)

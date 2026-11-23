@@ -38,54 +38,54 @@ namespace golang::go::parser
 
     
                 template<typename T>
-                gocpp_id_0::gocpp_id_0(T& ref)
+                gocpp_resolver_0::gocpp_resolver_0(T& ref)
                 {
-                    mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_resolver_0Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_0::gocpp_id_0(const T& ref)
+                gocpp_resolver_0::gocpp_resolver_0(const T& ref)
                 {
-                    mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+                    mValue.reset(new gocpp_resolver_0Impl<T, std::unique_ptr<T>>(new T(ref)));
                 }
 
                 template<typename T>
-                gocpp_id_0::gocpp_id_0(T* ptr)
+                gocpp_resolver_0::gocpp_resolver_0(T* ptr)
                 {
-                    mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+                    mValue.reset(new gocpp_resolver_0Impl<T, gocpp::ptr<T>>(ptr));
                 }
 
-                std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+                std::ostream& gocpp_resolver_0::PrintTo(std::ostream& os) const
                 {
                     return os;
                 }
 
                 template<typename T, typename TStore, typename TInterface>
-                token::Pos gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vPos()
+                token::Pos gocpp_resolver_0::gocpp_resolver_0Impl<T, TStore, TInterface>::vPos()
                 {
                     return rec::Pos(gocpp::PtrRecv<T, false>(value.get()));
                 }
 
-                inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+                inline gocpp_resolver_0::Igocpp_resolver_0* gocpp_resolver_0::value() const
                 {
                     if(auto res = mValue.get()) { return res; }
-                    throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+                    throw gocpp::GoPanic("using nil value for interface 'gocpp_resolver_0'");
                 }
 
                 namespace rec
                 {
-                    token::Pos Pos(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
+                    token::Pos Pos(const gocpp::PtrRecv<struct gocpp_resolver_0, false>& self)
                     {
                         return self.ptr->value()->vPos();
                     }
 
-                    token::Pos Pos(const gocpp::ObjRecv<struct gocpp_id_0>& self)
+                    token::Pos Pos(const gocpp::ObjRecv<struct gocpp_resolver_0>& self)
                     {
                         return self.obj.value()->vPos();
                     }
                 }
 
-                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+                std::ostream& operator<<(std::ostream& os, const struct gocpp_resolver_0& value)
                 {
                     return value.PrintTo(os);
                 }
@@ -132,7 +132,7 @@ namespace golang::go::parser
             else
             if(debugResolve)
             {
-                auto pos = rec::Pos(gocpp::recv(gocpp::assertValue<gocpp_id_0>(ident->Obj->Decl)));
+                auto pos = rec::Pos(gocpp::recv(gocpp::assertValue<gocpp_resolver_0>(ident->Obj->Decl)));
                 rec::trace(gocpp::recv(r), "resolved %s@%v to package object %v"_s, ident->Name, rec::Pos(gocpp::recv(ident)), pos);
             }
         }
@@ -201,10 +201,10 @@ namespace golang::go::parser
         {
             //Go type switch emulation
             {
-                const auto& gocpp_id_1 = gocpp::type_info(arg);
+                const auto& gocpp_id_0 = gocpp::type_info(arg);
                 const auto& arg_ref = arg;
                 int conditionId = -1;
-                if(gocpp_id_1 == typeid(token::Pos)) { conditionId = 0; }
+                if(gocpp_id_0 == typeid(token::Pos)) { conditionId = 0; }
                 switch(conditionId)
                 {
                     case 0:
@@ -285,7 +285,7 @@ namespace golang::go::parser
             obj->Data = data;
             // Identifiers (for receiver type parameters) are written to the scope, but
             // never set as the resolved object. See go.dev/issue/50956.
-            if(auto [gocpp_id_2, ok] = gocpp::getValue<ast::Ident*>(decl); ! ok)
+            if(auto [gocpp_id_1, ok] = gocpp::getValue<ast::Ident*>(decl); ! ok)
             {
                 ident->Obj = obj;
             }
@@ -380,7 +380,7 @@ namespace golang::go::parser
                 assert(obj->Name != ""_s, "obj with no name"_s);
                 // Identifiers (for receiver type parameters) are written to the scope,
                 // but never set as the resolved object. See go.dev/issue/50956.
-                if(auto [gocpp_id_3, ok] = gocpp::getValue<ast::Ident*>(obj->Decl); ! ok)
+                if(auto [gocpp_id_2, ok] = gocpp::getValue<ast::Ident*>(obj->Decl); ! ok)
                 {
                     ident->Obj = obj;
                 }
@@ -412,7 +412,7 @@ namespace golang::go::parser
         {
             auto expr_tmp = ast::Unparen(expr);
             auto& expr = expr_tmp;
-            if(auto [gocpp_id_4, ok] = gocpp::getValue<ast::Ident*>(expr); ! ok && expr != nullptr)
+            if(auto [gocpp_id_3, ok] = gocpp::getValue<ast::Ident*>(expr); ! ok && expr != nullptr)
             {
                 ast::Walk(r, expr);
             }
@@ -439,29 +439,29 @@ namespace golang::go::parser
 
             //Go type switch emulation
             {
-                const auto& gocpp_id_5 = gocpp::type_info(node);
+                const auto& gocpp_id_4 = gocpp::type_info(node);
                 int conditionId = -1;
-                if(gocpp_id_5 == typeid(ast::Ident*)) { conditionId = 0; }
-                else if(gocpp_id_5 == typeid(ast::FuncLit*)) { conditionId = 1; }
-                else if(gocpp_id_5 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
-                else if(gocpp_id_5 == typeid(ast::StructType*)) { conditionId = 3; }
-                else if(gocpp_id_5 == typeid(ast::FuncType*)) { conditionId = 4; }
-                else if(gocpp_id_5 == typeid(ast::CompositeLit*)) { conditionId = 5; }
-                else if(gocpp_id_5 == typeid(ast::InterfaceType*)) { conditionId = 6; }
-                else if(gocpp_id_5 == typeid(ast::LabeledStmt*)) { conditionId = 7; }
-                else if(gocpp_id_5 == typeid(ast::AssignStmt*)) { conditionId = 8; }
-                else if(gocpp_id_5 == typeid(ast::BranchStmt*)) { conditionId = 9; }
-                else if(gocpp_id_5 == typeid(ast::BlockStmt*)) { conditionId = 10; }
-                else if(gocpp_id_5 == typeid(ast::IfStmt*)) { conditionId = 11; }
-                else if(gocpp_id_5 == typeid(ast::CaseClause*)) { conditionId = 12; }
-                else if(gocpp_id_5 == typeid(ast::SwitchStmt*)) { conditionId = 13; }
-                else if(gocpp_id_5 == typeid(ast::TypeSwitchStmt*)) { conditionId = 14; }
-                else if(gocpp_id_5 == typeid(ast::CommClause*)) { conditionId = 15; }
-                else if(gocpp_id_5 == typeid(ast::SelectStmt*)) { conditionId = 16; }
-                else if(gocpp_id_5 == typeid(ast::ForStmt*)) { conditionId = 17; }
-                else if(gocpp_id_5 == typeid(ast::RangeStmt*)) { conditionId = 18; }
-                else if(gocpp_id_5 == typeid(ast::GenDecl*)) { conditionId = 19; }
-                else if(gocpp_id_5 == typeid(ast::FuncDecl*)) { conditionId = 20; }
+                if(gocpp_id_4 == typeid(ast::Ident*)) { conditionId = 0; }
+                else if(gocpp_id_4 == typeid(ast::FuncLit*)) { conditionId = 1; }
+                else if(gocpp_id_4 == typeid(ast::SelectorExpr*)) { conditionId = 2; }
+                else if(gocpp_id_4 == typeid(ast::StructType*)) { conditionId = 3; }
+                else if(gocpp_id_4 == typeid(ast::FuncType*)) { conditionId = 4; }
+                else if(gocpp_id_4 == typeid(ast::CompositeLit*)) { conditionId = 5; }
+                else if(gocpp_id_4 == typeid(ast::InterfaceType*)) { conditionId = 6; }
+                else if(gocpp_id_4 == typeid(ast::LabeledStmt*)) { conditionId = 7; }
+                else if(gocpp_id_4 == typeid(ast::AssignStmt*)) { conditionId = 8; }
+                else if(gocpp_id_4 == typeid(ast::BranchStmt*)) { conditionId = 9; }
+                else if(gocpp_id_4 == typeid(ast::BlockStmt*)) { conditionId = 10; }
+                else if(gocpp_id_4 == typeid(ast::IfStmt*)) { conditionId = 11; }
+                else if(gocpp_id_4 == typeid(ast::CaseClause*)) { conditionId = 12; }
+                else if(gocpp_id_4 == typeid(ast::SwitchStmt*)) { conditionId = 13; }
+                else if(gocpp_id_4 == typeid(ast::TypeSwitchStmt*)) { conditionId = 14; }
+                else if(gocpp_id_4 == typeid(ast::CommClause*)) { conditionId = 15; }
+                else if(gocpp_id_4 == typeid(ast::SelectStmt*)) { conditionId = 16; }
+                else if(gocpp_id_4 == typeid(ast::ForStmt*)) { conditionId = 17; }
+                else if(gocpp_id_4 == typeid(ast::RangeStmt*)) { conditionId = 18; }
+                else if(gocpp_id_4 == typeid(ast::GenDecl*)) { conditionId = 19; }
+                else if(gocpp_id_4 == typeid(ast::FuncDecl*)) { conditionId = 20; }
                 switch(conditionId)
                 {
                     // Expressions.
@@ -520,12 +520,12 @@ namespace golang::go::parser
                         }
                         for(auto [gocpp_ignored, e] : n->Elts)
                         {
-                            if(auto [kv, gocpp_id_6] = gocpp::getValue<ast::KeyValueExpr*>(e); kv != nullptr)
+                            if(auto [kv, gocpp_id_5] = gocpp::getValue<ast::KeyValueExpr*>(e); kv != nullptr)
                             {
                                 // See go.dev/issue/45160: try to resolve composite lit keys, but don't
                                 // collect them as unresolved if resolution failed. This replicates
                                 // existing behavior when resolving during parsing.
-                                if(auto [ident, gocpp_id_7] = gocpp::getValue<ast::Ident*>(kv->Key); ident != nullptr)
+                                if(auto [ident, gocpp_id_6] = gocpp::getValue<ast::Ident*>(kv->Key); ident != nullptr)
                                 {
                                     rec::resolve(gocpp::recv(r), ident, false);
                                 }
@@ -927,11 +927,11 @@ namespace golang::go::parser
         gocpp::slice<ast::Expr> resolveExprs = {};
         //Go type switch emulation
         {
-            const auto& gocpp_id_8 = gocpp::type_info(typ);
+            const auto& gocpp_id_7 = gocpp::type_info(typ);
             const auto& typ_ref = typ;
             int conditionId = -1;
-            if(gocpp_id_8 == typeid(ast::IndexExpr*)) { conditionId = 0; }
-            else if(gocpp_id_8 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
+            if(gocpp_id_7 == typeid(ast::IndexExpr*)) { conditionId = 0; }
+            else if(gocpp_id_7 == typeid(ast::IndexListExpr*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -958,7 +958,7 @@ namespace golang::go::parser
         }
         for(auto [gocpp_ignored, expr] : declareExprs)
         {
-            if(auto [id, gocpp_id_9] = gocpp::getValue<ast::Ident*>(expr); id != nullptr)
+            if(auto [id, gocpp_id_8] = gocpp::getValue<ast::Ident*>(expr); id != nullptr)
             {
                 rec::declare(gocpp::recv(r), expr, nullptr, r->topScope, ast::Typ, id);
             }

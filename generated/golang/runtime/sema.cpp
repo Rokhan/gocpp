@@ -86,7 +86,7 @@ namespace golang::runtime
     }
 
     semTable semtable;
-    struct gocpp_id_0
+    struct gocpp_sema_0
     {
         semaRoot root{};
         gocpp::array<unsigned char, cpu::CacheLinePadSize - gocpp::unsafe_sizeof<semaRoot>()> pad{};
@@ -120,7 +120,7 @@ namespace golang::runtime
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_sema_0& value)
     {
         return value.PrintTo(os);
     }

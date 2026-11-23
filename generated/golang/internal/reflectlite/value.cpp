@@ -347,54 +347,54 @@ namespace golang::internal::reflectlite
 
     
                         template<typename T>
-                        gocpp_id_3::gocpp_id_3(T& ref)
+                        gocpp_value_0::gocpp_value_0(T& ref)
                         {
-                            mValue.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            mValue.reset(new gocpp_value_0Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
-                        gocpp_id_3::gocpp_id_3(const T& ref)
+                        gocpp_value_0::gocpp_value_0(const T& ref)
                         {
-                            mValue.reset(new gocpp_id_3Impl<T, std::unique_ptr<T>>(new T(ref)));
+                            mValue.reset(new gocpp_value_0Impl<T, std::unique_ptr<T>>(new T(ref)));
                         }
 
                         template<typename T>
-                        gocpp_id_3::gocpp_id_3(T* ptr)
+                        gocpp_value_0::gocpp_value_0(T* ptr)
                         {
-                            mValue.reset(new gocpp_id_3Impl<T, gocpp::ptr<T>>(ptr));
+                            mValue.reset(new gocpp_value_0Impl<T, gocpp::ptr<T>>(ptr));
                         }
 
-                        std::ostream& gocpp_id_3::PrintTo(std::ostream& os) const
+                        std::ostream& gocpp_value_0::PrintTo(std::ostream& os) const
                         {
                             return os;
                         }
 
                         template<typename T, typename TStore, typename TInterface>
-                        void gocpp_id_3::gocpp_id_3Impl<T, TStore, TInterface>::vM()
+                        void gocpp_value_0::gocpp_value_0Impl<T, TStore, TInterface>::vM()
                         {
                             return rec::M(gocpp::PtrRecv<T, false>(value.get()));
                         }
 
-                        inline gocpp_id_3::Igocpp_id_3* gocpp_id_3::value() const
+                        inline gocpp_value_0::Igocpp_value_0* gocpp_value_0::value() const
                         {
                             if(auto res = mValue.get()) { return res; }
-                            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_3'");
+                            throw gocpp::GoPanic("using nil value for interface 'gocpp_value_0'");
                         }
 
                         namespace rec
                         {
-                            void M(const gocpp::PtrRecv<struct gocpp_id_3, false>& self)
+                            void M(const gocpp::PtrRecv<struct gocpp_value_0, false>& self)
                             {
                                 return self.ptr->value()->vM();
                             }
 
-                            void M(const gocpp::ObjRecv<struct gocpp_id_3>& self)
+                            void M(const gocpp::ObjRecv<struct gocpp_value_0>& self)
                             {
                                 return self.obj.value()->vM();
                             }
                         }
 
-                        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value)
+                        std::ostream& operator<<(std::ostream& os, const struct gocpp_value_0& value)
                         {
                             return value.PrintTo(os);
                         }
@@ -424,7 +424,7 @@ namespace golang::internal::reflectlite
                     }
                     else
                     {
-                        eface = (go_any)(*(gocpp_id_3*)(v.ptr));
+                        eface = (go_any)(*(gocpp_value_0*)(v.ptr));
                     }
                     auto x = unpackEface(eface);
                     if(x.flag != 0)
@@ -460,54 +460,54 @@ namespace golang::internal::reflectlite
 
     
             template<typename T>
-            gocpp_id_4::gocpp_id_4(T& ref)
+            gocpp_value_1::gocpp_value_1(T& ref)
             {
-                mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_value_1Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_4::gocpp_id_4(const T& ref)
+            gocpp_value_1::gocpp_value_1(const T& ref)
             {
-                mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_value_1Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_4::gocpp_id_4(T* ptr)
+            gocpp_value_1::gocpp_value_1(T* ptr)
             {
-                mValue.reset(new gocpp_id_4Impl<T, gocpp::ptr<T>>(ptr));
+                mValue.reset(new gocpp_value_1Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_value_1::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename TStore, typename TInterface>
-            void gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vM()
+            void gocpp_value_1::gocpp_value_1Impl<T, TStore, TInterface>::vM()
             {
                 return rec::M(gocpp::PtrRecv<T, false>(value.get()));
             }
 
-            inline gocpp_id_4::Igocpp_id_4* gocpp_id_4::value() const
+            inline gocpp_value_1::Igocpp_value_1* gocpp_value_1::value() const
             {
                 if(auto res = mValue.get()) { return res; }
-                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_4'");
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_value_1'");
             }
 
             namespace rec
             {
-                void M(const gocpp::PtrRecv<struct gocpp_id_4, false>& self)
+                void M(const gocpp::PtrRecv<struct gocpp_value_1, false>& self)
                 {
                     return self.ptr->value()->vM();
                 }
 
-                void M(const gocpp::ObjRecv<struct gocpp_id_4>& self)
+                void M(const gocpp::ObjRecv<struct gocpp_value_1>& self)
                 {
                     return self.obj.value()->vM();
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_value_1& value)
             {
                 return value.PrintTo(os);
             }
@@ -529,7 +529,7 @@ namespace golang::internal::reflectlite
             {
                 return *(go_any*)(v.ptr);
             }
-            return *(gocpp_id_4*)(v.ptr);
+            return *(gocpp_value_1*)(v.ptr);
         }
 
         return packEface(v);

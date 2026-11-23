@@ -707,54 +707,54 @@ namespace golang::io::fs
 
     
         template<typename T>
-        gocpp_id_0::gocpp_id_0(T& ref)
+        gocpp_fs_0::gocpp_fs_0(T& ref)
         {
-            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_fs_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_0::gocpp_id_0(const T& ref)
+        gocpp_fs_0::gocpp_fs_0(const T& ref)
         {
-            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_fs_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_0::gocpp_id_0(T* ptr)
+        gocpp_fs_0::gocpp_fs_0(T* ptr)
         {
-            mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+            mValue.reset(new gocpp_fs_0Impl<T, gocpp::ptr<T>>(ptr));
         }
 
-        std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+        std::ostream& gocpp_fs_0::PrintTo(std::ostream& os) const
         {
             return os;
         }
 
         template<typename T, typename TStore, typename TInterface>
-        bool gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vTimeout()
+        bool gocpp_fs_0::gocpp_fs_0Impl<T, TStore, TInterface>::vTimeout()
         {
             return rec::Timeout(gocpp::PtrRecv<T, false>(value.get()));
         }
 
-        inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+        inline gocpp_fs_0::Igocpp_fs_0* gocpp_fs_0::value() const
         {
             if(auto res = mValue.get()) { return res; }
-            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+            throw gocpp::GoPanic("using nil value for interface 'gocpp_fs_0'");
         }
 
         namespace rec
         {
-            bool Timeout(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
+            bool Timeout(const gocpp::PtrRecv<struct gocpp_fs_0, false>& self)
             {
                 return self.ptr->value()->vTimeout();
             }
 
-            bool Timeout(const gocpp::ObjRecv<struct gocpp_id_0>& self)
+            bool Timeout(const gocpp::ObjRecv<struct gocpp_fs_0>& self)
             {
                 return self.obj.value()->vTimeout();
             }
         }
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_fs_0& value)
         {
             return value.PrintTo(os);
         }
@@ -763,7 +763,7 @@ namespace golang::io::fs
     // Timeout reports whether this error represents a timeout.
     bool rec::Timeout(PathError* e)
     {
-        auto [t, ok] = gocpp::getValue<gocpp_id_0>(e->Err);
+        auto [t, ok] = gocpp::getValue<gocpp_fs_0>(e->Err);
         return ok && rec::Timeout(gocpp::recv(t));
     }
 

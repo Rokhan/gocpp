@@ -6,7 +6,7 @@
 
 namespace golang::sync
 {
-    struct gocpp_id_0;
-    template<typename T> struct gocpp_id_1;
-    template<typename T1, typename T2> struct gocpp_id_2;
+    struct gocpp_oncefunc_0;
+    template<typename T> struct gocpp_oncefunc_1;
+    template<typename T1, typename T2> struct gocpp_oncefunc_2;
 }

@@ -6,5 +6,5 @@
 
 namespace golang::golang_org::x::tools::go::gcexportdata
 {
-    struct gocpp_id_0;
+    struct gocpp_gcexportdata_0;
 }

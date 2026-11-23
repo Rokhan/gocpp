@@ -9,7 +9,7 @@ namespace golang::runtime
     struct semaRoot;
     // Prime to not correlate with any user patterns.
     inline constexpr long semTabSize = 251;
-    struct gocpp_id_0;
+    struct gocpp_sema_0;
     struct GoTag_semTable;
     struct GoTag_semaProfileFlags;
     using semaProfileFlags = gocpp::defined<int64_t, GoTag_semaProfileFlags>;
@@ -23,5 +23,5 @@ namespace golang::runtime
 {
     namespace cpu = golang::internal::cpu;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
+    using semTable = gocpp::defined<gocpp::array<gocpp_sema_0, semTabSize>, GoTag_semTable>;
 }

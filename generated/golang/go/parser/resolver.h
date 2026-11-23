@@ -12,43 +12,43 @@
 
 namespace golang::go::parser
 {
-    struct gocpp_id_0 : virtual gocpp::Interface
+    struct gocpp_resolver_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_0(){}
-        gocpp_id_0(gocpp_id_0& i) = default;
-        gocpp_id_0(const gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(const gocpp_id_0& i) = default;
+        gocpp_resolver_0(){}
+        gocpp_resolver_0(gocpp_resolver_0& i) = default;
+        gocpp_resolver_0(const gocpp_resolver_0& i) = default;
+        gocpp_resolver_0& operator=(gocpp_resolver_0& i) = default;
+        gocpp_resolver_0& operator=(const gocpp_resolver_0& i) = default;
 
-        inline gocpp_id_0(nullptr_t) {};
-        gocpp_id_0& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_0(T& ref);
+        inline gocpp_resolver_0(nullptr_t) {};
+        gocpp_resolver_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_0(const T& ref);
+        gocpp_resolver_0(T& ref);
 
         template<typename T>
-        gocpp_id_0(T* ptr);
+        gocpp_resolver_0(const T& ref);
+
+        template<typename T>
+        gocpp_resolver_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_0
+        struct Igocpp_resolver_0
         {
             virtual token::Pos vPos() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
-        struct gocpp_id_0Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_resolver_0>
+        struct gocpp_resolver_0Impl : virtual TInterface
         {
-            explicit gocpp_id_0Impl(T* ptr)
+            explicit gocpp_resolver_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -63,18 +63,18 @@ namespace golang::go::parser
             TStore value;
         };
 
-        inline Igocpp_id_0* value() const;
+        inline Igocpp_resolver_0* value() const;
 
-        std::shared_ptr<Igocpp_id_0> mValue;
+        std::shared_ptr<Igocpp_resolver_0> mValue;
     };
 
     namespace rec
     {
-        token::Pos Pos(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
-        token::Pos Pos(const gocpp::ObjRecv<struct gocpp_id_0>& self);
+        token::Pos Pos(const gocpp::PtrRecv<struct gocpp_resolver_0, false>& self);
+        token::Pos Pos(const gocpp::ObjRecv<struct gocpp_resolver_0>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_resolver_0& value);
 }
 #include "golang/go/ast/ast.fwd.h"
 

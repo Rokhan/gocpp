@@ -1119,7 +1119,7 @@ namespace golang::runtime
         }
     }
 
-    struct gocpp_id_0
+    struct gocpp_debuglog_0
             {
                 uint64_t tick{};
                 int64_t i{};
@@ -1153,7 +1153,7 @@ namespace golang::runtime
                 }
             };
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_debuglog_0& value)
             {
                 return value.PrintTo(os);
             }
@@ -1229,7 +1229,7 @@ namespace golang::runtime
         for(; ; )
         {
             // Find the next record.
-            gocpp_id_0 best = {};
+            gocpp_debuglog_0 best = {};
             best.tick = ~ uint64_t(0);
             for(auto [i, gocpp_ignored] : state)
             {
@@ -1257,7 +1257,7 @@ namespace golang::runtime
                 s->first = false;
             }
 
-            auto [end, gocpp_id_1, nano, p] = rec::header(gocpp::recv(s));
+            auto [end, gocpp_id_0, nano, p] = rec::header(gocpp::recv(s));
             auto oldEnd = s->debugLogReader.end;
             s->debugLogReader.end = end;
 

@@ -2754,7 +2754,7 @@ namespace golang::encoding::json::v2
         return & fncs;
     }
 
-    struct gocpp_id_6
+    struct gocpp_arshal_default_0
                                 {
                                     MarshalerTo MarshalerTo{};
 
@@ -2786,23 +2786,23 @@ namespace golang::encoding::json::v2
 
                                 namespace rec
                                 {
-                                    gocpp::error MarshalJSONTo(const gocpp::PtrRecv<struct gocpp_id_6, false>& self, jsontext::Encoder* arg0)
+                                    gocpp::error MarshalJSONTo(const gocpp::PtrRecv<struct gocpp_arshal_default_0, false>& self, jsontext::Encoder* arg0)
                                     {
                                         return rec::MarshalJSONTo(gocpp::recv(self.ptr->MarshalerTo), arg0);
                                     }
-                                    gocpp::error MarshalJSONTo(const gocpp::ObjRecv<struct gocpp_id_6>& self, jsontext::Encoder* arg0)
+                                    gocpp::error MarshalJSONTo(const gocpp::ObjRecv<struct gocpp_arshal_default_0>& self, jsontext::Encoder* arg0)
                                     {
                                         return rec::MarshalJSONTo(gocpp::recv(self.obj.MarshalerTo), arg0);
                                     }
                                 }
 
-                                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_6& value)
+                                std::ostream& operator<<(std::ostream& os, const struct gocpp_arshal_default_0& value)
                                 {
                                     return value.PrintTo(os);
                                 }
 
 
-    struct gocpp_id_7
+    struct gocpp_arshal_default_1
                                 {
                                     Marshaler Marshaler{};
 
@@ -2834,23 +2834,23 @@ namespace golang::encoding::json::v2
 
                                 namespace rec
                                 {
-                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::PtrRecv<struct gocpp_id_7, false>& self)
+                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::PtrRecv<struct gocpp_arshal_default_1, false>& self)
                                     {
                                         return rec::MarshalJSON(gocpp::recv(self.ptr->Marshaler));
                                     }
-                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::ObjRecv<struct gocpp_id_7>& self)
+                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalJSON(const gocpp::ObjRecv<struct gocpp_arshal_default_1>& self)
                                     {
                                         return rec::MarshalJSON(gocpp::recv(self.obj.Marshaler));
                                     }
                                 }
 
-                                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_7& value)
+                                std::ostream& operator<<(std::ostream& os, const struct gocpp_arshal_default_1& value)
                                 {
                                     return value.PrintTo(os);
                                 }
 
 
-    struct gocpp_id_8
+    struct gocpp_arshal_default_2
                                 {
                                     encoding::TextAppender TextAppender{};
 
@@ -2882,23 +2882,23 @@ namespace golang::encoding::json::v2
 
                                 namespace rec
                                 {
-                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::PtrRecv<struct gocpp_id_8, false>& self, gocpp::slice<unsigned char> b)
+                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::PtrRecv<struct gocpp_arshal_default_2, false>& self, gocpp::slice<unsigned char> b)
                                     {
                                         return encoding::rec::AppendText(gocpp::recv(self.ptr->TextAppender), b);
                                     }
-                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::ObjRecv<struct gocpp_id_8>& self, gocpp::slice<unsigned char> b)
+                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> AppendText(const gocpp::ObjRecv<struct gocpp_arshal_default_2>& self, gocpp::slice<unsigned char> b)
                                     {
                                         return encoding::rec::AppendText(gocpp::recv(self.obj.TextAppender), b);
                                     }
                                 }
 
-                                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+                                std::ostream& operator<<(std::ostream& os, const struct gocpp_arshal_default_2& value)
                                 {
                                     return value.PrintTo(os);
                                 }
 
 
-    struct gocpp_id_9
+    struct gocpp_arshal_default_3
                                 {
                                     encoding::TextMarshaler TextMarshaler{};
 
@@ -2930,17 +2930,17 @@ namespace golang::encoding::json::v2
 
                                 namespace rec
                                 {
-                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(const gocpp::PtrRecv<struct gocpp_id_9, false>& self)
+                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(const gocpp::PtrRecv<struct gocpp_arshal_default_3, false>& self)
                                     {
                                         return encoding::rec::MarshalText(gocpp::recv(self.ptr->TextMarshaler));
                                     }
-                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(const gocpp::ObjRecv<struct gocpp_id_9>& self)
+                                    std::tuple<gocpp::slice<unsigned char>, gocpp::error> MarshalText(const gocpp::ObjRecv<struct gocpp_arshal_default_3>& self)
                                     {
                                         return encoding::rec::MarshalText(gocpp::recv(self.obj.TextMarshaler));
                                     }
                                 }
 
-                                std::ostream& operator<<(std::ostream& os, const struct gocpp_id_9& value)
+                                std::ostream& operator<<(std::ostream& os, const struct gocpp_arshal_default_3& value)
                                 {
                                     return value.PrintTo(os);
                                 }
@@ -3006,16 +3006,16 @@ namespace golang::encoding::json::v2
                         switch(conditionId)
                         {
                             case 0:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_6 {gocpp::assertValue<MarshalerTo>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_arshal_default_0 {gocpp::assertValue<MarshalerTo>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                             case 1:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_7 {gocpp::assertValue<Marshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_arshal_default_1 {gocpp::assertValue<Marshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                             case 2:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_8 {gocpp::assertValue<encoding::TextAppender>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_arshal_default_2 {gocpp::assertValue<encoding::TextAppender>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                             case 3:
-                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_id_9 {gocpp::assertValue<encoding::TextMarshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
+                                rec::Set(gocpp::recv(v2), reflect::ValueOf(gocpp_arshal_default_3 {gocpp::assertValue<encoding::TextMarshaler>(rec::Interface(gocpp::recv(rec::Elem(gocpp::recv(va)))))}));
                                 break;
                         }
                     }
@@ -3071,7 +3071,7 @@ namespace golang::encoding::json::v2
                 {
                     if(rec::PeekKind(gocpp::recv(dec)) == 'n' && rec::Kind(gocpp::recv(rec::Elem(gocpp::recv(e)))) == reflect::Pointer)
                     {
-                        if(auto [gocpp_id_10, err] = rec::ReadToken(gocpp::recv(dec)); err != nullptr)
+                        if(auto [gocpp_id_6, err] = rec::ReadToken(gocpp::recv(dec)); err != nullptr)
                         {
                             return err;
                         }
@@ -3086,7 +3086,7 @@ namespace golang::encoding::json::v2
             }
             if(rec::PeekKind(gocpp::recv(dec)) == 'n')
             {
-                if(auto [gocpp_id_11, err] = rec::ReadToken(gocpp::recv(dec)); err != nullptr)
+                if(auto [gocpp_id_7, err] = rec::ReadToken(gocpp::recv(dec)); err != nullptr)
                 {
                     return err;
                 }
@@ -3161,7 +3161,7 @@ namespace golang::encoding::json::v2
                             // that will be cached by PeekKind and returned by ReadValue.
                             // If k is '}' or ']', then ReadValue must error since
                             // those are invalid kinds at the start of a JSON value.
-                            auto [gocpp_id_12, err] = rec::ReadValue(gocpp::recv(dec));
+                            auto [gocpp_id_8, err] = rec::ReadValue(gocpp::recv(dec));
                             return err;
                             break;
                         }

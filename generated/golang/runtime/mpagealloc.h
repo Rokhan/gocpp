@@ -42,7 +42,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_mpagealloc_0
     {
         // index is an efficient index of chunks that have pages available to
         // scavenge.
@@ -65,7 +65,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mpagealloc_0& value);
 }
 #include "golang/runtime/mpagealloc_64bit.fwd.h"
 #include "golang/runtime/mpallocbits.fwd.h"
@@ -145,7 +145,7 @@ namespace golang::runtime
         // All access is protected by the mheapLock.
         addrRanges inUse{};
         // scav stores the scavenger state.
-        gocpp_id_0 scav{};
+        gocpp_mpagealloc_0 scav{};
         // mheap_.lock. This level of indirection makes it possible
         // to test pageAlloc independently of the runtime allocator.
         mutex* mheapLock{};

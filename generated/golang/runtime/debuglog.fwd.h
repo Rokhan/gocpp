@@ -36,5 +36,5 @@ namespace golang::runtime
     // debugLogSyncSize is the number of bytes in a sync record.
     inline constexpr int64_t debugLogSyncSize = debugLogHeaderSize + 2 * 8;
     struct debugLogReader;
-    struct gocpp_id_0;
+    struct gocpp_debuglog_0;
 }

@@ -98,7 +98,7 @@ namespace golang::golang_org::x::tools::go::gcexportdata
         using os::exec::rec::Output;
     }
 
-    struct gocpp_id_0
+    struct gocpp_gcexportdata_0
         {
             gocpp::string ImportPath{};
             gocpp::string Export{};
@@ -132,7 +132,7 @@ namespace golang::golang_org::x::tools::go::gcexportdata
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_gcexportdata_0& value)
         {
             return value.PrintTo(os);
         }
@@ -161,7 +161,7 @@ namespace golang::golang_org::x::tools::go::gcexportdata
         {
             return {""_s, ""_s};
         }
-        gocpp_id_0 data = {};
+        gocpp_gcexportdata_0 data = {};
         json::Unmarshal(out, & data);
         return {data.Export, data.ImportPath};
     }
@@ -196,7 +196,7 @@ namespace golang::golang_org::x::tools::go::gcexportdata
         if(auto [lr, ok] = gocpp::getValue<io::LimitedReader*>(r); ok)
         {
             auto data = gocpp::make(gocpp::Tag<gocpp::slice<unsigned char>>(), lr->N);
-            auto [gocpp_id_1, err] = io::ReadFull(lr, data);
+            auto [gocpp_id_0, err] = io::ReadFull(lr, data);
             return {data, err};
         }
         return io::ReadAll(r);
@@ -270,7 +270,7 @@ namespace golang::golang_org::x::tools::go::gcexportdata
                         // inter-version Write-Read compatibility).
                         // This [Read] function would delegate to types.Import
                         // when it detects that the file was produced by Export.
-                        auto [gocpp_id_2, pkg, err] = gcimporter::IImportData(fset, imports, data.make_slice(1), path);
+                        auto [gocpp_id_1, pkg, err] = gcimporter::IImportData(fset, imports, data.make_slice(1), path);
                         return {pkg, err};
                         break;
                     }
@@ -299,7 +299,7 @@ namespace golang::golang_org::x::tools::go::gcexportdata
     // The FileSet provides file position information for named objects.
     gocpp::error Write(io::Writer out, token::FileSet* fset, types::Package* pkg)
     {
-        if(auto [gocpp_id_4, err] = io::WriteString(out, "i"_s); err != nullptr)
+        if(auto [gocpp_id_3, err] = io::WriteString(out, "i"_s); err != nullptr)
         {
             return err;
         }

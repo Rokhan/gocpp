@@ -83,7 +83,7 @@ namespace golang::encoding::json::v2
             const auto& gocpp_id_0 = gocpp::type_info(val);
             const auto& val_ref = val;
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(bool)) { conditionId = 1; }
             else if(gocpp_id_0 == typeid(gocpp::string)) { conditionId = 2; }
             else if(gocpp_id_0 == typeid(double)) { conditionId = 3; }
@@ -93,7 +93,7 @@ namespace golang::encoding::json::v2
             {
                 case 0:
                 {
-                    untyped nil val = gocpp::any_cast<untyped nil>(val_ref);
+                    nullptr_t val = gocpp::any_cast<nullptr_t>(val_ref);
                     return rec::WriteToken(gocpp::recv(enc), jsontext::Null);
                     break;
                 }

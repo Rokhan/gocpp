@@ -1682,7 +1682,7 @@ namespace golang::context
             int conditionId = -1;
             if(gocpp_id_2 == typeid(stringer)) { conditionId = 0; }
             else if(gocpp_id_2 == typeid(gocpp::string)) { conditionId = 1; }
-            else if(gocpp_id_2 == typeid(untyped nil)) { conditionId = 2; }
+            else if(gocpp_id_2 == typeid(nullptr_t)) { conditionId = 2; }
             switch(conditionId)
             {
                 case 0:
@@ -1699,7 +1699,7 @@ namespace golang::context
                 }
                 case 2:
                 {
-                    untyped nil s = gocpp::any_cast<untyped nil>(v);
+                    nullptr_t s = gocpp::any_cast<nullptr_t>(v);
                     return "<nil>"_s;
                     break;
                 }

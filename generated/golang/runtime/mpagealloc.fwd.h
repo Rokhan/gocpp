@@ -22,7 +22,7 @@ namespace golang::runtime
     struct GoTag_chunkIdx;
     using chunkIdx = gocpp::defined<uint64_t, GoTag_chunkIdx>;
     struct pageAlloc;
-    struct gocpp_id_1;
+    struct gocpp_mpagealloc_1;
     struct GoTag_pallocSum;
     using pallocSum = gocpp::defined<uint64_t, GoTag_pallocSum>;
 }

@@ -51,7 +51,7 @@ namespace golang::go::build
     struct Directive;
     struct NoGoError;
     struct MultiplePackageError;
-    struct gocpp_id_2;
+    struct gocpp_build_0;
     struct fileInfo;
     struct fileImport;
     struct fileEmbed;

@@ -406,54 +406,54 @@ namespace golang::encoding::json::v2
 
     
         template<typename T>
-        gocpp_id_4::gocpp_id_4(T& ref)
+        gocpp_errors_0::gocpp_errors_0(T& ref)
         {
-            mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_errors_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_4::gocpp_id_4(const T& ref)
+        gocpp_errors_0::gocpp_errors_0(const T& ref)
         {
-            mValue.reset(new gocpp_id_4Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_errors_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_4::gocpp_id_4(T* ptr)
+        gocpp_errors_0::gocpp_errors_0(T* ptr)
         {
-            mValue.reset(new gocpp_id_4Impl<T, gocpp::ptr<T>>(ptr));
+            mValue.reset(new gocpp_errors_0Impl<T, gocpp::ptr<T>>(ptr));
         }
 
-        std::ostream& gocpp_id_4::PrintTo(std::ostream& os) const
+        std::ostream& gocpp_errors_0::PrintTo(std::ostream& os) const
         {
             return os;
         }
 
         template<typename T, typename TStore, typename TInterface>
-        gocpp::slice<unsigned char> gocpp_id_4::gocpp_id_4Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> _1, int64_t _2)
+        gocpp::slice<unsigned char> gocpp_errors_0::gocpp_errors_0Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> _1, int64_t _2)
         {
             return rec::AppendStackPointer(gocpp::PtrRecv<T, false>(value.get()), _1, _2);
         }
 
-        inline gocpp_id_4::Igocpp_id_4* gocpp_id_4::value() const
+        inline gocpp_errors_0::Igocpp_errors_0* gocpp_errors_0::value() const
         {
             if(auto res = mValue.get()) { return res; }
-            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_4'");
+            throw gocpp::GoPanic("using nil value for interface 'gocpp_errors_0'");
         }
 
         namespace rec
         {
-            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_4, false>& self, gocpp::slice<unsigned char> _1, int64_t _2)
+            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_errors_0, false>& self, gocpp::slice<unsigned char> _1, int64_t _2)
             {
                 return self.ptr->value()->vAppendStackPointer(_1, _2);
             }
 
-            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_4>& self, gocpp::slice<unsigned char> _1, int64_t _2)
+            gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_errors_0>& self, gocpp::slice<unsigned char> _1, int64_t _2)
             {
                 return self.obj.value()->vAppendStackPointer(_1, _2);
             }
         }
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_errors_0& value)
         {
             return value.PrintTo(os);
         }
@@ -485,15 +485,15 @@ namespace golang::encoding::json::v2
         serr->Err = toUnexpectedEOF(serr->Err);
         int64_t currDepth = {};
         int64_t currLength = {};
-        gocpp_id_4 coderState = {};
+        gocpp_errors_0 coderState = {};
         int64_t offset = {};
         //Go type switch emulation
         {
-            const auto& gocpp_id_5 = gocpp::type_info(c);
+            const auto& gocpp_id_4 = gocpp::type_info(c);
             const auto& c_ref = c;
             int conditionId = -1;
-            if(gocpp_id_5 == typeid(jsontext::Encoder*)) { conditionId = 0; }
-            else if(gocpp_id_5 == typeid(jsontext::Decoder*)) { conditionId = 1; }
+            if(gocpp_id_4 == typeid(jsontext::Encoder*)) { conditionId = 0; }
+            else if(gocpp_id_4 == typeid(jsontext::Decoder*)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
@@ -759,7 +759,7 @@ namespace golang::encoding::json::v2
         // Avoid printing if it overlaps with a wrapped SyntacticError.
         //Go switch emulation
         {
-            auto [serr, gocpp_id_6] = gocpp::getValue<jsontext::SyntacticError*>(e->Err);
+            auto [serr, gocpp_id_5] = gocpp::getValue<jsontext::SyntacticError*>(e->Err);
             int conditionId = -1;
             if(e->JSONPointer != ""_s) { conditionId = 0; }
             else if(e->ByteOffset > 0) { conditionId = 1; }
@@ -806,7 +806,7 @@ namespace golang::encoding::json::v2
     {
         if(quotedName != nullptr)
         {
-            auto [name, gocpp_id_7] = jsonwire::AppendUnquote(nullptr, quotedName);
+            auto [name, gocpp_id_6] = jsonwire::AppendUnquote(nullptr, quotedName);
             ptr = rec::AppendToken(gocpp::recv(ptr), gocpp::string(name));
         }
         return gocpp::error(gocpp::InitPtr<jsontext::SyntacticError>([=](auto& x) {

@@ -824,7 +824,7 @@ namespace golang::go::types
                                 int conditionId = -1;
                                 if(gocpp_id_5 == typeid(ast::Ident*)) { conditionId = 0; }
                                 else if(gocpp_id_5 == typeid(ast::BadExpr*)) { conditionId = 1; }
-                                else if(gocpp_id_5 == typeid(untyped nil)) { conditionId = 2; }
+                                else if(gocpp_id_5 == typeid(nullptr_t)) { conditionId = 2; }
                                 switch(conditionId)
                                 {
                                     case 0:
@@ -841,7 +841,7 @@ namespace golang::go::types
                                     // ignore - error already reported by parser
                                     case 2:
                                     {
-                                        untyped nil arg = gocpp::any_cast<untyped nil>(arg_ref);
+                                        nullptr_t arg = gocpp::any_cast<nullptr_t>(arg_ref);
                                         rec::error(gocpp::recv(check), ix->orig, InvalidSyntaxTree, "parameterized receiver contains nil parameters"_s);
                                         break;
                                     }

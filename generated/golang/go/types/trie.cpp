@@ -47,7 +47,7 @@ namespace golang::go::types
                     int conditionId = -1;
                     if(gocpp_id_0 == typeid(types::trie<V>)) { conditionId = 0; }
                     else if(gocpp_id_0 == typeid(V)) { conditionId = 1; }
-                    else if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 2; }
+                    else if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 2; }
                     switch(conditionId)
                     {
                         case 0:
@@ -68,7 +68,7 @@ namespace golang::go::types
                         }
                         case 2:
                         {
-                            untyped nil v = gocpp::any_cast<untyped nil>(v_ref);
+                            nullptr_t v = gocpp::any_cast<nullptr_t>(v_ref);
                             // Handle esoteric case where V is any and val is nil.
                             V zero = {};
                             return {zero, l + 1};
@@ -115,7 +115,7 @@ namespace golang::go::types
                 int conditionId = -1;
                 if(gocpp_id_1 == typeid(types::trie<V>)) { conditionId = 0; }
                 else if(gocpp_id_1 == typeid(V)) { conditionId = 1; }
-                else if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 2; }
+                else if(gocpp_id_1 == typeid(nullptr_t)) { conditionId = 2; }
                 switch(conditionId)
                 {
                     case 0:
@@ -132,7 +132,7 @@ namespace golang::go::types
                     }
                     case 2:
                     {
-                        untyped nil v = gocpp::any_cast<untyped nil>(rec::pickValue<V>(gocpp::recv(tr)));
+                        nullptr_t v = gocpp::any_cast<nullptr_t>(rec::pickValue<V>(gocpp::recv(tr)));
                         V zero = {};
                         return {zero, len(key)};
                         break;

@@ -466,7 +466,7 @@ namespace golang::runtime
             const auto& gocpp_id_0 = gocpp::type_info(v);
             const auto& v_ref = v;
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(bool)) { conditionId = 1; }
             else if(gocpp_id_0 == typeid(int64_t)) { conditionId = 2; }
             else if(gocpp_id_0 == typeid(int8_t)) { conditionId = 3; }
@@ -488,7 +488,7 @@ namespace golang::runtime
             {
                 case 0:
                 {
-                    untyped nil v = gocpp::any_cast<untyped nil>(v_ref);
+                    nullptr_t v = gocpp::any_cast<nullptr_t>(v_ref);
                     print("nil"_s);
                     break;
                 }

@@ -486,7 +486,7 @@ namespace golang::go::types
         {
             const auto& gocpp_id_6 = gocpp::type_info(cu);
             int conditionId = -1;
-            if(gocpp_id_6 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_6 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_6 == typeid(types::Basic*)) { conditionId = 1; }
             else if(gocpp_id_6 == typeid(types::Array*)) { conditionId = 2; }
             else if(gocpp_id_6 == typeid(types::Pointer*)) { conditionId = 3; }
@@ -495,7 +495,7 @@ namespace golang::go::types
             {
                 case 0:
                 {
-                    untyped nil u = gocpp::any_cast<untyped nil>(cu);
+                    nullptr_t u = gocpp::any_cast<nullptr_t>(cu);
                     // error reported above
                     rec::invalidate(gocpp::recv(x));
                     return;

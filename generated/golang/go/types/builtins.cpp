@@ -847,7 +847,7 @@ namespace golang::go::types
                                 if(gocpp_id_11 == typeid(types::Slice*)) { conditionId = 0; }
                                 else if(gocpp_id_11 == typeid(types::Map*)) { conditionId = 1; }
                                 else if(gocpp_id_11 == typeid(types::Chan*)) { conditionId = 2; }
-                                else if(gocpp_id_11 == typeid(untyped nil)) { conditionId = 3; }
+                                else if(gocpp_id_11 == typeid(nullptr_t)) { conditionId = 3; }
                                 switch(conditionId)
                                 {
                                     // ok
@@ -1204,7 +1204,7 @@ namespace golang::go::types
                         {
                             const auto& gocpp_id_14 = gocpp::type_info(obj);
                             int conditionId = -1;
-                            if(gocpp_id_14 == typeid(untyped nil)) { conditionId = 0; }
+                            if(gocpp_id_14 == typeid(nullptr_t)) { conditionId = 0; }
                             else if(gocpp_id_14 == typeid(types::Func*)) { conditionId = 1; }
                             switch(conditionId)
                             {

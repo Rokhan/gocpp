@@ -15,7 +15,7 @@ namespace golang::go::parser
     inline constexpr int64_t basic = 0;
     inline constexpr int64_t labelOk = 1;
     inline constexpr int64_t rangeOk = 2;
-    struct gocpp_id_7;
+    struct gocpp_parser_0;
 }
 #include "golang/go/ast/ast.fwd.h"
 #include "golang/go/token/position.fwd.h"

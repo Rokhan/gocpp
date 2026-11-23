@@ -1003,7 +1003,7 @@ namespace golang::go::types
                         {
                             const auto& gocpp_id_6 = gocpp::type_info(s->Else);
                             int conditionId = -1;
-                            if(gocpp_id_6 == typeid(untyped nil)) { conditionId = 0; }
+                            if(gocpp_id_6 == typeid(nullptr_t)) { conditionId = 0; }
                             else if(gocpp_id_6 == typeid(ast::BadStmt*)) { conditionId = 1; }
                             else if(gocpp_id_6 == typeid(ast::IfStmt*)) { conditionId = 2; }
                             else if(gocpp_id_6 == typeid(ast::BlockStmt*)) { conditionId = 3; }
@@ -1265,7 +1265,7 @@ namespace golang::go::types
                             {
                                 const auto& gocpp_id_12 = gocpp::type_info(clause->Comm);
                                 int conditionId = -1;
-                                if(gocpp_id_12 == typeid(untyped nil)) { conditionId = 0; }
+                                if(gocpp_id_12 == typeid(nullptr_t)) { conditionId = 0; }
                                 else if(gocpp_id_12 == typeid(ast::SendStmt*)) { conditionId = 1; }
                                 else if(gocpp_id_12 == typeid(ast::AssignStmt*)) { conditionId = 2; }
                                 else if(gocpp_id_12 == typeid(ast::ExprStmt*)) { conditionId = 3; }
@@ -1274,7 +1274,7 @@ namespace golang::go::types
                                     case 0:
                                     case 1:
                                     {
-                                        untyped nil s = gocpp::any_cast<untyped nil>(clause->Comm);
+                                        nullptr_t s = gocpp::any_cast<nullptr_t>(clause->Comm);
                                         valid = true;
                                         break;
                                     }

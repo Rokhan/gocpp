@@ -670,54 +670,54 @@ namespace golang::go::types
 
     
             template<typename T>
-            gocpp_id_8::gocpp_id_8(T& ref)
+            gocpp_typexpr_0::gocpp_typexpr_0(T& ref)
             {
-                mValue.reset(new gocpp_id_8Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_typexpr_0Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_8::gocpp_id_8(const T& ref)
+            gocpp_typexpr_0::gocpp_typexpr_0(const T& ref)
             {
-                mValue.reset(new gocpp_id_8Impl<T, std::unique_ptr<T>>(new T(ref)));
+                mValue.reset(new gocpp_typexpr_0Impl<T, std::unique_ptr<T>>(new T(ref)));
             }
 
             template<typename T>
-            gocpp_id_8::gocpp_id_8(T* ptr)
+            gocpp_typexpr_0::gocpp_typexpr_0(T* ptr)
             {
-                mValue.reset(new gocpp_id_8Impl<T, gocpp::ptr<T>>(ptr));
+                mValue.reset(new gocpp_typexpr_0Impl<T, gocpp::ptr<T>>(ptr));
             }
 
-            std::ostream& gocpp_id_8::PrintTo(std::ostream& os) const
+            std::ostream& gocpp_typexpr_0::PrintTo(std::ostream& os) const
             {
                 return os;
             }
 
             template<typename T, typename TStore, typename TInterface>
-            TypeName* gocpp_id_8::gocpp_id_8Impl<T, TStore, TInterface>::vObj()
+            TypeName* gocpp_typexpr_0::gocpp_typexpr_0Impl<T, TStore, TInterface>::vObj()
             {
                 return rec::Obj(gocpp::PtrRecv<T, false>(value.get()));
             }
 
-            inline gocpp_id_8::Igocpp_id_8* gocpp_id_8::value() const
+            inline gocpp_typexpr_0::Igocpp_typexpr_0* gocpp_typexpr_0::value() const
             {
                 if(auto res = mValue.get()) { return res; }
-                throw gocpp::GoPanic("using nil value for interface 'gocpp_id_8'");
+                throw gocpp::GoPanic("using nil value for interface 'gocpp_typexpr_0'");
             }
 
             namespace rec
             {
-                TypeName* Obj(const gocpp::PtrRecv<struct gocpp_id_8, false>& self)
+                TypeName* Obj(const gocpp::PtrRecv<struct gocpp_typexpr_0, false>& self)
                 {
                     return self.ptr->value()->vObj();
                 }
 
-                TypeName* Obj(const gocpp::ObjRecv<struct gocpp_id_8>& self)
+                TypeName* Obj(const gocpp::ObjRecv<struct gocpp_typexpr_0>& self)
                 {
                     return self.obj.value()->vObj();
                 }
             }
 
-            std::ostream& operator<<(std::ostream& os, const struct gocpp_id_8& value)
+            std::ostream& operator<<(std::ostream& os, const struct gocpp_typexpr_0& value)
             {
                 return value.PrintTo(os);
             }
@@ -785,7 +785,7 @@ namespace golang::go::types
                 // errors.
                 rec::recordInstance(gocpp::recv(check), ix->orig, targs, inst);
 
-                auto name = rec::Obj(gocpp::recv(gocpp::assertValue<gocpp_id_8>(inst)))->object.name;
+                auto name = rec::Obj(gocpp::recv(gocpp::assertValue<gocpp_typexpr_0>(inst)))->object.name;
                 auto tparams = rec::list(gocpp::recv(rec::TypeParams(gocpp::recv(inst))));
                 if(rec::validateTArgLen(gocpp::recv(check), rec::Pos(gocpp::recv(ix)), name, len(tparams), len(targs)))
                 {
@@ -825,7 +825,7 @@ namespace golang::go::types
         // attempt at a parameterized type declaration with missing
         // constraint. Provide an error message that mentions array
         // length.
-        if(auto [name, gocpp_id_9] = gocpp::getValue<ast::Ident*>(e); name != nullptr)
+        if(auto [name, gocpp_id_8] = gocpp::getValue<ast::Ident*>(e); name != nullptr)
         {
             auto obj = rec::lookup(gocpp::recv(check), name->Name);
             if(obj == nullptr)
@@ -833,7 +833,7 @@ namespace golang::go::types
                 rec::errorf(gocpp::recv(check), name, InvalidArrayLen, "undefined array length %s or missing type constraint"_s, name->Name);
                 return - 1;
             }
-            if(auto [gocpp_id_10, ok] = gocpp::getValue<Const*>(obj); ! ok)
+            if(auto [gocpp_id_9, ok] = gocpp::getValue<Const*>(obj); ! ok)
             {
                 rec::errorf(gocpp::recv(check), name, InvalidArrayLen, "invalid array length %s"_s, name->Name);
                 return - 1;

@@ -24,54 +24,54 @@ namespace golang::main
 
     
         template<typename T>
-        gocpp_id_0::gocpp_id_0(T& ref)
+        gocpp_interfaces_cast_0::gocpp_interfaces_cast_0(T& ref)
         {
-            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_interfaces_cast_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_0::gocpp_id_0(const T& ref)
+        gocpp_interfaces_cast_0::gocpp_interfaces_cast_0(const T& ref)
         {
-            mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+            mValue.reset(new gocpp_interfaces_cast_0Impl<T, std::unique_ptr<T>>(new T(ref)));
         }
 
         template<typename T>
-        gocpp_id_0::gocpp_id_0(T* ptr)
+        gocpp_interfaces_cast_0::gocpp_interfaces_cast_0(T* ptr)
         {
-            mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+            mValue.reset(new gocpp_interfaces_cast_0Impl<T, gocpp::ptr<T>>(ptr));
         }
 
-        std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+        std::ostream& gocpp_interfaces_cast_0::PrintTo(std::ostream& os) const
         {
             return os;
         }
 
         template<typename T, typename TStore, typename TInterface>
-        void gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vM()
+        void gocpp_interfaces_cast_0::gocpp_interfaces_cast_0Impl<T, TStore, TInterface>::vM()
         {
             return rec::M(gocpp::PtrRecv<T, false>(value.get()));
         }
 
-        inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+        inline gocpp_interfaces_cast_0::Igocpp_interfaces_cast_0* gocpp_interfaces_cast_0::value() const
         {
             if(auto res = mValue.get()) { return res; }
-            throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+            throw gocpp::GoPanic("using nil value for interface 'gocpp_interfaces_cast_0'");
         }
 
         namespace rec
         {
-            void M(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
+            void M(const gocpp::PtrRecv<struct gocpp_interfaces_cast_0, false>& self)
             {
                 return self.ptr->value()->vM();
             }
 
-            void M(const gocpp::ObjRecv<struct gocpp_id_0>& self)
+            void M(const gocpp::ObjRecv<struct gocpp_interfaces_cast_0>& self)
             {
                 return self.obj.value()->vM();
             }
         }
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_interfaces_cast_0& value)
         {
             return value.PrintTo(os);
         }
@@ -87,7 +87,7 @@ namespace golang::main
 
         mocklib::Println(eface);
 
-        eface = (go_any)(*(gocpp_id_0*)(ptr));
+        eface = (go_any)(*(gocpp_interfaces_cast_0*)(ptr));
 
         mocklib::Println(eface);
     }

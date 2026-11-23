@@ -15,43 +15,43 @@ namespace golang::internal::reflectlite
     struct GoTag_flag { };
     using flag = gocpp::defined<uintptr_t, GoTag_flag>;
     gocpp::string methodName();
-    struct gocpp_id_3 : virtual gocpp::Interface
+    struct gocpp_value_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_3(){}
-        gocpp_id_3(gocpp_id_3& i) = default;
-        gocpp_id_3(const gocpp_id_3& i) = default;
-        gocpp_id_3& operator=(gocpp_id_3& i) = default;
-        gocpp_id_3& operator=(const gocpp_id_3& i) = default;
+        gocpp_value_0(){}
+        gocpp_value_0(gocpp_value_0& i) = default;
+        gocpp_value_0(const gocpp_value_0& i) = default;
+        gocpp_value_0& operator=(gocpp_value_0& i) = default;
+        gocpp_value_0& operator=(const gocpp_value_0& i) = default;
 
-        inline gocpp_id_3(nullptr_t) {};
-        gocpp_id_3& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_3(T& ref);
+        inline gocpp_value_0(nullptr_t) {};
+        gocpp_value_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_3(const T& ref);
+        gocpp_value_0(T& ref);
 
         template<typename T>
-        gocpp_id_3(T* ptr);
+        gocpp_value_0(const T& ref);
+
+        template<typename T>
+        gocpp_value_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_3
+        struct Igocpp_value_0
         {
             virtual void vM() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_3>
-        struct gocpp_id_3Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_value_0>
+        struct gocpp_value_0Impl : virtual TInterface
         {
-            explicit gocpp_id_3Impl(T* ptr)
+            explicit gocpp_value_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -66,55 +66,55 @@ namespace golang::internal::reflectlite
             TStore value;
         };
 
-        inline Igocpp_id_3* value() const;
+        inline Igocpp_value_0* value() const;
 
-        std::shared_ptr<Igocpp_id_3> mValue;
+        std::shared_ptr<Igocpp_value_0> mValue;
     };
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<struct gocpp_id_3, false>& self);
-        void M(const gocpp::ObjRecv<struct gocpp_id_3>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_value_0, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_value_0>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_3& value);
-    struct gocpp_id_4 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_value_0& value);
+    struct gocpp_value_1 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_4(){}
-        gocpp_id_4(gocpp_id_4& i) = default;
-        gocpp_id_4(const gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(gocpp_id_4& i) = default;
-        gocpp_id_4& operator=(const gocpp_id_4& i) = default;
+        gocpp_value_1(){}
+        gocpp_value_1(gocpp_value_1& i) = default;
+        gocpp_value_1(const gocpp_value_1& i) = default;
+        gocpp_value_1& operator=(gocpp_value_1& i) = default;
+        gocpp_value_1& operator=(const gocpp_value_1& i) = default;
 
-        inline gocpp_id_4(nullptr_t) {};
-        gocpp_id_4& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_4(T& ref);
+        inline gocpp_value_1(nullptr_t) {};
+        gocpp_value_1& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_4(const T& ref);
+        gocpp_value_1(T& ref);
 
         template<typename T>
-        gocpp_id_4(T* ptr);
+        gocpp_value_1(const T& ref);
+
+        template<typename T>
+        gocpp_value_1(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_4
+        struct Igocpp_value_1
         {
             virtual void vM() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_4>
-        struct gocpp_id_4Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_value_1>
+        struct gocpp_value_1Impl : virtual TInterface
         {
-            explicit gocpp_id_4Impl(T* ptr)
+            explicit gocpp_value_1Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -129,18 +129,18 @@ namespace golang::internal::reflectlite
             TStore value;
         };
 
-        inline Igocpp_id_4* value() const;
+        inline Igocpp_value_1* value() const;
 
-        std::shared_ptr<Igocpp_id_4> mValue;
+        std::shared_ptr<Igocpp_value_1> mValue;
     };
 
     namespace rec
     {
-        void M(const gocpp::PtrRecv<struct gocpp_id_4, false>& self);
-        void M(const gocpp::ObjRecv<struct gocpp_id_4>& self);
+        void M(const gocpp::PtrRecv<struct gocpp_value_1, false>& self);
+        void M(const gocpp::ObjRecv<struct gocpp_value_1>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_4& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_value_1& value);
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
     int64_t chanlen(gocpp::unsafe_pointer);
     int64_t maplen(gocpp::unsafe_pointer);

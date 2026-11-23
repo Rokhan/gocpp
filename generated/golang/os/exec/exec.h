@@ -52,7 +52,7 @@ namespace golang::os::exec
     };
 
     std::ostream& operator<<(std::ostream& os, const struct wrappedError& value);
-    struct gocpp_id_0
+    struct gocpp_exec_0
     {
         gocpp::string in{};
         gocpp::string out{};
@@ -68,7 +68,7 @@ namespace golang::os::exec
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_exec_0& value);
     bool interfaceEqual(go_any a, go_any b);
     struct prefixSuffixSaver
     {
@@ -383,7 +383,7 @@ namespace golang::os::exec
         // It is set when Command is called with an absolute path, letting it do
         // the work of resolving the extension, so Start doesn't need to do it again.
         // This is only used on Windows.
-        gocpp_id_0 cachedLookExtensions{};
+        gocpp_exec_0 cachedLookExtensions{};
         // startCalled records that Start was attempted, regardless of outcome.
         // (Until go.dev/issue/77075 is resolved, we use atomic.SwapInt32,
         // not atomic.Bool.Swap, to avoid triggering the copylocks vet check.)

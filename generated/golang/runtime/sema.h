@@ -114,7 +114,7 @@ namespace golang::runtime
 {
     namespace cpu = golang::internal::cpu;
     /* alias: "unsafe", namespace: 'golang::unsafe' */;
-    using semTable = gocpp::defined<gocpp::array<gocpp_id_0, semTabSize>, GoTag_semTable>;
+    using semTable = gocpp::defined<gocpp::array<gocpp_sema_0, semTabSize>, GoTag_semTable>;
     extern semTable semtable;
 }
 

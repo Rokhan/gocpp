@@ -229,7 +229,7 @@ namespace golang::go::types
             {
                 const auto& gocpp_id_0 = gocpp::type_info(typ);
                 int conditionId = -1;
-                if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+                if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
                 else if(gocpp_id_0 == typeid(types::Basic*)) { conditionId = 1; }
                 else if(gocpp_id_0 == typeid(types::Array*)) { conditionId = 2; }
                 else if(gocpp_id_0 == typeid(types::Slice*)) { conditionId = 3; }
@@ -248,7 +248,7 @@ namespace golang::go::types
                 {
                     case 0:
                     {
-                        untyped nil t = gocpp::any_cast<untyped nil>(typ);
+                        nullptr_t t = gocpp::any_cast<nullptr_t>(typ);
                         rec::error(gocpp::recv(w), "nil"_s);
                         break;
                     }

@@ -185,7 +185,7 @@ namespace golang::go::types
         {
             const auto& gocpp_id_1 = gocpp::type_info(typ);
             int conditionId = -1;
-            if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_1 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_1 == typeid(types::Basic*)) { conditionId = 1; }
             else if(gocpp_id_1 == typeid(types::Alias*)) { conditionId = 2; }
             else if(gocpp_id_1 == typeid(types::Array*)) { conditionId = 3; }
@@ -204,7 +204,7 @@ namespace golang::go::types
             {
                 case 0:
                 {
-                    untyped nil t = gocpp::any_cast<untyped nil>(typ);
+                    nullptr_t t = gocpp::any_cast<nullptr_t>(typ);
                     // Call typOrNil if it's possible that typ is nil.
                     gocpp::panic("nil typ"_s);
                     break;

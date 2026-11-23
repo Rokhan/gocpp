@@ -21,7 +21,7 @@ namespace golang::main
     {
     }
 
-    struct gocpp_id_0
+    struct gocpp_array_0
     {
         int64_t value{};
 
@@ -51,14 +51,14 @@ namespace golang::main
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_array_0& value)
     {
         return value.PrintTo(os);
     }
 
 
     // Array of struct
-    struct gocpp_id_1
+    struct gocpp_array_1
     {
         int64_t value{};
 
@@ -88,7 +88,7 @@ namespace golang::main
         }
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_array_1& value)
     {
         return value.PrintTo(os);
     }

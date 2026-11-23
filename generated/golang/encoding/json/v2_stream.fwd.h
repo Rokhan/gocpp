@@ -7,7 +7,7 @@
 namespace golang::encoding::json
 {
     struct Decoder;
-    struct gocpp_id_1;
+    struct gocpp_v2_stream_0;
     struct Encoder;
     using Token = go_any;
     struct GoTag_Delim;

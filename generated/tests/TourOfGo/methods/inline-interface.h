@@ -34,43 +34,43 @@ namespace golang::main
 
     std::ostream& operator<<(std::ostream& os, const struct Vertex& value);
     void main();
-    struct gocpp_id_0 : virtual gocpp::Interface
+    struct gocpp_inline_interface_0 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_0(){}
-        gocpp_id_0(gocpp_id_0& i) = default;
-        gocpp_id_0(const gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(gocpp_id_0& i) = default;
-        gocpp_id_0& operator=(const gocpp_id_0& i) = default;
+        gocpp_inline_interface_0(){}
+        gocpp_inline_interface_0(gocpp_inline_interface_0& i) = default;
+        gocpp_inline_interface_0(const gocpp_inline_interface_0& i) = default;
+        gocpp_inline_interface_0& operator=(gocpp_inline_interface_0& i) = default;
+        gocpp_inline_interface_0& operator=(const gocpp_inline_interface_0& i) = default;
 
-        inline gocpp_id_0(nullptr_t) {};
-        gocpp_id_0& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_0(T& ref);
+        inline gocpp_inline_interface_0(nullptr_t) {};
+        gocpp_inline_interface_0& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_0(const T& ref);
+        gocpp_inline_interface_0(T& ref);
 
         template<typename T>
-        gocpp_id_0(T* ptr);
+        gocpp_inline_interface_0(const T& ref);
+
+        template<typename T>
+        gocpp_inline_interface_0(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_0
+        struct Igocpp_inline_interface_0
         {
             virtual double vAbs() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_0>
-        struct gocpp_id_0Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_inline_interface_0>
+        struct gocpp_inline_interface_0Impl : virtual TInterface
         {
-            explicit gocpp_id_0Impl(T* ptr)
+            explicit gocpp_inline_interface_0Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -85,55 +85,55 @@ namespace golang::main
             TStore value;
         };
 
-        inline Igocpp_id_0* value() const;
+        inline Igocpp_inline_interface_0* value() const;
 
-        std::shared_ptr<Igocpp_id_0> mValue;
+        std::shared_ptr<Igocpp_inline_interface_0> mValue;
     };
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<struct gocpp_id_0, false>& self);
-        double Abs(const gocpp::ObjRecv<struct gocpp_id_0>& self);
+        double Abs(const gocpp::PtrRecv<struct gocpp_inline_interface_0, false>& self);
+        double Abs(const gocpp::ObjRecv<struct gocpp_inline_interface_0>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
-    struct gocpp_id_1 : virtual gocpp::Interface
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_inline_interface_0& value);
+    struct gocpp_inline_interface_1 : virtual gocpp::Interface
     {
         using gocpp::Interface::operator==;
         using gocpp::Interface::operator!=;
 
-        gocpp_id_1(){}
-        gocpp_id_1(gocpp_id_1& i) = default;
-        gocpp_id_1(const gocpp_id_1& i) = default;
-        gocpp_id_1& operator=(gocpp_id_1& i) = default;
-        gocpp_id_1& operator=(const gocpp_id_1& i) = default;
+        gocpp_inline_interface_1(){}
+        gocpp_inline_interface_1(gocpp_inline_interface_1& i) = default;
+        gocpp_inline_interface_1(const gocpp_inline_interface_1& i) = default;
+        gocpp_inline_interface_1& operator=(gocpp_inline_interface_1& i) = default;
+        gocpp_inline_interface_1& operator=(const gocpp_inline_interface_1& i) = default;
 
-        inline gocpp_id_1(nullptr_t) {};
-        gocpp_id_1& operator=(nullptr_t) { mValue.reset(); }
-
-        template<typename T>
-        gocpp_id_1(T& ref);
+        inline gocpp_inline_interface_1(nullptr_t) {};
+        gocpp_inline_interface_1& operator=(nullptr_t) { mValue.reset(); }
 
         template<typename T>
-        gocpp_id_1(const T& ref);
+        gocpp_inline_interface_1(T& ref);
 
         template<typename T>
-        gocpp_id_1(T* ptr);
+        gocpp_inline_interface_1(const T& ref);
+
+        template<typename T>
+        gocpp_inline_interface_1(T* ptr);
 
         using isGoInterface = void;
 
         std::ostream& PrintTo(std::ostream& os) const;
 
-        struct Igocpp_id_1
+        struct Igocpp_inline_interface_1
         {
             virtual double vAbs() = 0;
             virtual void* getPtr() = 0;
         };
 
-        template<typename T, typename TStore, typename TInterface = Igocpp_id_1>
-        struct gocpp_id_1Impl : virtual TInterface
+        template<typename T, typename TStore, typename TInterface = Igocpp_inline_interface_1>
+        struct gocpp_inline_interface_1Impl : virtual TInterface
         {
-            explicit gocpp_id_1Impl(T* ptr)
+            explicit gocpp_inline_interface_1Impl(T* ptr)
             {
                 value.reset(ptr);
             }
@@ -148,19 +148,19 @@ namespace golang::main
             TStore value;
         };
 
-        inline Igocpp_id_1* value() const;
+        inline Igocpp_inline_interface_1* value() const;
 
-        std::shared_ptr<Igocpp_id_1> mValue;
+        std::shared_ptr<Igocpp_inline_interface_1> mValue;
     };
 
     namespace rec
     {
-        double Abs(const gocpp::PtrRecv<struct gocpp_id_1, false>& self);
-        double Abs(const gocpp::ObjRecv<struct gocpp_id_1>& self);
+        double Abs(const gocpp::PtrRecv<struct gocpp_inline_interface_1, false>& self);
+        double Abs(const gocpp::ObjRecv<struct gocpp_inline_interface_1>& self);
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
-    void describe(gocpp_id_1 i);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_inline_interface_1& value);
+    void describe(gocpp_inline_interface_1 i);
 
     namespace rec
     {

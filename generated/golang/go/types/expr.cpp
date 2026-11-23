@@ -106,14 +106,14 @@ namespace golang::go::types
         {
             const auto& gocpp_id_0 = gocpp::type_info(x);
             int conditionId = -1;
-            if(gocpp_id_0 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_0 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_0 == typeid(ast::BinaryExpr*)) { conditionId = 1; }
             switch(conditionId)
             {
                 // don't crash
                 case 0:
                 {
-                    untyped nil op = gocpp::any_cast<untyped nil>(x);
+                    nullptr_t op = gocpp::any_cast<nullptr_t>(x);
                     return nopos;
                     break;
                 }

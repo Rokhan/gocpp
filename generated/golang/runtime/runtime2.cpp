@@ -1286,7 +1286,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_runtime2_0::operator T()
     {
         T result;
         result.len = this->len;
@@ -1295,14 +1295,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_runtime2_0::operator==(const T& ref) const
     {
         if (len != ref.len) return false;
         if (buf != ref.buf) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_runtime2_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << len;
@@ -1311,7 +1311,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_runtime2_0& value)
     {
         return value.PrintTo(os);
     }
@@ -1483,7 +1483,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_1::operator T()
+    gocpp_runtime2_1::operator T()
     {
         T result;
         result.user = this->user;
@@ -1492,14 +1492,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_1::operator==(const T& ref) const
+    bool gocpp_runtime2_1::operator==(const T& ref) const
     {
         if (user != ref.user) return false;
         if (runnable != ref.runnable) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_1::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_runtime2_1::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << user;
@@ -1508,7 +1508,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_runtime2_1& value)
     {
         return value.PrintTo(os);
     }
@@ -1516,7 +1516,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_2::operator T()
+    gocpp_runtime2_2::operator T()
     {
         T result;
         result.lock = this->lock;
@@ -1526,7 +1526,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_2::operator==(const T& ref) const
+    bool gocpp_runtime2_2::operator==(const T& ref) const
     {
         if (lock != ref.lock) return false;
         if (stack != ref.stack) return false;
@@ -1534,7 +1534,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_2::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_runtime2_2::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << lock;
@@ -1544,7 +1544,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_runtime2_2& value)
     {
         return value.PrintTo(os);
     }

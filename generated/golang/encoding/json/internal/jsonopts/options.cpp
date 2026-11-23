@@ -385,7 +385,7 @@ namespace golang::encoding::json::internal::jsonopts
                 const auto& gocpp_id_1 = gocpp::type_info(src);
                 const auto& src_ref = src;
                 int conditionId = -1;
-                if(gocpp_id_1 == typeid(untyped nil)) { conditionId = 0; }
+                if(gocpp_id_1 == typeid(nullptr_t)) { conditionId = 0; }
                 else if(gocpp_id_1 == typeid(jsonflags::Bools)) { conditionId = 1; }
                 else if(gocpp_id_1 == typeid(jsonopts::experimentalFormatTagSupporter)) { conditionId = 2; }
                 else if(gocpp_id_1 == typeid(jsonopts::Indent)) { conditionId = 3; }
@@ -397,7 +397,7 @@ namespace golang::encoding::json::internal::jsonopts
                 {
                     case 0:
                     {
-                        untyped nil src = gocpp::any_cast<untyped nil>(src_ref);
+                        nullptr_t src = gocpp::any_cast<nullptr_t>(src_ref);
                         continue;
                         break;
                     }

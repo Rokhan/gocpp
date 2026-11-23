@@ -153,7 +153,7 @@ namespace golang::runtime
 
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_mpagealloc_0::operator T()
     {
         T result;
         result.index = this->index;
@@ -163,7 +163,7 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_mpagealloc_0::operator==(const T& ref) const
     {
         if (index != ref.index) return false;
         if (releasedBg != ref.releasedBg) return false;
@@ -171,7 +171,7 @@ namespace golang::runtime
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mpagealloc_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << index;
@@ -181,7 +181,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mpagealloc_0& value)
     {
         return value.PrintTo(os);
     }
@@ -617,7 +617,7 @@ namespace golang::runtime
         return addr;
     }
 
-    struct gocpp_id_1
+    struct gocpp_mpagealloc_1
         {
             offAddr base{};
             offAddr bound{};
@@ -651,7 +651,7 @@ namespace golang::runtime
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value)
+        std::ostream& operator<<(std::ostream& os, const struct gocpp_mpagealloc_1& value)
         {
             return value.PrintTo(os);
         }
@@ -712,7 +712,7 @@ namespace golang::runtime
         // heap is discovered.
         // At the end of the search, base.addr() is the best new
         // searchAddr we could deduce in this search.
-        auto firstFree = gocpp::Init<gocpp_id_1>([=](auto& x) {
+        auto firstFree = gocpp::Init<gocpp_mpagealloc_1>([=](auto& x) {
             x.base = minOffAddr;
             x.bound = maxOffAddr;
         });

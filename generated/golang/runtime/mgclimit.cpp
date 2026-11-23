@@ -54,7 +54,7 @@ namespace golang::runtime
     gcCPULimiterState gcCPULimiter;
     
     template<typename T> requires gocpp::GoStruct<T>
-    gocpp_id_0::operator T()
+    gocpp_mgclimit_0::operator T()
     {
         T result;
         result.fill = this->fill;
@@ -63,14 +63,14 @@ namespace golang::runtime
     }
 
     template<typename T> requires gocpp::GoStruct<T>
-    bool gocpp_id_0::operator==(const T& ref) const
+    bool gocpp_mgclimit_0::operator==(const T& ref) const
     {
         if (fill != ref.fill) return false;
         if (capacity != ref.capacity) return false;
         return true;
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_mgclimit_0::PrintTo(std::ostream& os) const
     {
         os << '{';
         os << "" << fill;
@@ -79,7 +79,7 @@ namespace golang::runtime
         return os;
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mgclimit_0& value)
     {
         return value.PrintTo(os);
     }

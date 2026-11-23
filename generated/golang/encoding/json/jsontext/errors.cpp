@@ -181,91 +181,91 @@ namespace golang::encoding::json::jsontext
     // then the suffix is appended to the derived pointer.
     
     template<typename T>
-    gocpp_id_0::gocpp_id_0(T& ref)
+    gocpp_errors_0::gocpp_errors_0(T& ref)
     {
-        mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new gocpp_errors_0Impl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
-    gocpp_id_0::gocpp_id_0(const T& ref)
+    gocpp_errors_0::gocpp_errors_0(const T& ref)
     {
-        mValue.reset(new gocpp_id_0Impl<T, std::unique_ptr<T>>(new T(ref)));
+        mValue.reset(new gocpp_errors_0Impl<T, std::unique_ptr<T>>(new T(ref)));
     }
 
     template<typename T>
-    gocpp_id_0::gocpp_id_0(T* ptr)
+    gocpp_errors_0::gocpp_errors_0(T* ptr)
     {
-        mValue.reset(new gocpp_id_0Impl<T, gocpp::ptr<T>>(ptr));
+        mValue.reset(new gocpp_errors_0Impl<T, gocpp::ptr<T>>(ptr));
     }
 
-    std::ostream& gocpp_id_0::PrintTo(std::ostream& os) const
+    std::ostream& gocpp_errors_0::PrintTo(std::ostream& os) const
     {
         return os;
     }
 
     template<typename T, typename TStore, typename TInterface>
-    jsonopts::Struct* gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::voptions()
+    jsonopts::Struct* gocpp_errors_0::gocpp_errors_0Impl<T, TStore, TInterface>::voptions()
     {
         return rec::options(gocpp::PtrRecv<T, false>(value.get()));
     }
     template<typename T, typename TStore, typename TInterface>
-    int64_t gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::voffsetAt(int64_t pos)
+    int64_t gocpp_errors_0::gocpp_errors_0Impl<T, TStore, TInterface>::voffsetAt(int64_t pos)
     {
         return rec::offsetAt(gocpp::PtrRecv<T, false>(value.get()), pos);
     }
     template<typename T, typename TStore, typename TInterface>
-    gocpp::slice<unsigned char> gocpp_id_0::gocpp_id_0Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> b, int64_t where)
+    gocpp::slice<unsigned char> gocpp_errors_0::gocpp_errors_0Impl<T, TStore, TInterface>::vAppendStackPointer(gocpp::slice<unsigned char> b, int64_t where)
     {
         return rec::AppendStackPointer(gocpp::PtrRecv<T, false>(value.get()), b, where);
     }
 
-    inline gocpp_id_0::Igocpp_id_0* gocpp_id_0::value() const
+    inline gocpp_errors_0::Igocpp_errors_0* gocpp_errors_0::value() const
     {
         if(auto res = mValue.get()) { return res; }
-        throw gocpp::GoPanic("using nil value for interface 'gocpp_id_0'");
+        throw gocpp::GoPanic("using nil value for interface 'gocpp_errors_0'");
     }
 
     namespace rec
     {
-        jsonopts::Struct* options(const gocpp::PtrRecv<struct gocpp_id_0, false>& self)
+        jsonopts::Struct* options(const gocpp::PtrRecv<struct gocpp_errors_0, false>& self)
         {
             return self.ptr->value()->voptions();
         }
 
-        jsonopts::Struct* options(const gocpp::ObjRecv<struct gocpp_id_0>& self)
+        jsonopts::Struct* options(const gocpp::ObjRecv<struct gocpp_errors_0>& self)
         {
             return self.obj.value()->voptions();
         }
 
-        int64_t offsetAt(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, int64_t pos)
+        int64_t offsetAt(const gocpp::PtrRecv<struct gocpp_errors_0, false>& self, int64_t pos)
         {
             return self.ptr->value()->voffsetAt(pos);
         }
 
-        int64_t offsetAt(const gocpp::ObjRecv<struct gocpp_id_0>& self, int64_t pos)
+        int64_t offsetAt(const gocpp::ObjRecv<struct gocpp_errors_0>& self, int64_t pos)
         {
             return self.obj.value()->voffsetAt(pos);
         }
 
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_id_0, false>& self, gocpp::slice<unsigned char> b, int64_t where)
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::PtrRecv<struct gocpp_errors_0, false>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return self.ptr->value()->vAppendStackPointer(b, where);
         }
 
-        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_id_0>& self, gocpp::slice<unsigned char> b, int64_t where)
+        gocpp::slice<unsigned char> AppendStackPointer(const gocpp::ObjRecv<struct gocpp_errors_0>& self, gocpp::slice<unsigned char> b, int64_t where)
         {
             return self.obj.value()->vAppendStackPointer(b, where);
         }
     }
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value)
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_errors_0& value)
     {
         return value.PrintTo(os);
     }
 
-    gocpp::error wrapSyntacticError(gocpp_id_0 state, gocpp::error err, int64_t pos, int64_t where)
+    gocpp::error wrapSyntacticError(gocpp_errors_0 state, gocpp::error err, int64_t pos, int64_t where)
     {
-        if(auto [gocpp_id_1, ok] = gocpp::getValue<ioError*>(err); err == io::go_EOF || ok)
+        if(auto [gocpp_id_0, ok] = gocpp::getValue<ioError*>(err); err == io::go_EOF || ok)
         {
             return err;
         }
@@ -441,7 +441,7 @@ namespace golang::encoding::json::jsontext
     // which must be a valid quoted JSON string.
     gocpp::error wrapWithObjectName(gocpp::error err, gocpp::slice<unsigned char> quotedName)
     {
-        auto [serr, gocpp_id_2] = gocpp::getValue<pointerSuffixError*>(err);
+        auto [serr, gocpp_id_1] = gocpp::getValue<pointerSuffixError*>(err);
         if(serr == nullptr)
         {
             serr = gocpp::InitPtr<pointerSuffixError>([=](auto& x) {
@@ -456,7 +456,7 @@ namespace golang::encoding::json::jsontext
     // wrapWithArrayIndex wraps err with a JSON array index access.
     gocpp::error wrapWithArrayIndex(gocpp::error err, int64_t index)
     {
-        auto [serr, gocpp_id_3] = gocpp::getValue<pointerSuffixError*>(err);
+        auto [serr, gocpp_id_2] = gocpp::getValue<pointerSuffixError*>(err);
         if(serr == nullptr)
         {
             serr = gocpp::InitPtr<pointerSuffixError>([=](auto& x) {

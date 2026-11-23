@@ -837,14 +837,14 @@ namespace golang::go::types
         {
             const auto& gocpp_id_2 = gocpp::type_info(gocpp::recover());
             int conditionId = -1;
-            if(gocpp_id_2 == typeid(untyped nil)) { conditionId = 0; }
+            if(gocpp_id_2 == typeid(nullptr_t)) { conditionId = 0; }
             else if(gocpp_id_2 == typeid(types::bailout)) { conditionId = 1; }
             switch(conditionId)
             {
                 case 0:
                 case 1:
                 {
-                    untyped nil p = gocpp::any_cast<untyped nil>(gocpp::recover());
+                    nullptr_t p = gocpp::any_cast<nullptr_t>(gocpp::recover());
                     // normal return or early exit
                     *err = check->firstErr;
                     break;

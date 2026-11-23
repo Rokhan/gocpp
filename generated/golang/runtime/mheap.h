@@ -12,7 +12,7 @@
 
 namespace golang::runtime
 {
-    struct gocpp_id_0
+    struct gocpp_mheap_0
     {
         uintptr_t base{};
         uintptr_t end{};
@@ -28,7 +28,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_0& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mheap_0& value);
     struct GoTag_mSpanState { };
     using mSpanState = gocpp::defined<uint8_t, GoTag_mSpanState>;
     // mSpanStateNames are the names of the span states, indexed by
@@ -227,7 +227,7 @@ namespace golang::runtime
 
 namespace golang::runtime
 {
-    struct gocpp_id_1
+    struct gocpp_mheap_1
     {
         mcentral mcentral{};
         gocpp::array<unsigned char, (cpu::CacheLinePadSize - gocpp::unsafe_sizeof<golang::runtime::mcentral>() % cpu::CacheLinePadSize) % cpu::CacheLinePadSize> pad{};
@@ -243,7 +243,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_1& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mheap_1& value);
 }
 #include "golang/internal/runtime/sys/nih.fwd.h"
 
@@ -292,7 +292,7 @@ namespace golang::runtime
     };
 
     std::ostream& operator<<(std::ostream& os, const struct mSpanList& value);
-    struct gocpp_id_2
+    struct gocpp_mheap_2
     {
         // arenaHints is a list of addresses at which to attempt to
         // add more heap arenas for user arena chunks. This is initially
@@ -317,7 +317,7 @@ namespace golang::runtime
         std::ostream& PrintTo(std::ostream& os) const;
     };
 
-    std::ostream& operator<<(std::ostream& os, const struct gocpp_id_2& value);
+    std::ostream& operator<<(std::ostream& os, const struct gocpp_mheap_2& value);
     struct special
     {
         sys::NotInHeap _1{};
@@ -863,13 +863,13 @@ namespace golang::runtime
         gocpp::slice<arenaIdx> markArenas{};
         // curArena is the arena that the heap is currently growing
         // into. This should always be physPageSize-aligned.
-        gocpp_id_0 curArena{};
+        gocpp_mheap_0 curArena{};
         // central free lists for small size classes.
         // the padding makes sure that the mcentrals are
         // spaced CacheLinePadSize bytes apart, so that each mcentral.lock
         // gets its own cache line.
         // central is indexed by spanClass.
-        gocpp::array<gocpp_id_1, numSpanClasses> central{};
+        gocpp::array<gocpp_mheap_1, numSpanClasses> central{};
         fixalloc spanalloc{}; // allocator for span
         fixalloc spanSPMCAlloc{}; // allocator for spanSPMC, protected by work.spanSPMCs.lock
         fixalloc cachealloc{}; // allocator for mcache
@@ -887,7 +887,7 @@ namespace golang::runtime
         fixalloc arenaHintAlloc{}; // allocator for arenaHints
         // User arena state.
         // Protected by mheap_.lock.
-        gocpp_id_2 userArena{};
+        gocpp_mheap_2 userArena{};
         // cleanupID is a counter which is incremented each time a cleanup special is added
         // to a span. It's used to create globally unique identifiers for individual cleanup.
         // cleanupID is protected by mheap_.speciallock. It must only be incremented while holding

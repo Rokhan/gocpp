@@ -6,5 +6,5 @@
 
 namespace golang::main
 {
-    struct gocpp_id_0;
+    struct gocpp_slice_literals_0;
 }

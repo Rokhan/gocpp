@@ -344,7 +344,7 @@ func (cv *cppConverter) isAmbiguousName(name string) bool {
 	return false
 }
 
-func (cv *cppConverter) isNameUsebyMethods(name string) bool {
+func (cv *parsingInfos) isNameUsebyMethods(name string) bool {
 	// TODO, maybe slow, can be optimized by caching.
 	methods := cv.GetPackageMethodsNames()
 	if slices.Contains(methods, name) {
@@ -353,7 +353,7 @@ func (cv *cppConverter) isNameUsebyMethods(name string) bool {
 	return false
 }
 
-func (cv *cppConverter) isNameUsebyFunction(name string, fk FuncKind) bool {
+func (cv *parsingInfos) isNameUsebyFunction(name string, fk FuncKind) bool {
 	// TODO, maybe slow, can be optimized by caching.
 	methods := cv.GetPackageFuncNames(fk)
 	if slices.Contains(methods, name) {
@@ -644,7 +644,7 @@ func (cv *cppConverter) getPackagesUsedByHeaderEnd(headerEndElts []*place, usedP
 	return usedPkgInfosHeaderEnd
 }
 
-func (cv *cppConverter) getNeededNamespaceAliasesForHeaderEnd(headerEndElts []*place, usingEmitted set[string], namespaceElt map[string]namespaceAlias) []string {
+func (cv *parsingInfos) getNeededNamespaceAliasesForHeaderEnd(headerEndElts []*place, usingEmitted set[string], namespaceElt map[string]namespaceAlias) []string {
 	neededNs := set[string]{}
 	for _, elt := range headerEndElts {
 		for ns := range elt.depInfo.depNss {
@@ -699,7 +699,7 @@ func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
 	}
 }
 
-func (cv *cppConverter) ConvertDocToStrings(doc *ast.CommentGroup) (result []string) {
+func (cv *parsingInfos) ConvertDocToStrings(doc *ast.CommentGroup) (result []string) {
 	if doc == nil {
 		return
 	}
@@ -1866,7 +1866,7 @@ func (cv *cppConverter) convertAssignRight(nLhs int, exprs []ast.Expr) cppExpr {
 }
 
 // isConstExpr reports whether go/types folded e to a constant.
-func (cv *cppConverter) isConstExpr(e ast.Expr) bool {
+func (cv *parsingInfos) isConstExpr(e ast.Expr) bool {
 	tv, ok := cv.typeInfo.Types[e]
 	return ok && tv.Value != nil
 }
@@ -3055,7 +3055,7 @@ func constFitsOnlyUint64(obj types.Object) bool {
 		constant.Compare(v, token.LEQ, uint64Max)
 }
 
-func (cv *cppConverter) constKey(obj types.Object) string {
+func (cv *parsingInfos) constKey(obj types.Object) string {
 	p := cv.pcShared.fileSet.Position(obj.Pos())
 	return fmt.Sprintf("%s:%d", CleanPath(p.Filename), p.Offset)
 }
@@ -3290,7 +3290,7 @@ func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]includeType
 	return result
 }
 
-func (cv *cppConverter) getAllUsedNameSpaces(expr ast.Expr) map[string]bool {
+func (cv *parsingInfos) getAllUsedNameSpaces(expr ast.Expr) map[string]bool {
 	result := map[string]bool{}
 	for goNs, selector := range getAllNsSelectorIds(expr, cv.typeInfo) {
 		// Check if the identifier is a package name
@@ -3305,7 +3305,7 @@ func (cv *cppConverter) getAllUsedNameSpaces(expr ast.Expr) map[string]bool {
 	return result
 }
 
-func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
+func (cv *parsingInfos) getAllUsedNames(expr ast.Expr) map[string]bool {
 	result := map[string]bool{}
 	for ident := range getAllIdentifiers(expr) {
 		result[ident.Name] = true
@@ -3313,7 +3313,7 @@ func (cv *cppConverter) getAllUsedNames(expr ast.Expr) map[string]bool {
 	return result
 }
 
-func (cv *cppConverter) getAllUsedVars(expr ast.Expr) map[types.Object]bool {
+func (cv *parsingInfos) getAllUsedVars(expr ast.Expr) map[types.Object]bool {
 	result := map[types.Object]bool{}
 	for ident := range getAllIdentifiers(expr) {
 		defObj := cv.typeInfo.Uses[ident]
@@ -3514,7 +3514,7 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (isTD bool, pkgName string, nam
 	return
 }
 
-func (cv *cppConverter) NamespaceFromTypePkg(pkg *types.Package) string {
+func (cv *parsingInfos) NamespaceFromTypePkg(pkg *types.Package) string {
 	return cv.pcShared.nsNamer.NamespaceFromTypePkg(pkg)
 }
 
@@ -3812,7 +3812,7 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 }
 
 // Returns the type parameters referenced by the fields of an anonymous struct.
-func (cv *cppConverter) structTypeParams(st *ast.StructType) typeParams {
+func (cv *parsingInfos) structTypeParams(st *ast.StructType) typeParams {
 	tps := typeParams{}
 	ast.Inspect(st, func(n ast.Node) bool {
 		id, ok := n.(*ast.Ident)
@@ -3834,12 +3834,12 @@ func (cv *cppConverter) structTypeParams(st *ast.StructType) typeParams {
 	return tps
 }
 
-func (cv *cppConverter) isParam(n *ast.Ident) (bool, string) {
+func (cv *parsingInfos) isParam(n *ast.Ident) (bool, string) {
 	_, isParam := cv.typeInfo.Types[n].Type.(*types.TypeParam)
 	return isParam, n.Name
 }
 
-func (cv *cppConverter) checkIsParam(n *ast.Ident, identType *cppType) {
+func (cv *parsingInfos) checkIsParam(n *ast.Ident, identType *cppType) {
 	_, isParam := cv.typeInfo.Types[n].Type.(*types.TypeParam)
 	if isParam {
 		identType.typenames = append(identType.typenames, n.Name)
@@ -4818,7 +4818,7 @@ func convertTupleToCppTypeList(t *types.Tuple, tcCtx typeConvCtx) string {
 }
 
 // Sprintf formats according to a format specifier and returns the resulting string.
-func (cv *cppConverter) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
+func (cv *parsingInfos) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
 	defs, params /*tns*/, _, coms, dbgs := extractParamDefs(srcParams...)
 	//cv.Assertf(tns == nil, "typenames should be nil here")
 	for _, com := range coms {
@@ -4862,7 +4862,7 @@ const (
 	needsBig                    // use the big integer type
 )
 
-func (cv *cppConverter) constExprWidth(root ast.Expr) constWidth {
+func (cv *parsingInfos) constExprWidth(root ast.Expr) constWidth {
 	w := fitsInt32
 	ast.Inspect(root, func(n ast.Node) bool {
 		e, ok := n.(ast.Expr)
@@ -5452,14 +5452,14 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 	panic("convertExprImpl, bug, unreacheable code reached !")
 }
 
-func (cv *cppConverter) isConstLeaf(e ast.Expr) bool {
+func (cv *parsingInfos) isConstLeaf(e ast.Expr) bool {
 	tv, ok := cv.typeInfo.Types[e]
 	return ok && tv.Value != nil && tv.Value.Kind() == constant.Int
 }
 
 // Handles float literals such as `1e3` that are seen as an integer by the type system.
 // Returns the C++ integer literal and true/false if integer/float
-func (cv *cppConverter) floatLitAsInt(lit *ast.BasicLit) (string, bool) {
+func (cv *parsingInfos) floatLitAsInt(lit *ast.BasicLit) (string, bool) {
 	tv, ok := cv.typeInfo.Types[lit]
 	if !ok || tv.Value == nil {
 		return "", false
@@ -5485,14 +5485,14 @@ func (cv *cppConverter) floatLitAsInt(lit *ast.BasicLit) (string, bool) {
 	return "", false
 }
 
-func (cv *cppConverter) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {
+func (cv *parsingInfos) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {
 	use := cv.typeInfo.Uses[selector]
 	pkgId := obj.Imported().Path() + "/" + cv.posBaseName(use.Pos())
 	di := depInfo{depPkgs: map[string]includeType{pkgId: FwdInclude}}
 	return di
 }
 
-func (cv *cppConverter) nsFromPkg(obj *types.PkgName) string {
+func (cv *parsingInfos) nsFromPkg(obj *types.PkgName) string {
 	return cv.pcShared.nsNamer.NamespaceFromTypePkg(obj.Imported())
 }
 
@@ -5511,7 +5511,7 @@ func (cv *cppConverter) getCaptureExpr() string {
 	return captureExpr
 }
 
-func (cv *cppConverter) isNameSpace(expr ast.Expr) bool {
+func (cv *parsingInfos) isNameSpace(expr ast.Expr) bool {
 
 	switch n := expr.(type) {
 	case *ast.Ident:

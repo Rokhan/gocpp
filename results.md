@@ -119,6 +119,7 @@
 | [TourOfGo/welcome/hello.go](tests/TourOfGo/welcome/hello.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/hello.cpp)) | ✔️ |
 | [TourOfGo/welcome/sandbox.go](tests/TourOfGo/welcome/sandbox.go) | ✔️ | ✔️ | ✔️ ([cpp](generated/tests/TourOfGo/welcome/sandbox.cpp)) | ❌ |
 | [experiments/convs.go](tests/experiments/convs.go) | ✔️ | ❌ | ❌ | ❌ |
+| [refactor/moveMethods.go](tests/refactor/moveMethods.go) | ✔️ | ❌ | ❌ | ❌ |
 
 
 # Conversion of imported packages
@@ -193,6 +194,7 @@
 | $(ImportDir)/encoding/json/v2_stream.go | ✔️ ([cpp](generated/golang/encoding/json/v2_stream.cpp), [h](generated/golang/encoding/json/v2_stream.h))| ❌ | ❌ |
 | $(ImportDir)/errors/errors.go | ✔️ ([cpp](generated/golang/errors/errors.cpp), [h](generated/golang/errors/errors.h))| ✔️ | ✔️ |
 | $(ImportDir)/errors/wrap.go | ✔️ ([cpp](generated/golang/errors/wrap.cpp), [h](generated/golang/errors/wrap.h))| ✔️ | ❌ |
+| $(ImportDir)/flag/flag.go | ✔️ ([cpp](generated/golang/flag/flag.cpp), [h](generated/golang/flag/flag.h))| ❌ | ❌ |
 | $(ImportDir)/fmt/errors.go | ✔️ ([cpp](generated/golang/fmt/errors.cpp), [h](generated/golang/fmt/errors.h))| ✔️ | ❌ |
 | $(ImportDir)/fmt/format.go | ✔️ ([cpp](generated/golang/fmt/format.cpp), [h](generated/golang/fmt/format.h))| ✔️ | ❌ |
 | $(ImportDir)/fmt/print.go | ✔️ ([cpp](generated/golang/fmt/print.cpp), [h](generated/golang/fmt/print.h))| ✔️ | ❌ |
@@ -310,6 +312,7 @@
 | $(ImportDir)/golang.org/x/tools/go/packages/golist.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/packages/golist.cpp), [h](generated/golang/golang.org/x/tools/go/packages/golist.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/go/packages/golist_overlay.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/packages/golist_overlay.cpp), [h](generated/golang/golang.org/x/tools/go/packages/golist_overlay.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/go/packages/packages.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/packages/packages.cpp), [h](generated/golang/golang.org/x/tools/go/packages/packages.h))| ❌ | ❌ |
+| $(ImportDir)/golang.org/x/tools/go/packages/visit.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/packages/visit.cpp), [h](generated/golang/golang.org/x/tools/go/packages/visit.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/go/types/objectpath/objectpath.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/go/types/objectpath/objectpath.cpp), [h](generated/golang/golang.org/x/tools/go/types/objectpath/objectpath.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/aliases/aliases.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/aliases/aliases.cpp), [h](generated/golang/golang.org/x/tools/internal/aliases/aliases.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/event/core/event.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/event/core/event.cpp), [h](generated/golang/golang.org/x/tools/internal/event/core/event.h))| ❌ | ❌ |
@@ -330,6 +333,7 @@
 | $(ImportDir)/golang.org/x/tools/internal/gocommand/invoke_notunix.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gocommand/invoke_notunix.cpp), [h](generated/golang/golang.org/x/tools/internal/gocommand/invoke_notunix.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gocommand/vendor.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gocommand/vendor.cpp), [h](generated/golang/golang.org/x/tools/internal/gocommand/vendor.h))| ❌ | ❌ |
 | $(ImportDir)/golang.org/x/tools/internal/gocommand/version.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/gocommand/version.cpp), [h](generated/golang/golang.org/x/tools/internal/gocommand/version.h))| ❌ | ❌ |
+| $(ImportDir)/golang.org/x/tools/internal/moremaps/maps.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/moremaps/maps.cpp), [h](generated/golang/golang.org/x/tools/internal/moremaps/maps.h))| ✔️ | ✔️ |
 | $(ImportDir)/golang.org/x/tools/internal/packagesinternal/packages.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/packagesinternal/packages.cpp), [h](generated/golang/golang.org/x/tools/internal/packagesinternal/packages.h))| ✔️ | ✔️ |
 | $(ImportDir)/golang.org/x/tools/internal/pkgbits/codes.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/pkgbits/codes.cpp), [h](generated/golang/golang.org/x/tools/internal/pkgbits/codes.h))| ✔️ | ✔️ |
 | $(ImportDir)/golang.org/x/tools/internal/pkgbits/decoder.go | ✔️ ([cpp](generated/golang/golang.org/x/tools/internal/pkgbits/decoder.cpp), [h](generated/golang/golang.org/x/tools/internal/pkgbits/decoder.h))| ❌ | ❌ |
@@ -510,6 +514,7 @@
 | $(ImportDir)/iter/iter.go | ✔️ ([cpp](generated/golang/iter/iter.cpp), [h](generated/golang/iter/iter.h))| ❌ | ❌ |
 | $(ImportDir)/log/internal/internal.go | ✔️ ([cpp](generated/golang/log/internal/internal.cpp), [h](generated/golang/log/internal/internal.h))| ✔️ | ✔️ |
 | $(ImportDir)/log/log.go | ✔️ ([cpp](generated/golang/log/log.cpp), [h](generated/golang/log/log.h))| ❌ | ❌ |
+| $(ImportDir)/maps/maps.go | ✔️ ([cpp](generated/golang/maps/maps.cpp), [h](generated/golang/maps/maps.h))| ✔️ | ✔️ |
 | $(ImportDir)/math/abs.go | ✔️ ([cpp](generated/golang/math/abs.cpp), [h](generated/golang/math/abs.h))| ✔️ | ✔️ |
 | $(ImportDir)/math/big/arith.go | ✔️ ([cpp](generated/golang/math/big/arith.cpp), [h](generated/golang/math/big/arith.h))| ❌ | ❌ |
 | $(ImportDir)/math/big/arith_decl.go | ✔️ ([cpp](generated/golang/math/big/arith_decl.cpp), [h](generated/golang/math/big/arith_decl.h))| ❌ | ❌ |

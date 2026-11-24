@@ -43,6 +43,7 @@ const cpp_cplx128_type = "gocpp::complex128"
 //	=> "go\types\basic.go"
 //	=> "go\types\universe.go"
 var stdTypeMapping = map[string]string{
+	"any":        "go_any",
 	"byte":       "unsigned char",
 	"complex":    cpp_cplx128_type,
 	"complex64":  cpp_cplx64_type,
@@ -105,7 +106,6 @@ var cppKeyWordsMapping = map[string]string{
 
 	// Avoid C++ keywords conflicts, some of them are not really a problem
 	// as they are also go keyword and won't appears anywhere.
-	"any":       "go_any",       // just to avoid confusion with std::any used in support lib
 	"auto":      "go_auto",      // keyword
 	"break":     "go_break",     // keyword
 	"case":      "go_case",      // keyword

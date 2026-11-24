@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"strings"
 )
 
@@ -116,4 +117,25 @@ func (cv *parsingContext) funcParamOverload(af appendFunc, name string, params t
 	af(&out, "    return %s(%s);\n", name, strings.Join(args, ", "))
 	af(&out, "}\n")
 	return out
+}
+
+func (cv *parsingContext) getPackageFromType(usedType types.Object, tag tagType) *pkgInfo {
+	if usedType == nil {
+		return nil
+	}
+
+	var file = cv.getPosition(usedType.Pos()).Filename
+
+	if file == "" {
+		return nil
+	}
+
+	pkg := usedType.Pkg()
+	if pkg != nil {
+		fixedPath := pkg.Path()
+		//fixedPath := fixPkgPath(pkg.Path(), file)
+		fmt.Printf("getPackageFromType, pkgName: %v, pkgPath: %v, fixedpath: %s file: %v, usedTypeName: %v, tag: %v ---\n", pkg.Name(), pkg.Path(), fixedPath, file, usedType.Name(), tag)
+		return &pkgInfo{pkg.Name(), fixedPath, file, tag, GoFiles}
+	}
+	return nil
 }

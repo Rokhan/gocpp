@@ -20,12 +20,26 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+func apply(slice []string, f func(string) string) []string {
+	for i, v := range slice {
+		slice[i] = f(v)
+	}
+	return slice
+}
+
 func first[T1 any, T2 any](t1 T1, t2 T2) T1 {
 	return t1
 }
 
 func second[T1 any, T2 any](t1 T1, t2 T2) T2 {
 	return t2
+}
+
+func ToString(obj fmt.Stringer) string {
+	if obj != nil {
+		return obj.String()
+	}
+	return ""
 }
 
 type Logger interface {
@@ -68,6 +82,52 @@ func GetCppType(goType string) string {
 	return GetNsCppType(goType).String()
 }
 
+type method struct {
+	name   string
+	result string
+	commentInfo
+	params typeNames
+	parent *parentType
+	defs   []place
+}
+
+type nsType struct {
+	namespace string
+	name      string
+}
+
+type parentType struct {
+	nsType
+	nodeType types.Type
+}
+
+type parentTypes []parentType
+
+func (pt nsType) String() string {
+	if pt.namespace == "" {
+		return pt.name
+	}
+	return fmt.Sprintf("%s::%s", pt.namespace, pt.name)
+}
+
+// NB: First implicit param in format is parentType::name
+func (pt parentType) Format(format string, params ...any) string {
+	if pt.namespace == "" {
+		tmpParams := append([]any{pt.name}, params...)
+		return fmt.Sprintf(format, tmpParams...)
+	}
+	return fmt.Sprintf("%s::%s", pt.namespace, fmt.Sprintf(format, pt.name))
+}
+
+// NB: First implicit param in format is parentType::name
+func (pts parentTypes) Format(format string, params ...any) []string {
+	var strs []string
+	for _, pt := range pts {
+		strs = append(strs, pt.Format(format, params...))
+	}
+	return strs
+}
+
 func GetNsCppType(goType string) nsType {
 	nsVal, ok := stdNsTypeMapping[goType]
 	if ok {
@@ -92,6 +152,13 @@ func GetCppOutType(goType outType) string {
 	} else {
 		return outType
 	}
+}
+
+func convertNamespace(typeStr string, namespace string) string {
+	typeStr = strings.TrimPrefix(typeStr, namespace+".")
+	typeStr = strings.ReplaceAll(typeStr, ".", "::")
+	typeStr, _ = Last(strings.Split(typeStr, "/"))
+	return typeStr
 }
 
 func GetCppGoType(goType types.Type, namespace string) string {
@@ -1538,6 +1605,17 @@ func mkCppType(str string, defs []place) cppType {
 
 func mkCppEllipsis(expr cppExpr, eltType cppType) cppType {
 	return cppType{expr, false, false, true, false, &eltType, true}
+}
+
+func checkCanFwd(cppType *cppType) {
+	switch cppType.str {
+	case cpp_cplx64_type:
+		cppType.isStruct = true
+		cppType.canFwd = false
+	case cpp_cplx128_type:
+		cppType.isStruct = true
+		cppType.canFwd = false
+	}
 }
 
 type cppExprWritter[TWritter io.Writer] struct {

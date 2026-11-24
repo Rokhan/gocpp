@@ -809,13 +809,6 @@ func (cv *cppConverter) generateSortedHeader(headerElts []*place, getter func(pl
 	return usingIncluded, inNamespace
 }
 
-func ToString(obj fmt.Stringer) string {
-	if obj != nil {
-		return obj.String()
-	}
-	return ""
-}
-
 func (cv *cppConverter) Logf(format string, a ...any) (n int, err error) {
 	fmt.Printf("%s", cv.logPrefix)
 	return fmt.Printf(format, a...)
@@ -910,27 +903,6 @@ func (cv *cppConverter) getPackageFromObject(usedType types.Object, tag tagType)
 		}
 	} else {
 		cv.Logf("pkginfo, nil pkg, file: %v, usedTypeName: %v, tag:%v ---\n", file, usedType.Name(), tag)
-	}
-	return nil
-}
-
-func (cv *parsingContext) getPackageFromType(usedType types.Object, tag tagType) *pkgInfo {
-	if usedType == nil {
-		return nil
-	}
-
-	var file = cv.getPosition(usedType.Pos()).Filename
-
-	if file == "" {
-		return nil
-	}
-
-	pkg := usedType.Pkg()
-	if pkg != nil {
-		fixedPath := pkg.Path()
-		//fixedPath := fixPkgPath(pkg.Path(), file)
-		fmt.Printf("getPackageFromType, pkgName: %v, pkgPath: %v, fixedpath: %s file: %v, usedTypeName: %v, tag: %v ---\n", pkg.Name(), pkg.Path(), fixedPath, file, usedType.Name(), tag)
-		return &pkgInfo{pkg.Name(), fixedPath, file, tag, GoFiles}
 	}
 	return nil
 }
@@ -1060,52 +1032,6 @@ func (cv *cppConverter) readFieldsAndParentsCtx(fields *ast.FieldList, ctx ctCon
 	}
 
 	return
-}
-
-type method struct {
-	name   string
-	result string
-	commentInfo
-	params typeNames
-	parent *parentType
-	defs   []place
-}
-
-type nsType struct {
-	namespace string
-	name      string
-}
-
-type parentType struct {
-	nsType
-	nodeType types.Type
-}
-
-type parentTypes []parentType
-
-func (pt nsType) String() string {
-	if pt.namespace == "" {
-		return pt.name
-	}
-	return fmt.Sprintf("%s::%s", pt.namespace, pt.name)
-}
-
-// NB: First implicit param in format is parentType::name
-func (pt parentType) Format(format string, params ...any) string {
-	if pt.namespace == "" {
-		tmpParams := append([]any{pt.name}, params...)
-		return fmt.Sprintf(format, tmpParams...)
-	}
-	return fmt.Sprintf("%s::%s", pt.namespace, fmt.Sprintf(format, pt.name))
-}
-
-// NB: First implicit param in format is parentType::name
-func (pts parentTypes) Format(format string, params ...any) []string {
-	var strs []string
-	for _, pt := range pts {
-		strs = append(strs, pt.Format(format, params...))
-	}
-	return strs
 }
 
 func (cv *cppConverter) readMethods(fields *ast.FieldList, ctx ctContext) (methods []method, pts parentTypes, errors []error) {
@@ -3045,26 +2971,6 @@ func (cv *cppConverter) localConstQualifier(obj types.Object, init ast.Expr) str
 	return q
 }
 
-func typeOnlySpec(s *ast.ValueSpec) *ast.ValueSpec {
-	hdrValueSpec := *s
-	hdrValueSpec.Values = nil
-	return &hdrValueSpec
-}
-
-// Same than typeOnlySpec but retrieve the type from the value if
-// the type is not set in the spec.
-func typeOnlySpecFor(s *ast.ValueSpec, i int) *ast.ValueSpec {
-	spec := *s
-	spec.Names = []*ast.Ident{s.Names[i]}
-	spec.Values = nil
-	if spec.Type == nil && i < len(s.Values) {
-		if lit, ok := ast.Unparen(s.Values[i]).(*ast.CompositeLit); ok {
-			spec.Type = lit.Type
-		}
-	}
-	return &spec
-}
-
 func (cv *cppConverter) convertTypeSpec(node *ast.TypeSpec, end string, isNamespace bool) cppType {
 	if node == nil {
 		panic("node is nil")
@@ -3392,17 +3298,6 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (isTD bool, pkgName string, nam
 		cv.Logf("isTypedef[false], pkg is nil for %v, type: %v\n", types.ExprString(id), idType)
 	}
 	return
-}
-
-func checkCanFwd(cppType *cppType) {
-	switch cppType.str {
-	case cpp_cplx64_type:
-		cppType.isStruct = true
-		cppType.canFwd = false
-	case cpp_cplx128_type:
-		cppType.isStruct = true
-		cppType.canFwd = false
-	}
 }
 
 // put this in cppConverter ?
@@ -4100,54 +3995,6 @@ func writePromotedImpl(buf *bytes.Buffer, data genStructData, param genStructPar
 	fmt.Fprintf(buf, "%s}\n", data.out.Indent())
 }
 
-func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms typeParams) {
-	if len(templatePrms) != 0 {
-		fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), mkTemplateDec(templatePrms))
-	}
-}
-
-func getAnotherName(excludedNames []string, defaultNames []string) string {
-	usedNames := make(map[string]bool)
-	for _, name := range excludedNames {
-		usedNames[name] = true
-	}
-
-	// Try to use one of the default template names
-	for _, defaultName := range defaultNames {
-		if !usedNames[defaultName] {
-			return defaultName
-		}
-	}
-
-	// If all default names are used, append a suffix number
-	for i := 1; ; i++ {
-		for _, defaultName := range defaultNames {
-			candidate := fmt.Sprintf("%s%d", defaultName, i)
-			if !usedNames[candidate] {
-				return candidate
-			}
-		}
-	}
-}
-
-var defaultTemplateNames = []string{"T", "U", "V", "W"}
-
-func getAnotherTemplateParamName(excludedNames []string) string {
-	return getAnotherName(excludedNames, defaultTemplateNames)
-}
-
-var lambdaParamNames = []string{"x", "y", "z", "t", "u", "v"}
-
-func getAnotherLambdaParamName(excludedNames []string) string {
-	return getAnotherName(excludedNames, lambdaParamNames)
-}
-
-var loopParamNames = []string{"i", "j", "k", "l", "m", "n"}
-
-func getAnotherLoopParamName(excludedNames []string) string {
-	return getAnotherName(excludedNames, loopParamNames)
-}
-
 func (cv *cppConverter) convertInterfaceTypeExpr(node *ast.InterfaceType, templatePrms typeParams, param genStructParam) (string, []place) {
 	buf := new(bytes.Buffer)
 	defs := []place{}
@@ -4519,31 +4366,8 @@ func (cv *cppConverter) Errorf(format string, params ...any) {
 	}
 }
 
-func apply(slice []string, f func(string) string) []string {
-	for i, v := range slice {
-		slice[i] = f(v)
-	}
-	return slice
-}
-
 func (cv *cppConverter) convertNamespaces(typeStrs []string) []string {
 	return apply(typeStrs, func(s string) string { return convertNamespace(s, cv.namespace) })
-}
-
-func convertNamespace(typeStr string, namespace string) string {
-	typeStr = strings.TrimPrefix(typeStr, namespace+".")
-	typeStr = strings.ReplaceAll(typeStr, ".", "::")
-	typeStr, _ = Last(strings.Split(typeStr, "/"))
-	return typeStr
-}
-
-type typeConvCtx struct {
-	namespace string
-	position  token.Position
-
-	// Names of receivers in the current package
-	recNames set[string]
-	pkgPath  string
 }
 
 // Converts a Go type used in a declaration that lives in the `rec` namespace,
@@ -4562,100 +4386,6 @@ func (cv *cppConverter) convertGoToCppTypeInRecNs(t types.Type) string {
 
 func (cv *cppConverter) convertGoToCppType(goType types.Type, position token.Position) (string, bool) {
 	return convertGoToCppType(goType, typeConvCtx{namespace: cv.namespace, position: position})
-}
-
-func convertGoToCppType(goType types.Type, tcCtx typeConvCtx) (string, bool) {
-	if goType == nil {
-		panic("convertGoToCppType, Cannot convert nil type.")
-	}
-
-	switch subType := goType.(type) {
-	case *types.Array:
-		return fmt.Sprintf("gocpp::array<%s, %d>", convertGoToCppTypeRec(subType.Elem(), tcCtx), subType.Len()), true
-
-	case *types.Basic:
-		return GetCppGoType(subType, tcCtx.namespace), true
-
-	case *types.Chan:
-		return fmt.Sprintf("gocpp::channel<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
-
-	case *types.Map:
-		return fmt.Sprintf("gocpp::map<%s, %s>", convertGoToCppTypeRec(subType.Key(), tcCtx), convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
-
-	case *types.Alias:
-		return convertGoNamedToCppType(subType.Obj(), subType.TypeArgs(), tcCtx), true
-
-	case *types.Named:
-		return convertGoNamedToCppType(subType.Obj(), subType.TypeArgs(), tcCtx), true
-
-	case *types.Pointer:
-		if isArray(subType.Elem()) {
-			return fmt.Sprintf("gocpp::array_ptr<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
-		} else {
-			return fmt.Sprintf("%s*", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
-		}
-
-	case *types.Slice:
-		return fmt.Sprintf("gocpp::slice<%s>", convertGoToCppTypeRec(subType.Elem(), tcCtx)), true
-
-	case *types.Struct:
-		if subType.NumFields() == 0 {
-			return "gocpp::empty_struct", true
-		}
-		//fmt.Printf("convertGoToCppType, struct type [%v], position[%v]\n", subType, position)
-		id, ok := typeToId[subType]
-		if !ok {
-			for id, t := range typeToId {
-				fmt.Printf("convertGoToCppType, id %d, type %v\n", id, t)
-			}
-			//Panicf("Unknown struct type in convertGoToCppType, type [%v], position[%v]", subType, tcCtx.position)
-			return "UnknownStructType", false
-		}
-		return fmt.Sprintf("%s", id), true
-
-	case *types.TypeParam:
-		return fmt.Sprintf("%s", subType), true
-
-	case *types.Signature:
-		switch subType.Results().Len() {
-		case 0:
-			return fmt.Sprintf("std::function<void (%s)>", convertTupleToCppTypeList(subType.Params(), tcCtx)), true
-		case 1:
-			return fmt.Sprintf("std::function<%s (%s)>", convertGoToCppTypeRec(subType.Results().At(0).Type(), tcCtx), convertTupleToCppTypeList(subType.Params(), tcCtx)), true
-		default:
-			return fmt.Sprintf("std::function<std::tuple<%s> (%s)>", convertTupleToCppTypeList(subType.Results(), tcCtx), convertTupleToCppTypeList(subType.Params(), tcCtx)), true
-		}
-
-	case *types.Tuple:
-		return fmt.Sprintf("std::tuple<%s>", convertTupleToCppTypeList(subType, tcCtx)), true
-
-	case *types.Interface:
-		if subType.NumMethods() == 0 {
-			return "gocpp::go_any", true
-		} else {
-			panic(fmt.Sprintf("Unmanaged interface in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), tcCtx.position))
-		}
-
-	default:
-		panic(fmt.Sprintf("Unmanaged subType in convertGoToCppType, type [%v], position[%v]", reflect.TypeOf(subType), tcCtx.position))
-	}
-}
-
-func convertGoToCppTypeRec(goType types.Type, tcCtx typeConvCtx) string {
-	return first(convertGoToCppType(goType, tcCtx))
-}
-
-func convertTupleToCppTypeList(t *types.Tuple, tcCtx typeConvCtx) string {
-	if t.Len() == 0 {
-		return "void"
-	}
-
-	var strs []string
-	for i := 0; i < t.Len(); i++ {
-		strType, _ := convertGoToCppType(t.At(i).Type(), tcCtx)
-		strs = append(strs, strType)
-	}
-	return strings.Join(strs, ", ")
 }
 
 func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []place) {
@@ -5564,24 +5294,6 @@ func (cv *cppConverter) PrintDefsUsage() {
 		scopeCounts := getScopeCounts(obj)
 		cv.Logf("%s (%3d,%3d) => %15q uses [%15T] %v, scopes: %v\n", filePos.Filename, filePos.Line, filePos.Column, id.Name, obj, obj, scopeCounts)
 	}
-}
-
-func getScopeCounts(obj types.Object) []int {
-	var scopeCounts []int
-	if obj == nil {
-		return scopeCounts
-	}
-
-	scope := obj.Parent()
-	for {
-		if scope == nil {
-			break
-		}
-
-		scopeCounts = append(scopeCounts, len(scope.Names()))
-		scope = scope.Parent()
-	}
-	return scopeCounts
 }
 
 func (parentCv *cppConverter) convertDependency(pkgInfos []*pkgInfo) (usedPkgInfos []*pkgInfo, toBeConverted []*cppConverter) {

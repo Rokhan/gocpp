@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"slices"
@@ -134,4 +135,52 @@ func printFwdOutro(cv *cppConverter, inNamespace bool) {
 	}
 	// Close golang namespace
 	cv.fwd.indent--
+}
+
+func PrintTemplatePrefix(buf *bytes.Buffer, data genStructData, templatePrms typeParams) {
+	if len(templatePrms) != 0 {
+		fmt.Fprintf(buf, "%s%s\n", data.out.Indent(), mkTemplateDec(templatePrms))
+	}
+}
+
+func getAnotherName(excludedNames []string, defaultNames []string) string {
+	usedNames := make(map[string]bool)
+	for _, name := range excludedNames {
+		usedNames[name] = true
+	}
+
+	// Try to use one of the default template names
+	for _, defaultName := range defaultNames {
+		if !usedNames[defaultName] {
+			return defaultName
+		}
+	}
+
+	// If all default names are used, append a suffix number
+	for i := 1; ; i++ {
+		for _, defaultName := range defaultNames {
+			candidate := fmt.Sprintf("%s%d", defaultName, i)
+			if !usedNames[candidate] {
+				return candidate
+			}
+		}
+	}
+}
+
+var defaultTemplateNames = []string{"T", "U", "V", "W"}
+
+func getAnotherTemplateParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, defaultTemplateNames)
+}
+
+var lambdaParamNames = []string{"x", "y", "z", "t", "u", "v"}
+
+func getAnotherLambdaParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, lambdaParamNames)
+}
+
+var loopParamNames = []string{"i", "j", "k", "l", "m", "n"}
+
+func getAnotherLoopParamName(excludedNames []string) string {
+	return getAnotherName(excludedNames, loopParamNames)
 }

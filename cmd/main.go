@@ -344,24 +344,6 @@ func (cv *cppConverter) isAmbiguousName(name string) bool {
 	return false
 }
 
-func (cv *parsingInfos) isNameUsebyMethods(name string) bool {
-	// TODO, maybe slow, can be optimized by caching.
-	methods := cv.GetPackageMethodsNames()
-	if slices.Contains(methods, name) {
-		return true
-	}
-	return false
-}
-
-func (cv *parsingInfos) isNameUsebyFunction(name string, fk FuncKind) bool {
-	// TODO, maybe slow, can be optimized by caching.
-	methods := cv.GetPackageFuncNames(fk)
-	if slices.Contains(methods, name) {
-		return true
-	}
-	return false
-}
-
 // Get the cpp type parameters from an expression
 func (cv *cppConverter) GetCppTypeParameters(expr ast.Expr) []string {
 	goTypes := cv.GetExprTypeParameters(expr)
@@ -644,29 +626,6 @@ func (cv *cppConverter) getPackagesUsedByHeaderEnd(headerEndElts []*place, usedP
 	return usedPkgInfosHeaderEnd
 }
 
-func (cv *parsingInfos) getNeededNamespaceAliasesForHeaderEnd(headerEndElts []*place, usingEmitted set[string], namespaceElt map[string]namespaceAlias) []string {
-	neededNs := set[string]{}
-	for _, elt := range headerEndElts {
-		for ns := range elt.depInfo.depNss {
-			neededNs.add(ns)
-		}
-	}
-	if len(neededNs) == 0 {
-		return nil
-	}
-
-	neededNs.remove(usingEmitted)
-
-	var result []string
-	for _, ns := range namespaceElt {
-		if neededNs.has(ns.ns) {
-			result = append(result, ns.aliasString())
-		}
-	}
-	slices.Sort(result)
-	return result
-}
-
 // NB: This only init the depInfo fields.
 // The full dependencies are available when ComputeDeps is call on depInfo fields.
 func (cv *cppConverter) computeDepInfos(headerElts []*place) {
@@ -697,20 +656,6 @@ func (cv *cppConverter) ConvertDoc(doc *ast.CommentGroup) {
 	for _, comText := range cv.ConvertDocToStrings(doc) {
 		fmt.Fprintf(out, "%s%s", cv.cpp.Indent(), comText)
 	}
-}
-
-func (cv *parsingInfos) ConvertDocToStrings(doc *ast.CommentGroup) (result []string) {
-	if doc == nil {
-		return
-	}
-
-	for _, comment := range doc.List {
-		text := strings.TrimSpace(comment.Text)
-		if text != "" {
-			result = append(result, text+"\n")
-		}
-	}
-	return
 }
 
 func (rec goReceiverDesc) getFullReceiverName(cv *cppConverter) *string {
@@ -1863,12 +1808,6 @@ func (cv *cppConverter) convertAssignRight(nLhs int, exprs []ast.Expr) cppExpr {
 		}
 	}
 	return cv.convertAssignRightExprs(exprs)
-}
-
-// isConstExpr reports whether go/types folded e to a constant.
-func (cv *parsingInfos) isConstExpr(e ast.Expr) bool {
-	tv, ok := cv.typeInfo.Types[e]
-	return ok && tv.Value != nil
 }
 
 func (cv *cppConverter) convertAssignStmt(stmt *ast.AssignStmt, env blockEnv) []cppExpr {
@@ -3038,28 +2977,6 @@ func constNeedsBigint(obj types.Object) bool {
 		(constant.Compare(v, token.LSS, int64Min) || constant.Compare(v, token.GTR, uint64Max))
 }
 
-// constFitsOnlyUint64 reports whether obj is an untyped integer constant whose value
-// is above int64 but still fits uint64, so uint64_t can hold it and bigint is not needed
-func constFitsOnlyUint64(obj types.Object) bool {
-	c, ok := obj.(*types.Const)
-	if !ok {
-		return false
-	}
-	b, ok := c.Type().(*types.Basic)
-	if !ok || b.Kind() != types.UntypedInt {
-		return false
-	}
-	v := c.Val()
-	return v.Kind() == constant.Int &&
-		constant.Compare(v, token.GTR, int64Max) &&
-		constant.Compare(v, token.LEQ, uint64Max)
-}
-
-func (cv *parsingInfos) constKey(obj types.Object) string {
-	p := cv.pcShared.fileSet.Position(obj.Pos())
-	return fmt.Sprintf("%s:%d", CleanPath(p.Filename), p.Offset)
-}
-
 // usesNonConstexpr reports whether a constant initializer calls a listed builtin,
 // or refers to a constant that was itself emitted without constexpr.
 func (cv *cppConverter) usesNonConstexpr(expr ast.Expr) bool {
@@ -3290,43 +3207,6 @@ func (cv *cppConverter) getAllUsedPackages(expr ast.Expr) map[string]includeType
 	return result
 }
 
-func (cv *parsingInfos) getAllUsedNameSpaces(expr ast.Expr) map[string]bool {
-	result := map[string]bool{}
-	for goNs, selector := range getAllNsSelectorIds(expr, cv.typeInfo) {
-		// Check if the identifier is a package name
-		if defObj := cv.typeInfo.Uses[goNs]; defObj != nil {
-			if _, ok := defObj.(*types.PkgName); ok {
-				selType := cv.typeInfo.Uses[selector]
-				ns := cv.NamespaceFromTypePkg(selType.Pkg())
-				result[ns] = true
-			}
-		}
-	}
-	return result
-}
-
-func (cv *parsingInfos) getAllUsedNames(expr ast.Expr) map[string]bool {
-	result := map[string]bool{}
-	for ident := range getAllIdentifiers(expr) {
-		result[ident.Name] = true
-	}
-	return result
-}
-
-func (cv *parsingInfos) getAllUsedVars(expr ast.Expr) map[types.Object]bool {
-	result := map[types.Object]bool{}
-	for ident := range getAllIdentifiers(expr) {
-		defObj := cv.typeInfo.Uses[ident]
-		switch def := defObj.(type) {
-		case *types.Const:
-			result[def] = true
-		case *types.Var:
-			result[def] = true
-		}
-	}
-	return result
-}
-
 func (cv *cppConverter) appendDepExpr(di *depInfo, expr ast.Expr) {
 	if expr == nil {
 		return
@@ -3512,10 +3392,6 @@ func (cv *cppConverter) isTypedef(id *ast.Ident) (isTD bool, pkgName string, nam
 		cv.Logf("isTypedef[false], pkg is nil for %v, type: %v\n", types.ExprString(id), idType)
 	}
 	return
-}
-
-func (cv *parsingInfos) NamespaceFromTypePkg(pkg *types.Package) string {
-	return cv.pcShared.nsNamer.NamespaceFromTypePkg(pkg)
 }
 
 func checkCanFwd(cppType *cppType) {
@@ -3809,41 +3685,6 @@ func (cv *cppConverter) convertTypeExpr(node ast.Expr, ctx ctContext) cppType {
 	}
 
 	panic("convertExprCppType, bug, unreacheable code reached !")
-}
-
-// Returns the type parameters referenced by the fields of an anonymous struct.
-func (cv *parsingInfos) structTypeParams(st *ast.StructType) typeParams {
-	tps := typeParams{}
-	ast.Inspect(st, func(n ast.Node) bool {
-		id, ok := n.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		tn, ok := cv.typeInfo.Uses[id].(*types.TypeName)
-		if !ok {
-			return true
-		}
-		if _, isParam := tn.Type().(*types.TypeParam); isParam {
-			name := GetCppName(id.Name)
-			if _, dup := tps[name]; !dup {
-				tps[name] = &typeParam{name: name, order: len(tps)}
-			}
-		}
-		return true
-	})
-	return tps
-}
-
-func (cv *parsingInfos) isParam(n *ast.Ident) (bool, string) {
-	_, isParam := cv.typeInfo.Types[n].Type.(*types.TypeParam)
-	return isParam, n.Name
-}
-
-func (cv *parsingInfos) checkIsParam(n *ast.Ident, identType *cppType) {
-	_, isParam := cv.typeInfo.Types[n].Type.(*types.TypeParam)
-	if isParam {
-		identType.typenames = append(identType.typenames, n.Name)
-	}
 }
 
 func (cv *cppConverter) convertMethodExpr(node ast.Expr, ctx ctContext) (string, typeNames, []place) {
@@ -4817,18 +4658,6 @@ func convertTupleToCppTypeList(t *types.Tuple, tcCtx typeConvCtx) string {
 	return strings.Join(strs, ", ")
 }
 
-// Sprintf formats according to a format specifier and returns the resulting string.
-func (cv *parsingInfos) BuffExprPrintf(buff *cppExprBuffer, format string, srcParams ...any) (n int, err error) {
-	defs, params /*tns*/, _, coms, dbgs := extractParamDefs(srcParams...)
-	//cv.Assertf(tns == nil, "typenames should be nil here")
-	for _, com := range coms {
-		com = cleanCommentString(com)
-		fmt.Fprintf(buff.buff, "    /* %s */\n", com)
-	}
-	*buff.defs = append(*buff.defs, defs...)
-	buff.dbgs = append(buff.dbgs, dbgs...)
-	return fmt.Fprintf(buff.buff, format, params...)
-}
 func (cv *cppConverter) printInline(bBuff io.Writer, bDefs *[]place, defs []place) {
 	for _, def := range defs {
 		if def.inline != nil {
@@ -4852,61 +4681,6 @@ func (cv *cppConverter) WritterExprPrintf(buff *cppExprWritter[*bufio.Writer], f
 	cv.printInline(buff.buff, buff.defs, defs)
 	buff.dbgs = append(buff.dbgs, dbgs...)
 	return fmt.Fprintf(buff.buff, format, params...)
-}
-
-type constWidth int
-
-const (
-	fitsInt32 constWidth = iota // plain C++ int is enough: emit as today
-	fitsInt64                   // widen the leaves
-	needsBig                    // use the big integer type
-)
-
-func (cv *parsingInfos) constExprWidth(root ast.Expr) constWidth {
-	w := fitsInt32
-	ast.Inspect(root, func(n ast.Node) bool {
-		e, ok := n.(ast.Expr)
-		if !ok {
-			return true
-		}
-		tv, ok := cv.typeInfo.Types[e]
-		if !ok || tv.Value == nil || tv.Value.Kind() != constant.Int {
-			return true
-		}
-		if b, ok := types.Unalias(tv.Type).Underlying().(*types.Basic); ok &&
-			b.Info()&types.IsInteger != 0 && b.Info()&types.IsUntyped == 0 && fitsOwnType(tv.Value, b) {
-			// Typed and representable in its own type: never needs bigint, but the C++
-			// literals building it are plain int, so they must be widened when the value
-			// is beyond int32 (e.g. '-1 << 63' for a Duration).
-			if constant.Compare(tv.Value, token.LSS, int32Min) || constant.Compare(tv.Value, token.GTR, int32Max) {
-				if constant.Compare(tv.Value, token.GEQ, int64Min) && constant.Compare(tv.Value, token.LEQ, int64Max) {
-					w = max(w, fitsInt64)
-				}
-				// beyond int64 (e.g. ^uint(0)): its typed conversion already produces the right C++ type
-			}
-			return true
-		}
-		switch {
-		case constant.Compare(tv.Value, token.GEQ, int32Min) && constant.Compare(tv.Value, token.LEQ, int32Max):
-		case constant.Compare(tv.Value, token.GEQ, int64Min) && constant.Compare(tv.Value, token.LEQ, int64Max):
-			w = max(w, fitsInt64)
-		default:
-			w = max(w, needsBig)
-		}
-		return true
-	})
-	return w
-}
-
-// Reports whether integer constant v is representable in basic type b (64-bit platform).
-func fitsOwnType(v constant.Value, b *types.Basic) bool {
-	bits := uint(types.SizesFor("gc", "amd64").Sizeof(b) * 8)
-	if b.Info()&types.IsUnsigned != 0 {
-		return constant.Sign(v) >= 0 && constant.BitLen(v) <= int(bits)
-	}
-	min := constant.Shift(constant.MakeInt64(-1), token.SHL, bits-1)
-	max := constant.BinaryOp(constant.Shift(constant.MakeInt64(1), token.SHL, bits-1), token.SUB, constant.MakeInt64(1))
-	return constant.Compare(v, token.GEQ, min) && constant.Compare(v, token.LEQ, max)
 }
 
 // -> converts the initializer of a Go constant, widening its untyped
@@ -5452,50 +5226,6 @@ func (cv *cppConverter) convertExprCtx(node ast.Expr, ctx exprCtx) cppExpr {
 	panic("convertExprImpl, bug, unreacheable code reached !")
 }
 
-func (cv *parsingInfos) isConstLeaf(e ast.Expr) bool {
-	tv, ok := cv.typeInfo.Types[e]
-	return ok && tv.Value != nil && tv.Value.Kind() == constant.Int
-}
-
-// Handles float literals such as `1e3` that are seen as an integer by the type system.
-// Returns the C++ integer literal and true/false if integer/float
-func (cv *parsingInfos) floatLitAsInt(lit *ast.BasicLit) (string, bool) {
-	tv, ok := cv.typeInfo.Types[lit]
-	if !ok || tv.Value == nil {
-		return "", false
-	}
-	b, ok := types.Unalias(tv.Type).Underlying().(*types.Basic)
-	if !ok || b.Info()&types.IsInteger == 0 || b.Info()&types.IsUntyped != 0 {
-		return "", false
-	}
-	v := constant.ToInt(tv.Value)
-	if v.Kind() != constant.Int {
-		return "", false
-	}
-
-	str := groupDigits(v.ExactString())
-	switch {
-	case constant.Compare(v, token.GEQ, int32Min) && constant.Compare(v, token.LEQ, int32Max):
-		return str, true
-	case constant.Compare(v, token.GEQ, int64Min) && constant.Compare(v, token.LEQ, int64Max):
-		return str + "LL", true
-	case constant.Compare(v, token.GTR, int64Max) && constant.Compare(v, token.LEQ, uint64Max):
-		return str + "ULL", true
-	}
-	return "", false
-}
-
-func (cv *parsingInfos) buildPkgDepInfo(obj *types.PkgName, selector *ast.Ident) depInfo {
-	use := cv.typeInfo.Uses[selector]
-	pkgId := obj.Imported().Path() + "/" + cv.posBaseName(use.Pos())
-	di := depInfo{depPkgs: map[string]includeType{pkgId: FwdInclude}}
-	return di
-}
-
-func (cv *parsingInfos) nsFromPkg(obj *types.PkgName) string {
-	return cv.pcShared.nsNamer.NamespaceFromTypePkg(obj.Imported())
-}
-
 func (cv *cppConverter) DbgSprintf(format string, params ...any) string {
 	if cv.shared.debugMode {
 		return fmt.Sprintf(format, params...)
@@ -5509,19 +5239,6 @@ func (cv *cppConverter) getCaptureExpr() string {
 		captureExpr = "[]" // global scope
 	}
 	return captureExpr
-}
-
-func (cv *parsingInfos) isNameSpace(expr ast.Expr) bool {
-
-	switch n := expr.(type) {
-	case *ast.Ident:
-		exprType := cv.typeInfo.Uses[n]
-		switch exprType.(type) {
-		case *types.PkgName:
-			return true
-		}
-	}
-	return false
 }
 
 func (cv *cppConverter) convertCompositeLit(n *ast.CompositeLit, addPtr bool) cppExpr {

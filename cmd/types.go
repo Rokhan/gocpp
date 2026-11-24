@@ -3,23 +3,12 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"go/constant"
 	"go/token"
 	"go/types"
-	"path/filepath"
 	"reflect"
 	"strings"
-
-	"golang.org/x/tools/go/ast/astutil"
 )
-
-type parsingInfos struct {
-	parsingContext
-
-	typeInfo   *types.Info
-	astFile    *ast.File
-	pkg        *types.Package
-	commentMap ast.CommentMap
-}
 
 func convertGoToCppTypes(goType []types.Type, namespace string, position token.Position) []string {
 	results := []string{}
@@ -28,6 +17,42 @@ func convertGoToCppTypes(goType []types.Type, namespace string, position token.P
 		results = append(results, result)
 	}
 	return results
+}
+
+// constFitsOnlyUint64 reports whether obj is an untyped integer constant whose value
+// is above int64 but still fits uint64, so uint64_t can hold it and bigint is not needed
+func constFitsOnlyUint64(obj types.Object) bool {
+	c, ok := obj.(*types.Const)
+	if !ok {
+		return false
+	}
+	b, ok := c.Type().(*types.Basic)
+	if !ok || b.Kind() != types.UntypedInt {
+		return false
+	}
+	v := c.Val()
+	return v.Kind() == constant.Int &&
+		constant.Compare(v, token.GTR, int64Max) &&
+		constant.Compare(v, token.LEQ, uint64Max)
+}
+
+type constWidth int
+
+const (
+	fitsInt32 constWidth = iota // plain C++ int is enough: emit as today
+	fitsInt64                   // widen the leaves
+	needsBig                    // use the big integer type
+)
+
+// Reports whether integer constant v is representable in basic type b (64-bit platform).
+func fitsOwnType(v constant.Value, b *types.Basic) bool {
+	bits := uint(types.SizesFor("gc", "amd64").Sizeof(b) * 8)
+	if b.Info()&types.IsUnsigned != 0 {
+		return constant.Sign(v) >= 0 && constant.BitLen(v) <= int(bits)
+	}
+	min := constant.Shift(constant.MakeInt64(-1), token.SHL, bits-1)
+	max := constant.BinaryOp(constant.Shift(constant.MakeInt64(1), token.SHL, bits-1), token.SUB, constant.MakeInt64(1))
+	return constant.Compare(v, token.GEQ, min) && constant.Compare(v, token.LEQ, max)
 }
 
 func convertCommentLines(comment *ast.CommentGroup) []string {
@@ -78,376 +103,6 @@ func underlying(tv types.Type) types.Type {
 	return underlying
 }
 
-// posFilePath return the path computed via the shared FileSet.
-func (cv *parsingInfos) posFilePath(t token.Pos) string {
-	tf := cv.pcShared.fileSet.File(t)
-	if tf == nil {
-		return "<unknown>"
-	}
-	return CleanPath(tf.Name())
-}
-
-// posFilePath return the base name computed via the shared FileSet.
-func (cv *parsingInfos) posBaseName(t token.Pos) string {
-	tf := cv.pcShared.fileSet.File(t)
-	if tf == nil {
-		return "<unknown>"
-	}
-	return strings.TrimSuffix(filepath.Base(tf.Name()), ".go")
-}
-
-// Get the type parameters from an expression
-func (cv *parsingInfos) GetExprTypeParameters(expr ast.Expr) []types.Type {
-	goType := cv.convertExprToType(expr)
-	return cv.GetTypeParameters(goType, expr)
-}
-
-func (cv *parsingInfos) getPkgFromExprType(expr ast.Expr) (pkg *types.Package) {
-	typ := cv.typeInfo.Types[expr].Type
-	if typ == nil {
-		return nil
-	}
-
-	switch t := typ.(type) {
-	case *types.Named:
-		pkg = t.Obj().Pkg()
-	case *types.Pointer:
-		if named, ok := t.Elem().(*types.Named); ok {
-			pkg = named.Obj().Pkg()
-		}
-	default:
-	}
-	return pkg
-}
-
-func (cv *parsingInfos) GetTypeParameters(goType types.Type, expr ast.Expr) []types.Type {
-	if goType == nil {
-		return nil
-	}
-
-	switch t := goType.(type) {
-	case *types.Basic:
-		return nil
-
-	case *types.Alias:
-		if t.TypeArgs() != nil && t.TypeArgs().Len() > 0 {
-			var result []types.Type
-			for i := 0; i < t.TypeArgs().Len(); i++ {
-				result = append(result, t.TypeArgs().At(i))
-			}
-			return result
-		}
-
-	case *types.Named:
-		if t.TypeArgs() != nil && t.TypeArgs().Len() > 0 {
-			var result []types.Type
-			for i := 0; i < t.TypeArgs().Len(); i++ {
-				result = append(result, t.TypeArgs().At(i))
-			}
-			return result
-		}
-
-	case *types.Array:
-		return cv.GetTypeParameters(t.Elem(), expr)
-
-	case *types.Interface:
-		return nil
-
-	case *types.Map:
-		var result []types.Type
-		result = append(result, cv.GetTypeParameters(t.Key(), expr)...)
-		result = append(result, cv.GetTypeParameters(t.Elem(), expr)...)
-		return result
-
-	case *types.Pointer:
-		return cv.GetTypeParameters(t.Elem(), expr)
-
-	case *types.Slice:
-		return cv.GetTypeParameters(t.Elem(), expr)
-
-	case *types.Struct:
-		return nil
-
-	case *types.TypeParam:
-		return []types.Type{t}
-
-	case *types.Union:
-		// For a union, collect type parameters from all terms
-		var result []types.Type
-		for i := 0; i < t.Len(); i++ {
-			term := t.Term(i)
-			params := cv.GetTypeParameters(term.Type(), expr)
-			if params != nil {
-				result = append(result, params...)
-			}
-		}
-		return result
-
-	default:
-		cv.Panicf("GetExprTypeParameters, unimplemented case: type=%v, expr=%s, position=%s", reflect.TypeOf(goType), types.ExprString(expr), cv.Position(expr))
-	}
-
-	return nil
-}
-
-func (cv *parsingInfos) IsExprInt(expr ast.Expr) bool {
-	goType := cv.convertExprToType(expr)
-	switch t := goType.(type) {
-	case *types.Basic:
-		switch t.Kind() {
-		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
-			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
-			return true
-		}
-	}
-	return false
-}
-
-func (cv *parsingInfos) IsExprPtr(expr ast.Expr) bool {
-	goType := cv.convertExprToType(expr)
-
-	switch goType.(type) {
-	case *types.Pointer:
-		return true
-
-	// TODO: types.Named, types.Alias ??
-
-	default:
-		return false
-	}
-}
-
-func (cv *parsingInfos) IsExprArray(expr ast.Expr) bool {
-	goType := cv.convertExprToType(expr)
-	return isArray(goType)
-}
-
-func isArray(goType types.Type) bool {
-	switch goType.Underlying().(type) {
-	case *types.Array:
-		return true
-	}
-	return false
-}
-
-func (cv *parsingInfos) IsExprInterface(expr ast.Expr) bool {
-	goType := cv.convertExprToType(expr)
-
-	for {
-		switch t := goType.(type) {
-		case *types.Interface:
-			return true
-
-		case *types.Named:
-			goType = t.Underlying()
-
-		default:
-			return false
-		}
-	}
-}
-
-func (cv *parsingInfos) IsSelectorExprSignature(expr *ast.SelectorExpr) (isFunc bool, hasReceiv bool, nbPrams int) {
-	exprGoType := cv.convertExprToType(expr)
-	selectorGoType := cv.typeInfo.TypeOf(expr.Sel)
-
-	switch exprType := exprGoType.(type) {
-	case *types.Signature:
-		nExpr := exprType.Params().Len()
-
-		switch selType := selectorGoType.(type) {
-		case *types.Signature:
-			nSel := selType.Params().Len()
-			return true, nSel != nExpr, nExpr
-		}
-		return true, false, nExpr
-
-	// TODO: types.Named, types.Alias ??
-
-	default:
-		return false, false, 0
-	}
-}
-
-func (cv *parsingInfos) IsFunc(expr ast.Expr) bool {
-	tv := cv.typeInfo.Types[expr].Type
-
-	switch tv.(type) {
-	case *types.Signature:
-		return true
-	}
-	return false
-}
-
-func (cv *parsingInfos) IsExprSignature(expr ast.Expr) (isFunc bool, hasReceiv bool, nbPrams int) {
-	exprGoType := cv.convertExprToType(expr)
-
-	switch exprType := exprGoType.(type) {
-	case *types.Signature:
-		nExpr := exprType.Params().Len()
-		return true, exprType.Recv() != nil, nExpr
-
-	default:
-		return false, false, 0
-	}
-}
-
-func (cv *parsingInfos) IsExprMap(expr ast.Expr) bool {
-	goType := cv.convertExprToType(expr)
-	return cv.IsTypeMap(goType)
-}
-
-func (cv *parsingInfos) IsTypeMap(goType types.Type) bool {
-	switch t := goType.(type) {
-	case *types.Map:
-		return true
-
-	case *types.Named:
-		return cv.IsTypeMap(t.Underlying())
-
-	// case *types.Alias:
-	// 	return cv.IsTypeMap(types.Unalias(t))
-
-	default:
-		return false
-	}
-}
-
-func (cv *parsingInfos) IsType(expr ast.Expr) bool {
-	tv, ok := cv.typeInfo.Types[expr]
-	return ok && tv.IsType()
-}
-
-func (cv *parsingInfos) getReferencedTypes() (usedTypes map[types.Object]tagType) {
-	usedTypes = make(map[types.Object]tagType)
-
-	/*
-	 * We need to manage dependencies in header and cpp like we do in forward header.
-	 * Once it will be done, all "tags" used to know if we need include in header or source file will be useless.
-	 */
-	ast.Inspect(cv.astFile, func(n ast.Node) bool {
-		if n == nil {
-			return false
-		}
-
-		if expr, ok := n.(ast.Expr); ok {
-			if tv, ok := cv.typeInfo.Types[expr]; ok {
-				cv.filterType(tv, usedTypes, UsesTag)
-			}
-		}
-
-		if id, ok := n.(*ast.Ident); ok {
-			if use := cv.typeInfo.Uses[id]; use != nil {
-				cv.filterUsedObject(use, usedTypes, UsesTag)
-			}
-			if def := cv.typeInfo.Defs[id]; def != nil {
-				cv.filterUsedObject(def, usedTypes, DefsTag)
-			}
-		}
-
-		// Maybe needed at some point.
-		// if sel, ok := n.(*ast.SelectorExpr); ok {
-		// 	if def := cv.typeInfo.Selections[sel]; def != nil {
-		// 		cv.filterSelections(def, file, usedTypes, UsesTag)
-		// 	}
-		// }
-
-		return true
-	})
-	return
-}
-
-// func (cv *parsingInfos) filterSelections(selection *types.Selection, usedTypes map[types.Object]tagType, tag tagType) {
-// 	usedTypes[selection.Obj()] |= tag
-// }
-
-func (cv *parsingInfos) filterType(srcType types.TypeAndValue, usedTypes map[types.Object]tagType, tag tagType) {
-	for _, o := range GetObjectsOfType(srcType.Type) {
-		usedTypes[o] |= tag
-	}
-}
-
-func (cv *parsingInfos) filterUsedObject(obj types.Object, usedTypes map[types.Object]tagType, tag tagType) {
-
-	switch t := obj.(type) {
-	case *types.TypeName, *types.Const:
-		usedTypes[t] |= tag
-		for _, o := range GetObjectsOfType(t.Type()) {
-			usedTypes[o] |= tag
-		}
-
-	case *types.Func:
-		usedTypes[t] |= tag
-		for _, o := range GetObjectsOfType(t.Type()) {
-			usedTypes[o] |= tag
-		}
-
-	case *types.Var:
-		switch tag {
-		case DefsTag:
-			scopeCount := getScopeCounts(obj)
-			// len(scopeCount) == 0  --> member of structs
-			// len(scopeCount) == 1  --> ? ? ?
-			// len(scopeCount) == 2  --> global variable
-			if len(scopeCount) <= 2 {
-				for _, o := range GetObjectsOfType(t.Type()) {
-					usedTypes[o] |= tag
-				}
-			}
-		default:
-			usedTypes[t] |= tag
-		}
-	}
-}
-
-// Take a node in the ast and return the return type of the function in which it is located
-func (cv *parsingInfos) getReturnType(node ast.Node) *types.Tuple {
-	funcNode := cv.getReturnFunc(node)
-	if funcNode == nil {
-		return nil
-	}
-	return getFunctionReturnType(cv.typeInfo, funcNode)
-}
-
-// Tell if node is used in a method or not
-func (cv *parsingInfos) IsInMethod(node ast.Node) bool {
-	funcNode := cv.getReturnFunc(node)
-	if funcNode == nil {
-		return false
-	}
-	return cv.IsMethod(funcNode)
-}
-
-// Take a node in the ast get the containing function
-func (cv *parsingInfos) getReturnFunc(node ast.Node) ast.Node {
-	if cv.typeInfo == nil || node == nil || cv.astFile == nil {
-		return nil
-	}
-
-	// Find the innermost function-related node that encloses the given node.
-	var best ast.Node
-	var bestSpan token.Pos = 0
-	pos := node.Pos()
-
-	// Use AST path helper to get candidates near the position.
-	if path, _ := astutil.PathEnclosingInterval(cv.astFile, pos, pos); path != nil {
-		for _, n := range path {
-			switch n.(type) {
-			case *ast.FuncDecl, *ast.FuncLit, *ast.FuncType:
-				if n.Pos() <= pos && pos <= n.End() {
-					span := n.End() - n.Pos()
-					if best == nil || span < bestSpan {
-						best = n
-						bestSpan = span
-					}
-				}
-			}
-		}
-	}
-
-	return best
-}
-
 // Get the return type of a function node
 func getFunctionSignature(typeInfo *types.Info, funcNode ast.Node) (sig *types.Signature) {
 
@@ -495,15 +150,6 @@ func getFunctionReturnType(typeInfo *types.Info, funcNode ast.Node) *types.Tuple
 	return sig.Results()
 }
 
-// Tell if a function is a method (has a receiver) or not
-func (cv *parsingInfos) IsMethod(funcNode ast.Node) bool {
-	if funcNode == nil {
-		return false
-	}
-	sig := getFunctionSignature(cv.typeInfo, funcNode)
-	return sig != nil && sig.Recv() != nil
-}
-
 type FuncKind int
 
 const (
@@ -526,76 +172,6 @@ func (kind FuncKind) AppliesTo(sig *types.Signature) bool {
 	}
 }
 
-// Get the list of functions/methods declared in the current package
-func (cv *parsingInfos) GetPackageFuncs(fk FuncKind) []*types.Func {
-	if cv.typeInfo == nil {
-		return nil
-	}
-	var result []*types.Func
-	for _, obj := range cv.typeInfo.Defs {
-		if obj == nil {
-			continue
-		}
-
-		if obj.Pkg() != cv.pkg {
-			continue // belongs to a different package
-		}
-
-		if fn, ok := obj.(*types.Func); ok {
-			if sig, ok := fn.Type().(*types.Signature); ok {
-				if fk.AppliesTo(sig) {
-					result = append(result, fn)
-				}
-			}
-		}
-	}
-	return result
-}
-
-// // GetPackageVars returns the list of global (package-level) variables
-// // declared in the current package.
-// func (cv *parsingInfos) GetPackageVars() []*types.Var {
-// 	if cv.typeInfo == nil {
-// 		return nil
-// 	}
-// 	var result []*types.Var
-// 	for _, obj := range cv.typeInfo.Defs {
-// 		if obj == nil {
-// 			continue
-// 		}
-// 		v, ok := obj.(*types.Var)
-// 		if !ok {
-// 			continue
-// 		}
-// 		if v.IsField() {
-// 			continue // struct field, not a package-level var
-// 		}
-// 		// TODO
-// 		// if v.Pkg() != cv.pkg {
-// 		// 	continue // belongs to a different package
-// 		// }
-// 		if v.Parent() != v.Pkg().Scope() {
-// 			continue // local var / param, not package-level
-// 		}
-// 		result = append(result, v)
-// 	}
-// 	return result
-// }
-
-func (cv *parsingInfos) GetPackageMethods() []*types.Func {
-	return cv.GetPackageFuncs(FuncKindMethod)
-}
-
-func (cv *parsingInfos) GetPackageMethodsNames() []string {
-	methods := cv.GetPackageMethods()
-	return getFuncNames(methods)
-}
-
-func (cv *parsingInfos) GetPackageFuncNames(fk FuncKind) []string {
-	methods := cv.GetPackageFuncs(fk)
-	return getFuncNames(methods)
-}
-
 func isTopLevel(obj types.Object) bool {
 	return obj != nil && obj.Parent() == obj.Pkg().Scope()
 }
@@ -606,59 +182,4 @@ func getFuncNames(methods []*types.Func) []string {
 		result = append(result, m.Name())
 	}
 	return result
-}
-
-// Not used at the moment
-//
-// // Get the list of methods declared in the current file
-// func (cv *parsingInfos) GetFileMethods() []*types.Func {
-// 	if cv.astFile == nil || cv.typeInfo == nil {
-// 		return nil
-// 	}
-// 	var result []*types.Func
-// 	for _, decl := range cv.astFile.Decls {
-// 		fn, ok := decl.(*ast.FuncDecl)
-// 		if !ok || fn.Recv == nil || fn.Name == nil {
-// 			continue
-// 		}
-// 		if def := cv.typeInfo.Defs[fn.Name]; def != nil {
-// 			if f, ok := def.(*types.Func); ok {
-// 				result = append(result, f)
-// 			}
-// 		}
-// 	}
-// 	return result
-// }
-//
-// func (cv *parsingInfos) GetFileMethodsNames() []string {
-// 	methods := cv.GetFileMethods()
-// 	return getFuncNames(methods)
-// }
-
-func (cv *parsingInfos) convertExprToType(node ast.Expr) types.Type {
-	if node == nil {
-		return nil
-	}
-
-	typeInfo := cv.typeInfo.Types[node].Type
-
-	if typeInfo != nil {
-		return typeInfo
-	}
-
-	ident, ok := node.(*ast.Ident)
-	if ok {
-		def := cv.typeInfo.Defs[ident]
-		if def != nil {
-			return def.Type()
-		}
-
-		use := cv.typeInfo.Uses[ident]
-		if use != nil {
-			return use.Type()
-		}
-	}
-
-	cv.Panicf("convertExprToType, node [%s], position [%s]", types.ExprString(node), cv.Position(node))
-	panic("convertExprToType, bug, unreacheable code reached !")
 }

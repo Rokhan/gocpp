@@ -43,7 +43,6 @@ const cpp_cplx128_type = "gocpp::complex128"
 //	=> "go\types\basic.go"
 //	=> "go\types\universe.go"
 var stdTypeMapping = map[string]string{
-	"any":        "go_any",
 	"byte":       "unsigned char",
 	"complex":    cpp_cplx128_type,
 	"complex64":  cpp_cplx64_type,
@@ -72,6 +71,10 @@ var stdTypeMapping = map[string]string{
 	"untyped rune":    "gocpp::rune",
 	"untyped string":  cpp_string_type,
 	"untyped nil":     "nullptr_t",
+
+	// standard declared types
+	"any":            "go_any",
+	"unsafe.Pointer": "gocpp::unsafe_pointer",
 
 	// Type that are keywords in c++, we want to change them always but restore the original name
 	// when we know that this is really a type and not an identifier.

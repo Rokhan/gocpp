@@ -8651,7 +8651,7 @@ namespace golang::runtime
     }
 
     // any returns true if any bit in p is set.
-    bool rec::go_any(pMask p)
+    bool rec::any(pMask p)
     {
         for(auto [i, gocpp_ignored] : p)
         {

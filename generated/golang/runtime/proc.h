@@ -728,7 +728,7 @@ namespace golang::runtime
         bool read(pMask p, uint32_t id);
         void set(pMask p, int32_t id);
         void clear(pMask p, int32_t id);
-        bool go_any(pMask p);
+        bool any(pMask p);
         pMask resize(pMask p, int32_t nprocs);
         bool empty(gQueue* q);
         void push(gQueue* q, g* gp);

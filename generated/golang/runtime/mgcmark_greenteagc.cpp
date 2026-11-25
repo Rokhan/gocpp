@@ -1449,7 +1449,7 @@ namespace golang::runtime
             // root scan work available
             return true;
         }
-        if(rec::go_any(gocpp::recv(work.spanqMask)))
+        if(rec::any(gocpp::recv(work.spanqMask)))
         {
             // stealable local work available
             return true;

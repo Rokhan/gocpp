@@ -511,10 +511,10 @@ namespace golang::runtime
             return false;
         }
         lock(& c->lock);
-        bool go_any = false;
+        bool any = false;
         for(; c->qcount > 0; )
         {
-            go_any = true;
+            any = true;
             typedmemclr(c->elemtype, chanbuf(c, c->recvx));
             c->recvx++;
             if(c->recvx == c->dataqsiz)
@@ -524,7 +524,7 @@ namespace golang::runtime
             c->qcount--;
         }
         unlock(& c->lock);
-        return go_any;
+        return any;
     }
 
     void sendDirect(_type* t, sudog* sg, gocpp::unsafe_pointer src)

@@ -306,9 +306,9 @@ namespace golang::encoding::json::internal::jsonopts
                     if(! ok && opt == jsonflags::StringifyNumbers && rec::Get(gocpp::recv(structOpts->Flags), jsonflags::StringTag))
                     {
                         // check also whether the option is specified via a `string` tag
-                        return {gocpp::assertValue<T>(go_any(true)), true};
+                        return {gocpp::assertValue<T>(any(true)), true};
                     }
-                    return {gocpp::assertValue<T>(go_any(v)), ok};
+                    return {gocpp::assertValue<T>(any(v)), ok};
                     break;
                 }
                 case 1:
@@ -316,7 +316,7 @@ namespace golang::encoding::json::internal::jsonopts
                     jsonopts::experimentalFormatTagSupporter opt = gocpp::any_cast<jsonopts::experimentalFormatTagSupporter>(setter(zero));
                     auto v = rec::Get(gocpp::recv(structOpts->Flags), jsonflags::FormatTagSupported);
                     auto ok = rec::Has(gocpp::recv(structOpts->Flags), jsonflags::FormatTagSupported);
-                    return {gocpp::assertValue<T>(go_any(v)), ok};
+                    return {gocpp::assertValue<T>(any(v)), ok};
                     break;
                 }
                 case 2:
@@ -326,7 +326,7 @@ namespace golang::encoding::json::internal::jsonopts
                     {
                         return {zero, false};
                     }
-                    return {gocpp::assertValue<T>(go_any(structOpts->CoderValues.Indent)), true};
+                    return {gocpp::assertValue<T>(any(structOpts->CoderValues.Indent)), true};
                     break;
                 }
                 case 3:
@@ -336,7 +336,7 @@ namespace golang::encoding::json::internal::jsonopts
                     {
                         return {zero, false};
                     }
-                    return {gocpp::assertValue<T>(go_any(structOpts->CoderValues.IndentPrefix)), true};
+                    return {gocpp::assertValue<T>(any(structOpts->CoderValues.IndentPrefix)), true};
                     break;
                 }
                 case 4:
@@ -346,7 +346,7 @@ namespace golang::encoding::json::internal::jsonopts
                     {
                         return {zero, false};
                     }
-                    return {gocpp::assertValue<T>(go_any(structOpts->CoderValues.ByteLimit)), true};
+                    return {gocpp::assertValue<T>(any(structOpts->CoderValues.ByteLimit)), true};
                     break;
                 }
                 case 5:
@@ -356,7 +356,7 @@ namespace golang::encoding::json::internal::jsonopts
                     {
                         return {zero, false};
                     }
-                    return {gocpp::assertValue<T>(go_any(structOpts->CoderValues.DepthLimit)), true};
+                    return {gocpp::assertValue<T>(any(structOpts->CoderValues.DepthLimit)), true};
                     break;
                 }
                 default:

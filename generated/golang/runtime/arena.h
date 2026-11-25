@@ -236,8 +236,8 @@ namespace golang::runtime
         typePointers typePointersOfType(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, abi::Type* typ, uintptr_t addr);
         typePointers typePointersOfUnchecked(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr);
         typePointers typePointersOfUnchecked(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t addr);
-        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int64_t cap);
-        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int64_t cap);
+        gocpp::unsafe_pointer userArenaNextFree(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, _type* typ, int64_t cap);
+        gocpp::unsafe_pointer userArenaNextFree(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, _type* typ, int64_t cap);
         uintptr_t writeHeapBitsSmall(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         uintptr_t writeHeapBitsSmall(const gocpp::ObjRecv<struct liveUserArenaChunk>& self, uintptr_t x, uintptr_t dataSize, _type* typ);
         runtime::writeUserArenaHeapBits writeUserArenaHeapBits(const gocpp::PtrRecv<struct liveUserArenaChunk, false>& self, uintptr_t addr);

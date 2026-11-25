@@ -283,7 +283,7 @@ namespace golang::runtime
         {
             go_throw("bad j"_s);
         }
-        if(gocpp::unsafe_sizeof<unsafe::Pointer>() != goarch::PtrSize)
+        if(gocpp::unsafe_sizeof<gocpp::unsafe_pointer>() != goarch::PtrSize)
         {
             go_throw("bad k"_s);
         }

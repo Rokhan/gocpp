@@ -462,12 +462,12 @@ namespace golang::runtime
 
     namespace rec
     {
-        unsafe::Pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self)
+        gocpp::unsafe_pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self)
         {
             return rec::get(gocpp::recv(self.ptr->maybeTraceablePtr));
         }
 
-        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, unsafe::Pointer v)
+        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, gocpp::unsafe_pointer v)
         {
             return rec::set(gocpp::recv(self.ptr->maybeTraceablePtr), v);
         }

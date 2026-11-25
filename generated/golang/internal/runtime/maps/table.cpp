@@ -1077,8 +1077,8 @@ namespace golang::internal::runtime::maps
                 if(grown)
                 {
                     bool ok = {};
-                    unsafe::Pointer newKey;
-                    unsafe::Pointer newElem;
+                    gocpp::unsafe_pointer newKey;
+                    gocpp::unsafe_pointer newElem;
                     std::tie(newKey, newElem, ok) = rec::getWithKey(gocpp::recv(it->m), it->typ, key);
                     if(! ok)
                     {

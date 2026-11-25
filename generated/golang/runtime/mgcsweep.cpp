@@ -842,12 +842,12 @@ namespace golang::runtime
             return rec::typePointersOfUnchecked(gocpp::recv(self.obj.mspan), addr);
         }
 
-        unsafe::Pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int64_t cap)
+        gocpp::unsafe_pointer userArenaNextFree(const gocpp::PtrRecv<struct sweepLocked, false>& self, _type* typ, int64_t cap)
         {
             return rec::userArenaNextFree(gocpp::recv(self.ptr->mspan), typ, cap);
         }
 
-        unsafe::Pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int64_t cap)
+        gocpp::unsafe_pointer userArenaNextFree(const gocpp::ObjRecv<struct sweepLocked>& self, _type* typ, int64_t cap)
         {
             return rec::userArenaNextFree(gocpp::recv(self.obj.mspan), typ, cap);
         }

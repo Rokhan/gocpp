@@ -90,7 +90,7 @@ namespace golang::runtime
     // so it emits the test and keeps the call, giving the desired
     // escape/alive analysis result. The test is cheaper than the call.
     bool cgoAlwaysFalse;
-    unsafe::Pointer* cgo_yield = & _cgo_yield;
+    gocpp::unsafe_pointer* cgo_yield = & _cgo_yield;
     void cgoNoCallback(bool v)
     {
         auto g = getg();

@@ -1435,7 +1435,7 @@ namespace golang::syscall
     gocpp::error Bind(golang::syscall::Handle fd, golang::syscall::Sockaddr sa)
     {
         gocpp::error err;
-        unsafe::Pointer ptr;
+        gocpp::unsafe_pointer ptr;
         int32_t n;
         std::tie(ptr, n, err) = rec::sockaddr(gocpp::recv(sa));
         if(err != nullptr)
@@ -1448,7 +1448,7 @@ namespace golang::syscall
     gocpp::error Connect(golang::syscall::Handle fd, golang::syscall::Sockaddr sa)
     {
         gocpp::error err;
-        unsafe::Pointer ptr;
+        gocpp::unsafe_pointer ptr;
         int32_t n;
         std::tie(ptr, n, err) = rec::sockaddr(gocpp::recv(sa));
         if(err != nullptr)
@@ -1527,7 +1527,7 @@ namespace golang::syscall
     gocpp::error wsaSendtoInet4(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet4* to, Overlapped* overlapped, unsigned char* croutine)
     {
         gocpp::error err;
-        unsafe::Pointer rsa;
+        gocpp::unsafe_pointer rsa;
         int32_t len;
         std::tie(rsa, len, err) = rec::sockaddr(gocpp::recv(to));
         if(err != nullptr)
@@ -1552,7 +1552,7 @@ namespace golang::syscall
     gocpp::error wsaSendtoInet6(golang::syscall::Handle s, WSABuf* bufs, uint32_t bufcnt, uint32_t* sent, uint32_t flags, SockaddrInet6* to, Overlapped* overlapped, unsigned char* croutine)
     {
         gocpp::error err;
-        unsafe::Pointer rsa;
+        gocpp::unsafe_pointer rsa;
         int32_t len;
         std::tie(rsa, len, err) = rec::sockaddr(gocpp::recv(to));
         if(err != nullptr)
@@ -1666,7 +1666,7 @@ namespace golang::syscall
         {
             return errorspkg::New("failed to find ConnectEx: "_s + rec::Error(gocpp::recv(err)));
         }
-        unsafe::Pointer ptr;
+        gocpp::unsafe_pointer ptr;
         int32_t n;
         std::tie(ptr, n, err) = rec::sockaddr(gocpp::recv(sa));
         if(err != nullptr)

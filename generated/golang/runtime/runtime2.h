@@ -1204,8 +1204,8 @@ namespace golang::runtime
         void set(maybeTraceablePtr* p, gocpp::unsafe_pointer v);
         gocpp::unsafe_pointer get(maybeTraceablePtr* p);
         uintptr_t uintptr(maybeTraceablePtr* p);
-        unsafe::Pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
-        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, unsafe::Pointer v);
+        gocpp::unsafe_pointer get(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
+        void set(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self, gocpp::unsafe_pointer v);
         void setTraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
         void setUntraceable(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);
         uintptr_t uintptr(const gocpp::PtrRecv<struct maybeTraceableChan, false>& self);

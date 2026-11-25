@@ -1350,12 +1350,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::SetMapIndex(gocpp::recv(self.obj.Value), key, elem);
         }
 
-        void SetPointer(const gocpp::PtrRecv<struct addressableValue, false>& self, unsafe::Pointer x)
+        void SetPointer(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::unsafe_pointer x)
         {
             return reflect::rec::SetPointer(gocpp::recv(self.ptr->Value), x);
         }
 
-        void SetPointer(const gocpp::ObjRecv<struct addressableValue>& self, unsafe::Pointer x)
+        void SetPointer(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::unsafe_pointer x)
         {
             return reflect::rec::SetPointer(gocpp::recv(self.obj.Value), x);
         }
@@ -1470,12 +1470,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::UnsafeAddr(gocpp::recv(self.obj.Value));
         }
 
-        unsafe::Pointer UnsafePointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        gocpp::unsafe_pointer UnsafePointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::UnsafePointer(gocpp::recv(self.ptr->Value));
         }
 
-        unsafe::Pointer UnsafePointer(const gocpp::ObjRecv<struct addressableValue>& self)
+        gocpp::unsafe_pointer UnsafePointer(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::UnsafePointer(gocpp::recv(self.obj.Value));
         }
@@ -1500,12 +1500,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::abiTypeSlow(gocpp::recv(self.obj.Value));
         }
 
-        reflect::Value assignTo(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
+        reflect::Value assignTo(const gocpp::PtrRecv<struct addressableValue, false>& self, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
         {
             return reflect::rec::assignTo(gocpp::recv(self.ptr->Value), context, dst, target);
         }
 
-        reflect::Value assignTo(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string context, abi::Type* dst, unsafe::Pointer target)
+        reflect::Value assignTo(const gocpp::ObjRecv<struct addressableValue>& self, gocpp::string context, abi::Type* dst, gocpp::unsafe_pointer target)
         {
             return reflect::rec::assignTo(gocpp::recv(self.obj.Value), context, dst, target);
         }
@@ -1650,12 +1650,12 @@ namespace golang::encoding::json::v2
             return reflect::rec::panicNotMap(gocpp::recv(self.obj.Value.flag));
         }
 
-        unsafe::Pointer pointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
+        gocpp::unsafe_pointer pointer(const gocpp::PtrRecv<struct addressableValue, false>& self)
         {
             return reflect::rec::pointer(gocpp::recv(self.ptr->Value));
         }
 
-        unsafe::Pointer pointer(const gocpp::ObjRecv<struct addressableValue>& self)
+        gocpp::unsafe_pointer pointer(const gocpp::ObjRecv<struct addressableValue>& self)
         {
             return reflect::rec::pointer(gocpp::recv(self.obj.Value));
         }
